@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Rotation Renderer</title>
+    <link rel="icon" href="static\assets\icons\webapp icon.png" type="image/png">
+    <style>
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Set a minimum height */
+            width: 100vw;
+            margin: 0;
+            padding: 0; 
+            overflow-y: auto;
+            overflow-x: hidden;
+            background-color: rgb(30, 37, 43);
+        }
+
+        #head {
+            position: absolute;
+            width: 100%;
+            height: 5%;
+            z-index: 5;
+            left: 0%;
+            top: 0%;
+            background-color: rgb(241, 241, 241);
+            border-color: rgb(255, 136, 0);
+            border-width: 3px;
+            border-style: None;
+        }
+
+        #main {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            width: calc(max(min(50%, 800px), 350px));
+            height: fit-content;
+            z-index: 1;
+            left: calc((100% - max(min(50%, 800px), 350px)) / 2);
+            top: 0px;
+            padding-bottom: 100px;
+            background-color: rgb(50, 50, 50);
+            border-color: rgb(255, 136, 0);
+            border-width: 3px;
+            border-style: None;
+        }
+
+
+        .bracket {
+            position: relative;
+            width: 100%;
+            height: fit-content;
+            z-index: 0;
+            left: 0%;
+            margin-top: 25%;
+            background-color: rgb(50, 50, 50);
+            border-color: rgb(255, 136, 0);
+            border-width: 3px;
+            border-style: None;
+        }
+
+        .bracket-head {
+            position: relative;
+            width: 100%;
+            height: 55px;
+            z-index: 0;
+            left: 0%;
+            top: 0%;
+            background-color: rgb(123, 123, 123);
+            border-color: rgb(255, 136, 0);
+            border-width: 3px;
+            border-style: None;
+        }
+
+        .bracket-body {
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: row;
+            row-gap: 0px;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            height: fit-content;
+            padding-bottom: 50px;
+            z-index: 0;
+            left: 0%;
+            top: 0%;
+            background-color: rgb(92, 92, 92);
+            border-color: rgb(255, 136, 0);
+            border-width: 3px;
+            border-style: None;
+        }
+
+        .fight {
+            flex: 0 1 auto;
+            background-color: rgb(46, 48, 48);
+            width: calc(min(max(15%, 150px), 200px));
+            height: 45px;
+            border-radius: 10px;
+            margin: 20px;
+        }
+
+        
+
+    </style>
+</head>
+<body id="body">
+
+    <div id="container"></div>
+
+        <div id="head">
+
+        </div>
+
+        <div id="main">
+
+            <div class="bracket">
+
+                <div class="bracket-head">
+
+
+            
+                </div>
+
+                <div class="bracket-body">
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+            
+                </div>
+            
+            </div>
+
+
+            <div class="bracket">
+
+                <div class="bracket-head">
+
+
+            
+                </div>
+
+                <div class="bracket-body">
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+            
+                </div>
+            
+            </div>
+
+            <div class="bracket">
+
+                <div class="bracket-head">
+
+
+            
+                </div>
+
+                <div class="bracket-body">
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+                    <div class="fight">
+
+                    
+            
+                    </div>
+            
+                </div>
+            
+            </div>
+
+        </div>
+
+        
+
+    </div>
+   
+
+    <script>
+
+        async function sendPutRequest(number) {
+                
+            const url = 'https://porc.mywire.org/api/pull-request';
+            const title = "Client calculation Request";
+            const description = "Package containing data ment to be calcualted and renderd by the server";
+
+            const contents = "something"
+
+            const data = {
+                title,
+                description,
+                contents
+            };
+
+            try {
+
+                console.log(`sending data: ${JSON.stringify(data)}`)
+
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+
+                    const result = await response.json();
+
+                    if (result.error != "No Error detected") {
+
+                        console.error(`Error occured during server calculations: ${result.error}`);
+                        console.log(result);
+
+                        document.getElementById('ErrorField').innerText = 
+                            `An Error Occured:\n"${result.error}"
+                            \nTrying some different inputs might fix it
+                            \nIf you dont understand the meaning of this message you are welcome to ask me
+                            \nunless you dont't know english. In which case all you can do is look at the screen in cofusion I guess`;
+
+                    } 
+                    else {
+                                      
+                        output = result.data;
+                        console.log('Data:', output);
+                        
+                        document.getElementById('ErrorField').innerText = "";
+                        console.log('PUT request successful with result: ');
+                        console.log(result);
+
+                    }
+                    
+                } else {
+
+                    console.error('PUT request failed:', response.status, response.statusText);
+                }
+            } catch (error) {
+
+                console.error('Error during PUT request:', error);
+            }
+        }
+
+    </script>
+</body>
+</html>
