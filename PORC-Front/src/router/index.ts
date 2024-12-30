@@ -1,23 +1,23 @@
+import BracketsView from '@/views/BracketsView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
+import QaAView from '@/views/QaAView.vue'
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import Brackets from '../views/Brackets.vue'
-import QaA from '../views/QaA.vue'
-import NotFound from '../views/NotFound.vue'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Brackets',
-    component: Brackets,
+    component: BracketsView,
   },
   {
     path: '/qaa',
     name: 'QaA',
-    component: QaA,
+    component: QaAView,
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'Page not found',
-    component: NotFound,
+    component: NotFoundView,
   },
 ]
 
