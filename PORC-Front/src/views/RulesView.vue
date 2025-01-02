@@ -1,5 +1,5 @@
 <template>
-  <div>QaA</div>
+  <div>Rules</div>
 </template>
 
 <script lang="ts" setup>
