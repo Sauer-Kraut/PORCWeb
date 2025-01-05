@@ -1,0 +1,508 @@
+use colored::Colorize;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fmt;
+
+use crate::bot_communication::PlanBlueprint;
+
+
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MatchPlan {
+    pub divisions: Vec<Division>,
+    pub players: Vec<Player>,
+}
+
+impl fmt::Display for MatchPlan {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "MatchPlan:\nDivisions:\n")?;
+        for division in &self.divisions {
+            write!(f, "{}\n", division)?;
+        }
+        write!(f, "Players:\n")?;
+        for player in &self.players {
+            write!(f, "{}\n", player)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Division {
+    pub name: String,
+    pub order: usize,
+    pub matches: HashMap<String, Match>,
+    pub players: Vec<Player>,
+}
+
+impl fmt::Display for Division {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Division: {}\nOrder: {}\nMatches:\n", self.name, self.order)?;
+        for (key, match_) in &self.matches {
+            write!(f, "{}: {}\n", key, match_)?;
+        }
+        write!(f, "Players:\n")?;
+        for player in &self.players {
+            write!(f, "{}\n", player)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub struct Match {
+    p1: Player,
+    p2: Player,
+    p1score: Option<usize>,
+    p2score: Option<usize>,
+}
+
+impl fmt::Display for Match {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Match between {} and {}: {} - {}",
+            self.p1.tag,
+            self.p2.tag,
+            self.p1score.map_or("None".to_string(), |s| s.to_string()),
+            self.p2score.map_or("None".to_string(), |s| s.to_string())
+        )
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub struct Player {
+    pub id: usize,
+    pub tag: String,
+    pub division: String,
+}
+
+impl fmt::Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Player {} (ID: {}) in division {}", self.tag, self.id, self.division)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PlayerPerformance {
+    pub player: Player,
+    pub wins: usize,
+    pub matches: usize,
+    pub rounds: usize
+}
+
+impl fmt::Display for PlayerPerformance {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Player {} (ID: {}) in division {} with {} wins in {} matches and {} rounds", self.player.tag, self.player.id, self.player.division, self.wins, self.matches, self.rounds)
+    }
+}
+
+impl PartialEq for PlayerPerformance {
+    fn eq(&self, other: &Self) -> bool {
+        self.player == other.player && self.wins == other.wins && self.matches == other.matches && self.rounds == other.rounds
+    }
+}
+
+impl PartialOrd for PlayerPerformance {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        let mut ordering = self.wins.partial_cmp(&other.wins);
+
+        if ordering != None {
+            return ordering;
+        }
+
+        ordering = self.matches.partial_cmp(&other.matches);
+
+        if ordering != None {
+            return ordering;
+        }
+
+        self.rounds.partial_cmp(&other.rounds)
+    }
+}
+
+
+
+impl MatchPlan {
+
+    pub fn generate(blueprint: PlanBlueprint, allow_doubles: bool) -> Result<MatchPlan, DataGenerationError> {
+
+        let mut entered_players: Vec<&String> = vec!();
+        let mut player_objects = vec!();
+        let mut divisions = vec!();
+
+        for division_plan in blueprint.divisions.iter() {
+
+            divisions.push(division_plan.name.clone());
+
+            for (index, player) in division_plan.players.iter().enumerate() {
+
+                if entered_players.contains(&&player) {
+                    if allow_doubles {
+                        println!("{}", "Warning: Player with already existing name has been entered into Matchplan".bold().red());
+                    }
+
+                    else {
+                        return Err(DataGenerationError::MatchMapGenerationError(format!("Player of same name already exists: {}, doubles were disallowed", player)));
+                    }            
+                }
+
+                entered_players.push(&player);
+
+                let player_object = Player {
+                    id: index,
+                    tag: player.to_string(),
+                    division: division_plan.name.clone(),
+                };
+
+                player_objects.push(player_object);
+            }
+        }
+        
+        let division_plan = Division::generate_set(player_objects.clone(), divisions)?;
+
+        Ok(MatchPlan {
+            divisions: division_plan,
+            players: player_objects,
+        })
+    }
+
+    pub fn add_player(&mut self, add_player: (String, String), allow_doubles: bool) -> Result<(), DataGenerationError> {
+
+        let (add_player_tag, add_player_div)= add_player;
+
+        for player in self.players.iter() {
+
+            if add_player_tag == player.tag {
+
+                if allow_doubles {
+                    println!("{}", "Warning: Player with already existing name has been entered into Matchplan".bold().red());
+                }
+
+                else {
+                    return Err(DataGenerationError::MatchMapAdditionError(format!("Player of same name already exists: {}, doubles were disallowed", player.tag)));
+                }
+            }
+        }
+
+        let add_player_id = self.players.len();
+        let add_player_object = Player {
+            id: add_player_id,
+            tag: add_player_tag,
+            division: add_player_div.clone()
+        };
+
+        let mut entered = false;
+
+        for division in self.divisions.iter_mut() {
+
+            if division.name == add_player_div {
+
+                division.add_players(vec!(add_player_object.clone()))?;
+                self.players.push(add_player_object);
+                entered = true;
+                break;
+            }
+        }
+
+        if !entered {
+            return Err(DataGenerationError::MatchMapAdditionError(format!("Player target division does not exist: {}", add_player_div)));
+        }
+
+        Ok(())
+    }
+
+    pub fn remove_player(&mut self, remove_player: &Player) -> Result<(), DataGenerationError> {
+
+        let player_index = self.players.iter().position(|player| player == remove_player);
+
+        if let Some(index) = player_index {
+
+            let player = self.players.remove(index);
+
+            for division in self.divisions.iter_mut() {
+
+                if division.name == player.division {
+                    division.remove_players(vec![&player])?;
+                    break;
+                }
+            }
+
+            Ok(())
+        } 
+        
+        else {
+            Err(DataGenerationError::MatchMapRemovalError(format!("Player with tag {} does not exist", remove_player.tag)))
+        }
+    }
+
+    pub fn move_player(&mut self, move_player: &mut Player, target_division: &str) -> Result<(), DataGenerationError> {
+
+        let player_index = self.players.iter().position(|player| player == move_player);
+
+        if let Some(index) = player_index {
+
+            let player = self.players.remove(index);
+            let mut removed = false;
+
+            for division in self.divisions.iter_mut() {
+
+                if division.name == move_player.division {
+                    division.remove_players(vec![&player])?;
+                    removed = true;
+                    break;
+                }
+            }
+
+            if !removed {
+                return Err(DataGenerationError::MatchMapRemovalError(format!("Player wasnt found in any division: {:?}", move_player)))
+            }
+
+            move_player.division = target_division.to_string();
+
+            for division in self.divisions.iter_mut() {
+
+                if division.name == target_division {
+
+                    match division.add_players(vec![player.clone()]) {
+                        Err(err) => {
+
+                            panic!("{}", format!("Critical error encountered while moving player when data was already modified. Thread paniced in order to prevent faulty saves. \nError: {:?}", err));
+                        }
+                        _ => {}
+                    };
+                    break;
+                }
+            }
+
+            Ok(())
+        }
+
+        else {
+            return Err(DataGenerationError::MatchMapGenerationError(format!("Player wasnt found in player list: {:?}", move_player)))
+        }
+    }
+
+    pub fn update_match(&mut self, match_info: Match) -> Result<(), DataGenerationError> {
+
+        for division in self.divisions.iter_mut() {
+
+            for (_key, value) in division.matches.iter_mut() {
+
+                if value.p1 == match_info.p1 && value.p2 == match_info.p2 {
+                    *value = match_info.clone();
+                    return Ok(());
+                }
+            }
+        }
+
+        return Err(DataGenerationError::MatchMapModificationError("Match not found in any division".to_string()));
+    }
+}
+
+
+impl Division {
+
+    pub fn generate_set(players: Vec<Player>, divisions: Vec<String>) -> Result<Vec<Division>, DataGenerationError> {
+
+        let mut output = vec!();
+        let mut entered_players = vec!();
+
+        for (index, division) in divisions.iter().enumerate() {
+
+            let player_set: Vec<Player> = players.iter().filter(|player| player.division == *division).map(|player| player.clone()).collect();
+            entered_players.append(&mut player_set.clone());
+
+            if player_set.len() == 1 {
+                return Err(DataGenerationError::MatchMapGenerationError(format!("Division {} has only one player", division)));
+            }
+
+            if player_set.len() == 0 {
+                continue;
+            }
+
+            let division_map = Match::generate_matchmap(&player_set)?;
+
+            let entry = Division {
+                name: division.clone(),
+                order: index,
+                matches: division_map,
+                players: player_set
+            };
+
+            output.push(entry);
+        }
+
+        if entered_players.len() != players.len() {
+            let missing_players: Vec<_> = players.iter().filter(|player| !entered_players.contains(player)).collect();
+            return Err(DataGenerationError::MatchMapAdditionError(format!("Some players were not assigned to any division: {:?}", missing_players)));
+        }
+
+        return Ok(output)
+    }
+
+    pub fn add_players(&mut self, mut add_player_set: Vec<Player>) -> Result<(), DataGenerationError> {
+
+        for add_player in add_player_set.iter() {
+
+            if self.players.contains(add_player) {
+                return Err(DataGenerationError::MatchMapAdditionError("Player already in division".to_string()));
+            }
+
+            if add_player.division != self.name {
+                return Err(DataGenerationError::MatchMapAdditionError("Player division does not allign with divison".to_string()));
+            }
+        }
+
+        self.players.append(&mut add_player_set);
+
+        let new_matchmap = Match::generate_matchmap(&self.players)?;
+
+        for (key, value) in new_matchmap.iter() {
+
+            self.matches.entry(key.clone()).or_insert(value.clone());
+        }
+
+        Ok(())
+
+    }
+
+    pub fn remove_players(&mut self, remove_player_set: Vec<&Player>) -> Result<(), DataGenerationError> {
+
+        for remove_player in remove_player_set.iter() {
+
+            if !self.players.contains(remove_player) {
+                return Err(DataGenerationError::MatchMapRemovalError("Player not in division".to_string()));
+            }
+
+            if remove_player.division != self.name {
+                return Err(DataGenerationError::MatchMapRemovalError("Player division does not align with division".to_string()));
+            }
+        }
+
+        if self.players.len() - remove_player_set.len() < 2 {
+
+            return Err(DataGenerationError::MatchMapRemovalError(format!("Division does not have enough players to loose {} players", remove_player_set.len())));
+        }
+
+        self.players.retain(|player| !remove_player_set.contains(&player));
+
+        let new_matchmap = Match::generate_matchmap(&self.players)?;
+
+        self.matches.retain(|key, _| new_matchmap.contains_key(key));
+
+        Ok(())
+    }
+
+    pub async fn generate_perfomance(&self) -> Vec<PlayerPerformance> {
+
+        let mut output = vec!();
+
+        for player in self.players.iter() {
+
+            let mut wins = 0;
+            let mut matches = 0;
+            let mut rounds = 0;
+
+            for (_key, battle) in self.matches.iter() {
+
+                if battle.p1 == *player || battle.p2 == *player {
+
+                    if battle.p1score.is_some() && battle.p2score.is_some() {
+
+                        matches += 1;
+                        rounds += battle.p1score.unwrap() + battle.p2score.unwrap();
+
+                        if battle.p1 == *player && battle.p1score.unwrap() > battle.p2score.unwrap() {
+                            wins += 1;
+                        }
+
+                        if battle.p2 == *player && battle.p2score.unwrap() > battle.p1score.unwrap() {
+                            wins += 1;
+                        }
+                    }
+                }
+            }
+
+            output.push(PlayerPerformance {
+                player: player.clone(),
+                wins,
+                matches,
+                rounds
+            });
+        }
+
+        output.sort_by(|a, b| b.partial_cmp(a).unwrap());
+
+        output
+    }
+    
+}
+
+
+
+impl Match {
+
+    fn generate_matchmap(player_set: &Vec<Player>) -> Result<HashMap<String, Match>, DataGenerationError> {
+        
+        if player_set.len() < 2 {
+            return Err(DataGenerationError::MatchMapGenerationError("Too few players :(".to_string()));
+        }
+
+        let mut division_map = HashMap::new();
+
+        for player in player_set.iter() {
+            for opponent in player_set.iter() {
+                if player.id == opponent.id {
+                    continue;
+                }
+
+                let mut lower_id_player = player;
+                let mut higher_id_player = opponent;
+
+                if lower_id_player.id > higher_id_player.id {
+                    lower_id_player = opponent;
+                    higher_id_player = player;
+                }
+
+                let match_key = format!("{}V{}", lower_id_player.id, higher_id_player.id);
+                let match_info = Match {
+                    p1: lower_id_player.clone(),
+                    p2: higher_id_player.clone(),
+                    p1score: None,
+                    p2score: None,
+                };
+
+                let _ = division_map.insert(match_key, match_info);
+            }
+        }
+
+        Ok(division_map)
+    }
+}
+
+
+
+#[derive(Debug)]
+pub enum DataGenerationError {
+    DivisionGenerationError(String),
+    MatchMapGenerationError(String),
+    MatchMapAdditionError(String),
+    MatchMapRemovalError(String),
+    MatchMapModificationError(String),
+}
+
+impl fmt::Display for DataGenerationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DataGenerationError::DivisionGenerationError(err) => write!(f, "Division generation Error: {}", err),
+            DataGenerationError::MatchMapGenerationError(err) => write!(f, "Match Map generation Error: {}", err),
+            DataGenerationError::MatchMapAdditionError(err) => write!(f, "Division player addition Error: {}", err),
+            DataGenerationError::MatchMapRemovalError(err) => write!(f, "Division player removal Error: {}", err),
+            DataGenerationError::MatchMapModificationError(err) => write!(f, "Division matchr modification Error: {}", err),
+        }
+    }
+}
+
+impl std::error::Error for DataGenerationError {}

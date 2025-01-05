@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Rotation Renderer</title>
-    <link rel="icon" href="static\assets\icons\webapp icon.png" type="image/png">
     <style>
         
         body {
@@ -408,68 +407,51 @@
 
     <script>
 
-        async function sendPutRequest(number) {
+        async function sendGetRequest() {
                 
-            const url = 'https://porc.mywire.org/api/pull-request';
+            const url = 'http://localhost:8081/api/plan-blueprint';
             const title = "Client calculation Request";
             const description = "Package containing data ment to be calcualted and renderd by the server";
 
-            const contents = "something"
-
-            const data = {
-                title,
-                description,
-                contents
-            };
-
             try {
 
-                console.log(`sending data: ${JSON.stringify(data)}`)
+                console.log(`sending GET request`)
 
                 const response = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
+                    method: 'GET',
                 });
 
                 if (response.ok) {
 
                     const result = await response.json();
 
-                    if (result.error != "No Error detected") {
+                    if (result.error != null) {
 
                         console.error(`Error occured during server calculations: ${result.error}`);
                         console.log(result);
-
-                        document.getElementById('ErrorField').innerText = 
-                            `An Error Occured:\n"${result.error}"
-                            \nTrying some different inputs might fix it
-                            \nIf you dont understand the meaning of this message you are welcome to ask me
-                            \nunless you dont't know english. In which case all you can do is look at the screen in cofusion I guess`;
 
                     } 
                     else {
                                       
                         output = result.data;
                         console.log('Data:', output);
-                        
-                        document.getElementById('ErrorField').innerText = "";
-                        console.log('PUT request successful with result: ');
+
+                        console.log('GET request successful with result: ');
                         console.log(result);
 
                     }
                     
                 } else {
 
-                    console.error('PUT request failed:', response.status, response.statusText);
+                    console.error('GET request failed:', response.status, response.statusText);
                 }
             } catch (error) {
 
-                console.error('Error during PUT request:', error);
+                console.error('Error during GET request:', error);
             }
         }
+
+        sendGetRequest();
 
     </script>
 </body>
