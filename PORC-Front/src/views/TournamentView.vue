@@ -248,17 +248,17 @@
   //   }
   // ] as DivisionModel[]);
 
-  const divisions = ref([] as DivisionModel[]);
+const divisions = ref([] as DivisionModel[]);
 
-  const displayError = ref(false);
-  let errorMessage: string  = "This is an error message";
+const displayError = ref(false);
+let errorMessage: string  = "This is an error message";
 
-  function hideError() {
+function hideError() {
   displayError.value = false;
 }
 
-  async function getMatchPlan() {
-  console.log("Trying to get match plan");
+async function getMatchPlan() {
+console.log("Trying to get match plan");
 
   try {
     const response = await fetch('https://porc.mywire.org/api/match-plan', {
@@ -315,6 +315,7 @@ onMounted(() => {
 <style lang="scss" scoped>
   .container-fill {
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
   .spacer {

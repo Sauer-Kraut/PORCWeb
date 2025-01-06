@@ -1,16 +1,16 @@
 <template>
   <header>
     <nav class="row justify-content-center text-center h-100 custom">
-      <router-link to="/" class="router-link col-2 h-100 custom">Tournament</router-link>
-      <router-link to="/rules" class="router-link col-2 h-100 custom">Rules</router-link>
-      <router-link to="/qaa" class="router-link col-2 h-100 custom">QaA</router-link>
-      <router-link to="/sign-up" class="router-link col-2 h-100 custom">Sign up</router-link>
+      <router-link to="/" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Tournament</router-link>
+      <router-link to="/rules" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Rules</router-link>
+      <router-link to="/qaa" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">QaA</router-link>
+      <router-link to="/sign-up" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Sign up</router-link>
     </nav>
   </header>
 
   <div class="row justify-content-center h-100 custom">
-    <main class="col-xxl-4 col-xl-6 col-md-8 p-0 custom">
-      <router-view></router-view>
+    <main class="col-xxl-4 col-xl-6-cust col-l-8-cust col-lg-8 col-md-9 col-11 p-0 custom">
+      <router-view class="custom"></router-view>
     </main>
   </div>
 </template>
@@ -54,5 +54,23 @@ nav {
 
 .custom {
   overflow-x: hidden;
+}
+
+@media (max-width: 2400px) and (min-width: 1699px) {
+  .col-xl-6-cust {
+  width: 50%;
+  }
+}
+
+@media (max-width: 1699px) and (min-width: 1400px) {
+  .col-l-8-cust {
+    width: 66%;
+  }
+}
+
+@media (max-width: 1699px) {
+  .col-s-3 {
+    width: 25%;
+  }
 }
 </style>

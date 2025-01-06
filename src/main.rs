@@ -94,6 +94,8 @@ async fn main() -> std::io::Result<()> {
             .route(web::post().to(add_sign_up_request)))
             .service(web::resource("/api/sign-up/remove")
             .route(web::post().to(remove_sign_up_request)))
+            .service(web::resource("/api/ranking")
+            .route(web::get().to(get_player_ranking_request)))
             .service(web::resource("/api/plan-blueprint")
             .route(web::get().to(generate_plan_blueprint_request)))
     })

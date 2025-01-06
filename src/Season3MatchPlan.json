@@ -18,6 +18,20 @@
           "p1score": 2,
           "p2score": 5
         },
+        "1V6": {
+          "p1": {
+            "id": 1,
+            "tag": "Sauerkraut",
+            "division": "Meteorite"
+          },
+          "p2": {
+            "id": 6,
+            "tag": "Monkey",
+            "division": "Meteorite"
+          },
+          "p1score": 0,
+          "p2score": 0
+        },
         "2V6": {
           "p1": {
             "id": 2,
@@ -31,20 +45,6 @@
           },
           "p1score": 5,
           "p2score": 1
-        },
-        "1V6": {
-          "p1": {
-            "id": 1,
-            "tag": "Sauerkraut",
-            "division": "Meteorite"
-          },
-          "p2": {
-            "id": 6,
-            "tag": "Monkey",
-            "division": "Meteorite"
-          },
-          "p1score": null,
-          "p2score": null
         }
       },
       "players": [
@@ -112,8 +112,8 @@
             "tag": "Pirate",
             "division": "Stone"
           },
-          "p1score": null,
-          "p2score": null
+          "p1score": 4,
+          "p2score": 5
         }
       },
       "players": [

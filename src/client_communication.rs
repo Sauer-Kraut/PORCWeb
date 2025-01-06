@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use colored::Colorize;
 use tokio;
 
-use crate::{AppState, Match, MatchPlan, StorageMod};
+use crate::{AppState, Match, MatchPlan, PlayerPerformance, StorageMod};
 use actix_web::{web, Responder, HttpResponse};
 
 
@@ -27,6 +27,13 @@ pub struct GetRequestPlanPackage {
 pub struct GetRequestSignUpPackage {
     pub title: String,
     pub data: Vec<SignUpInfo>,
+    pub error: Option<String>
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GetPlayerPerformancePackage {
+    pub title: String,
+    pub data: Vec<(String, Vec<PlayerPerformance>)>,
     pub error: Option<String>
 }
 
@@ -84,6 +91,54 @@ pub async fn get_match_plan_request(appstate: web::Data<AppState>) -> impl Respo
 
     HttpResponse::Ok().json(GetRequestPlanPackage {
         title: "Server Match Plan Respons".to_string(),
+        data,
+        error
+    })
+}
+
+
+
+pub async fn get_player_ranking_request(appstate: web::Data<AppState>) -> impl Responder {
+    println!("\n{}", "Received GET Request for match plan".bold().cyan());
+
+    let (data_sender, data_receiver) = mpsc::channel();
+    let (error_sender, error_receiver) = mpsc::channel();
+    let matchplan = appstate.matchplan.clone();
+
+    // We spawn an asyncronus thread in order to be able to handle many requests at once
+    println!("startig async thread");
+    tokio::task::spawn(async move {
+
+        let mut output = Vec::new();
+
+        let locked_plan = matchplan.lock().await;
+        let plan = match locked_plan.as_ref() {
+            Some(plan) => plan,
+            None => {
+                error_sender.send("No Match Plan found".to_owned()).unwrap();
+                return;
+            }
+        };
+
+        for division in plan.divisions.iter() {
+            
+            let ranking = division.generate_perfomance().await;
+            output.push((division.name.clone(), ranking));
+        }
+
+        data_sender.send(output).unwrap();
+
+    }).await.unwrap();
+
+    let error = match error_receiver.try_recv(){
+        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
+        Err(_) => None,
+    };
+
+    let data = data_receiver.recv().unwrap();
+
+    HttpResponse::Ok().json(GetPlayerPerformancePackage {
+        title: "Server Player Performance Respons".to_string(),
         data,
         error
     })
