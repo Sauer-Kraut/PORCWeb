@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "username": "example_user",
+    "bp": 1234,
+    "region": "Europe"
+  },
+  {
+    "username": "Sauer",
+    "bp": 20000,
+    "region": "Europe"
+  },
+  {
+    "username": "2Guib",
+    "bp": 19999,
+    "region": "US East"
+  },
+  {
+    "username": "Guibert",
+    "bp": 2,
+    "region": "Europe"
+  },
+  {
+    "username": "Sauerkratos",
+    "bp": 13,
+    "region": "Austrailia"
+  }
+]

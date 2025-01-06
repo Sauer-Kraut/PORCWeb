@@ -1,5 +1,189 @@
+<script lang="ts" setup>
+import { ref } from 'vue'
+import errorMessagePopup from '@/components/ErrorPopupModel.vue';
+import type { SignUpInfo } from '@/models/SignUpInfoModel.ts'
+
+const displayError = ref(false);
+let errorMessage: string  = "This is an error message";
+
+const invalidFillOut = ref(false)
+const success = ref(false)
+
+const username = ref(null);
+const BP = ref(null)
+const region = ref(null)
+const isOnDiscord = ref(false);
+
+function showError(error: string) {
+    errorMessage = error;
+    console.log("Error message:", errorMessage);
+    displayError.value = true;
+}
+
+function hideError() {
+    displayError.value = false;
+}
+
+function showWarning() {
+    invalidFillOut.value = true;
+}
+
+function hideWarning() {
+    invalidFillOut.value = false;
+}
+
+function showSuccess() {
+    success.value = true;
+}
+
+function confirmInput() {
+
+    if (username.value != null &&
+        BP.value != null &&
+        region.value != null &&
+        isOnDiscord.value == true
+    ) {
+        hideWarning();
+        postSignUp();
+    } 
+    else {
+        showWarning();
+    }
+}
+
+async function postSignUp() {
+    console.log("Trying to get match plan");
+
+    const data: SignUpInfo = {
+        username: String(username.value),
+        bp: Number(BP.value),
+        region: String(region.value)
+    }
+
+    const requestData = JSON.stringify({
+        title: "Sign Up Request",
+        sing_up_info: data
+    });
+
+    console.log(requestData);
+
+    try {
+        const response = await fetch('https://porc.mywire.org/api/sign-up', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: requestData
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log('Success:', data);
+
+        if (data.error != null) {
+            showError(data.error);
+        } 
+        else {
+            showSuccess();
+        }
+
+    } catch (error) {
+        console.log("Error: ", error)
+        showError("Internal server error")
+    }
+}
+</script>
+
 <template>
-  <div>Sign Up</div>
+    <div class="container-fill justify-content-center">
+        <div class="inner-container">
+            <h1 class="titel">Sign Up</h1>
+            <div class="form-container col-10">
+            <form>
+                <fieldset>
+                    <legend>User Info</legend>
+                    <div class="p-3"></div>
+                    <div class="mb-3">
+                    <label for="disabledTextInput" class="form-label">Discord username</label>
+                    <input type="text" id="disabledTextInput" class="form-control" placeholder="username" v-model="username">
+                    </div>
+                    <div class="p-1"></div>
+                    <div class="mb-3">
+                    <label for="disabledTextInput" class="form-label">BP</label>
+                    <input type="number" id="disabledTextInput" class="form-control" placeholder="Your BP" v-model="BP">
+                    </div>
+                    <div class="p-2"></div>
+                    <div class="mb-3">
+                    <label for="disabledSelect" class="form-label">Region</label>
+                    <select id="disabledSelect" class="form-select" v-model="region" placeholder="Select a region">
+                        <option>Europe</option>
+                        <option>US East</option>
+                        <option>US West</option>
+                        <option>Austrailia</option>
+                        <option>Asia</option>
+                    </select>
+                    </div>
+                    <div class="p-3"></div>
+                    <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck" v-model="isOnDiscord">
+                        <label class="form-check-label" for="disabledFieldsetCheck">
+                        I am on the PORC discord server
+                        </label>
+                    </div>
+                    </div>
+                    <div class="p-1"></div>
+                    <button type="button" class="btn btn-primary" @click="confirmInput">Submit</button>
+                </fieldset>
+            </form>
+            <div class="p-2"></div>
+            <label class="warning" v-if="invalidFillOut">Sign up is not valid</label>
+            <label class="success" v-if="success">Sign up successfull!</label>
+        </div>
+    </div>
+        <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError"/>
+    </div>
 </template>
 
-<script lang="ts" setup></script>
+<style lang="scss" scoped>
+    .container-fill {
+        min-height: 93vh;
+    }
+
+    .inner-container {
+        overflow-x: hidden;
+        justify-content: center;
+        flex-direction: column;
+        align-items: first baseline;
+        display: flex;
+    }
+
+    .titel {
+        justify-content: center;
+        text-align: center;
+        margin: 3rem;
+        font-style: bold;
+        height: fit-content;
+    }
+
+    .form-container {
+        top: 0;
+    }
+
+    .warning {
+        font-style: italic;
+        color: rgb(255, 53, 39);
+    }
+
+    .success {
+        font-style: italic;
+        color: rgb(19, 244, 98);
+    }
+
+    .spacer {
+        height: 90px;
+    }
+</style>

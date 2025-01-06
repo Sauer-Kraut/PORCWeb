@@ -1,8 +1,6 @@
 <script lang="ts" setup>
-import type { PlayerModel } from '@/models/PlayerModel';
 import { ref, defineProps, onMounted, defineEmits } from 'vue';
 import type { PlayerPerformance } from '@/models/PlayerPerformancModel';
-import { reactive } from 'vue';
 import { errorMessages } from 'vue/compiler-sfc';
 
 const props = defineProps({

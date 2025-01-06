@@ -59,9 +59,10 @@ function toggleLeaderbordExpanded() {
 
     .pr-2 {
       // padding-left: 2.6rem;
-      font-size: 1.3rem;
+      font-size: 1.35rem;
       text-align: center;
-      line-height: 1.4;
+      line-height: 1.25;
+      font-style: italic;
     }
 
     .p-3-cust {
@@ -121,7 +122,7 @@ function toggleLeaderbordExpanded() {
     color: #ffffff;
     display: inline-block;
     transform: rotate(0deg);
-    line-height: 1.5;
+    line-height: 1.35;
     font-size: larger;
     margin-right: 5px;
   }

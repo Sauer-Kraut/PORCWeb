@@ -2,9 +2,9 @@
   <header>
     <nav class="row justify-content-center text-center h-100 custom">
       <router-link to="/" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Tournament</router-link>
+      <router-link to="/signup" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Sign Up</router-link>
       <router-link to="/rules" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Rules</router-link>
       <router-link to="/qaa" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">QaA</router-link>
-      <router-link to="/sign-up" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Sign up</router-link>
     </nav>
   </header>
 
