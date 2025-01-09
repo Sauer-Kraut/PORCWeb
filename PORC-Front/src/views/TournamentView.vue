@@ -291,8 +291,67 @@ console.log("Trying to get match plan");
     }
 }
 
+function getCookieValue(name: string): string | null {
+    const cookies = document.cookie.split("; ");
+    for (const cookie of cookies) {
+        const [key, value] = cookie.split("=");
+        if (key === name) {
+            return decodeURIComponent(value);
+        }
+    }
+    return null; // Cookie not found
+}
+
+async function getLoggedIn(): Promise<string | null> {
+    console.log("Trying to get Logged in status");
+    const id = getCookieValue("browser_id");
+
+    if (id == null) {
+        return null;
+    }
+
+    const data = getCookieValue("browser_id");
+
+    const requestData = JSON.stringify({
+        title: "Logged in Request",
+        id: data
+    });
+
+    try {
+        const response = await fetch('https://porc.mywire.org/api/discord/logged-in', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: requestData
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log('Success:', data);
+        if (data.error != null) {
+            return null;
+        } else {
+            console.log("Logged in: ", data);
+            return data;
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        errorMessage = "internal server error";
+        console.log("Error message:", errorMessage);
+        displayError.value = true;
+    }
+
+    return null
+}
+
 onMounted(() => {
     getMatchPlan();
+    console.log(getLoggedIn());
 });
 </script>
 

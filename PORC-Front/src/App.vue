@@ -1,3 +1,7 @@
+<script lang="ts" setup>
+  import DiscordUserComponent from './components/DiscordUserComponent.vue';
+</script>
+
 <template>
   <header>
     <nav class="row justify-content-center text-center h-100 custom">
@@ -6,6 +10,9 @@
       <router-link to="/rules" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">Rules</router-link>
       <router-link to="/qaa" class="router-link col-s-3 col-xl-2 col-xll-2 h-100 custom">QaA</router-link>
     </nav>
+    <div class="col-s-3 col-xl-2 col-xll-2 custom discordUser">
+    <DiscordUserComponent></DiscordUserComponent>
+    </div>
   </header>
 
   <div class="row justify-content-center h-100 custom">
@@ -53,6 +60,19 @@ nav {
 }
 
 .custom {
+  overflow-x: hidden;
+}
+
+.discordUser {
+  top: 0%;
+  right: 3%;
+  width: 100px;
+  position: absolute;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90px;
   overflow-x: hidden;
 }
 

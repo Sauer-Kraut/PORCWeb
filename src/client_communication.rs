@@ -13,7 +13,8 @@ use actix_web::{web, Responder, HttpResponse};
 pub struct SignUpInfo {
     pub username: String,
     pub bp: u32,
-    pub region: String
+    pub region: String,
+    pub discord_id: String
 }
 
 #[derive(Debug, Deserialize, Serialize)]

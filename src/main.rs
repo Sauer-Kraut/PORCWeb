@@ -2,6 +2,8 @@ pub mod data_lib;
 pub mod client_communication;
 pub mod storage_lib;
 pub mod bot_communication;
+pub mod discord_communication;
+use discord_communication::{discord_callback, put_logged_in, DiscordUser};
 use async_std::sync::Mutex;
 use actix_web::FromRequest;
 use bot_communication::*;
@@ -16,6 +18,7 @@ use actix_web::http;
 use actix_files::Files;
 use colored::Colorize;
 use tokio;
+use std::collections::HashMap;
 use std::sync::{Arc};
 use tokio::sync::RwLock;
 
@@ -53,13 +56,23 @@ async fn main() -> std::io::Result<()> {
 
     // let _ = StorageMod::save_matchplan(matchplan, "src/Season3MatchPlan.json")?;
 
-    let read_plan = StorageMod::read_matchplan("src/Season3MatchPlan.json")?;
+    let matchplan_path = "src/SeasonMatchPlan.json".to_string();
+    let signups_path = "src/SeasonSignUps.json".to_string();
+    let logins_path = "src/DiscordLogIns.json".to_string();
+
+    println!("read 1");
+    let read_plan = StorageMod::read_matchplan(&matchplan_path)?;
+
+    println!("read 2");
+    let logins = Arc::new(Mutex::new(StorageMod::read_logins(&logins_path)?));
 
     // println!("Read Matchplan: {}", read_plan);
 
     let matchplan = Arc::new(Mutex::new(Some(read_plan)));
     // StorageMod::save_signups(vec!(), "src/Season4SignUps.json")?;
-    let signups = Arc::new(Mutex::new(vec!()));
+    println!("read 3");
+    let signups = Arc::new(Mutex::new(StorageMod::read_signups(&signups_path)?));
+    println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
 
     println!("\n{}\n\n", "Server has launched");
 
@@ -74,15 +87,18 @@ async fn main() -> std::io::Result<()> {
                     http::header::AUTHORIZATION,
                     http::header::ACCEPT,
                     http::header::ORIGIN,
-                    http::header::CONTENT_TYPE,
+                    http::header::CONTENT_TYPE
                 ])
+                .allow_any_header()
                 .supports_credentials()
                 .max_age(3600))
             .app_data(web::Data::new(AppState {
                 matchplan: matchplan.clone(),
                 signups: signups.clone(),
-                matchplan_path: "src/Season3MatchPlan.json".to_string(),
-                signups_path: "src/Season4SignUps.json".to_string()
+                logins: logins.clone(),
+                matchplan_path: matchplan_path.clone(),
+                signups_path: signups_path.clone(),
+                logins_path: logins_path.clone()
             }))
             .service(Files::new("/static", "./static").show_files_listing())
             .service(web::resource("/").to(index))
@@ -98,6 +114,10 @@ async fn main() -> std::io::Result<()> {
             .route(web::get().to(get_player_ranking_request)))
             .service(web::resource("/api/plan-blueprint")
             .route(web::get().to(generate_plan_blueprint_request)))
+            .service(web::resource("/discord/callback").to(discord_callback))
+            .service(web::resource("/api/discord/logged-in")
+            .route(web::post().to(put_logged_in)))
+
     })
     .bind("0.0.0.0:8081")? // Caddy forwarts requests to our URL to the local port 8081
     .run()
@@ -111,6 +131,8 @@ async fn main() -> std::io::Result<()> {
 pub struct AppState {
     matchplan: Arc<Mutex<Option<MatchPlan>>>,
     signups: Arc<Mutex<Vec<SignUpInfo>>>,
+    logins: Arc<Mutex<HashMap<String, DiscordUser>>>,
     matchplan_path: String,
-    signups_path: String
+    signups_path: String,
+    logins_path: String
 }
