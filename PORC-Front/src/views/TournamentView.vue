@@ -3,6 +3,7 @@
     import DivisionComponent from '@/components/DivisionComponent.vue';
     import { onMounted, ref } from 'vue'
     import errorMessagePopup from '@/components/ErrorPopupModel.vue';
+    import TimerComponent from '@/components/TimerComponent.vue';
 
     // let divisions = ref([
     //     {
@@ -357,6 +358,8 @@ onMounted(() => {
 
 <template>
     <div class="container-fill">
+        <div class="row spacer"></div>
+        <TimerComponent :targetTimestamp="1737226800" :season="4"></TimerComponent>
         <div class="row spacer"></div>
         <div class="pt-3">
             <DivisionComponent
