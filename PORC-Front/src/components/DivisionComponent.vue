@@ -89,9 +89,10 @@ function toggleLeaderbordExpanded() {
       padding-left: 1rem;
       padding-right: 1rem;
       padding-bottom: 0rem;
-      overflow: hidden;
+      overflow-x: hidden;
       transition: max-height 0.59s ease-in;
-      max-height: 400px;
+      max-height: 450px;
+      scrollbar-color: inherit;
     }
 
     .nothing {

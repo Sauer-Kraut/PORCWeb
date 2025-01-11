@@ -35,6 +35,7 @@ main {
   min-height: 100%;
   background-color: #323232;
   overflow-x: hidden;
+  scrollbar-color: #242424;
 }
 
 nav {
@@ -61,6 +62,7 @@ nav {
 
 .custom {
   overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .discordUser {
