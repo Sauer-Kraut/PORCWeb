@@ -22,14 +22,14 @@ const routes: RouteRecordRaw[] = [
     component: QaAView,
   },
   {
-    path: '/sign-up',
-    name: 'Sign up',
-    component: SignUpView,
-  },
-  {
     path: '/:pathMatch(.*)*',
     name: 'Page not found',
     component: NotFoundView,
+  },
+  {
+    path: '/signup',
+    name: 'Sign Up',
+    component: SignUpView,
   },
 ]
 
