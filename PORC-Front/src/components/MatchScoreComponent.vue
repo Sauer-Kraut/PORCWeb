@@ -1,104 +1,126 @@
 <script lang="ts" setup>
-import type { MatchModel } from '@/models/MatchModel';
-import { ref } from "vue";
-import EditMatchComponent from './EditMatchComponent.vue';
-import ErrorPopupModel from './ErrorPopupModel.vue';
+    import type { MatchModel } from '@/models/MatchModel';
+    import { ref, onMounted, watch } from "vue";
+    import EditMatchComponent from './EditMatchComponent.vue';
+    import ErrorPopupModel from './ErrorPopupModel.vue';
 
-const props = defineProps<{
-    match: MatchModel
-}>();
+    const props = defineProps<{
+        match: MatchModel,
+        allowedEdit: boolean
+    }>();
 
-const isScored = ref(false);
+    const isScored = ref(false);
 
-const matchData = props.match;
+    const matchData = props.match;
 
-if (matchData.p1score != null && matchData.p2score != null) {
-    isScored.value = true;
-}
-
-const showModal = ref(false);
-const displayError = ref(false);
-let errorMessage: string    = "This is an error message";
-
-function hideError() {
-    displayError.value = false;
-}
-
-function ShowModal() {
-    showModal.value = true;
-    console.log("I am trieing to show the prompt")
-}
-
-function handleSave(updateInfo: MatchModel) {
-    console.log("Save event triggered", updateInfo);
-    showModal.value = false;
-    updateMatchInfo(updateInfo);
-}
-
-async function updateMatchInfo(updateInfo: MatchModel) {
-    console.log("Trying to update match info");
-    console.log(updateInfo);
-
-    if (typeof updateInfo === 'object' && updateInfo !== null) {
-        console.log("updateInfo is an object");
-        console.log("updateInfo.p1:", updateInfo.p1);
-        console.log("updateInfo.p2:", updateInfo.p2);
-        console.log("updateInfo.p1score:", updateInfo.p1score);
-        console.log("updateInfo.p2score:", updateInfo.p2score);
-    } else {
-        console.error("updateInfo is not an object or is null");
+    if (matchData.p1score != null && matchData.p2score != null) {
+        isScored.value = true;
     }
-    const Match: MatchModel = {
-        p1: updateInfo.p1,
-        p2: updateInfo.p2,
-        p1score: updateInfo.p1score,
-        p2score: updateInfo.p2score
-    };
-    const requestData = JSON.stringify({
-        title: 'updateMatch',
-        match_info: Match
-    });
-    
-    console.log(Match);
-    console.log(requestData);
 
-    try {
-        const response = await fetch('https://porc.mywire.org/api/match-plan', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: requestData
-        });
+    const showModal = ref(false);
+    const displayError = ref(false);
+    let errorMessage: string    = "This is an error message";
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+    function hideError() {
+        displayError.value = false;
+    }
+
+    function ShowModal() {
+        showModal.value = true;
+        console.log("I am trieing to show the prompt")
+    }
+
+    function handleSave(updateInfo: MatchModel) {
+        console.log("Save event triggered", updateInfo);
+        showModal.value = false;
+        updateMatchInfo(updateInfo);
+    }
+
+    async function updateMatchInfo(updateInfo: MatchModel) {
+        console.log("Trying to update match info");
+        console.log(updateInfo);
+
+        if (typeof updateInfo === 'object' && updateInfo !== null) {
+            console.log("updateInfo is an object");
+            console.log("updateInfo.p1:", updateInfo.p1);
+            console.log("updateInfo.p2:", updateInfo.p2);
+            console.log("updateInfo.p1score:", updateInfo.p1score);
+            console.log("updateInfo.p2score:", updateInfo.p2score);
+        } else {
+            console.error("updateInfo is not an object or is null");
         }
+        const Match: MatchModel = {
+            p1: updateInfo.p1,
+            p2: updateInfo.p2,
+            p1score: updateInfo.p1score,
+            p2score: updateInfo.p2score
+        };
+        const requestData = JSON.stringify({
+            title: 'updateMatch',
+            match_info: Match
+        });
+        
+        console.log(Match);
+        console.log(requestData);
 
-        const data = await response.json();
-        console.log('Success:', data);
-        if (data.error != null) {
-            errorMessage = data.error;
+        try {
+            const response = await fetch('https://porc.mywire.org/api/match-plan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: requestData
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
+            if (data.error != null) {
+                errorMessage = data.error;
+                console.log("Error message:", errorMessage);
+                displayError.value = true;
+                matchData.p1score = null;
+                matchData.p2score = null;
+            } 
+            else {
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage = "Internal server error";
             console.log("Error message:", errorMessage);
             displayError.value = true;
             matchData.p1score = null;
             matchData.p2score = null;
+        }
+    }
+
+    onMounted(() => {
+        checkEditPermission();
+        checkScores();
+    });
+
+    watch(() => props.allowedEdit, checkEditPermission);
+    watch(() => [props.match.p1score, props.match.p2score], checkScores);
+
+    function checkEditPermission() {
+        if (props.allowedEdit) {
+            console.log("Im allowed to be edited: ", props.allowedEdit);
             isScored.value = false;
-        } 
-        else {
+        } else {
+           console.log("Im not allowed to be edited: ", props.allowedEdit); 
+           isScored.value = true;
+        }
+    }
+
+    function checkScores() {
+        if (matchData.p1score != null && matchData.p2score != null) {
             isScored.value = true;
         }
-
-    } catch (error) {
-        console.error('Error:', error);
-        errorMessage = "Internal server error";
-        console.log("Error message:", errorMessage);
-        displayError.value = true;
-        matchData.p1score = null;
-        matchData.p2score = null;
-        isScored.value = false;
     }
-}
 </script>
 
 <template>

@@ -15,7 +15,7 @@
     </div>
   </header>
 
-  <div class="row justify-content-center h-100 custom">
+  <div class="row justify-content-center h-100 custom backgorund">
     <main class="col-xxl-4 col-xl-6-cust col-l-8-cust col-lg-8 col-md-9 col-11 p-0 custom">
       <router-view class="custom"></router-view>
     </main>
@@ -34,8 +34,13 @@ header {
 main {
   min-height: 100%;
   background-color: #323232;
+  background: linear-gradient(135deg, #3a3938, #4a4f5b);
   overflow-x: hidden;
   scrollbar-color: #242424;
+}
+
+.background {
+  background: linear-gradient(135deg, #ff8306, #4a4f5b);;
 }
 
 nav {

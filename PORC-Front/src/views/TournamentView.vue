@@ -249,7 +249,7 @@
     //     }
     // ] as DivisionModel[]);
 
-const divisions = ref([] as DivisionModel[]);
+const divisions = ref<DivisionModel[]>([]);
 
 const displayError = ref(false);
 let errorMessage: string    = "This is an error message";
@@ -257,6 +257,8 @@ let errorMessage: string    = "This is an error message";
 function hideError() {
     displayError.value = false;
 }
+
+let user = 100000;
 
 async function getMatchPlan() {
 console.log("Trying to get match plan");
@@ -280,8 +282,8 @@ console.log("Trying to get match plan");
             console.log("Error message:", errorMessage);
             displayError.value = true;
         } else {
-            divisions.value = data.data.divisions;
-            console.log("Divisions:", data);
+            divisions.value = data.data.divisions as DivisionModel[];
+            console.log("Divisions:", divisions.value);
         }
 
     } catch (error) {
@@ -336,7 +338,9 @@ async function getLoggedIn(): Promise<string | null> {
         if (data.error != null) {
             return null;
         } else {
-            console.log("Logged in: ", data);
+            console.log("Logged in: ", data.data);
+            user = data.data.id as number;
+            console.log("user: ", user)
             return data;
         }
 
@@ -351,8 +355,8 @@ async function getLoggedIn(): Promise<string | null> {
 }
 
 onMounted(() => {
+    getLoggedIn()
     getMatchPlan();
-    console.log(getLoggedIn());
 });
 </script>
 
@@ -366,6 +370,7 @@ onMounted(() => {
             v-for="division in divisions"
             :division="division"
             :key="division.name"
+            :user_id="user"
             class="pb-5"
             />
         </div>
@@ -377,7 +382,7 @@ onMounted(() => {
 <style lang="scss" scoped>
     .container-fill {
         min-height: 100vh;
-        overflow-x: hidden;
+        overflow: hidden;
     }
 
     .spacer {
