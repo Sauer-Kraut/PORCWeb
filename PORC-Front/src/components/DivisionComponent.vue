@@ -66,17 +66,17 @@
                 </div>
                 <div :class="{'body': isDivisionExpanded, 'nothing': !isDivisionExpanded}" v-if="load">
                     <div class="conatiner display-flex justify-content-center row">
-                        <div :class="{'col-8 col-md-0-custom': !isLeaderbordExpanded, 'col-12-cust': isLeaderbordExpanded}" class="row display-flex justify-content-center transition-width" @click="toggleLeaderbordExpanded()">
-                        <div v-for="[key, match] in Object.entries(division.matches)" :key="key"
-                            class="col-12 col-sm-6 col-xs-12 col-lg-3-cust p-3-cust">
-                            <MatchScoreComponent :match="match" v-if="AllowEdit" :allowedEdit="true"/>
-                            <MatchScoreComponent :match="match" v-else :allowedEdit="false"/>
+                        <div :class="{'col-8 col-md-0-custom felx-1': !isLeaderbordExpanded, 'col-12-cust': isLeaderbordExpanded}" class="row display-flex justify-content-center transition-width" @click="toggleLeaderbordExpanded()">
+                            <div v-for="[key, match] in Object.entries(division.matches)" :key="key"
+                                class="col-12 col-sm-6 col-xs-12 col-lg-3-cust p-3-cust">
+                                <MatchScoreComponent :match="match" v-if="AllowEdit" :allowedEdit="true"/>
+                                <MatchScoreComponent :match="match" v-else :allowedEdit="false"/>
+                            </div>
+                        </div>
+                        <div :class="{'col-xxl-4 col-xl-4 col-lg-6 display-flex justify-content-center p-3 col-md-6': !isLeaderbordExpanded, 'col-super-tiny-mini p-0': isLeaderbordExpanded}" class="transition-width d-flex">
+                            <LeaderbordComponent v-if="!isLeaderbordExpanded" @close="toggleLeaderbordExpanded()" :divisionName="division.name"/>
+                        </div>
                     </div>
-                    </div>
-                    <div :class="{'col-xxl-4 col-xl-4 col-lg-6 display-flex justify-content-center p-3 col-md-6': !isLeaderbordExpanded, 'col-super-tiny-mini p-0': isLeaderbordExpanded}" class="transition-width d-flex">
-                    <LeaderbordComponent v-if="!isLeaderbordExpanded" @close="toggleLeaderbordExpanded()" :divisionName="division.name"/>
-                    </div>
-                </div>
                 <div class="row display-flex justify-content-center p-4"></div>
                 <div class="row display-flex justify-content-center p-1"></div>
             </div>
@@ -193,14 +193,27 @@
         width: 99%;
     }
 
-    @media (max-width: 1600px) {
+    @media (max-width: 1599px) {
         .col-md-0-custom {
-        width: 0%;
-        clip:auto;
-        padding: 0%;
-        overflow: hidden;
+            width: 0%;
+            clip: auto;
+            padding: 0%;
+            overflow: clip;
+            align-items: flex;
+        }
+        .flex-1 {
+            display: flex;
+            flex-direction: row;
         }
     }
+
+    @media (min-width: 1600px) {
+        .row {
+            align-items: flex-start;
+        }
+    }
+
+    
 
     .container {
         display: flex;

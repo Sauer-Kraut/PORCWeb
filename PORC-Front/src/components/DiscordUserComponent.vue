@@ -95,12 +95,23 @@ onMounted(() => {
     }
 
     .profile {
-        height: 4vh;
+        height: 3.3rem;
         object-fit: cover; /* Makes the image cover the entire div */
         border-radius: 50px;
         border-style: solid;
         border-width: 3px;
         border-color: rgb(73, 73, 73);
+    }
+
+    @media (max-width: 768px) {
+        .profile {
+            height: 2.3rem;
+            object-fit: cover; /* Makes the image cover the entire div */
+            border-radius: 50px;
+            border-style: solid;
+            border-width: 3px;
+            border-color: rgb(73, 73, 73);
+        }
     }
 /* Add your styles here */
 </style>

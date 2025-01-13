@@ -125,19 +125,19 @@
 
 <template>
     <div class="rounded-custom match d-flex row">
-        <div class="d-flex flex-column" :class="{'col-10 p-cust': !isScored, 'col-12': isScored}">
+        <div class="d-flex flex-column justify-content-center center" :class="{'col-10 p-cust': !isScored, 'col-12': isScored}">
             <div class="d-flex justify-content-between">
-                <span>{{match.p1.tag}}</span>
-                <span>{{match.p1score}}</span>
+                <span class="player-tag">{{match.p1.tag}}</span>
+                <span class="player-score">{{match.p1score}}</span>
             </div>
             <div class="divider"></div>
             <div class="d-flex justify-content-between">
-                <span>{{match.p2.tag}}</span>
-                <span>{{match.p2score}}</span>
+                <span class="player-tag">{{match.p2.tag}}</span>
+                <span class="player-score">{{match.p2score}}</span>
             </div>
         </div>
-        <div :class="{'col-2 p-0 justify-content-centered': !isScored, 'nothing': isScored}">
-            <button class="edit-button" @click="ShowModal()" @click.stop>B</button>
+        <div v-if="!isScored" :class="{'col-2 p-0 justify-content-centered': !isScored, 'nothing': isScored}">
+            <button class="edit-button" @click="ShowModal()" @click.stop>E</button>
         </div>
     </div>
     <EditMatchComponent v-if="showModal" @save="handleSave" @close="showModal = false" :match="match" />
@@ -147,7 +147,8 @@
 <style lang="scss" scoped>
 .match {
     background-color: #252727;
-    max-height: 42px;
+    // max-height: 45px;
+    height: 2.6rem;
     text-align: center;
 }
 
@@ -166,6 +167,14 @@
 .p-cust {
     padding-left: 0.5rem;
     padding-right: 0rem;
+}
+
+.player-tag {
+    font-weight: 400;
+}
+
+.player-score {
+    font-weight: 400;
 }
 
 .divider {

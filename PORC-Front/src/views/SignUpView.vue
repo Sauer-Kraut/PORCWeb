@@ -210,7 +210,7 @@
                     </div>
                     <div class="p-1"></div>
                     <div class="row justify-content-between align-items-center">
-                        <button type="button" class="btn btn-primary col-2 ms-2" @click="confirmInput">Submit</button>
+                        <button type="button" class="btn btn-primary col-auto ms-2" @click="confirmInput">Submit</button>
                         <div class="col-auto">
                             <DiscordUserComponent v-if="!isLoggedIn"></DiscordUserComponent>
                         </div>
