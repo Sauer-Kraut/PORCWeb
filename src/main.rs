@@ -56,9 +56,9 @@ async fn main() -> std::io::Result<()> {
 
     // let _ = StorageMod::save_matchplan(matchplan, "src/Season3MatchPlan.json")?;
 
-    let matchplan_path = "src/SeasonMatchPlan.json".to_string();
-    let signups_path = "src/SeasonSignUps.json".to_string();
-    let logins_path = "src/DiscordLogIns.json".to_string();
+    let matchplan_path = "userdata/SeasonMatchPlan.json".to_string();
+    let signups_path = "userdata/SeasonSignUps.json".to_string();
+    let logins_path = "userdata/DiscordLogIns.json".to_string();
 
     println!("read 1");
     let read_plan = StorageMod::read_matchplan(&matchplan_path)?;
@@ -114,6 +114,8 @@ async fn main() -> std::io::Result<()> {
             .route(web::get().to(get_player_ranking_request)))
             .service(web::resource("/api/plan-blueprint")
             .route(web::get().to(generate_plan_blueprint_request)))
+            .service(web::resource("/api/season-control")
+            .route(web::post().to(start_new_season)))
             .service(web::resource("/discord/callback").to(discord_callback))
             .service(web::resource("/api/discord/logged-in")
             .route(web::post().to(put_logged_in)))

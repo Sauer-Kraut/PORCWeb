@@ -38,15 +38,16 @@ function close() {
   <div class="modal-overlay" @click.stop>
     <div class="row">
       <div class="modal-content col-xl-4 col-md-9" @click.stop>
-        <h3>Edit Match Scores</h3>
-        <div class="justify-content-center d-flex">
+        <h3 class="title">Edit Match Scores</h3>
+        <div class="justify-content-center d-flex p-1">
           <label for="p1score" class="col-9">Player 1 Score:</label>
-          <input id="p1score" v-model="p1score" type="number" class="col-2" />
+          <input id="p1score" v-model="p1score" type="number" class="col-2 input" />
         </div>
-        <div class="justify-content-center d-flex">
+        <div class="justify-content-center d-flex p-1">
           <label for="p2score" class="col-9">Player 2 Score:</label>
-          <input id="p2score" v-model="p2score" type="number" class="col-2" />
+          <input id="p2score" v-model="p2score" type="number" class="col-2 input" />
         </div>
+        <div class="spacer"></div>
         <button @click="save" class="col-11 button">Save</button>
         <button @click="close" class="col-11 button">Cancel</button>
       </div>
@@ -55,6 +56,13 @@ function close() {
 </template>
 
 <style lang="scss" scoped>
+.title {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -70,11 +78,11 @@ function close() {
 }
 
 .modal-content {
-  background: white;
+  background: linear-gradient(135deg, #8d7b78, #3b435b);
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  color: #333;
+  color: #ffffff;
 }
 
 .modal-content h3 {
@@ -90,9 +98,10 @@ function close() {
 }
 
 .button {
-  background-color: #3f3f3f;
+  background-color: #e1a398;
   border: none;
-  color: white;
+  color: rgb(25, 26, 28);
+  font-weight: 500;
   text-align: center;
   text-decoration: none;
   display: f;
@@ -102,5 +111,15 @@ function close() {
   margin-right: 10px;
   cursor: pointer;
   border-radius: 8px;
+}
+
+.input {
+  border-radius: 10px;
+  background-color: #f9fbff;
+  border-style: hidden;
+}
+
+.spacer {
+  margin-top: 0rem;
 }
 </style>

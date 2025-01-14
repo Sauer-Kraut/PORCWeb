@@ -57,7 +57,7 @@ main {
 }
 
 .background {
-  background: linear-gradient(135deg, #ff8306, #4a4f5b);;
+  background: linear-gradient(135deg, #ff8306, #4a4f5b);
 }
 
 nav {

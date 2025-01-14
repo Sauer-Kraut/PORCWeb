@@ -259,9 +259,11 @@ function hideError() {
 }
 
 let user = 100000;
+let globalTimer = 0;
+let TimerText = "";
 
 async function getMatchPlan() {
-console.log("Trying to get match plan");
+    console.log("Trying to get match plan");
 
     try {
         const response = await fetch('https://porc.mywire.org/api/match-plan', {
@@ -281,9 +283,29 @@ console.log("Trying to get match plan");
             errorMessage = data.error;
             console.log("Error message:", errorMessage);
             displayError.value = true;
-        } else {
+        } 
+        else {
             divisions.value = data.data.divisions as DivisionModel[];
-            console.log("Divisions:", divisions.value);
+            // console.log("Divisions:", divisions.value);
+            const now = Math.floor(Date.now() / 1000);
+            const seasonEnd = data.data.end_timestamp;
+            const seasonPause = data.data.pause_end_timestamp;
+            const season = data.data.season;
+
+            console.log("Current Season: ", season);
+
+            if (now > seasonEnd) 
+            {
+                console.log("Tournament Phase: Pause until ", seasonPause);
+                globalTimer = seasonPause;
+                TimerText = `Time remaining until season ${season + 1} of PORC`
+
+            }
+            else {
+                console.log("Tournament Phase: Competing until ", seasonEnd);
+                globalTimer = seasonEnd;
+                TimerText = `Time remaining for season ${season} of PORC`
+            }
         }
 
     } catch (error) {
@@ -334,13 +356,13 @@ async function getLoggedIn(): Promise<string | null> {
         }
 
         const data = await response.json();
-        console.log('Success:', data);
+        // console.log('Success:', data);
         if (data.error != null) {
             return null;
         } else {
-            console.log("Logged in: ", data.data);
+            // console.log("Logged in: ", data.data);
             user = data.data.id as number;
-            console.log("user: ", user)
+            // console.log("user: ", user)
             return data;
         }
 
@@ -363,7 +385,7 @@ onMounted(() => {
 <template>
     <div class="container-fill">
         <div class="row spacer"></div>
-        <TimerComponent :targetTimestamp="1737226800" :season="4"></TimerComponent>
+        <TimerComponent :targetTimestamp="globalTimer" :season="4" :text="TimerText"></TimerComponent>
         <div class="row spacer"></div>
         <div class="pt-3">
             <DivisionComponent

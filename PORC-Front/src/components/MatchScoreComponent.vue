@@ -1,13 +1,19 @@
 <script lang="ts" setup>
     import type { MatchModel } from '@/models/MatchModel';
-    import { ref, onMounted, watch } from "vue";
+    import { ref, onMounted } from "vue";
     import EditMatchComponent from './EditMatchComponent.vue';
     import ErrorPopupModel from './ErrorPopupModel.vue';
 
     const props = defineProps<{
         match: MatchModel,
-        allowedEdit: boolean
+        user_id: number
     }>();
+
+    let userID = props.user_id;
+    let Match = props.match;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let allowedEdit = false;
 
     const isScored = ref(false);
 
@@ -98,23 +104,39 @@
         }
     }
 
+    function containsUser(): boolean {
+
+        userID = props.user_id;
+        Match = props.match;
+        // console.log("user id: ", userID);
+        // console.log("match: ", Match);
+        
+        if (Match.p1.id != userID &&
+            Match.p2.id != userID)  {
+
+            allowedEdit = !true;
+        }
+        else {
+            allowedEdit = true;
+            return true;
+        }
+
+        return false;
+    }
+
     onMounted(() => {
-        checkEditPermission();
+        containsUser();
         checkScores();
+
+        setTimeout(() => {
+            containsUser();;
+            setInterval(checkScores, 500);
+        }, 70);
+
     });
 
-    watch(() => props.allowedEdit, checkEditPermission);
-    watch(() => [props.match.p1score, props.match.p2score], checkScores);
-
-    function checkEditPermission() {
-        if (props.allowedEdit) {
-            console.log("Im allowed to be edited: ", props.allowedEdit);
-            isScored.value = false;
-        } else {
-           console.log("Im not allowed to be edited: ", props.allowedEdit); 
-           isScored.value = true;
-        }
-    }
+    // watch(() => allowedEdit, checkEditPermission);
+    // watch(() => [props.match.p1score, props.match.p2score], checkScores);
 
     function checkScores() {
         if (matchData.p1score != null && matchData.p2score != null) {

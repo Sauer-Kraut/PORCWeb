@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h2 class="title">Time remaining until season {{ props.season }} of PORC</h2>
+        <h2 class="title">{{TimerText}}</h2>
         <div class="timer">
             <div class="time-unit">
                 <span class="number">{{ days }}</span>
@@ -27,18 +27,22 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps<{
     targetTimestamp: number;
+    text: string;
     season: number;
 }>();
 
-const days = ref(0);
-const hours = ref(0);
-const minutes = ref(0);
-const seconds = ref(0);
-let timer: number | null = null;
+const days = ref(1);
+const hours = ref(2);
+const minutes = ref(24);
+const seconds = ref(57);
+let timer: number | null = 1730000000;
+let TimerText = "Time remaining until season 4 of PORC"; // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
+let target = 1730000000; // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
 
 const updateTime = () => {
     const now = Math.floor(Date.now() / 1000);
-    const diff = props.targetTimestamp - now;
+    target = props.targetTimestamp;
+    const diff = target - now;
 
     if (diff <= 0) {
         if (timer) clearInterval(timer);
@@ -50,11 +54,18 @@ const updateTime = () => {
     hours.value = Math.floor((diff % (60 * 60 * 24)) / (60 * 60));
     minutes.value = Math.floor((diff % (60 * 60)) / 60);
     seconds.value = diff % 60;
+
+    TimerText = props.text;
 };
 
 onMounted(() => {
-    updateTime();
-    timer = setInterval(updateTime, 1000);
+    setTimeout(() => {
+        updateTime();
+        setTimeout(() => {
+            updateTime();
+            timer = setInterval(updateTime, 500);
+        }, 70); // Fail safe in case 70mx is to short to load correctly so you dont need to wait for 500ms
+    }, 70);
 });
 
 onBeforeUnmount(() => {
