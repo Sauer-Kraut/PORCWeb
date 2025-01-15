@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h2 class="title">{{TimerText}}</h2>
+        <h2 class="title">{{ TimerText }}</h2>
         <div class="timer">
             <div class="time-unit">
                 <span class="number">{{ days }}</span>
@@ -14,7 +14,7 @@
                 <span class="number">{{ minutes }}</span>
                 <span class="label">Minutes</span>
             </div>
-            <div class="time-unit">
+            <div class="time-unit d-none d-xs-block">
                 <span class="number">{{ seconds }}</span>
                 <span class="label">Seconds</span>
             </div>
@@ -36,7 +36,7 @@ const hours = ref(2);
 const minutes = ref(24);
 const seconds = ref(57);
 let timer: number | null = 1730000000;
-let TimerText = "Time remaining until season 4 of PORC"; // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
+let TimerText = 'Time remaining until season 4 of PORC'; // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
 let target = 1730000000; // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
 
 const updateTime = () => {
@@ -82,6 +82,7 @@ onBeforeUnmount(() => {
 
 .timer {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     font-size: 3rem;
@@ -109,12 +110,30 @@ onBeforeUnmount(() => {
 
     .number {
         font-size: 4rem;
-        font-weight: bold;
     }
 
     .label {
-        display: block;
         font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .title {
+        font-size: 1rem;
+    }
+
+    .number {
+        font-size: 3rem;
+    }
+
+    .label {
+        font-size: 1.2rem;
+    }
+}
+
+@media (min-width: 400px) {
+    .d-xs-block {
+        display: block !important;
     }
 }
 </style>
