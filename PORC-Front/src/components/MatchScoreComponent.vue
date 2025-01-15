@@ -1,169 +1,165 @@
 <script lang="ts" setup>
-    import type { MatchModel } from '@/models/MatchModel';
-    import { ref, onMounted } from "vue";
-    import EditMatchComponent from './EditMatchComponent.vue';
-    import ErrorPopupModel from './ErrorPopupModel.vue';
+import type { MatchModel } from '@/models/MatchModel';
+import { ref, onMounted } from 'vue';
+import EditMatchComponent from './EditMatchComponent.vue';
+import ErrorPopupModel from './ErrorPopupModel.vue';
 
-    const props = defineProps<{
-        match: MatchModel,
-        user_id: number
-    }>();
+const props = defineProps<{
+    match: MatchModel;
+    user_id: string;
+}>();
 
-    let userID = props.user_id;
-    let Match = props.match;
+let userID = props.user_id;
+let Match = props.match;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let allowedEdit = false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const allowedEdit = ref(false);
 
-    const isScored = ref(false);
+const isScored = ref(false);
 
-    const matchData = props.match;
+const matchData = props.match;
 
-    if (matchData.p1score != null && matchData.p2score != null) {
-        isScored.value = true;
+if (matchData.p1score != null && matchData.p2score != null) {
+    isScored.value = true;
+}
+
+const showModal = ref(false);
+const displayError = ref(false);
+let errorMessage: string = 'This is an error message';
+
+function hideError() {
+    displayError.value = false;
+}
+
+function ShowModal() {
+    showModal.value = true;
+    console.log('I am trieing to show the prompt');
+}
+
+function handleSave(updateInfo: MatchModel) {
+    console.log('Save event triggered', updateInfo);
+    showModal.value = false;
+    updateMatchInfo(updateInfo);
+}
+
+async function updateMatchInfo(updateInfo: MatchModel) {
+    console.log('Trying to update match info');
+    console.log(updateInfo);
+
+    if (typeof updateInfo === 'object' && updateInfo !== null) {
+        console.log('updateInfo is an object');
+        console.log('updateInfo.p1:', updateInfo.p1);
+        console.log('updateInfo.p2:', updateInfo.p2);
+        console.log('updateInfo.p1score:', updateInfo.p1score);
+        console.log('updateInfo.p2score:', updateInfo.p2score);
+    } else {
+        console.error('updateInfo is not an object or is null');
     }
+    const Match: MatchModel = {
+        p1: updateInfo.p1,
+        p2: updateInfo.p2,
+        p1score: updateInfo.p1score,
+        p2score: updateInfo.p2score,
+    };
+    const requestData = JSON.stringify({
+        title: 'updateMatch',
+        match_info: Match,
+    });
 
-    const showModal = ref(false);
-    const displayError = ref(false);
-    let errorMessage: string    = "This is an error message";
+    console.log(Match);
+    console.log(requestData);
 
-    function hideError() {
-        displayError.value = false;
-    }
-
-    function ShowModal() {
-        showModal.value = true;
-        console.log("I am trieing to show the prompt")
-    }
-
-    function handleSave(updateInfo: MatchModel) {
-        console.log("Save event triggered", updateInfo);
-        showModal.value = false;
-        updateMatchInfo(updateInfo);
-    }
-
-    async function updateMatchInfo(updateInfo: MatchModel) {
-        console.log("Trying to update match info");
-        console.log(updateInfo);
-
-        if (typeof updateInfo === 'object' && updateInfo !== null) {
-            console.log("updateInfo is an object");
-            console.log("updateInfo.p1:", updateInfo.p1);
-            console.log("updateInfo.p2:", updateInfo.p2);
-            console.log("updateInfo.p1score:", updateInfo.p1score);
-            console.log("updateInfo.p2score:", updateInfo.p2score);
-        } else {
-            console.error("updateInfo is not an object or is null");
-        }
-        const Match: MatchModel = {
-            p1: updateInfo.p1,
-            p2: updateInfo.p2,
-            p1score: updateInfo.p1score,
-            p2score: updateInfo.p2score
-        };
-        const requestData = JSON.stringify({
-            title: 'updateMatch',
-            match_info: Match
+    try {
+        const response = await fetch('https://porc.mywire.org/api/match-plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: requestData,
         });
-        
-        console.log(Match);
-        console.log(requestData);
 
-        try {
-            const response = await fetch('https://porc.mywire.org/api/match-plan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: requestData
-            });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            const data = await response.json();
-            console.log('Success:', data);
-            if (data.error != null) {
-                errorMessage = data.error;
-                console.log("Error message:", errorMessage);
-                displayError.value = true;
-                matchData.p1score = null;
-                matchData.p2score = null;
-            } 
-            else {
-            }
-
-        } catch (error) {
-            console.error('Error:', error);
-            errorMessage = "Internal server error";
-            console.log("Error message:", errorMessage);
+        const data = await response.json();
+        console.log('Success:', data);
+        if (data.error != null) {
+            errorMessage = data.error;
+            console.log('Error message:', errorMessage);
             displayError.value = true;
             matchData.p1score = null;
             matchData.p2score = null;
+        } else {
         }
+    } catch (error) {
+        console.error('Error:', error);
+        errorMessage = 'Internal server error';
+        console.log('Error message:', errorMessage);
+        displayError.value = true;
+        matchData.p1score = null;
+        matchData.p2score = null;
+    }
+}
+
+function containsUser(): boolean {
+    userID = props.user_id;
+    Match = props.match;
+    // console.log('user id: ', userID);
+    // console.log('match : ', Match);
+
+    if (Match.p1.id !== userID && Match.p2.id !== userID) {
+        allowedEdit.value = false;
+    } else {
+        allowedEdit.value = true;
+        return true;
     }
 
-    function containsUser(): boolean {
+    return false;
+}
 
-        userID = props.user_id;
-        Match = props.match;
-        // console.log("user id: ", userID);
-        // console.log("match: ", Match);
-        
-        if (Match.p1.id != userID &&
-            Match.p2.id != userID)  {
+onMounted(() => {
+    containsUser();
+    checkScores();
 
-            allowedEdit = !true;
-        }
-        else {
-            allowedEdit = true;
-            return true;
-        }
+    setTimeout(() => {
+        setInterval(containsUser, 500);
+        setInterval(checkScores, 500);
+    }, 70);
+});
 
-        return false;
+// watch(() => allowedEdit, checkEditPermission);
+// watch(() => [props.match.p1score, props.match.p2score], checkScores);
+
+function checkScores() {
+    if (matchData.p1score != null && matchData.p2score != null) {
+        isScored.value = true;
     }
-
-    onMounted(() => {
-        containsUser();
-        checkScores();
-
-        setTimeout(() => {
-            containsUser();;
-            setInterval(checkScores, 500);
-        }, 70);
-
-    });
-
-    // watch(() => allowedEdit, checkEditPermission);
-    // watch(() => [props.match.p1score, props.match.p2score], checkScores);
-
-    function checkScores() {
-        if (matchData.p1score != null && matchData.p2score != null) {
-            isScored.value = true;
-        }
-    }
+}
 </script>
 
 <template>
-    <div class="rounded-custom match d-flex row">
-        <div class="d-flex flex-column justify-content-center center" :class="{'col-10 p-cust': !isScored, 'col-12': isScored}">
+    <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored && allowedEdit }">
+        <div
+            class="d-flex flex-column justify-content-center center match-score"
+            :class="{ 'col-10 p-cust': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }"
+        >
             <div class="d-flex justify-content-between">
-                <span class="player-tag">{{match.p1.tag}}</span>
-                <span class="player-score">{{match.p1score}}</span>
+                <span class="player-tag">{{ match.p1.tag }}</span>
+                <span class="player-score">{{ match.p1score }}</span>
             </div>
             <div class="divider"></div>
             <div class="d-flex justify-content-between">
-                <span class="player-tag">{{match.p2.tag}}</span>
-                <span class="player-score">{{match.p2score}}</span>
+                <span class="player-tag">{{ match.p2.tag }}</span>
+                <span class="player-score">{{ match.p2score }}</span>
             </div>
         </div>
-        <div v-if="!isScored" :class="{'col-2 p-0 justify-content-centered': !isScored, 'nothing': isScored}">
-            <button class="edit-button" @click="ShowModal()" @click.stop>E</button>
+        <div v-if="allowedEdit" class="edit" :class="{ 'col-2 p-0 justify-content-centered': !isScored }">
+            <button class="edit-button" @click="ShowModal()" @click.stop><i class="icon-edit-pencil"></i></button>
         </div>
     </div>
     <EditMatchComponent v-if="showModal" @save="handleSave" @close="showModal = false" :match="match" />
-    <ErrorPopupModel v-if="displayError" :errorMessage="errorMessage" @close="hideError"/>
+    <ErrorPopupModel v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
 <style lang="scss" scoped>
@@ -172,6 +168,28 @@
     // max-height: 45px;
     height: 2.6rem;
     text-align: center;
+
+    &.hover-edit {
+        .match-score {
+            transition: width 0.4s ease-in-out;
+        }
+        .edit {
+            width: 0%;
+            overflow: hidden;
+            padding: 0;
+            transition: width 0.4s ease-in-out;
+        }
+    }
+
+    &.hover-edit:hover {
+        .match-score {
+            width: 85%;
+        }
+
+        .edit {
+            width: 15%;
+        }
+    }
 }
 
 .match-text {
