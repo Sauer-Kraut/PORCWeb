@@ -1,3 +1,6 @@
 /target
 Cargo.lock
 secrets.json
+SeasonMatchPlan.json
+SeasonSignUps.json
+DiscordLogIns.json

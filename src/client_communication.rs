@@ -291,7 +291,7 @@ pub async fn remove_sign_up_request(info: web::Json<PostRequestSignUpPackage>, a
         let mut index_to_remove = None;
 
         for (index, signup) in signups.iter().enumerate() {
-            if sanetize_username(&signup.username) == sanetize_username(&info.sing_up_info.username) {
+            if &signup.discord_id == &info.sing_up_info.discord_id {
                 index_to_remove = Some(index);
             }
         }

@@ -12,6 +12,9 @@ use crate::bot_communication::PlanBlueprint;
 pub struct MatchPlan {
     pub divisions: Vec<Division>,
     pub players: Vec<Player>,
+    pub end_timestamp: u64,
+    pub pause_end_timestamp: u64,
+    pub season: u64
 }
 
 impl fmt::Display for MatchPlan {
@@ -132,6 +135,20 @@ impl MatchPlan {
         let mut player_objects = vec!();
         let mut divisions = vec!();
 
+        let mut end_timestamp = 0;
+
+        match blueprint.end_timestamp {
+            None => {return Err(DataGenerationError::MatchMapGenerationError(format!("No end timestamp provided :(")));},
+            Some(v) => {end_timestamp = v}
+        }
+
+        let mut pause_end_timestamp = 0;
+
+        match blueprint.pause_end_timestamp {
+            None => {return Err(DataGenerationError::MatchMapGenerationError(format!("No pause end timestamp provided :(")));},
+            Some(v) => {pause_end_timestamp = v}
+        }
+
         for division_plan in blueprint.divisions.iter() {
 
             divisions.push(division_plan.name.clone());
@@ -165,6 +182,9 @@ impl MatchPlan {
         Ok(MatchPlan {
             divisions: division_plan,
             players: player_objects,
+            end_timestamp,
+            pause_end_timestamp,
+            season: blueprint.season
         })
     }
 

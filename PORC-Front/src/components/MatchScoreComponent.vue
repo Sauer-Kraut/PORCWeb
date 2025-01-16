@@ -1,12 +1,19 @@
 <script lang="ts" setup>
 import type { MatchModel } from '@/models/MatchModel';
-import { ref } from "vue";
+import { ref, onMounted } from 'vue';
 import EditMatchComponent from './EditMatchComponent.vue';
 import ErrorPopupModel from './ErrorPopupModel.vue';
 
 const props = defineProps<{
-    match: MatchModel
+    match: MatchModel;
+    user_id: string;
 }>();
+
+let userID = props.user_id;
+let Match = props.match;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const allowedEdit = ref(false);
 
 const isScored = ref(false);
 
@@ -18,7 +25,7 @@ if (matchData.p1score != null && matchData.p2score != null) {
 
 const showModal = ref(false);
 const displayError = ref(false);
-let errorMessage: string    = "This is an error message";
+let errorMessage: string = 'This is an error message';
 
 function hideError() {
     displayError.value = false;
@@ -26,39 +33,39 @@ function hideError() {
 
 function ShowModal() {
     showModal.value = true;
-    console.log("I am trieing to show the prompt")
+    console.log('I am trieing to show the prompt');
 }
 
 function handleSave(updateInfo: MatchModel) {
-    console.log("Save event triggered", updateInfo);
+    console.log('Save event triggered', updateInfo);
     showModal.value = false;
     updateMatchInfo(updateInfo);
 }
 
 async function updateMatchInfo(updateInfo: MatchModel) {
-    console.log("Trying to update match info");
+    console.log('Trying to update match info');
     console.log(updateInfo);
 
     if (typeof updateInfo === 'object' && updateInfo !== null) {
-        console.log("updateInfo is an object");
-        console.log("updateInfo.p1:", updateInfo.p1);
-        console.log("updateInfo.p2:", updateInfo.p2);
-        console.log("updateInfo.p1score:", updateInfo.p1score);
-        console.log("updateInfo.p2score:", updateInfo.p2score);
+        console.log('updateInfo is an object');
+        console.log('updateInfo.p1:', updateInfo.p1);
+        console.log('updateInfo.p2:', updateInfo.p2);
+        console.log('updateInfo.p1score:', updateInfo.p1score);
+        console.log('updateInfo.p2score:', updateInfo.p2score);
     } else {
-        console.error("updateInfo is not an object or is null");
+        console.error('updateInfo is not an object or is null');
     }
     const Match: MatchModel = {
         p1: updateInfo.p1,
         p2: updateInfo.p2,
         p1score: updateInfo.p1score,
-        p2score: updateInfo.p2score
+        p2score: updateInfo.p2score,
     };
     const requestData = JSON.stringify({
         title: 'updateMatch',
-        match_info: Match
+        match_info: Match,
     });
-    
+
     console.log(Match);
     console.log(requestData);
 
@@ -66,9 +73,9 @@ async function updateMatchInfo(updateInfo: MatchModel) {
         const response = await fetch('https://porc.mywire.org/api/match-plan', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: requestData
+            body: requestData,
         });
 
         if (!response.ok) {
@@ -79,54 +86,110 @@ async function updateMatchInfo(updateInfo: MatchModel) {
         console.log('Success:', data);
         if (data.error != null) {
             errorMessage = data.error;
-            console.log("Error message:", errorMessage);
+            console.log('Error message:', errorMessage);
             displayError.value = true;
             matchData.p1score = null;
             matchData.p2score = null;
-            isScored.value = false;
-        } 
-        else {
-            isScored.value = true;
+        } else {
         }
-
     } catch (error) {
         console.error('Error:', error);
-        errorMessage = "Internal server error";
-        console.log("Error message:", errorMessage);
+        errorMessage = 'Internal server error';
+        console.log('Error message:', errorMessage);
         displayError.value = true;
         matchData.p1score = null;
         matchData.p2score = null;
-        isScored.value = false;
+    }
+}
+
+function containsUser(): boolean {
+    userID = props.user_id;
+    Match = props.match;
+    // console.log('user id: ', userID);
+    // console.log('match : ', Match);
+
+    if (Match.p1.id !== userID && Match.p2.id !== userID) {
+        allowedEdit.value = false;
+    } else {
+        allowedEdit.value = true;
+        return true;
+    }
+
+    return false;
+}
+
+onMounted(() => {
+    containsUser();
+    checkScores();
+
+    setTimeout(() => {
+        setInterval(containsUser, 500);
+        setInterval(checkScores, 500);
+    }, 70);
+});
+
+// watch(() => allowedEdit, checkEditPermission);
+// watch(() => [props.match.p1score, props.match.p2score], checkScores);
+
+function checkScores() {
+    if (matchData.p1score != null && matchData.p2score != null) {
+        isScored.value = true;
     }
 }
 </script>
 
 <template>
-    <div class="rounded-custom match d-flex row">
-        <div class="d-flex flex-column" :class="{'col-10 p-cust': !isScored, 'col-12': isScored}">
+    <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored && allowedEdit }">
+        <div
+            class="d-flex flex-column justify-content-center center match-score"
+            :class="{ 'col-10 p-cust': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }"
+        >
             <div class="d-flex justify-content-between">
-                <span>{{match.p1.tag}}</span>
-                <span>{{match.p1score}}</span>
+                <span class="player-tag">{{ match.p1.tag }}</span>
+                <span class="player-score">{{ match.p1score }}</span>
             </div>
             <div class="divider"></div>
             <div class="d-flex justify-content-between">
-                <span>{{match.p2.tag}}</span>
-                <span>{{match.p2score}}</span>
+                <span class="player-tag">{{ match.p2.tag }}</span>
+                <span class="player-score">{{ match.p2score }}</span>
             </div>
         </div>
-        <div :class="{'col-2 p-0 justify-content-centered': !isScored, 'nothing': isScored}">
-            <button class="edit-button" @click="ShowModal()" @click.stop>B</button>
+        <div v-if="allowedEdit" class="edit" :class="{ 'col-2 p-0 justify-content-centered': !isScored }">
+            <button class="edit-button" @click="ShowModal()" @click.stop><i class="icon-edit-pencil"></i></button>
         </div>
     </div>
     <EditMatchComponent v-if="showModal" @save="handleSave" @close="showModal = false" :match="match" />
-    <ErrorPopupModel v-if="displayError" :errorMessage="errorMessage" @close="hideError"/>
+    <ErrorPopupModel v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
 <style lang="scss" scoped>
 .match {
     background-color: #252727;
-    max-height: 42px;
+    // max-height: 45px;
+    height: 2.6rem;
     text-align: center;
+
+    &.hover-edit {
+        .match-score {
+            transition: width 0.4s ease-in-out;
+        }
+        .edit {
+            width: 0%;
+            overflow: hidden;
+            padding: 0;
+            transition: width 0.4s ease-in-out;
+        }
+    }
+
+    &.hover-edit:hover {
+        .match-score {
+            width: 85%;
+        }
+
+        .edit {
+            width: 15%;
+        }
+    }
 }
 
 .match-text {
@@ -144,6 +207,14 @@ async function updateMatchInfo(updateInfo: MatchModel) {
 .p-cust {
     padding-left: 0.5rem;
     padding-right: 0rem;
+}
+
+.player-tag {
+    font-weight: 400;
+}
+
+.player-score {
+    font-weight: 400;
 }
 
 .divider {
