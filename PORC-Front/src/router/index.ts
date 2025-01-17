@@ -31,6 +31,11 @@ const routes: RouteRecordRaw[] = [
     name: 'Sign Up',
     component: SignUpView,
   },
+  {
+    path: '/discord/callback',
+    name: 'Callback',
+    component: TournamentView,
+  },
 ]
 
 const router = createRouter({

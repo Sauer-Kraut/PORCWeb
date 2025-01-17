@@ -120,7 +120,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
 
     return HttpResponse::Ok()
         .cookie(cookie)
-        .body(fs::read_to_string("static/index.html").await.unwrap())
+        .body(fs::read_to_string("PORC-Front/dist/index.html").await.unwrap())
 }
 
 

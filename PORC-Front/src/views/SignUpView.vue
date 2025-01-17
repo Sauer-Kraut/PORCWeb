@@ -68,13 +68,13 @@
 
         const requestData = JSON.stringify({
             title: "Sign Up Request",
-            sing_up_info: data
+            sing_up_info: data      // misspelled, but so is it in the backend
         });
 
         console.log(requestData);
 
         try {
-            const response = await fetch('https://porc.mywire.org/api/sign-up', {
+            const response = await fetch('/api/sign-up', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
