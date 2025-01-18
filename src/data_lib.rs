@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 use crate::bot_communication::PlanBlueprint;
+use crate::PlayerBlueprint;
 
 
 
@@ -131,7 +132,7 @@ impl MatchPlan {
 
     pub fn generate(blueprint: PlanBlueprint, allow_doubles: bool) -> Result<MatchPlan, DataGenerationError> {
 
-        let mut entered_players: Vec<&String> = vec!();
+        let mut entered_players: Vec<PlayerBlueprint> = vec!();
         let mut player_objects = vec!();
         let mut divisions = vec!();
 
@@ -153,23 +154,23 @@ impl MatchPlan {
 
             divisions.push(division_plan.name.clone());
 
-            for (index, player) in division_plan.players.iter().enumerate() {
+            for (_index, player) in division_plan.players.iter().enumerate() {
 
-                if entered_players.contains(&&player) {
+                if entered_players.contains(&player) {
                     if allow_doubles {
                         println!("{}", "Warning: Player with already existing name has been entered into Matchplan".bold().red());
                     }
 
                     else {
-                        return Err(DataGenerationError::MatchMapGenerationError(format!("Player of same name already exists: {}, doubles were disallowed", player)));
+                        return Err(DataGenerationError::MatchMapGenerationError(format!("Player of same name already exists: {:?}, doubles were disallowed", player)));
                     }            
                 }
 
-                entered_players.push(&player);
+                entered_players.push(player.clone());
 
                 let player_object = Player {
-                    id: index,
-                    tag: player.to_string(),
+                    id: player.id,
+                    tag: player.tag.clone(),
                     division: division_plan.name.clone(),
                 };
 
@@ -310,9 +311,17 @@ impl MatchPlan {
 
             for (_key, value) in division.matches.iter_mut() {
 
-                if value.p1 == match_info.p1 && value.p2 == match_info.p2 {
+                if value.p1.id == match_info.p1.id && value.p2.id == match_info.p2.id {
                     *value = match_info.clone();
                     return Ok(());
+                } else if value.p1.id == match_info.p2.id && value.p2.id == match_info.p1.id {
+                    let fit_match_info = Match {
+                        p1: match_info.p1.clone(),
+                        p2: match_info.p2.clone(),
+                        p1score: match_info.p2score,
+                        p2score: match_info.p1score,
+                    };
+                    *value = fit_match_info;
                 }
             }
         }

@@ -101,6 +101,9 @@ async fn main() -> std::io::Result<()> {
                 logins_path: logins_path.clone()
             }))
             .service(web::resource("/").to(index))
+            .service(web::resource("/signup").to(index))
+            .service(web::resource("/rules").to(index))
+            .service(web::resource("/qaa").to(index))
             .service(web::resource("/api/match-plan")
             .route(web::get().to(get_match_plan_request))
             .route(web::post().to(update_match_plan_request)))
@@ -121,12 +124,10 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
 
     })
-    .bind("0.0.0.0:8081")? // Caddy forwarts requests to our URL to the local port 8081
+    .bind("[::]:8081")? // Caddy forwarts requests to our URL to the local port 8081
     .run()
     .await
 }
-
-
 
 
 

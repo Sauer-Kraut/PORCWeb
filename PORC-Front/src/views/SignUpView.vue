@@ -71,7 +71,7 @@
             sing_up_info: data      // misspelled, but so is it in the backend
         });
 
-        console.log(requestData);
+        // console.log(requestData);
 
         try {
             const response = await fetch('/api/sign-up', {
@@ -87,7 +87,7 @@
             }
 
             const data = await response.json();
-            console.log('Success:', data);
+            // console.log('Success:', data);
 
             if (data.error != null) {
                 showError(data.error);
@@ -144,9 +144,9 @@
             }
 
             const data = await response.json();
-            console.log('Success:', data);
+            // console.log('Success:', data);
             if (data.error == null) {
-                console.log("Logged in: ", data);
+                // console.log("Logged in: ", data);
                 isLoggedIn.value = true;
                 username.value = data.data.username;
                 user_id = data.data.id;
@@ -210,7 +210,7 @@
                     </div>
                     <div class="p-1"></div>
                     <div class="row justify-content-between align-items-center">
-                        <button type="button" class="btn btn-primary col-auto ms-2" @click="confirmInput">Submit</button>
+                        <button type="button" class="btn btn-primary col-auto ms-2 button" @click="confirmInput">Submit</button>
                         <div class="col-auto">
                             <DiscordUserComponent v-if="!isLoggedIn"></DiscordUserComponent>
                         </div>
@@ -221,7 +221,6 @@
             <label class="warning" v-if="invalidFillOut">Sign up is not valid</label>
             <label class="warning" v-if="!isLoggedIn">Please Sign in with discord</label>
             <label class="success" v-if="success">Sign up successfull!</label>
-            
         </div>
     </div>
         <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError"/>
@@ -230,7 +229,7 @@
 
 <style lang="scss" scoped>
     .container-fill {
-        min-height: 93vh;
+        min-height: 100vh;
     }
 
     .inner-container {
@@ -239,6 +238,13 @@
         flex-direction: column;
         align-items: first baseline;
         display: flex;
+    }
+
+    .button {
+        background-color: #828ae0;
+        border-color: black;
+        border: none;
+        font-weight: 400;
     }
 
     .titel {
@@ -255,7 +261,7 @@
 
     .warning {
         font-style: italic;
-        color: rgb(255, 53, 39);
+        color: #f1492c;;
     }
 
     .success {
@@ -267,9 +273,5 @@
         align-items: right;
         justify-content: right;
         right: 0;
-    }
-
-    .spacer {
-        height: 90px;
     }
 </style>

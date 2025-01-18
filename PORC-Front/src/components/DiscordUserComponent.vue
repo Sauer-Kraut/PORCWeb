@@ -7,7 +7,7 @@ const isLoggedIn = ref(false);
 const discordAuthURL = "https://discord.com/oauth2/authorize?client_id=1326173309234319441&response_type=code&redirect_uri=https%3A%2F%2Fporc.mywire.org%2Fdiscord%2Fcallback&scope=identify";
 
 const displayError = ref(false);
-let errorMessage: string    = "This is an error message";
+let errorMessage: string = "This is an error message";
 
 function hideError() {
     displayError.value = false;
@@ -53,9 +53,9 @@ async function getLoggedIn() {
         }
 
         const data = await response.json();
-        console.log('Success:', data);
+        // console.log('Success:', data);
         if (data.error == null) {
-            console.log("Logged in: ", data);
+            // console.log("Logged in: ", data);
             isLoggedIn.value = true;
             const avatar = data.data.avatar;
             const id = data.data.id;

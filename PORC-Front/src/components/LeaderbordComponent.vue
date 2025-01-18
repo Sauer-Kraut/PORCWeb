@@ -38,7 +38,7 @@ async function getPlayerRanking() {
         }
 
         const data = await response.json();
-        console.log('Success:', data);
+        // console.log('Success:', data);
 
         if (data.error != null) {
             errorMessage = data.error;
@@ -47,11 +47,11 @@ async function getPlayerRanking() {
         } 
         else {
             let playerPerformances = performances.value;
-            console.log("data", data.data);
+            // console.log("data", data.data);
 
             for (let i = 0; i < data.data.length; i++) {
                 const division = data.data[i][0];
-                console.log("Division:", division);
+                // console.log("Division:", division);
 
                 if (division == props.divisionName) {
                     playerPerformances = data.data[i][1];
@@ -75,11 +75,11 @@ async function getPlayerRanking() {
         displayError.value = true;
     }
 
-    console.log("Performances:", performances);
+    // console.log("Performances:", performances);
 }
 
 function close() {
-    console.log("I got cklicked")
+    // console.log("I got clicked")
     emit("close")
 }
 
@@ -96,7 +96,7 @@ onMounted(() => {
         <div class="col-4 item">
             <span class="content header">Player</span>
             <div v-for="player in performances" :key="player.player.id" class="player content">
-            <span>{{ player.player.tag }}</span>
+            <span>{{ player.player.tag.slice(0, 10) }}</span>
         </div>
         </div>
         <div class="col-4 item">

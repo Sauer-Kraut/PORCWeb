@@ -8,7 +8,7 @@ const props = defineProps<{
 const emit = defineEmits(['close']);
 
 function close() {
-    console.log("I am closing the error popup, the error message is: ", props.errorMessage);
+    // console.log("I am closing the error popup, the error message is: ", props.errorMessage);
     emit('close');
 }
 </script>
@@ -23,7 +23,7 @@ function close() {
                     <div class="row">
                         <p class="error-text"></p>
                         <p class="error-text">{{ errorMessage }}</p>
-                        <p class="error-text">hello, Im text and I would like to talk</p>
+                        <p class="error-text">If you dont understand why you are seeing this error <br> feel free to contact our mod team over on discord</p>
                     </div>
                 </div>
             </div>
@@ -51,6 +51,7 @@ function close() {
     margin: 15% auto;
     padding: 20px;
     border: 1px solid #888;
+    border-radius: 4px;
 }
 
 .close-button {

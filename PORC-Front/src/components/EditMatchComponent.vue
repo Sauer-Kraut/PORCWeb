@@ -25,7 +25,7 @@ function save() {
         p1score: p1score.value,
         p2score: p2score.value,
     };
-    console.log(MatchInfo);
+    // console.log(MatchInfo);
     emit('save', MatchInfo);
 }
 
