@@ -18,6 +18,8 @@
     const isLoggedIn = ref(true);
     let user_id = "default";
 
+    const isSignedUp = ref(false);
+
     function showError(error: string) {
         errorMessage = error;
         console.log("Error message:", errorMessage);
@@ -74,7 +76,7 @@
         // console.log(requestData);
 
         try {
-            const response = await fetch('/api/sign-up', {
+            const response = await fetch('http://localhost:8081/api/sign-up', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -130,7 +132,7 @@
         });
 
         try {
-            const response = await fetch('https://porc.mywire.org/api/discord/logged-in', {
+            const response = await fetch('http://localhost:8081/api/discord/logged-in', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -165,7 +167,50 @@
         return null
     }
 
+    async function getSignedUp() {
+        console.log("Trying to get signed up in status");
+
+        try {
+            const response = await fetch('https://porc.mywire.org/api/sign-up', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                isLoggedIn.value = false;
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
+            isSignedUp.value = false;
+
+            if (data.error == null) {
+                const signUps = data.data;
+                for (let i = 0; i < signUps.length; i++) {
+                    console.log("checking sign up: ", signUps[i], " against id: ", user_id);
+                    if (signUps[i].discord_id == user_id) {
+                        console.log("found user sign up")
+                        isSignedUp.value = true;
+                    }
+                }
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage = "Server communication error";
+            console.log("Error message:", errorMessage);
+            displayError.value = true;
+            isLoggedIn.value = false;
+        }
+
+        return null
+    }
+
     onMounted(() => {
+        getSignedUp();
         getLoggedIn();
     });
 </script>
@@ -173,10 +218,13 @@
 <template>
     <div class="container-fill justify-content-center">
         <div class="inner-container">
-            <h1 class="titel">Sign Up</h1>
+            <div class="titel">
+            <h1 class="titel-text">Sign Up</h1> 
+            <h3 v-if="isSignedUp" class="conformation">You are allready signed up for next season</h3>
+            </div>
             <div class="form-container col-10">
             <form>
-                <fieldset :disabled="!isLoggedIn">
+                <fieldset :disabled="(!isLoggedIn || isSignedUp)">
                     <legend>User Info</legend>
                     <div class="p-3"></div>
                     <div class="mb-3">
@@ -248,9 +296,13 @@
     }
 
     .titel {
-        justify-content: center;
-        text-align: center;
         margin: 3rem;
+        font-style: bold;
+        height: fit-content;
+        width: calc(100% - 6rem);
+    }
+
+    .titel-text {
         font-style: bold;
         height: fit-content;
     }
@@ -267,6 +319,11 @@
     .success {
         font-style: italic;
         color: rgb(19, 244, 98);
+    }
+
+    .conformation {
+        color: rgb(19, 244, 98);
+        margin-top: 1.5rem;
     }
 
     .right {

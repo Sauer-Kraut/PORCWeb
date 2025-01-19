@@ -122,7 +122,7 @@ onMounted(() => {
                     }"
                     class="transition-width d-flex"
                 >
-                    <LeaderbordComponent v-if="!isLeaderbordExpanded" @close="toggleLeaderbordExpanded()" :divisionName="division.name" />
+                    <LeaderbordComponent class="leaderbord" v-if="!isLeaderbordExpanded" @close="toggleLeaderbordExpanded()" :divisionName="division.name" />
                 </div>
             </div>
             <div v-else class="placekeeper">
@@ -194,6 +194,10 @@ onMounted(() => {
         clip-path: view-box;
         background: linear-gradient(135deg, #635f5e, #4a4f5b);
         overflow: hidden;
+    }
+
+    .leaderbord {
+        height: fit-content
     }
 
     .margin-cust {

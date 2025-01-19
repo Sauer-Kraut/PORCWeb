@@ -70,7 +70,7 @@ async function updateMatchInfo(updateInfo: MatchModel) {
     // console.log(requestData);
 
     try {
-        const response = await fetch('https://porc.mywire.org/api/match-plan', {
+        const response = await fetch('http://localhost:8081/api/match-plan', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -90,7 +90,6 @@ async function updateMatchInfo(updateInfo: MatchModel) {
             displayError.value = true;
             matchData.p1score = null;
             matchData.p2score = null;
-        } else {
         }
     } catch (error) {
         console.error('Error:', error);
@@ -118,6 +117,7 @@ function checkWinner() {
         // console.log("is second bigger? ", (props.match.p1score < props.match.p2score));
         p1Win.value = (props.match.p1score > props.match.p2score);
         p2Win.value = (props.match.p1score < props.match.p2score);
+        // console.log("p1 win: ", p1Win.value)
     }
 }
 
@@ -168,13 +168,13 @@ function checkScores() {
             :class="{ 'col-10': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }"
         >
             <div class="d-flex justify-content-between">
-                <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
-                <span class="player-score" :class="{'winner': p1Win}">{{ match.p1score }}</span>
+                <span class="player-tag" :class="{ 'winner-tag': p1Win }">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
+                <span class="player-score" :class="{'winner-score': p1Win}">{{ match.p1score }}</span>
             </div>
             <div class="divider"></div>
             <div class="d-flex justify-content-between">
-                <span class="player-tag">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
-                <span class="player-score" :class="{'winner': p2Win}">{{ match.p2score }}</span>
+                <span class="player-tag" :class="{ 'winner-tag': p2Win }">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
+                <span class="player-score" :class="{'winner-score': p2Win}">{{ match.p2score }}</span>
             </div>
         </div>
         <div v-if="allowedEdit" class="edit" :class="{ 'col-2 p-0 justify-content-centered': !isScored }">
@@ -277,8 +277,12 @@ function checkScores() {
     cursor: pointer; /* Ensure it still looks like a button */
 }
 
-.winner {
+.winner-score {
     font-weight: bolder;
+    color: #fe9b8a;
+}
+
+.winner-tag {
     color: #fe9b8a;
 }
 

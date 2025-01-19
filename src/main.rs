@@ -72,7 +72,7 @@ async fn main() -> std::io::Result<()> {
     // StorageMod::save_signups(vec!(), "src/Season4SignUps.json")?;
     println!("read 3");
     let signups = Arc::new(Mutex::new(StorageMod::read_signups(&signups_path)?));
-    println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
+    // println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
 
     println!("\n{}\n\n", "Server has launched");
 

@@ -29,7 +29,7 @@ pub struct DivisionBlueprint {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerBlueprint {
     pub tag: String,
-    pub id: usize
+    pub id: String
 }
 
 impl PartialEq for PlayerBlueprint {
@@ -113,7 +113,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
                             Some(division_blueprint) => {
                                 let player_blueprint = PlayerBlueprint{
                                     tag: player.tag.clone(),
-                                    id: player.id,
+                                    id: player.id.clone(),
                                 };
                                 division_blueprint.players.push(player_blueprint);
                             },
@@ -133,7 +133,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
                         return false;
                     }).map(|player| PlayerBlueprint{
                         tag: player.tag.clone(),
-                        id: player.id,
+                        id: player.id.clone(),
                     }).collect();
 
                     let division_blueprint = DivisionBlueprint {
@@ -149,7 +149,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
                 divisions: division_blueprints,
                 players_to_sort: signups_locked.iter().map(|signup|PlayerBlueprint{
                     tag: signup.username.clone(),
-                    id: signup.discord_id.parse::<usize>().unwrap_or(0),
+                    id: signup.discord_id.clone(),
                 }).collect(),
                 end_timestamp: None,
                 pause_end_timestamp: None,
@@ -162,7 +162,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
                     divisions: Vec::new(),
                     players_to_sort: signups_locked.iter().map(|signup| PlayerBlueprint{
                         tag: signup.username.clone(),
-                        id: signup.discord_id.parse::<usize>().unwrap_or(0),
+                        id: signup.discord_id.clone(),
                     }).collect(),
                     end_timestamp: None,
                     pause_end_timestamp: None,

@@ -445,7 +445,7 @@ async function getLoggedIn(): Promise<string | null> {
     });
 
     try {
-        const response = await fetch('https://porc.mywire.org/api/discord/logged-in', {
+        const response = await fetch('http://localhost:8081/api/discord/logged-in', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
