@@ -11,22 +11,10 @@ const emit = defineEmits<{
     (e: 'save', payload: MatchModel): void;
 }>();
 
-const p1score = ref(props.match.p1score);
-const p2score = ref(props.match.p2score);
-
-const Match = props.match;
+const match = ref(props.match);
 
 function save() {
-    console.log('Save match scores', p1score.value, p2score.value);
-    Match.p1score = p1score.value;
-    Match.p2score = p2score.value;
-    const MatchInfo: MatchModel = {
-        ...props.match,
-        p1score: p1score.value,
-        p2score: p2score.value,
-    };
-    // console.log(MatchInfo);
-    emit('save', MatchInfo);
+    emit('save', match.value);
 }
 
 function close() {
@@ -40,12 +28,12 @@ function close() {
             <div class="modal-content col-xl-4 col-md-9" @click.stop>
                 <h3 class="title">Edit Match Scores</h3>
                 <div class="justify-content-center d-flex p-1">
-                    <label for="p1score" class="col-9">Player 1 Score:</label>
-                    <input id="p1score" v-model="p1score" type="number" class="col-2 input" />
+                    <label for="p1score" class="col-9">{{match.p1.tag}} score:</label>
+                    <input id="p1score" v-model="match.p1score" type="number" class="col-2 input" />
                 </div>
                 <div class="justify-content-center d-flex p-1">
-                    <label for="p2score" class="col-9">Player 2 Score:</label>
-                    <input id="p2score" v-model="p2score" type="number" class="col-2 input" />
+                    <label for="p2score" class="col-9">{{match.p2.tag}} score:</label>
+                    <input id="p2score" v-model="match.p2score" type="number" class="col-2 input" />
                 </div>
                 <div class="spacer"></div>
                 <button @click="save" class="col-11 button">Save</button>
