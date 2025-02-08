@@ -18,6 +18,8 @@
     const isLoggedIn = ref(true);
     let user_id = "default";
 
+    const isSignedUp = ref(false);
+
     function showError(error: string) {
         errorMessage = error;
         console.log("Error message:", errorMessage);
@@ -68,13 +70,13 @@
 
         const requestData = JSON.stringify({
             title: "Sign Up Request",
-            sing_up_info: data
+            sing_up_info: data      // misspelled, but so is it in the backend
         });
 
-        console.log(requestData);
+        // console.log(requestData);
 
         try {
-            const response = await fetch('https://porc.mywire.org/api/sign-up', {
+            const response = await fetch('http://localhost:8081/api/sign-up', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -87,7 +89,7 @@
             }
 
             const data = await response.json();
-            console.log('Success:', data);
+            // console.log('Success:', data);
 
             if (data.error != null) {
                 showError(data.error);
@@ -130,7 +132,7 @@
         });
 
         try {
-            const response = await fetch('https://porc.mywire.org/api/discord/logged-in', {
+            const response = await fetch('http://localhost:8081/api/discord/logged-in', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -144,9 +146,9 @@
             }
 
             const data = await response.json();
-            console.log('Success:', data);
+            // console.log('Success:', data);
             if (data.error == null) {
-                console.log("Logged in: ", data);
+                // console.log("Logged in: ", data);
                 isLoggedIn.value = true;
                 username.value = data.data.username;
                 user_id = data.data.id;
@@ -165,7 +167,50 @@
         return null
     }
 
+    async function getSignedUp() {
+        console.log("Trying to get signed up in status");
+
+        try {
+            const response = await fetch('https://porc.mywire.org/api/sign-up', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                isLoggedIn.value = false;
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
+            isSignedUp.value = false;
+
+            if (data.error == null) {
+                const signUps = data.data;
+                for (let i = 0; i < signUps.length; i++) {
+                    console.log("checking sign up: ", signUps[i], " against id: ", user_id);
+                    if (signUps[i].discord_id == user_id) {
+                        console.log("found user sign up")
+                        isSignedUp.value = true;
+                    }
+                }
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage = "Server communication error";
+            console.log("Error message:", errorMessage);
+            displayError.value = true;
+            isLoggedIn.value = false;
+        }
+
+        return null
+    }
+
     onMounted(() => {
+        getSignedUp();
         getLoggedIn();
     });
 </script>
@@ -173,10 +218,13 @@
 <template>
     <div class="container-fill justify-content-center">
         <div class="inner-container">
-            <h1 class="titel">Sign Up</h1>
+            <div class="titel">
+            <h1 class="titel-text">Sign Up</h1> 
+            <h3 v-if="isSignedUp" class="conformation">You are allready signed up for next season</h3>
+            </div>
             <div class="form-container col-10">
             <form>
-                <fieldset :disabled="!isLoggedIn">
+                <fieldset :disabled="(!isLoggedIn || isSignedUp)">
                     <legend>User Info</legend>
                     <div class="p-3"></div>
                     <div class="mb-3">
@@ -210,7 +258,7 @@
                     </div>
                     <div class="p-1"></div>
                     <div class="row justify-content-between align-items-center">
-                        <button type="button" class="btn btn-primary col-auto ms-2" @click="confirmInput">Submit</button>
+                        <button type="button" class="btn btn-primary col-auto ms-2 button" @click="confirmInput">Submit</button>
                         <div class="col-auto">
                             <DiscordUserComponent v-if="!isLoggedIn"></DiscordUserComponent>
                         </div>
@@ -221,7 +269,6 @@
             <label class="warning" v-if="invalidFillOut">Sign up is not valid</label>
             <label class="warning" v-if="!isLoggedIn">Please Sign in with discord</label>
             <label class="success" v-if="success">Sign up successfull!</label>
-            
         </div>
     </div>
         <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError"/>
@@ -230,7 +277,7 @@
 
 <style lang="scss" scoped>
     .container-fill {
-        min-height: 93vh;
+        min-height: 100vh;
     }
 
     .inner-container {
@@ -241,10 +288,21 @@
         display: flex;
     }
 
+    .button {
+        background-color: #828ae0;
+        border-color: black;
+        border: none;
+        font-weight: 400;
+    }
+
     .titel {
-        justify-content: center;
-        text-align: center;
         margin: 3rem;
+        font-style: bold;
+        height: fit-content;
+        width: calc(100% - 6rem);
+    }
+
+    .titel-text {
         font-style: bold;
         height: fit-content;
     }
@@ -255,7 +313,7 @@
 
     .warning {
         font-style: italic;
-        color: rgb(255, 53, 39);
+        color: #f1492c;;
     }
 
     .success {
@@ -263,13 +321,14 @@
         color: rgb(19, 244, 98);
     }
 
+    .conformation {
+        color: rgb(19, 244, 98);
+        margin-top: 1.5rem;
+    }
+
     .right {
         align-items: right;
         justify-content: right;
         right: 0;
-    }
-
-    .spacer {
-        height: 90px;
     }
 </style>

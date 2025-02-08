@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 use crate::bot_communication::PlanBlueprint;
+use crate::PlayerBlueprint;
 
 
 
@@ -76,7 +77,7 @@ impl fmt::Display for Match {
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Player {
-    pub id: usize,
+    pub id: String,
     pub tag: String,
     pub division: String,
 }
@@ -93,6 +94,7 @@ pub struct PlayerPerformance {
     pub wins: usize,
     pub matches: usize,
     pub rounds: usize
+    // TODO: add normalized round win field
 }
 
 impl fmt::Display for PlayerPerformance {
@@ -131,7 +133,7 @@ impl MatchPlan {
 
     pub fn generate(blueprint: PlanBlueprint, allow_doubles: bool) -> Result<MatchPlan, DataGenerationError> {
 
-        let mut entered_players: Vec<&String> = vec!();
+        let mut entered_players: Vec<PlayerBlueprint> = vec!();
         let mut player_objects = vec!();
         let mut divisions = vec!();
 
@@ -153,23 +155,23 @@ impl MatchPlan {
 
             divisions.push(division_plan.name.clone());
 
-            for (index, player) in division_plan.players.iter().enumerate() {
+            for (_index, player) in division_plan.players.iter().enumerate() {
 
-                if entered_players.contains(&&player) {
+                if entered_players.contains(&player) {
                     if allow_doubles {
                         println!("{}", "Warning: Player with already existing name has been entered into Matchplan".bold().red());
                     }
 
                     else {
-                        return Err(DataGenerationError::MatchMapGenerationError(format!("Player of same name already exists: {}, doubles were disallowed", player)));
+                        return Err(DataGenerationError::MatchMapGenerationError(format!("Player of same name already exists: {:?}, doubles were disallowed", player)));
                     }            
                 }
 
-                entered_players.push(&player);
+                entered_players.push(player.clone());
 
                 let player_object = Player {
-                    id: index,
-                    tag: player.to_string(),
+                    id: player.id.clone(),
+                    tag: player.tag.clone(),
                     division: division_plan.name.clone(),
                 };
 
@@ -188,13 +190,13 @@ impl MatchPlan {
         })
     }
 
-    pub fn add_player(&mut self, add_player: (String, String), allow_doubles: bool) -> Result<(), DataGenerationError> {
+    pub fn add_player(&mut self, add_player: (PlayerBlueprint, String), allow_doubles: bool) -> Result<(), DataGenerationError> {
 
-        let (add_player_tag, add_player_div)= add_player;
+        let (add_player, add_player_div)= add_player;
 
         for player in self.players.iter() {
 
-            if add_player_tag == player.tag {
+            if add_player.tag == player.tag {
 
                 if allow_doubles {
                     println!("{}", "Warning: Player with already existing name has been entered into Matchplan".bold().red());
@@ -206,10 +208,9 @@ impl MatchPlan {
             }
         }
 
-        let add_player_id = self.players.len();
         let add_player_object = Player {
-            id: add_player_id,
-            tag: add_player_tag,
+            id: add_player.id,
+            tag: add_player.tag,
             division: add_player_div.clone()
         };
 
@@ -310,9 +311,24 @@ impl MatchPlan {
 
             for (_key, value) in division.matches.iter_mut() {
 
-                if value.p1 == match_info.p1 && value.p2 == match_info.p2 {
+                if value.p1.id == match_info.p1.id && value.p2.id == match_info.p2.id {
                     *value = match_info.clone();
                     return Ok(());
+                } else if value.p1.id == match_info.p2.id && value.p2.id == match_info.p1.id {
+                    let fit_match_info = Match {
+                        p1: match_info.p1.clone(),
+                        p2: match_info.p2.clone(),
+                        p1score: match_info.p2score,
+                        p2score: match_info.p1score,
+                    };
+                    *value = fit_match_info;
+                    return Ok(());
+                } else {
+                    // println!("Match info did not match: \n{:?} is not same as match info  \n{:?}", value, match_info);
+
+                    // if value.p1.id != match_info.p1.id {
+                    //     println!("ID of p1 does not match: p1 id: {}, p1 info id: {}", value.p1.id, match_info.p1.id);
+                    // }
                 }
             }
         }
@@ -520,7 +536,7 @@ impl fmt::Display for DataGenerationError {
             DataGenerationError::MatchMapGenerationError(err) => write!(f, "Match Map generation Error: {}", err),
             DataGenerationError::MatchMapAdditionError(err) => write!(f, "Division player addition Error: {}", err),
             DataGenerationError::MatchMapRemovalError(err) => write!(f, "Division player removal Error: {}", err),
-            DataGenerationError::MatchMapModificationError(err) => write!(f, "Division matchr modification Error: {}", err),
+            DataGenerationError::MatchMapModificationError(err) => write!(f, "Division match modification Error: {}", err),
         }
     }
 }

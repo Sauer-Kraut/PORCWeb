@@ -30,7 +30,7 @@ use tokio::sync::RwLock;
 // retruns the html site we want to serve
 async fn index() -> impl Responder {
     println!("\nYay, we got a request!");
-    HttpResponse::Ok().body(fs::read_to_string("static/index.html").await.unwrap())
+    HttpResponse::Ok().body(fs::read_to_string("PORC-Front/dist/index.html").await.unwrap())
 }
 
 
@@ -44,7 +44,7 @@ async fn index() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    println!("{}", "This is a Prototype, please neither judge nor deploy. \nHi 2Guib by the way");
+    // println!("{}", "This is a Prototype, please neither judge nor deploy. \nHi 2Guib by the way");
     println!("\n\n{}", "Starting server...");
 
     // let divisions: Vec<String> = vec!("Meteorite", "Malachite", "Adamantium", "Mithril", "Platinum", "Diamond", "Gold", "Silver", "Bronze", "Steel", "Copper", "Iron", "Stone").iter().map(|f| f.to_string()).collect();
@@ -72,7 +72,7 @@ async fn main() -> std::io::Result<()> {
     // StorageMod::save_signups(vec!(), "src/Season4SignUps.json")?;
     println!("read 3");
     let signups = Arc::new(Mutex::new(StorageMod::read_signups(&signups_path)?));
-    println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
+    // println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
 
     println!("\n{}\n\n", "Server has launched");
 
@@ -81,7 +81,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::default()
                 .allowed_origin("http://localhost:8081") 
                 .allowed_origin("http://localhost:5173") 
-                .allowed_origin("https://PORC.mywire.org") // Update with your frontend's origin
+                .allowed_origin("https://porc.mywire.org") // Update with your frontend's origin
                 .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
                 .allowed_headers(vec![
                     http::header::AUTHORIZATION,
@@ -100,8 +100,10 @@ async fn main() -> std::io::Result<()> {
                 signups_path: signups_path.clone(),
                 logins_path: logins_path.clone()
             }))
-            .service(Files::new("/static", "./static").show_files_listing())
             .service(web::resource("/").to(index))
+            .service(web::resource("/signup").to(index))
+            .service(web::resource("/rules").to(index))
+            .service(web::resource("/qaa").to(index))
             .service(web::resource("/api/match-plan")
             .route(web::get().to(get_match_plan_request))
             .route(web::post().to(update_match_plan_request)))
@@ -119,14 +121,13 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/discord/callback").to(discord_callback))
             .service(web::resource("/api/discord/logged-in")
             .route(web::post().to(put_logged_in)))
+            .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
 
     })
-    .bind("0.0.0.0:8081")? // Caddy forwarts requests to our URL to the local port 8081
+    .bind("[::]:8081")? // Caddy forwarts requests to our URL to the local port 8081
     .run()
     .await
 }
-
-
 
 
 

@@ -13,7 +13,7 @@ use crate::{sanetize_username, AppState, Division, GetRequestPlanPackage, GetReq
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlanBlueprint {
     pub divisions: Vec<DivisionBlueprint>,
-    pub players_to_sort: Vec<String>,
+    pub players_to_sort: Vec<PlayerBlueprint>,
     pub end_timestamp: Option<u64>,
     pub pause_end_timestamp: Option<u64>,
     pub season: u64
@@ -23,7 +23,19 @@ pub struct PlanBlueprint {
 pub struct DivisionBlueprint {
     pub name: String,
     pub order: usize,
-    pub players: Vec<String>
+    pub players: Vec<PlayerBlueprint>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PlayerBlueprint {
+    pub tag: String,
+    pub id: String
+}
+
+impl PartialEq for PlayerBlueprint {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -90,7 +102,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
 
                     for player in players_to_promote.iter().filter(|player| {
                         for signup in signups_locked.iter(){
-                            if sanetize_username(&signup.username) == sanetize_username(&player.tag) {
+                            if signup.discord_id == signup.discord_id {
                                 signups_locked.remove(signups_locked.iter().position(|x| x.username == signup.username).unwrap());
                                 return true;
                             }
@@ -99,7 +111,11 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
                     }) {
                         match division_blueprints.get_mut(((index as i32 - 1 as i32).max(0 as i32)) as usize) {
                             Some(division_blueprint) => {
-                                division_blueprint.players.push(player.tag.clone());
+                                let player_blueprint = PlayerBlueprint{
+                                    tag: player.tag.clone(),
+                                    id: player.id.clone(),
+                                };
+                                division_blueprint.players.push(player_blueprint);
                             },
                             None => {
                                 players_to_keep.push(player.clone());
@@ -115,7 +131,10 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
                             }
                         } 
                         return false;
-                    }).map(|player| player.tag.clone()).collect();
+                    }).map(|player| PlayerBlueprint{
+                        tag: player.tag.clone(),
+                        id: player.id.clone(),
+                    }).collect();
 
                     let division_blueprint = DivisionBlueprint {
                         name: division.name.clone(),
@@ -128,7 +147,10 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
 
             data_sender.send(PlanBlueprint {
                 divisions: division_blueprints,
-                players_to_sort: signups_locked.iter().map(|signup| signup.username.clone()).collect(),
+                players_to_sort: signups_locked.iter().map(|signup|PlayerBlueprint{
+                    tag: signup.username.clone(),
+                    id: signup.discord_id.clone(),
+                }).collect(),
                 end_timestamp: None,
                 pause_end_timestamp: None,
                 season: 0
@@ -138,7 +160,10 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
             None => {
                 data_sender.send(PlanBlueprint {
                     divisions: Vec::new(),
-                    players_to_sort: signups_locked.iter().map(|signup| signup.username.clone()).collect(),
+                    players_to_sort: signups_locked.iter().map(|signup| PlayerBlueprint{
+                        tag: signup.username.clone(),
+                        id: signup.discord_id.clone(),
+                    }).collect(),
                     end_timestamp: None,
                     pause_end_timestamp: None,
                     season: 0
@@ -205,10 +230,10 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
         for player in division.players.iter() {
 
             if players.contains(player) {
-                return Some(format!("Player {} occurs multiple times", player));
+                return Some(format!("Player {:?} occurs multiple times", player));
             }
 
-            players.push(player.to_string());
+            players.push(player.clone());
         }
     }
 

@@ -38,7 +38,7 @@ async function getPlayerRanking() {
         }
 
         const data = await response.json();
-        console.log('Success:', data);
+        // console.log('Success:', data);
 
         if (data.error != null) {
             errorMessage = data.error;
@@ -47,11 +47,11 @@ async function getPlayerRanking() {
         } 
         else {
             let playerPerformances = performances.value;
-            console.log("data", data.data);
+            // console.log("data", data.data);
 
             for (let i = 0; i < data.data.length; i++) {
                 const division = data.data[i][0];
-                console.log("Division:", division);
+                // console.log("Division:", division);
 
                 if (division == props.divisionName) {
                     playerPerformances = data.data[i][1];
@@ -75,11 +75,11 @@ async function getPlayerRanking() {
         displayError.value = true;
     }
 
-    console.log("Performances:", performances);
+    // console.log("Performances:", performances);
 }
 
 function close() {
-    console.log("I got cklicked")
+    // console.log("I got clicked")
     emit("close")
 }
 
@@ -91,19 +91,21 @@ onMounted(() => {
 <template>
     <div class="leaderboard row justify-content-center d-flex" @click="close">
         <div class="item">
-            <h2>Leaderboard</h2>
+            <h2 class="titel">Leaderboard</h2>
         </div>
         <div class="col-4 item">
             <span class="content header">Player</span>
             <div v-for="player in performances" :key="player.player.id" class="player content">
-            <span>{{ player.player.tag }}</span>
-        </div>
+                <span>{{ player.player.tag.slice(0, 10) }}</span>
+            </div>
+            <div class="spacer"></div>
         </div>
         <div class="col-4 item">
             <span class="content header">Played</span>
             <div v-for="player in performances" :key="player.player.id" class="player content">
                 <span>{{ player.wins }}-{{ player.matches - player.wins }}</span>
-        </div>
+            </div>
+            <div class="spacer"></div>
         </div>
         <!-- <div class="col-4">
             <span class="content header">Score</span>
@@ -116,41 +118,52 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.leaderboard {
-    width: 100%;
-    text-align: center;
-    border-radius: 11.5px;
-    border-width: 1px;
-    border-color: rgb(143, 143, 143);
-    border-style: solid;
-    flex-wrap: none;
-    min-width: 60px;
-    background-color: #2e3030;
-}
+    .leaderboard {
+        width: 100%;
+        text-align: center;
+        border-radius: 11.5px;
+        border-width: 1px;
+        border-color: rgb(143, 143, 143);
+        border-style: solid;
+        flex-wrap: none;
+        min-width: 60px;
+        background-color: #2e3030;
+        height: fit-content;
+    }
 
-.item {
-    overflow: hidden;
-    clip: auto;
-    flex-wrap: none;
-    display: grid;
-}
+    .titel {
+        margin-top: 0.5rem;
+        margin-bottom: 2rem;
+    }
 
-.player {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 5px;
-}
+    .item {
+        overflow: hidden;
+        clip: auto;
+        flex-wrap: none;
+        display: grid;
+    }
 
-.content {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 5px;
-    font-size: 13px;
-    text-wrap: none;
-    clip: auto;
-}
+    .player {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 5px;
+    }
 
-.content.header {
-    font-weight: bold;
-}
+    .content {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 5px;
+        font-size: 13px;
+        text-wrap: none;
+        clip: auto;
+    }
+
+    .content.header {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .spacer {
+        margin-bottom: 1rem;
+    }
 </style>

@@ -4,6 +4,7 @@ import DivisionComponent from '@/components/DivisionComponent.vue';
 import { onMounted, ref } from 'vue';
 import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import TimerComponent from '@/components/TimerComponent.vue';
+
 /*
 const debugData = {
     data: {
@@ -352,8 +353,8 @@ const debugData = {
         pause_end_timestamp: 1737226800,
         season: 3,
     },
-};
-*/
+};*/
+
 const divisions = ref<DivisionModel[]>([]);
 
 const displayError = ref(false);
@@ -383,8 +384,8 @@ async function getMatchPlan() {
         }
 
         let data = await response.json();
-        //data = debugData;
-        console.log('Success:', data);
+        // data = debugData;
+        // console.log('Success:', data);
         if (data.error != null) {
             errorMessage = data.error;
 
@@ -444,7 +445,7 @@ async function getLoggedIn(): Promise<string | null> {
     });
 
     try {
-        const response = await fetch('https://porc.mywire.org/api/discord/logged-in', {
+        const response = await fetch('http://localhost:8081/api/discord/logged-in', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -461,7 +462,7 @@ async function getLoggedIn(): Promise<string | null> {
         if (data.error != null) {
             return null;
         } else {
-            // console.log("Logged in: ", data.data);
+            console.log("Logged in: ", data.data);
             user = data.data.id as string;
             // console.log("user: ", user)
             return data;

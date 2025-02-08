@@ -247,7 +247,7 @@ pub async fn add_sign_up_request(info: web::Json<PostRequestSignUpPackage>, apps
 
         for signup in signups.iter() {
             if sanetize_username(&signup.username) == sanetize_username(&info.sing_up_info.username) {
-                error_sender.send(format!("Simular Sign Up already exists: {}", signup.username)).unwrap();
+                error_sender.send(format!("Similar Sign Up already exists: {}", signup.username)).unwrap();
                 return;
             }
         }

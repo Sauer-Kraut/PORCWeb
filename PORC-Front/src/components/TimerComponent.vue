@@ -36,7 +36,7 @@ const hours = ref(2);
 const minutes = ref(24);
 const seconds = ref(57);
 let timer: number | null = 1730000000;
-let TimerText = 'Time remaining until season 4 of PORC'; // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
+let TimerText = ref('Time remaining until season 4 of PORC'); // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
 let target = 1730000000; // This is a placeholder, it will look better while loading this way, approximatly remains on screen for 50ms
 
 const updateTime = () => {
@@ -55,7 +55,7 @@ const updateTime = () => {
     minutes.value = Math.floor((diff % (60 * 60)) / 60);
     seconds.value = diff % 60;
 
-    TimerText = props.text;
+    TimerText.value = props.text;
 };
 
 onMounted(() => {
@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
     }
 }
 
-@media (min-width: 400px) {
+@media (min-width: 200px) {
     .d-xs-block {
         display: block !important;
     }
