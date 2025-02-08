@@ -17,9 +17,6 @@ const allowedEdit = ref(false);
 
 const isScored = ref(false);
 
-const p1Win = ref(false);
-const p2Win = ref(false);
-
 const p1User = ref(true);
 const p2User = ref(false);
 
@@ -111,14 +108,12 @@ function containsUser(): boolean {
     return allowedEdit.value
 }
 
-function checkWinner() {
-    // console.log("score: ", props.match.p1score, " - ", props.match.p2score);
-    if (props.match.p1score != null && props.match.p2score != null) {
-        // console.log("is second bigger? ", (props.match.p1score < props.match.p2score));
-        p1Win.value = (props.match.p1score > props.match.p2score);
-        p2Win.value = (props.match.p1score < props.match.p2score);
-        // console.log("p1 win: ", p1Win.value)
-    }
+function p1Win(match: MatchModel): boolean {
+    return (match.p1score ?? 0) > (match.p2score ?? 0);
+}
+
+function p2Win(match: MatchModel): boolean {
+    return (match.p2score ?? 0) > (match.p1score ?? 0);
 }
 
 function checkUser() {
@@ -138,12 +133,10 @@ function shortenTags() {
 onMounted(() => {
     containsUser();
     checkScores();
-    checkWinner();
     checkUser();
     shortenTags();
 
     setTimeout(() => {
-        checkWinner();
         checkUser();
         shortenTags();
         setInterval(containsUser, 500);
@@ -167,14 +160,14 @@ function checkScores() {
             class="d-flex flex-column justify-content-center center match-score"
             :class="{ 'col-10': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }"
         >
-            <div class="d-flex justify-content-between">
-                <span class="player-tag" :class="{ 'winner-tag': p1Win }">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
-                <span class="player-score" :class="{'winner-score': p1Win}">{{ match.p1score }}</span>
+            <div class="d-flex justify-content-between" :class="{'winner': p1Win(match)}">
+                <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
+                <span class="player-score">{{ match.p1score }}</span>
             </div>
             <div class="divider"></div>
-            <div class="d-flex justify-content-between">
-                <span class="player-tag" :class="{ 'winner-tag': p2Win }">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
-                <span class="player-score" :class="{'winner-score': p2Win}">{{ match.p2score }}</span>
+            <div class="d-flex justify-content-between" :class="{'winner': p2Win(match)}">
+                <span class="player-tag">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
+                <span class="player-score">{{ match.p2score }}</span>
             </div>
         </div>
         <div v-if="allowedEdit" class="edit" :class="{ 'col-2 p-0 justify-content-centered': !isScored }">
@@ -277,13 +270,15 @@ function checkScores() {
     cursor: pointer; /* Ensure it still looks like a button */
 }
 
-.winner-score {
-    font-weight: bolder;
-    color: #fe9b8a;
-}
+.winner {
+    .player-score {
+        font-weight: bolder;
+        color: #fe9b8a;
+    }
 
-.winner-tag {
-    color: #fe9b8a;
+    .player-tag {
+        color: #fe9b8a;
+    }
 }
 
 .user {
