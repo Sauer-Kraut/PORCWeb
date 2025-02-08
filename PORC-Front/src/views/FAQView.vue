@@ -7,7 +7,7 @@
 <template>
     <div class="container-fill justify-content-center">
         <div class="inner-container">
-            <h1 class="titel">QaA</h1>
+            <h1 class="titel">Frequently asked question</h1>
             <div class="rule-container col-10">
                 <div class="rule-box">
                     <h2 class="lesser-title">How can I participate in PORC?</h2>
