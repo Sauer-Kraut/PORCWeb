@@ -6,11 +6,11 @@
                 <div class="rule-box">
                     <h2 class="titel">Set rules</h2>
                     <ul>
-                        <li class="rule"> 
-                            The players will play a total of 6 matches on the chosen map (3 as host and 3 as client). Client round wins do count. 
+                        <li class="rule">
+                            The players will play a total of 6 matches on the chosen map (3 as host and 3 as client). Client round wins do count.
                             If a player has more client round wins than the other, they will win the game at the end of the 6 matches.
                         </li> <br> <li>
-                            The players are allowed to decide which map they want to play on (custom maps are also allowed). Alternatively, they may also choose to go to a random map together. 
+                            The players are allowed to decide which map they want to play on (custom maps are also allowed). Alternatively, they may also choose to go to a random map together.
                             If both players do not agree on their prefered map, Pit is chosen as default.
                         </li> <br> <li>
                             After each match, if any client rounds were won, <span class="highlight">the host may decide to switch to the other map.</span>
@@ -29,7 +29,7 @@
                             <li>
                                 First to win a client round will set the bar.
                             </li> <br> <li>
-                                The opponent will have the right of reply. 
+                                The opponent will have the right of reply.
                                 If they equal the client round, the tiebreaker resets.
                             </li> <br> <li>
                                 If they fail to equal, the first client round winner wins. If they win the match, they will win.
@@ -55,7 +55,7 @@
                 <div class="rule-box">
                     <h2 class="titel">Scoring</h2>
                     <ul>
-                        <li> 
+                        <li>
                             A match is defined as a best of 3 rounds with one player as host and the other as client. At the end of a game, scoring is decided as follows:
                         </li> <br> <li>
                             If the number of matches won is unequal between the players, the final score is simply the matches won by each player during the game.
@@ -67,15 +67,15 @@
                 <div class="rule-box">
                     <h2 class="titel">Additional Notes</h2>
                     <ul>
-                        <li> 
+                        <li>
                             Cheaters will be banned from competing, and all their matches will be marked as 3-0 losses to their opponents.
                         </li> <br> <li>
                             Competitors are encouraged to record their fights in order to allow both sharing and ensure proof in case of the need to check games.
                         </li> <br> <li>
-                            This is an early access game, so unexpected things can happen. The standard protocol is to reset the match in case a major bug occurs, 
+                            This is an early access game, so unexpected things can happen. The standard protocol is to reset the match in case a major bug occurs,
                             although treating the occurrences differently is allowed if both players agree to do so.
                         </li> <br> <li>
-                            We heavily incourage you to get yourself a timezone role on the PORC dicord server and take full advantage of both discords events and unix time stamps to help you and your fellow rumblers plan matches
+                            We heavily encourage you to get yourself a timezone role on the PORC dicord server and take full advantage of both discords events and unix time stamps to help you and your fellow rumblers plan matches
                         </li> <br> <li>
                             As is common courtesy in the RUMBLE community, please treat each other with respect and enjoy yourself.
                         </li>
