@@ -33,8 +33,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/discord/callback',
-    name: 'Callback',
-    component: TournamentView,
+    redirect: '/',
   },
 ]
 
