@@ -4,6 +4,7 @@ import DivisionComponent from '@/components/DivisionComponent.vue';
 import { onMounted, ref } from 'vue';
 import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import TimerComponent from '@/components/TimerComponent.vue';
+import config from '@/config';
 
 /*
 const debugData = {
@@ -364,7 +365,7 @@ function hideError() {
     displayError.value = false;
 }
 
-let user = "";
+let user = '';
 let globalTimer = 0;
 let TimerText = '';
 
@@ -372,7 +373,7 @@ async function getMatchPlan() {
     console.log('Trying to get match plan');
 
     try {
-        const response = await fetch('http://localhost:8081/api/match-plan', {
+        const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -445,7 +446,7 @@ async function getLoggedIn(): Promise<string | null> {
     });
 
     try {
-        const response = await fetch('http://localhost:8081/api/discord/logged-in', {
+        const response = await fetch(`${config.getBackendUrl()}/api/discord/logged-in`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

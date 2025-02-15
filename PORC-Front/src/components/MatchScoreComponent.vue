@@ -3,6 +3,7 @@ import type { MatchModel } from '@/models/MatchModel';
 import { ref, onMounted } from 'vue';
 import EditMatchComponent from './EditMatchComponent.vue';
 import ErrorPopupModel from './ErrorPopupModel.vue';
+import config from '@/config';
 
 const props = defineProps<{
     match: MatchModel;
@@ -70,7 +71,7 @@ async function updateMatchInfo(updateInfo: MatchModel) {
     // console.log(requestData);
 
     try {
-        const response = await fetch('http://localhost:8081/api/match-plan', {
+        const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -108,27 +109,27 @@ function containsUser(): boolean {
     // console.log('match : ', Match);
 
     allowedEdit.value = !(Match.p1.id != userID && Match.p2.id != userID);
-    return allowedEdit.value
+    return allowedEdit.value;
 }
 
 function checkWinner() {
     // console.log("score: ", props.match.p1score, " - ", props.match.p2score);
     if (props.match.p1score != null && props.match.p2score != null) {
         // console.log("is second bigger? ", (props.match.p1score < props.match.p2score));
-        p1Win.value = (props.match.p1score > props.match.p2score);
-        p2Win.value = (props.match.p1score < props.match.p2score);
+        p1Win.value = props.match.p1score > props.match.p2score;
+        p2Win.value = props.match.p1score < props.match.p2score;
         // console.log("p1 win: ", p1Win.value)
     }
 }
 
 function checkUser() {
     // console.log("score: ", props.match.p1score, " - ", props.match.p2score);
-    p1User.value = (props.match.p1.id == userID);
-    p2User.value = (props.match.p2.id == userID)
+    p1User.value = props.match.p1.id == userID;
+    p2User.value = props.match.p2.id == userID;
 }
 
-const shortendP1tag = ref("")
-const shortendP2tag = ref("")
+const shortendP1tag = ref('');
+const shortendP2tag = ref('');
 
 function shortenTags() {
     shortendP1tag.value = props.match.p1.tag.length > 10 ? props.match.p1.tag.slice(0, 10) + '..' : props.match.p1.tag;
@@ -169,12 +170,12 @@ function checkScores() {
         >
             <div class="d-flex justify-content-between">
                 <span class="player-tag" :class="{ 'winner-tag': p1Win }">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
-                <span class="player-score" :class="{'winner-score': p1Win}">{{ match.p1score }}</span>
+                <span class="player-score" :class="{ 'winner-score': p1Win }">{{ match.p1score }}</span>
             </div>
             <div class="divider"></div>
             <div class="d-flex justify-content-between">
                 <span class="player-tag" :class="{ 'winner-tag': p2Win }">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
-                <span class="player-score" :class="{'winner-score': p2Win}">{{ match.p2score }}</span>
+                <span class="player-score" :class="{ 'winner-score': p2Win }">{{ match.p2score }}</span>
             </div>
         </div>
         <div v-if="allowedEdit" class="edit" :class="{ 'col-2 p-0 justify-content-centered': !isScored }">

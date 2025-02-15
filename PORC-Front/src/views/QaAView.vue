@@ -1,7 +1,9 @@
 <script lang="ts" setup>
-    const signUpURL = "http://localhost:5173/signup"
-    const discordServerURL = "https://discord.gg/TUQd26DTzg"
-    const discordTimeStamps = "https://www.geeksforgeeks.org/how-to-make-timestamps-on-discord/#what-is-a-discord-timestamp"
+import config from '@/config';
+
+const signUpURL = `${config.getBackendUrl()}/signup`;
+const discordServerURL = 'https://discord.gg/TUQd26DTzg';
+const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-on-discord/#what-is-a-discord-timestamp';
 </script>
 
 <template>
@@ -59,70 +61,70 @@
 </template>
 
 <style lang="scss" scoped>
-    .container-fill {
-        min-height: 93vh;
-    }
+.container-fill {
+    min-height: 93vh;
+}
 
-    .inner-container {
-        overflow-x: hidden;
-        justify-content: center;
-        flex-direction: column;
-        align-items: center;
-        display: flex;
-    }
+.inner-container {
+    overflow-x: hidden;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    display: flex;
+}
 
-    .titel {
-        justify-content: center;
-        text-align: center;
-        margin: 3rem;
-        font-style: bold;
-        height: fit-content;
-    }
+.titel {
+    justify-content: center;
+    text-align: center;
+    margin: 3rem;
+    font-style: bold;
+    height: fit-content;
+}
 
-    .lesser-title {
-        margin-bottom: 0.4rem;
-    }
+.lesser-title {
+    margin-bottom: 0.4rem;
+}
 
-    .under-rules {
-        padding-top: 2rem;
-        align-items: first baseline;
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }
+.under-rules {
+    padding-top: 2rem;
+    align-items: first baseline;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
 
-    .highlight {
-        text-decoration: underline;
-    }
+.highlight {
+    text-decoration: underline;
+}
 
-    .rule-box {
-        margin-bottom: 10rem;
-        margin-top: 1rem;
-    }
+.rule-box {
+    margin-bottom: 10rem;
+    margin-top: 1rem;
+}
 
-    .form-container {
-        top: 0;
-    }
+.form-container {
+    top: 0;
+}
 
-    .warning {
-        font-style: italic;
-        color: rgb(255, 53, 39);
-    }
+.warning {
+    font-style: italic;
+    color: rgb(255, 53, 39);
+}
 
-    .success {
-        font-style: italic;
-        color: rgb(19, 244, 98);
-    }
+.success {
+    font-style: italic;
+    color: rgb(19, 244, 98);
+}
 
-    .answer {
-        margin-bottom: 6rem;
-    }
+.answer {
+    margin-bottom: 6rem;
+}
 
-    .spacer {
-        height: 100px;
-    }
+.spacer {
+    height: 100px;
+}
 
-    .link {
-        color: rgb(0, 191, 255);
-        text-decoration: none;
-    }
+.link {
+    color: rgb(0, 191, 255);
+    text-decoration: none;
+}
 </style>
