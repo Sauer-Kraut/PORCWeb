@@ -3,7 +3,9 @@ pub mod client_communication;
 pub mod storage_lib;
 pub mod bot_communication;
 pub mod discord_communication;
-use discord_communication::{discord_callback, put_logged_in, DiscordUser};
+pub mod account_lib;
+use discord_communication::{discord_callback, put_logged_in};
+use account_lib::{Account, DiscordUser};
 use async_std::sync::Mutex;
 use actix_web::FromRequest;
 use bot_communication::*;
@@ -59,6 +61,7 @@ async fn main() -> std::io::Result<()> {
     let matchplan_path = "userdata/SeasonMatchPlan.json".to_string();
     let signups_path = "userdata/SeasonSignUps.json".to_string();
     let logins_path = "userdata/DiscordLogIns.json".to_string();
+    let accounts_path = "userdata/UserAccounts.json".to_string();
 
     println!("read 1");
     let read_plan = StorageMod::read_matchplan(&matchplan_path)?;
@@ -73,6 +76,9 @@ async fn main() -> std::io::Result<()> {
     println!("read 3");
     let signups = Arc::new(Mutex::new(StorageMod::read_signups(&signups_path)?));
     // println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
+
+    println!("read 4");
+    let accounts = Arc::new(Mutex::new(StorageMod::read_accounts(&accounts_path)?));
 
     println!("\n{}\n\n", "Server has launched");
 
@@ -96,9 +102,11 @@ async fn main() -> std::io::Result<()> {
                 matchplan: matchplan.clone(),
                 signups: signups.clone(),
                 logins: logins.clone(),
+                accounts: accounts.clone(),
                 matchplan_path: matchplan_path.clone(),
                 signups_path: signups_path.clone(),
-                logins_path: logins_path.clone()
+                logins_path: logins_path.clone(),
+                accounts_path: accounts_path.clone()
             }))
             .service(web::resource("/").to(index))
             .service(web::resource("/signup").to(index))
@@ -124,7 +132,7 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
 
     })
-    .bind("[::]:8081")? // Caddy forwarts requests to our URL to the local port 8081
+    .bind("[::]:8081")? // Caddy forwards requests to our URL to the local port 8081
     .run()
     .await
 }
@@ -134,8 +142,58 @@ async fn main() -> std::io::Result<()> {
 pub struct AppState {
     matchplan: Arc<Mutex<Option<MatchPlan>>>,
     signups: Arc<Mutex<Vec<SignUpInfo>>>,
-    logins: Arc<Mutex<HashMap<String, DiscordUser>>>,
+    logins: Arc<Mutex<HashMap<String, String>>>,
+    accounts: Arc<Mutex<HashMap<String, Account>>>,
     matchplan_path: String,
     signups_path: String,
-    logins_path: String
+    logins_path: String,
+    accounts_path: String
+}
+
+impl AppState {
+
+    pub async fn refresh(&self) {
+
+        let accounts_clone = self.accounts.clone();
+        let accounts = accounts_clone.lock().await;
+
+        let matchplan_clone = self.matchplan.clone();
+        let mut matchplan_lock = matchplan_clone.lock().await;
+
+        if let Some(matchplan) = matchplan_lock.as_mut() {
+            for division in matchplan.divisions.iter_mut() {
+
+                for (_key, value) in division.matches.iter_mut() {
+
+                    let account_p1 = accounts.get(&value.p1.id);
+
+                    match account_p1 {
+                        Some(account) => {
+                            if account.user_info.username != value.p1.tag {
+                                value.p1.tag = account.user_info.username.clone();
+                            }
+                        },
+                        None => {},
+                    }
+
+                    let account_p2 = accounts.get(&value.p2.id);
+
+                    match account_p2 {
+                        Some(account) => {
+                            if account.user_info.username != value.p2.tag {
+                                value.p2.tag = account.user_info.username.clone();
+                            }
+                        },
+                        None => {},
+                    }
+                }
+            }
+
+            let _ = StorageMod::save_matchplan(matchplan.clone(), &self.matchplan_path);
+        }
+
+        let _ = StorageMod::save_accounts(accounts.clone(), &self.accounts_path);
+        let _ = StorageMod::save_logins(self.logins.lock().await.clone(), &self.logins_path);
+        let _ = StorageMod::save_signups(self.signups.lock().await.clone(), &self.signups_path);
+    }
 }

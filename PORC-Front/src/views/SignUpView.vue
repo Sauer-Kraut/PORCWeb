@@ -171,7 +171,7 @@
         console.log("Trying to get signed up in status");
 
         try {
-            const response = await fetch('https://porc.mywire.org/api/sign-up', {
+            const response = await fetch('http://localhost:8081/api/sign-up', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
