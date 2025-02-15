@@ -2,35 +2,36 @@
 import { ref, defineProps, onMounted, defineEmits } from 'vue';
 import type { PlayerPerformance } from '@/models/PlayerPerformancModel';
 import { errorMessages } from 'vue/compiler-sfc';
+import config from '@/config';
 
 const props = defineProps({
     divisionName: {
-        type: String
+        type: String,
     },
 });
 
 const emit = defineEmits<{
-  (e: 'close'): void;
+    (e: 'close'): void;
 }>();
 
 const displayError = ref(false);
-let errorMessage: string  = "This is an error message";
+let errorMessage: string = 'This is an error message';
 
 const performances = ref<PlayerPerformance[]>([]);
 
 function hideError() {
-  displayError.value = false;
+    displayError.value = false;
 }
 
 async function getPlayerRanking() {
-    console.log("Trying to get player ranking");
+    console.log('Trying to get player ranking');
 
     try {
-        const response = await fetch('http://localhost:8081/api/ranking', {
+        const response = await fetch(`${config.getBackendUrl()}/api/ranking`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
@@ -42,10 +43,9 @@ async function getPlayerRanking() {
 
         if (data.error != null) {
             errorMessage = data.error;
-            console.log("Error message:", errorMessage);
+            console.log('Error message:', errorMessage);
             displayError.value = true;
-        } 
-        else {
+        } else {
             let playerPerformances = performances.value;
             // console.log("data", data.data);
 
@@ -60,18 +60,17 @@ async function getPlayerRanking() {
             }
 
             if (playerPerformances == performances.value) {
-                errorMessage = "Divsion could not be found for ranking";
-                console.log("Error message:", errorMessage);
+                errorMessage = 'Divsion could not be found for ranking';
+                console.log('Error message:', errorMessage);
                 displayError.value = true;
-            } 
-            else {
+            } else {
                 performances.value = playerPerformances;
             }
         }
     } catch (error) {
         console.error('Error:', error);
-        errorMessage = "internal server error";
-        console.log("Error message:", errorMessage);
+        errorMessage = 'internal server error';
+        console.log('Error message:', errorMessage);
         displayError.value = true;
     }
 
@@ -80,7 +79,7 @@ async function getPlayerRanking() {
 
 function close() {
     // console.log("I got clicked")
-    emit("close")
+    emit('close');
 }
 
 onMounted(() => {
@@ -118,52 +117,52 @@ onMounted(() => {
 </template>
 
 <style scoped>
-    .leaderboard {
-        width: 100%;
-        text-align: center;
-        border-radius: 11.5px;
-        border-width: 1px;
-        border-color: rgb(143, 143, 143);
-        border-style: solid;
-        flex-wrap: none;
-        min-width: 60px;
-        background-color: #2e3030;
-        height: fit-content;
-    }
+.leaderboard {
+    width: 100%;
+    text-align: center;
+    border-radius: 11.5px;
+    border-width: 1px;
+    border-color: rgb(143, 143, 143);
+    border-style: solid;
+    flex-wrap: none;
+    min-width: 60px;
+    background-color: #2e3030;
+    height: fit-content;
+}
 
-    .titel {
-        margin-top: 0.5rem;
-        margin-bottom: 2rem;
-    }
+.titel {
+    margin-top: 0.5rem;
+    margin-bottom: 2rem;
+}
 
-    .item {
-        overflow: hidden;
-        clip: auto;
-        flex-wrap: none;
-        display: grid;
-    }
+.item {
+    overflow: hidden;
+    clip: auto;
+    flex-wrap: none;
+    display: grid;
+}
 
-    .player {
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 5px;
-    }
+.player {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 5px;
+}
 
-    .content {
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 5px;
-        font-size: 13px;
-        text-wrap: none;
-        clip: auto;
-    }
+.content {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 5px;
+    font-size: 13px;
+    text-wrap: none;
+    clip: auto;
+}
 
-    .content.header {
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
+.content.header {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
 
-    .spacer {
-        margin-bottom: 1rem;
-    }
+.spacer {
+    margin-bottom: 1rem;
+}
 </style>
