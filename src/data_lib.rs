@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 use crate::bot_communication::PlanBlueprint;
-use crate::PlayerBlueprint;
+use crate::{AppState, PlayerBlueprint};
 
 
 
@@ -56,10 +56,10 @@ impl fmt::Display for Division {
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Match {
-    p1: Player,
-    p2: Player,
-    p1score: Option<usize>,
-    p2score: Option<usize>,
+    pub p1: Player,
+    pub p2: Player,
+    pub p1score: Option<usize>,
+    pub p2score: Option<usize>,
 }
 
 impl fmt::Display for Match {
@@ -79,7 +79,7 @@ impl fmt::Display for Match {
 pub struct Player {
     pub id: String,
     pub tag: String,
-    pub division: String,
+    pub division: String
 }
 
 impl fmt::Display for Player {
@@ -334,6 +334,40 @@ impl MatchPlan {
         }
 
         return Err(DataGenerationError::MatchMapModificationError("Match not found in any division".to_string()));
+    }
+
+    pub async fn refresh(&mut self, appstate: AppState) {
+
+        let accounts_clone = appstate.accounts.clone();
+        let accounts = accounts_clone.lock().await;
+
+        for division in self.divisions.iter_mut() {
+
+            for (_key, value) in division.matches.iter_mut() {
+
+                let account_p1 = accounts.get(&value.p1.id);
+
+                match account_p1 {
+                    Some(account) => {
+                        if account.user_info.username != value.p1.tag {
+                            value.p1.tag = account.user_info.username.clone();
+                        }
+                    },
+                    None => {},
+                }
+
+                let account_p2 = accounts.get(&value.p2.id);
+
+                match account_p2 {
+                    Some(account) => {
+                        if account.user_info.username != value.p2.tag {
+                            value.p2.tag = account.user_info.username.clone();
+                        }
+                    },
+                    None => {},
+                }
+            }
+        }
     }
 }
 

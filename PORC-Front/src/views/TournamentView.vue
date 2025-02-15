@@ -364,7 +364,7 @@ function hideError() {
     displayError.value = false;
 }
 
-let user = '';
+let user = "";
 let globalTimer = 0;
 let TimerText = '';
 
@@ -372,7 +372,7 @@ async function getMatchPlan() {
     console.log('Trying to get match plan');
 
     try {
-        const response = await fetch('https://porc.mywire.org/api/match-plan', {
+        const response = await fetch('http://localhost:8081/api/match-plan', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -457,15 +457,15 @@ async function getLoggedIn(): Promise<string | null> {
             throw new Error('Network response was not ok');
         }
 
-        const data = await response.json();
-        // console.log('Success:', data);
-        if (data.error != null) {
+        const response_json = await response.json();
+        // console.log('Success:', response_json);
+        if (response_json.error != null) {
             return null;
         } else {
-            console.log("Logged in: ", data.data);
-            user = data.data.id as string;
+            // console.log("Logged in: ", response_json.data);
+            user = response_json.data.user_info.id as string;
             // console.log("user: ", user)
-            return data;
+            return response_json;
         }
     } catch (error) {
         console.error('Error:', error);

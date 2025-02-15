@@ -1,4 +1,4 @@
-use crate::discord_communication::DiscordUser;
+use crate::account_lib::{Account, DiscordUser};
 use crate::{discord_communication, MatchPlan, SignUpInfo};
 use askama::filters::format;
 use discord_communication::TokenRequestParam;
@@ -49,19 +49,34 @@ impl StorageMod {
         Ok(signups)
     }
 
-    pub fn save_logins(logins: HashMap<String, DiscordUser>, path: &str) -> Result<(), io::Error> {
+    pub fn save_logins(logins: HashMap<String, String>, path: &str) -> Result<(), io::Error> {
         let json = serde_json::to_string_pretty(&logins)?;
         let mut file = File::create(path)?;
         file.write_all(json.as_bytes())?;
         Ok(())
     }
 
-    pub fn read_logins(path: &str) -> Result<HashMap<String, DiscordUser>, io::Error> {
+    pub fn read_logins(path: &str) -> Result<HashMap<String, String>, io::Error> {
         let mut file = File::open(path)?;
         let mut json = "".to_string();
         file.read_to_string(&mut json)?;
-        let signups: HashMap<String, DiscordUser> = serde_json::from_str(&json)?;
+        let signups: HashMap<String, String> = serde_json::from_str(&json)?;
         Ok(signups)
+    }
+
+    pub fn save_accounts(accounts: HashMap<String, Account>, path: &str) -> Result<(), io::Error> {
+        let json = serde_json::to_string_pretty(&accounts)?;
+        let mut file = File::create(path)?;
+        file.write_all(json.as_bytes())?;
+        Ok(())
+    }
+
+    pub fn read_accounts(path: &str) -> Result<HashMap<String, Account>, io::Error> {
+        let mut file = File::open(path)?;
+        let mut json = "".to_string();
+        file.read_to_string(&mut json)?;
+        let accounts: HashMap<String, Account> = serde_json::from_str(&json)?;
+        Ok(accounts)
     }
 
     pub fn read_secrets() -> Result<TokenRequestParam, io::Error> {

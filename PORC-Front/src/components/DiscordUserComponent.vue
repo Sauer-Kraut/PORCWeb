@@ -52,13 +52,13 @@ async function getLoggedIn() {
             throw new Error('Network response was not ok');
         }
 
-        const data = await response.json();
+        const response_json = await response.json();
         // console.log('Success:', data);
-        if (data.error == null) {
-            // console.log("Logged in: ", data);
+        if (response_json.error == null) {
+            console.log("Logged in: ", response_json);
             isLoggedIn.value = true;
-            const avatar = data.data.avatar;
-            const id = data.data.id;
+            const avatar = response_json.data.user_info.avatar;
+            const id = response_json.data.user_info.id;
             url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`
         }
 

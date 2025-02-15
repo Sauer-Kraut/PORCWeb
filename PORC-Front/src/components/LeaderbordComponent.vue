@@ -26,7 +26,7 @@ async function getPlayerRanking() {
     console.log("Trying to get player ranking");
 
     try {
-        const response = await fetch('https://porc.mywire.org/api/ranking', {
+        const response = await fetch('http://localhost:8081/api/ranking', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'

@@ -8,10 +8,14 @@ use tokio;
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
-use crate::{sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, Player, SignUpInfo, StorageMod};
+use crate::{account_lib, sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, Player, SignUpInfo, StorageMod};
+use account_lib::{Account, DiscordUser};
 use async_std::fs;
 use reqwest::Client;
 use uuid::Uuid;
+use actix_web::cookie::time::OffsetDateTime;
+use std::time::{SystemTime, Duration};
+
 
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -34,15 +38,6 @@ struct TokenResponse {
     scope: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct DiscordUser {
-    id: String,
-    username: String,
-    discriminator: String,
-    avatar: Option<String>,
-    email: Option<String>,
-}
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PutRequestLoggedInRecvPackage {
     pub title: String,
@@ -52,7 +47,7 @@ pub struct PutRequestLoggedInRecvPackage {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PutRequestLoggedInSendPackage {
     pub title: String,
-    pub data: Option<DiscordUser>,
+    pub data: Option<Account>,
     pub error: Option<String>
 }
 
@@ -100,7 +95,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
 
     let session_id = generate_session_id().await;
 
-    logins.insert(session_id.clone(), result);
+    logins.insert(session_id.clone(), result.id.clone());
     *locked_logins = logins.clone();
     match StorageMod::save_logins(logins, &appstate.logins_path) {
         Ok(_) => {},
@@ -110,11 +105,36 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
         }
     };
 
+    let mut locked_accounts = appstate.accounts.lock().await;
+    let mut accounts = locked_accounts.clone();
+
+    if !accounts.contains_key(&result.id) {
+        
+        let new_account = Account {
+            user_info: result.clone(),
+            schedule: None
+        };
+
+        accounts.insert(result.id, new_account);
+        *locked_accounts = accounts.clone();
+        match StorageMod::save_accounts(accounts, &appstate.accounts_path) {
+            Ok(_) => {},
+            Err(err) => {
+                println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
+                return HttpResponse::InternalServerError().body("")
+            }
+        };
+    }
+
+    
+    let expiry = OffsetDateTime::now_utc() + Duration::from_secs(60 * 60 * 24 * 30);
+
     let cookie = Cookie::build("browser_id", &session_id[..])
         .domain("porc.mywire.org")         // TODO: needs to be updated for deployment
         .path("/")
         .http_only(false)
         .secure(true)               
+        .expires(expiry)
         .same_site(actix_web::cookie::SameSite::None)       // TODO: needs to be set to strict for deployment
         .finish();
 
@@ -162,16 +182,24 @@ pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appst
     let logins_clone = appstate.logins.clone();
     let client_id = info.id.clone();
 
+    let accounts_clone = appstate.accounts.clone();
+    let accounts_lock = accounts_clone.lock().await.clone();
+
     // We spawn an asyncronus thread in order to be able to handle many requests at once
     println!("startig async thread");
     tokio::task::spawn(async move {
         
         match logins_clone.as_ref().lock().await.get(&client_id) {
             Some(entry) => {
-                data_sender.send(entry.clone()).unwrap()
+                let discord_id = entry.clone();
+                match accounts_lock.get(&discord_id) {
+                    Some(value) => {let _ = data_sender.send(value.clone());}
+                    None => {error_sender.send("No account for discord id found".to_string()).unwrap();}
+                }
             },
             None => {error_sender.send("no login found for client id".to_string()).unwrap()}
         };
+        drop(accounts_lock);
 
     }).await.unwrap();
 
