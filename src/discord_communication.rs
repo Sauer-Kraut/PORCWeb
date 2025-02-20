@@ -58,7 +58,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
     let client = Client::new();
     let clinet_info = StorageMod::read_secrets().unwrap();
     
-    let access_token = match exchang_code_for_token(&query.code, clinet_info).await {
+    let access_token = match exchang_code_for_token(&query.code, clinet_info, appstate.config.url.clone()).await {
         Ok(token) => token,
         Err(err) => {
             println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
@@ -130,7 +130,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
     let expiry = OffsetDateTime::now_utc() + Duration::from_secs(60 * 60 * 24 * 30);
 
     let cookie = Cookie::build("browser_id", &session_id[..])
-        .domain("porc.mywire.org")         // TODO: needs to be updated for deployment
+        .domain(appstate.config.domain.clone())         // TODO: needs to be updated for deployment
         .path("/")
         .http_only(false)
         .secure(true)               
@@ -145,7 +145,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
 
 
 
-async fn exchang_code_for_token(code: &str, info: TokenRequestParam) -> Result<String, reqwest::Error> {
+async fn exchang_code_for_token(code: &str, info: TokenRequestParam, url: String) -> Result<String, reqwest::Error> {
     let client = Client::new();
 
     let id = info.client_id;
@@ -156,7 +156,7 @@ async fn exchang_code_for_token(code: &str, info: TokenRequestParam) -> Result<S
         ("client_secret", &secret[..]),
         ("grant_type", "authorization_code"),
         ("code", code),
-        ("redirect_uri", "https://porc.mywire.org/discord/callback")
+        ("redirect_uri", &format!("{}{}", url, "/discord/callback"))
     ];
 
     let response = client

@@ -272,7 +272,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
 pub struct PostAccountInfoRecvPackage {
     title: String,
     client_id: String,
-    account_info: Account
+    account_info: PubAccountInfo
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -283,7 +283,7 @@ pub struct PostAccountInfoRespPackage {
 
 
 pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{} {}", "Received POST Request for account info of account:".bold().cyan(), info.account_info.user_info.username.bold().italic());
+    println!("\n{} {}", "Received POST Request for account info of account:".bold().cyan(), info.account_info.username.bold().italic());
 
     let (error_sender, error_receiver) = mpsc::channel();
 
@@ -301,7 +301,17 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
             Some(entry) => {
                 let discord_id = entry.clone();
                 match accounts_lock.get_mut(&discord_id) {
-                    Some(value) => {*value = info.account_info.clone()}
+                    Some(value) => {*value = 
+                        Account{ 
+                            user_info: DiscordUser {
+                                id: info.account_info.id.clone(),
+                                username: info.account_info.username.clone(),
+                                discriminator: value.user_info.discriminator.clone(),
+                                avatar: info.account_info.avatar.clone(),
+                                email: value.user_info.email.clone(),
+                            }, 
+                            schedule: info.account_info.schedule.clone()
+                        }}
                     None => {error_sender.send("No account for discord id found".to_string()).unwrap();}
                 }
             },
