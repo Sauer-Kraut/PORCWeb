@@ -5,8 +5,8 @@ import { onMounted, ref } from 'vue';
 
 let url = 'default';
 const isLoggedIn = ref(false);
-const discordAuthURL =
-    'https://discord.com/oauth2/authorize?client_id=1326173309234319441&response_type=code&redirect_uri=https%3A%2F%2Fporc.mywire.org%2Fdiscord%2Fcallback&scope=identify';
+const discordAuthURL = `${config.getDiscordUrl()}`;
+console.log(`${config.getDiscordUrl()}`);
 
 const displayError = ref(false);
 let errorMessage: string = 'This is an error message';

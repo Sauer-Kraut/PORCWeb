@@ -15,6 +15,13 @@ pub struct Record {
     pub season: usize
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Config {
+    pub url: String,
+    pub domain: String,
+    pub port: String
+}
+
 pub struct StorageMod {}
 
 impl StorageMod {
@@ -88,7 +95,6 @@ impl StorageMod {
         Ok(info)
     }
 
-
     pub fn save_record(record: Record, directory: &str) -> Result<(), io::Error> {
         let json = serde_json::to_string_pretty(&record)?;
 
@@ -97,6 +103,15 @@ impl StorageMod {
         let mut file = File::create(&file_path)?;
         file.write_all(json.as_bytes())?;
         Ok(())
+    }
+
+    pub fn read_config() -> Result<Config, io::Error> {
+        let path = "config.json";
+        let mut file = File::open(path)?;
+        let mut json = "".to_string();
+        file.read_to_string(&mut json)?;
+        let info: Config = serde_json::from_str(&json)?;
+        Ok(info)
     }
 
 }

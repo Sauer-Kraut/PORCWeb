@@ -5,7 +5,7 @@ pub mod bot_communication;
 pub mod discord_communication;
 pub mod account_lib;
 use discord_communication::{discord_callback, put_logged_in};
-use account_lib::{Account, DiscordUser};
+use account_lib::*;
 use async_std::sync::Mutex;
 use actix_web::FromRequest;
 use bot_communication::*;
@@ -80,14 +80,18 @@ async fn main() -> std::io::Result<()> {
     println!("read 4");
     let accounts = Arc::new(Mutex::new(StorageMod::read_accounts(&accounts_path)?));
 
+    println!("read 5");
+    let config = Arc::new(StorageMod::read_config()?);
+    let port = config.port.clone();
+
     println!("\n{}\n\n", "Server has launched");
 
     HttpServer::new(move || {
         App::new()
             .wrap(Cors::default()
-                .allowed_origin("http://localhost:8081") 
+                .allowed_origin(&format!("{}{}", "http://localhost:", config.port.clone())) 
                 .allowed_origin("http://localhost:5173") 
-                .allowed_origin("https://porc.mywire.org") // Update with your frontend's origin
+                .allowed_origin(&config.url.clone()) // Update with your frontend's origin
                 .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
                 .allowed_headers(vec![
                     http::header::AUTHORIZATION,
@@ -106,7 +110,8 @@ async fn main() -> std::io::Result<()> {
                 matchplan_path: matchplan_path.clone(),
                 signups_path: signups_path.clone(),
                 logins_path: logins_path.clone(),
-                accounts_path: accounts_path.clone()
+                accounts_path: accounts_path.clone(),
+                config: config.clone()
             }))
             .service(web::resource("/").to(index))
             .service(web::resource("/signup").to(index))
@@ -129,10 +134,16 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/discord/callback").to(discord_callback))
             .service(web::resource("/api/discord/logged-in")
             .route(web::post().to(put_logged_in)))
+            .service(web::resource("/api/account/info")
+            .route(web::put().to(put_account_info)))
+            .service(web::resource("/api/account/setinfo")
+            .route(web::post().to(post_account_info)))
+            .service(web::resource("/api/matches/set")
+            .route(web::post().to(post_match_event)))
             .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
 
     })
-    .bind("[::]:8081")? // Caddy forwards requests to our URL to the local port 8081
+    .bind(&format!("{}{}", "[::]:", port))? // Production port: 8081, devolpment sever port: 8082, local port:8082
     .run()
     .await
 }
@@ -147,7 +158,8 @@ pub struct AppState {
     matchplan_path: String,
     signups_path: String,
     logins_path: String,
-    accounts_path: String
+    accounts_path: String,
+    config: Arc<Config>
 }
 
 impl AppState {
