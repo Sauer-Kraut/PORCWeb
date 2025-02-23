@@ -13,7 +13,6 @@ const props = defineProps<{
 let userID = props.user_id;
 let Match = props.match;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const allowedEdit = ref(false);
 
 const isScored = ref(false);
@@ -157,10 +156,7 @@ function checkScores() {
 
 <template>
     <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored && allowedEdit }">
-        <div
-            class="d-flex flex-column justify-content-center center match-score"
-            :class="{ 'col-10': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }"
-        >
+        <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-10': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
             <div class="d-flex justify-content-between" :class="{'winner': p1Win(match)}">
                 <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
                 <span class="player-score">{{ match.p1score }}</span>

@@ -1,6 +1,11 @@
+//Bootstrap
 $primary: #0d6efd;
 $body-bg: #1e252b;
 $body-color: #ffffff;
 $border-radius: 1rem;
+$border-radius-sm: 1rem;
+
+//Custom
+$background-header: linear-gradient(135deg, #7a6464, #5b77e8);
 
 @import 'bootstrap/scss/bootstrap';

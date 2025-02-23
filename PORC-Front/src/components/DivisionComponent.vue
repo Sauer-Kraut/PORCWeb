@@ -136,12 +136,14 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+@import '@/assets/scss/styles.scss';
+
 .division {
     .header {
         background-color: #7b7b7b;
         padding: 1rem;
         height: 45px;
-        background: linear-gradient(135deg, #7a6464, #5b77e8);
+        background: $background-header;
     }
 
     .pr-2 {
