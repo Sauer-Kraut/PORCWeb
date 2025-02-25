@@ -5,6 +5,7 @@ use colored::Colorize;
 use tokio;
 use std::sync::{mpsc, Arc, LockResult};
 use serde::{Deserialize, Serialize};
+use crate::account_lib::MatchEvent;
 use crate::{sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, MatchPlan, Player, Record, SignUpInfo, StorageMod};
 
 
@@ -251,13 +252,11 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
 
 
 pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for plan blueprint".bold().cyan());
+    println!("\n{}", "Received POST Request for new season start".bold().magenta());
 
     let (error_sender, error_receiver) = mpsc::channel();
     let match_plan = appstate.matchplan.clone();
     let sign_ups = appstate.signups.clone();
-    let plan_path = appstate.matchplan_path.clone();
-    let signup_path = appstate.signups_path.clone();
 
     let blueprint = info.plan.clone();
 
@@ -295,19 +294,21 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
                                     season: l.season as usize,
                                 };
 
-                                let _ = StorageMod::save_record(record, "static/records").unwrap();
+                                let _ = StorageMod::save_record(record).unwrap();
                             },
                             None => {}
                         };
 
                         *plan_binding = Some(plan.clone());
-                        let _ = StorageMod::save_matchplan(plan, &plan_path).unwrap();
+                        let _ = StorageMod::save_matchplan(plan).unwrap();
                         *signup_binding = vec!();
-                        let _ = StorageMod::save_signups(vec!(), &signup_path).unwrap();
+                        let _ = StorageMod::save_signups(vec!()).unwrap();
                     }
                 }
             }
         }
+
+        appstate.refresh().await;
     }).await.unwrap();
 
     let error = match error_receiver.try_recv(){
@@ -319,4 +320,9 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
         title: "Server New Season start Respons".to_string(),
         error
     })
+}
+
+
+pub fn make_bot_request_match(matchevent: MatchEvent) -> Result<(), String>{
+    Ok(())
 }

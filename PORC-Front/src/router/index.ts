@@ -1,6 +1,6 @@
 import TournamentView from '@/views/TournamentView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
-import QaAView from '@/views/QaAView.vue'
+import QaAView from '@/views/FAQView.vue'
 import RulesView from '@/views/RulesView.vue'
 import SignUpView from '@/views/SignUpView.vue'
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
@@ -17,8 +17,8 @@ const routes: RouteRecordRaw[] = [
     component: RulesView,
   },
   {
-    path: '/qaa',
-    name: 'QaA',
+    path: '/faq',
+    name: 'FAQ',
     component: QaAView,
   },
   {

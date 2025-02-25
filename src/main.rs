@@ -58,29 +58,27 @@ async fn main() -> std::io::Result<()> {
 
     // let _ = StorageMod::save_matchplan(matchplan, "src/Season3MatchPlan.json")?;
 
-    let matchplan_path = "userdata/SeasonMatchPlan.json".to_string();
-    let signups_path = "userdata/SeasonSignUps.json".to_string();
-    let logins_path = "userdata/DiscordLogIns.json".to_string();
-    let accounts_path = "userdata/UserAccounts.json".to_string();
-
     println!("read 1");
-    let read_plan = StorageMod::read_matchplan(&matchplan_path)?;
+    let read_plan = StorageMod::read_matchplan()?;
 
     println!("read 2");
-    let logins = Arc::new(Mutex::new(StorageMod::read_logins(&logins_path)?));
+    let logins = Arc::new(Mutex::new(StorageMod::read_logins()?));
 
     // println!("Read Matchplan: {}", read_plan);
 
     let matchplan = Arc::new(Mutex::new(Some(read_plan)));
     // StorageMod::save_signups(vec!(), "src/Season4SignUps.json")?;
     println!("read 3");
-    let signups = Arc::new(Mutex::new(StorageMod::read_signups(&signups_path)?));
+    let signups = Arc::new(Mutex::new(StorageMod::read_signups()?));
     // println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
 
     println!("read 4");
-    let accounts = Arc::new(Mutex::new(StorageMod::read_accounts(&accounts_path)?));
+    let accounts = Arc::new(Mutex::new(StorageMod::read_accounts()?));
 
     println!("read 5");
+    let matchevents = Arc::new(Mutex::new(StorageMod::read_matchevents()?));
+
+    println!("read 6");
     let config = Arc::new(StorageMod::read_config()?);
     let port = config.port.clone();
 
@@ -107,16 +105,13 @@ async fn main() -> std::io::Result<()> {
                 signups: signups.clone(),
                 logins: logins.clone(),
                 accounts: accounts.clone(),
-                matchplan_path: matchplan_path.clone(),
-                signups_path: signups_path.clone(),
-                logins_path: logins_path.clone(),
-                accounts_path: accounts_path.clone(),
+                matchevents: matchevents.clone(),
                 config: config.clone()
             }))
             .service(web::resource("/").to(index))
             .service(web::resource("/signup").to(index))
             .service(web::resource("/rules").to(index))
-            .service(web::resource("/qaa").to(index))
+            .service(web::resource("/faq").to(index))
             .service(web::resource("/api/match-plan")
             .route(web::get().to(get_match_plan_request))
             .route(web::post().to(update_match_plan_request)))
@@ -135,11 +130,13 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/api/discord/logged-in")
             .route(web::post().to(put_logged_in)))
             .service(web::resource("/api/account/info")
-            .route(web::put().to(put_account_info)))
+            .route(web::get().to(get_account_info)))
             .service(web::resource("/api/account/setinfo")
             .route(web::post().to(post_account_info)))
             .service(web::resource("/api/matches/set")
             .route(web::post().to(post_match_event)))
+            .service(web::resource("/api/matches/get")
+            .route(web::get().to(get_match_event)))
             .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
 
     })
@@ -155,10 +152,7 @@ pub struct AppState {
     signups: Arc<Mutex<Vec<SignUpInfo>>>,
     logins: Arc<Mutex<HashMap<String, String>>>,
     accounts: Arc<Mutex<HashMap<String, Account>>>,
-    matchplan_path: String,
-    signups_path: String,
-    logins_path: String,
-    accounts_path: String,
+    matchevents: Arc<Mutex<HashMap<String, MatchEvent>>>,
     config: Arc<Config>
 }
 
@@ -201,11 +195,12 @@ impl AppState {
                 }
             }
 
-            let _ = StorageMod::save_matchplan(matchplan.clone(), &self.matchplan_path);
+            let _ = StorageMod::save_matchplan(matchplan.clone());
         }
 
-        let _ = StorageMod::save_accounts(accounts.clone(), &self.accounts_path);
-        let _ = StorageMod::save_logins(self.logins.lock().await.clone(), &self.logins_path);
-        let _ = StorageMod::save_signups(self.signups.lock().await.clone(), &self.signups_path);
+        let _ = StorageMod::save_accounts(accounts.clone());
+        let _ = StorageMod::save_logins(self.logins.lock().await.clone());
+        let _ = StorageMod::save_signups(self.signups.lock().await.clone());
+        let _ = StorageMod::save_matchevents(self.matchevents.lock().await.clone());
     }
 }

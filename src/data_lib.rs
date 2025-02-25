@@ -531,7 +531,7 @@ impl Match {
                 let mut lower_id_player = player;
                 let mut higher_id_player = opponent;
 
-                if lower_id_player.id > higher_id_player.id {
+                if lower_id_player.id.parse::<i32>().unwrap() > higher_id_player.id.parse::<i32>().unwrap() {
                     lower_id_player = opponent;
                     higher_id_player = player;
                 }
