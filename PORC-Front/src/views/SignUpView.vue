@@ -41,6 +41,7 @@ function hideWarning() {
 
 function showSuccess() {
     success.value = true;
+    getSignedUp()
 }
 
 function confirmInput() {
@@ -54,12 +55,14 @@ function confirmInput() {
 
 async function postSignUp() {
     console.log('Trying to get match plan');
+    const now = Math.floor(Date.now() / 1000);
 
     const data: SignUpInfo = {
         username: String(username.value),
         bp: Number(BP.value),
         region: String(region.value),
         discord_id: user_id,
+        date: String(now)
     };
 
     const requestData = JSON.stringify({
@@ -137,13 +140,13 @@ async function getLoggedIn() {
             throw new Error('Network response was not ok');
         }
 
-        const data = await response.json();
+        const json_data = await response.json();
         // console.log('Success:', data);
-        if (data.error == null) {
-            // console.log("Logged in: ", data);
+        if (json_data.error == null) {
+            // console.log("Logged in: ", json_data);
             isLoggedIn.value = true;
-            username.value = data.data.username;
-            user_id = data.data.id;
+            username.value = json_data.data.user_info.username;
+            user_id = json_data.data.user_info.id;
         } else {
             isLoggedIn.value = false;
         }
@@ -200,17 +203,17 @@ async function getSignedUp() {
 }
 
 onMounted(() => {
-    getSignedUp();
     getLoggedIn();
+    getSignedUp();
 });
 </script>
 
 <template>
     <div class="container-fill justify-content-center">
         <div class="inner-container">
-            <div class="titel">
+            <div class="titel col-10">
                 <h1 class="titel-text">Sign Up</h1>
-                <h3 v-if="isSignedUp" class="conformation">You are allready signed up for next season</h3>
+                <h3 v-if="isSignedUp" class="conformation icon-checkmark"></h3>
             </div>
             <div class="form-container col-10">
                 <form>
@@ -287,7 +290,8 @@ onMounted(() => {
     margin: 3rem;
     font-style: bold;
     height: fit-content;
-    width: calc(100% - 6rem);
+    display: flex;
+    justify-content: space-between
 }
 
 .titel-text {
@@ -311,12 +315,24 @@ onMounted(() => {
 
 .conformation {
     color: rgb(19, 244, 98);
-    margin-top: 1.5rem;
+    margin-top: 0.7rem;
+    font-weight: 900;
+    align-self: right;
 }
 
 .right {
     align-items: right;
     justify-content: right;
     right: 0;
+}
+
+@media (max-width: 768px) {
+    .titel {
+        margin-left: 1rem;
+        font-style: bold;
+        height: fit-content;
+        display: flex;
+        justify-content: space-between
+    }
 }
 </style>

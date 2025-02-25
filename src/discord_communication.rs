@@ -48,7 +48,7 @@ pub struct PutRequestLoggedInRecvPackage {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PutRequestLoggedInSendPackage {
     pub title: String,
-    pub data: Option<PubAccountInfo>,
+    pub data: Option<Account>,
     pub error: Option<String>
 }
 
@@ -98,7 +98,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
 
     logins.insert(session_id.clone(), result.id.clone());
     *locked_logins = logins.clone();
-    match StorageMod::save_logins(logins, &appstate.logins_path) {
+    match StorageMod::save_logins(logins) {
         Ok(_) => {},
         Err(err) => {
             println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
@@ -118,7 +118,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
 
         accounts.insert(result.id, new_account);
         *locked_accounts = accounts.clone();
-        match StorageMod::save_accounts(accounts, &appstate.accounts_path) {
+        match StorageMod::save_accounts(accounts) {
             Ok(_) => {},
             Err(err) => {
                 println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
@@ -210,7 +210,7 @@ pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appst
     };
 
     let data = match data_receiver.recv() {
-        Ok(data) => Some(data.get_pub_info()),
+        Ok(data) => Some(data),
         Err(_) => None,
     };
 

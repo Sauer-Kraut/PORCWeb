@@ -1,0 +1,16 @@
+{
+    "306467062530965514": {
+      "user_info": {
+        "id": "306467062530965514",
+        "username": "default_user",
+        "discriminator": "0000",
+        "avatar": null,
+        "email": null
+      },
+      "schedule": {
+        "availabilities": [],
+        "matches": [],
+        "notes": ""
+      }
+    }
+  }

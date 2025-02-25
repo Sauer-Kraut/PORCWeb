@@ -1,10 +1,10 @@
 <template>
     <div class="container-fill justify-content-center">
         <div class="inner-container">
-            <h1 class="titel">PORC Rules</h1>
+            <h1 class="title">PORC Rules</h1>
             <div class="rule-container col-10">
                 <div class="rule-box">
-                    <h2 class="titel">Set rules</h2>
+                    <h2 class="title">Set rules</h2>
                     <ul>
                         <li class="rule">
                             The players will play a total of 6 matches on the chosen map (3 as host and 3 as client). Client round wins do count.
@@ -24,7 +24,7 @@
                     </ul>
                     <div class="p-3"></div>
                     <div class="under-rules">
-                        <h4 class="lesser-titel">Tiebreaker rules</h4>
+                        <h4 class="lesser-title">Tiebreaker rules</h4>
                         <ul>
                             <li>
                                 First to win a client round will set the bar.
@@ -38,7 +38,7 @@
                     </div>
                     <div class="p-3"></div>
                     <div class="under-rules">
-                        <h4 class="lesser-titel">Extended tiebreaker rules</h4>
+                        <h4 class="lesser-title">Extended tiebreaker rules</h4>
                         <ol>
                             <li>
                                 Host goes to one shift stone.
@@ -53,7 +53,7 @@
                     </div>
                 </div>
                 <div class="rule-box">
-                    <h2 class="titel">Scoring</h2>
+                    <h2 class="title">Scoring</h2>
                     <ul>
                         <li>
                             A match is defined as a best of 3 rounds with one player as host and the other as client. At the end of a game, scoring is decided as follows:
@@ -61,11 +61,29 @@
                             If the number of matches won is unequal between the players, the final score is simply the matches won by each player during the game.
                         </li> <br> <li>
                             In case both players won an equal number of matches, the final score is determined by the matches won by both players +1 for the winning party.
+                        </li> <br> <li>
+                            If a partie forfeits / fails to appear at an agreed time it counts as an automatic 3-0 win for the opposing player.
                         </li>
                     </ul>
                 </div>
                 <div class="rule-box">
-                    <h2 class="titel">Additional Notes</h2>
+                    <h2 class="title">Placement and Promotion</h2>
+                    <ul>
+                        <li> 
+                            Your initial placement is determined by your amount of BP as well as your assessed skill.
+                        </li> <br> <li>
+                            Before the start of each season, there will be a timeframe to contest your placement after you have been placed in a division. To contest your placement, simply contact one of the moderators  
+                            and put forward your pitch for your placement.
+                        </li> <br> <li>
+                            After each season, player performance during the season decides promotion and demotion. As a rule of thumb, one can expect the top third of a division to promote and the bottom third to demote.
+                        </li> <br> <li>
+                            Promotions over two divisions may be rewarded upon special performance or improvement.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="rule-box">
+                    <h2 class="title">Additional Notes</h2>
                     <ul>
                         <li>
                             Cheaters will be banned from competing, and all their matches will be marked as 3-0 losses to their opponents.
@@ -100,7 +118,7 @@
         display: flex;
     }
 
-    .titel {
+    .title {
         justify-content: center;
         text-align: center;
         margin: 3rem;
@@ -108,7 +126,7 @@
         height: fit-content;
     }
 
-    .lesser-titel {
+    .lesser-title {
         justify-content: left;
         text-align: left;
         font-style: bold;

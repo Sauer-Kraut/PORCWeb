@@ -1,4 +1,4 @@
-use crate::account_lib::{Account, DiscordUser};
+use crate::account_lib::{Account, DiscordUser, MatchEvent};
 use crate::{discord_communication, MatchPlan, SignUpInfo};
 use askama::filters::format;
 use discord_communication::TokenRequestParam;
@@ -6,6 +6,16 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write, self};
+
+// hardcoded to avoid incorect uses
+const MATCHPLAN_PATH: &str = "userdata/SeasonMatchPlan.json";
+const SIGNUPS_PATH: &str = "userdata/SeasonSignUps.json";
+const LOGINS_PATH: &str = "userdata/DiscordLogIns.json";
+const ACCOUNTS_PATH: &str = "userdata/UserAccounts.json";
+const SECRETS_PATH: &str = "secrets.json";
+const RECORDINGS_PATH: &str = "static/records";
+const CONFIG_PATH: &str = "config.json";
+const MATCHEVENTS_PATH: &str = "userdata/SeasonMatches.json";
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -26,14 +36,16 @@ pub struct StorageMod {}
 
 impl StorageMod {
 
-    pub fn save_matchplan(plan: MatchPlan, path: &str) -> Result<(), io::Error> {
+    pub fn save_matchplan(plan: MatchPlan) -> Result<(), io::Error> {
+        let path = MATCHPLAN_PATH;
         let json = serde_json::to_string_pretty(&plan)?;
         let mut file = File::create(path)?;
         file.write_all(json.as_bytes())?;
         Ok(())
     }
 
-    pub fn read_matchplan(path: &str) -> Result<MatchPlan, io::Error> {
+    pub fn read_matchplan() -> Result<MatchPlan, io::Error> {
+        let path = MATCHPLAN_PATH;
         let mut file = File::open(path)?;
         let mut json = "".to_string();
         file.read_to_string(&mut json)?;
@@ -41,14 +53,16 @@ impl StorageMod {
         Ok(plan)
     }
 
-    pub fn save_signups(signups: Vec<SignUpInfo>, path: &str) -> Result<(), io::Error> {
+    pub fn save_signups(signups: Vec<SignUpInfo>) -> Result<(), io::Error> {
+        let path = SIGNUPS_PATH;
         let json = serde_json::to_string_pretty(&signups)?;
         let mut file = File::create(path)?;
         file.write_all(json.as_bytes())?;
         Ok(())
     }
 
-    pub fn read_signups(path: &str) -> Result<Vec<SignUpInfo>, io::Error> {
+    pub fn read_signups() -> Result<Vec<SignUpInfo>, io::Error> {
+        let path = SIGNUPS_PATH;
         let mut file = File::open(path)?;
         let mut json = "".to_string();
         file.read_to_string(&mut json)?;
@@ -56,14 +70,16 @@ impl StorageMod {
         Ok(signups)
     }
 
-    pub fn save_logins(logins: HashMap<String, String>, path: &str) -> Result<(), io::Error> {
+    pub fn save_logins(logins: HashMap<String, String>) -> Result<(), io::Error> {
+        let path = LOGINS_PATH;
         let json = serde_json::to_string_pretty(&logins)?;
         let mut file = File::create(path)?;
         file.write_all(json.as_bytes())?;
         Ok(())
     }
 
-    pub fn read_logins(path: &str) -> Result<HashMap<String, String>, io::Error> {
+    pub fn read_logins() -> Result<HashMap<String, String>, io::Error> {
+        let path = LOGINS_PATH;
         let mut file = File::open(path)?;
         let mut json = "".to_string();
         file.read_to_string(&mut json)?;
@@ -71,14 +87,16 @@ impl StorageMod {
         Ok(signups)
     }
 
-    pub fn save_accounts(accounts: HashMap<String, Account>, path: &str) -> Result<(), io::Error> {
+    pub fn save_accounts(accounts: HashMap<String, Account>) -> Result<(), io::Error> {
+        let path = ACCOUNTS_PATH;
         let json = serde_json::to_string_pretty(&accounts)?;
         let mut file = File::create(path)?;
         file.write_all(json.as_bytes())?;
         Ok(())
     }
 
-    pub fn read_accounts(path: &str) -> Result<HashMap<String, Account>, io::Error> {
+    pub fn read_accounts() -> Result<HashMap<String, Account>, io::Error> {
+        let path = ACCOUNTS_PATH;
         let mut file = File::open(path)?;
         let mut json = "".to_string();
         file.read_to_string(&mut json)?;
@@ -87,7 +105,7 @@ impl StorageMod {
     }
 
     pub fn read_secrets() -> Result<TokenRequestParam, io::Error> {
-        let path = "secrets.json";
+        let path = SECRETS_PATH;
         let mut file = File::open(path)?;
         let mut json = "".to_string();
         file.read_to_string(&mut json)?;
@@ -95,8 +113,9 @@ impl StorageMod {
         Ok(info)
     }
 
-    pub fn save_record(record: Record, directory: &str) -> Result<(), io::Error> {
+    pub fn save_record(record: Record) -> Result<(), io::Error> {
         let json = serde_json::to_string_pretty(&record)?;
+        let directory = RECORDINGS_PATH;
 
         let file_path = format!("{}/Season{}Record.json", directory, record.season);
 
@@ -106,12 +125,29 @@ impl StorageMod {
     }
 
     pub fn read_config() -> Result<Config, io::Error> {
-        let path = "config.json";
+        let path = CONFIG_PATH;
         let mut file = File::open(path)?;
         let mut json = "".to_string();
         file.read_to_string(&mut json)?;
         let info: Config = serde_json::from_str(&json)?;
         Ok(info)
+    }
+
+    pub fn save_matchevents(matchevents: HashMap<String, MatchEvent>) -> Result<(), io::Error> {
+        let path = MATCHEVENTS_PATH;
+        let json = serde_json::to_string_pretty(&matchevents)?;
+        let mut file = File::create(path)?;
+        file.write_all(json.as_bytes())?;
+        Ok(())
+    }
+
+    pub fn read_matchevents() -> Result<HashMap<String, MatchEvent>, io::Error> {
+        let path = MATCHEVENTS_PATH;
+        let mut file = File::open(path)?;
+        let mut json = "".to_string();
+        file.read_to_string(&mut json)?;
+        let matchevents: HashMap<String, MatchEvent> = serde_json::from_str(&json)?;
+        Ok(matchevents)
     }
 
 }

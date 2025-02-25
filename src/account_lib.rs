@@ -8,6 +8,7 @@ use tokio;
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
+use crate::bot_communication::{make_bot_request_match};
 use crate::{sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, Player, SignUpInfo, StorageMod};
 use async_std::fs;
 use reqwest::Client;
@@ -32,7 +33,7 @@ pub struct DiscordUser {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Schedule {
     pub availabilities: Vec<Event>,
-    pub matches: Vec<MatchEvent>,
+    pub matches: Vec<String>,
     pub notes: String
 }
 
@@ -81,13 +82,13 @@ impl Account {
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct PutAccountInfoRecv {
-    pub titel: String,
+pub struct GetAccountInfoRecv {
+    pub title: String,
     pub ids: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct PutAccountInfoResp {
+pub struct GetAccountInfoResp {
     pub title: String,
     pub data: Option<Vec<PubAccountInfo>>,
     pub error: Option<String>
@@ -95,8 +96,8 @@ pub struct PutAccountInfoResp {
 
 
 
-pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received PUT Request for account infos".bold().cyan());
+pub async fn get_account_info(info: web::Json<GetAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
+    println!("\n{}", "Received GET Request for account infos".bold().cyan());
 
     let (data_sender, data_receiver) = mpsc::channel();
     let (error_sender, error_receiver) = mpsc::channel();
@@ -134,7 +135,7 @@ pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web
         Err(_) => None,
     };
 
-    HttpResponse::Ok().json(PutAccountInfoResp {
+    HttpResponse::Ok().json(GetAccountInfoResp {
         title: "Account Info response".to_string(),
         data,
         error
@@ -147,7 +148,7 @@ pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PostMatchEventRecvPackage {
-    pub titel: String,
+    pub title: String,
     pub match_event: MatchEvent
 }
 
@@ -163,15 +164,50 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
     let (error_sender, error_receiver) = mpsc::channel();
     
     let accounts_clone = appstate.accounts.clone();
+    let matchevents_clone = appstate.matchevents.clone();
 
     // We spawn an asyncronus thread in order to be able to handle many requests at once
     println!("startig async thread");
     tokio::task::spawn(async move {
 
+        let mut error = "".to_string();
+
         let mut accounts_lock = accounts_clone.lock().await;
         let mut accounts = accounts_lock.clone();
+
+        let mut matchevents_lock = matchevents_clone.lock().await;
+        let mut matchevents = matchevents_lock.clone();
         
         let initiator = accounts.get_mut(&info.match_event.initiator_id);
+
+        let mut lower_id = info.match_event.initiator_id.clone();
+        let mut higher_id = info.match_event.opponent_id.clone();
+
+        if lower_id.parse::<i32>().unwrap() > higher_id.parse::<i32>().unwrap() {
+            lower_id = info.match_event.opponent_id.clone();
+            higher_id = info.match_event.initiator_id.clone();
+        }
+
+        let match_key = format!("{}V{}@{}", lower_id, higher_id, info.match_event.start_timestamp);
+
+        match matchevents.get_mut(&match_key) {
+            Some(matchevent) => {
+                matchevent.status = info.match_event.status.clone();
+            },
+            None => {
+                let matchevent = MatchEvent{
+                    start_timestamp: info.match_event.start_timestamp,
+                    initiator_id: info.match_event.initiator_id.clone(),
+                    opponent_id: info.match_event.opponent_id.clone(),
+                    status: MatchStatus::Requested,
+                };
+                match make_bot_request_match(matchevent.clone()) {
+                    Ok(_) => {},
+                    Err(err) => {error = err}
+                }
+                matchevents.insert(match_key.clone(), matchevent);
+            },
+        }
         
         match initiator {
             Some(account) => {
@@ -190,23 +226,19 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                 let mut schedule_copie = account.schedule.clone().unwrap();
 
                 let mut found = false;
-                for match_event in schedule_copie.matches.iter_mut() {
-                    if (match_event.initiator_id == info.match_event.initiator_id &&
-                        match_event.opponent_id == info.match_event.opponent_id &&
-                        match_event.start_timestamp == info.match_event.start_timestamp) {
-
-                        *match_event = info.match_event.clone();
+                for match_event_key in schedule_copie.matches.iter_mut() {
+                    if *match_event_key == match_key {
                         found = true
                     }
                 }
 
                 if !found {
-                    schedule_copie.matches.push(info.match_event.clone());
+                    schedule_copie.matches.push(match_key.clone());
                 }
 
                 account.schedule = Some(schedule_copie);
             },
-            None => {error_sender.send("Not all participating accounts could be found".to_string()).unwrap()},
+            None => {error = "Not all participating accounts could be found".to_string()},
         };
 
         
@@ -229,26 +261,27 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                 let mut schedule_copie = account.schedule.clone().unwrap();
 
                 let mut found = false;
-                for match_event in schedule_copie.matches.iter_mut() {
-                    if (match_event.initiator_id == info.match_event.initiator_id &&
-                        match_event.opponent_id == info.match_event.opponent_id &&
-                        match_event.start_timestamp == info.match_event.start_timestamp) {
-
-                        *match_event = info.match_event.clone();
+                for match_event_key in schedule_copie.matches.iter_mut() {
+                    if *match_event_key == match_key {
                         found = true
                     }
                 }
 
                 if !found {
-                    schedule_copie.matches.push(info.match_event.clone());
+                    schedule_copie.matches.push(match_key);
                 }
 
                 account.schedule = Some(schedule_copie);
             },
-            None => {error_sender.send("Not all participating accounts could be found".to_string()).unwrap()},
+            None => {error = "Not all participating accounts could be found".to_string()},
         };
 
-        *accounts_lock = accounts;
+        if error == "".to_string() {
+            *accounts_lock = accounts;
+            *matchevents_lock = matchevents;
+        } else {
+            error_sender.send(error).unwrap();
+        }
     }).await.unwrap();
 
     let error = match error_receiver.try_recv(){
@@ -258,6 +291,67 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
 
     HttpResponse::Ok().json(PostMatchEventRespPackage {
         title: "Server Match Event update Respons".to_string(),
+        error
+    })
+}
+
+
+
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetMatchEventRecvPackage {
+    pub title: String,
+    pub match_events: Vec<String>
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetMatchEventRespPackage {
+    pub title: String,
+    pub data: Vec<MatchEvent>,
+    pub error: Option<String>
+}
+
+pub async fn get_match_event(info: web::Json<GetMatchEventRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
+    println!("\n{}", "Received GET Request for match events".bold().cyan());
+
+    let (data_sender, data_receiver) = mpsc::channel();
+    let (error_sender, error_receiver) = mpsc::channel();
+    let matchevents_clone = appstate.matchevents.clone();
+
+    // We spawn an asyncronus thread in order to be able to handle many requests at once
+    println!("startig async thread");
+    tokio::task::spawn(async move {
+
+        let matchevents_lock = matchevents_clone.lock().await;
+        let matchevents = matchevents_lock.clone();
+
+        let mut found_events = vec!();
+
+        for event_key in info.match_events.iter() {
+
+            match matchevents.get(event_key){
+                Some(event) => {found_events.push(event.clone())},
+                None => {error_sender.send(format!("match event with key {} could not be found", event_key)).unwrap()},
+            }
+        }
+
+        data_sender.send(found_events).unwrap_or_else( |err| {
+            error_sender.send(format!("Internal Server Error : {:?}", err)).unwrap();
+        });
+
+    }).await.unwrap();
+
+    let error = match error_receiver.try_recv(){
+        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
+        Err(_) => None,
+    };
+
+    let data = data_receiver.recv().unwrap();
+
+    HttpResponse::Ok().json(GetMatchEventRespPackage {
+        title: "Server GET match events Respons".to_string(),
+        data,
         error
     })
 }

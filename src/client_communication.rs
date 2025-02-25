@@ -14,7 +14,8 @@ pub struct SignUpInfo {
     pub username: String,
     pub bp: u32,
     pub region: String,
-    pub discord_id: String
+    pub discord_id: String,
+    pub date: String
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -201,7 +202,7 @@ pub async fn update_match_plan_request(info: web::Json<PostRequestMatchPackage>,
             match plan.update_match(info.match_info.clone()) {
                 Ok(_) => {
                     *locked_matchplan = Some(plan.clone());
-                    match StorageMod::save_matchplan(plan.clone(), appstate.matchplan_path.as_str()) {
+                    match StorageMod::save_matchplan(plan.clone()) {
                         Ok(_) => {},
                         Err(err) => {
                             error_sender.send(err.to_string()).unwrap();
@@ -254,7 +255,7 @@ pub async fn add_sign_up_request(info: web::Json<PostRequestSignUpPackage>, apps
 
         signups.push(info.sing_up_info.clone());
         *locked_signups = signups.clone();
-        match StorageMod::save_signups(signups.clone(), appstate.signups_path.as_str()) {
+        match StorageMod::save_signups(signups.clone()) {
             Ok(_) => {},
             Err(err) => {
                 error_sender.send(err.to_string()).unwrap();
@@ -301,7 +302,7 @@ pub async fn remove_sign_up_request(info: web::Json<PostRequestSignUpPackage>, a
 
                 signups.remove(index);
                 *locked_signups = signups.clone();
-                match StorageMod::save_signups(signups.clone(), appstate.signups_path.as_str()) {
+                match StorageMod::save_signups(signups.clone()) {
                     Ok(_) => {},
                     Err(err) => {
                         error_sender.send(err.to_string()).unwrap();

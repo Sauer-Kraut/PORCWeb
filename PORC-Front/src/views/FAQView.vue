@@ -9,7 +9,7 @@ const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-
 <template>
     <div class="container-fill justify-content-center">
         <div class="inner-container">
-            <h1 class="titel">Frequently asked question</h1>
+            <h1 class="titel">FAQ</h1>
             <div class="rule-container col-10">
                 <div class="rule-box">
                     <h2 class="lesser-title">How can I participate in PORC?</h2>
@@ -39,6 +39,13 @@ const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-
                     <label class="answer">
                         Your initial division placement is determined by your BP and estimated capabilities.
                         If you're unhappy with your placement, you can contest it before the season starts.
+                    </label>
+
+                    <h2 class="lesser-title">How do I enter a score?</h2>
+                    <label class="answer">
+                        To enter a score you have to be logged in as the discord account you signed up with 
+                        and press on the pencil icon next to the match of yours you want to enter a score for.
+                        You can only enter scores for your own matches.
                     </label>
 
                     <h2 class="lesser-title">My opponent isn't responding/showing up/forfeited - what now?</h2>
