@@ -247,7 +247,7 @@ pub async fn add_sign_up_request(info: web::Json<PostRequestSignUpPackage>, apps
         let mut signups: Vec<SignUpInfo> = locked_signups.clone();
 
         for signup in signups.iter() {
-            if sanetize_username(&signup.username) == sanetize_username(&info.sing_up_info.username) {
+            if &signup.discord_id == &info.sing_up_info.discord_id {
                 error_sender.send(format!("Similar Sign Up already exists: {}", signup.username)).unwrap();
                 return;
             }
