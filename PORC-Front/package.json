@@ -8,7 +8,7 @@
         "dev:development": "vite --mode development",
         "dev:test": "vite --mode test",
         "dev:production": "vite --mode production",
-        "build": "vite build", 
+        "build": "vite build",
         "build:development": "vite build --mode development",
         "build:test": "vite build --mode test",
         "build:production": "vite build --mode production",
@@ -21,6 +21,7 @@
         "bootstrap": "^5.3.3",
         "sass": "^1.83.0",
         "vue": "^3.5.13",
+        "vue-final-modal": "^4.5.5",
         "vue-router": "^4.5.0"
     },
     "devDependencies": {

@@ -2,7 +2,11 @@
     <div class="container-fill justify-content-center">
         <div class="inner-container">
             <h1 class="titel">Match planner</h1>
-            <CalendarComponent :schedule="schedule"></CalendarComponent>
+            <CalendarComponent
+                :schedule="schedule"
+                :players="players"
+                :own-calendar="true">
+            </CalendarComponent>
         </div>
     </div>
 </template>
@@ -12,6 +16,7 @@ import CalendarComponent from '@/components/CalendarComponent.vue';
 import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
 import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
+import type { PlayerModel } from '@/models/PlayerModel';
 import { ref } from 'vue';
 
 const schedule = ref({
@@ -41,10 +46,31 @@ const schedule = ref({
         {
             startDate: new Date(2025, 1, 24, 11),
             endDate: new Date(2025, 1, 24, 12),
-        }
+        },
+        {
+            startDate: new Date(2025, 2, 3, 8),
+            endDate: new Date(2025, 2, 3, 9),
+            initiatorId: "1",
+            opponentId: "2",
+        },
     ] as MatchEvent[],
     notes: 'notes',
 } as Schedule);
+
+const players = [
+    {
+        id: "1",
+        tag: "2Guib",
+    },
+    {
+        id: "2",
+        tag: "Sauerkraut",
+    },
+    {
+        id: "3",
+        tag: "Bibin",
+    }
+] as PlayerModel[];
 </script>
 
 <style lang="scss" scoped>
