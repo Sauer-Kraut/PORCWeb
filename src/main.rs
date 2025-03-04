@@ -159,6 +159,7 @@ pub struct AppState {
 impl AppState {
 
     pub async fn refresh(&self) {
+        println!("Refreshing appstate... ");
 
         let accounts_clone = self.accounts.clone();
         let accounts = accounts_clone.lock().await;
@@ -167,7 +168,9 @@ impl AppState {
         let mut matchplan_lock = matchplan_clone.lock().await;
 
         if let Some(matchplan) = matchplan_lock.as_mut() {
+            println!("Refreshing matchplan... ");
             for division in matchplan.divisions.iter_mut() {
+                println!("Refreshing division {}... ", division.name);
 
                 for (_key, value) in division.matches.iter_mut() {
 
@@ -195,12 +198,17 @@ impl AppState {
                 }
             }
 
-            let _ = StorageMod::save_matchplan(matchplan.clone());
+            let res = StorageMod::save_matchplan(matchplan.clone());
+            println!("Saving matchplan data: {:?}", res);
         }
 
-        let _ = StorageMod::save_accounts(accounts.clone());
-        let _ = StorageMod::save_logins(self.logins.lock().await.clone());
-        let _ = StorageMod::save_signups(self.signups.lock().await.clone());
-        let _ = StorageMod::save_matchevents(self.matchevents.lock().await.clone());
+        let res = StorageMod::save_accounts(accounts.clone());
+        println!("Saving account data: {:?}", res);
+        let res = StorageMod::save_logins(self.logins.lock().await.clone());
+        println!("Saving login data: {:?}", res);
+        let res = StorageMod::save_signups(self.signups.lock().await.clone());
+        println!("Saving signup data: {:?}", res);
+        let res = StorageMod::save_matchevents(self.matchevents.lock().await.clone());
+        println!("Saving matchevent data: {:?}", res);
     }
 }
