@@ -2,6 +2,7 @@
     <div class="container-fill justify-content-center">
         <div class="inner-container">
             <h1 class="titel">Match planner</h1>
+            <PlayerSelector></PlayerSelector>
             <CalendarComponent
                 :schedule="schedule"
                 :players="players"
@@ -13,6 +14,7 @@
 
 <script lang="ts" setup>
 import CalendarComponent from '@/components/CalendarComponent.vue';
+import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
 import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
 import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
