@@ -1,16 +1,34 @@
 {
-    "306467062530965514": {
-      "user_info": {
-        "id": "306467062530965514",
-        "username": "default_user",
-        "discriminator": "0000",
-        "avatar": null,
-        "email": null
-      },
-      "schedule": {
-        "availabilities": [],
-        "matches": [],
-        "notes": ""
-      }
+  "306467062530965514": {
+    "user_info": {
+      "id": "306467062530965514",
+      "username": "Sauerkraut",
+      "discriminator": "0000",
+      "avatar": null,
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [],
+      "matches": [
+        "178905571682942976V306467062530965514@1741460400"
+      ],
+      "notes": ""
+    }
+  },
+  "178905571682942976": {
+    "user_info": {
+      "id": "178905571682942976",
+      "username": "2Guib",
+      "discriminator": "0000",
+      "avatar": null,
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [],
+      "matches": [
+        "178905571682942976V306467062530965514@1741460400"
+      ],
+      "notes": ""
     }
   }
+}
