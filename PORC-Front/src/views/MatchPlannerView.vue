@@ -2,7 +2,7 @@
     <div class="container-fill justify-content-center">
         <div class="inner-container">
             <h1 class="titel">Match planner</h1>
-            <PlayerSelector></PlayerSelector>
+            <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer"></PlayerSelector>
             <CalendarComponent
                 :schedule="schedule"
                 :players="players"
@@ -13,6 +13,8 @@
 </template>
 
 <script lang="ts" setup>
+import type { PubAccountInfo } from '@/models/PubAccountInfo';
+import { MatchStatus } from '@/models/Calendar/MatchEventModel';
 import CalendarComponent from '@/components/CalendarComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
 import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
@@ -20,6 +22,8 @@ import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
 import { ref } from 'vue';
+
+const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const schedule = ref({
     avaliabilities: [
@@ -73,6 +77,99 @@ const players = [
         tag: "Bibin",
     }
 ] as PlayerModel[];
+
+const playerinfos = [
+        {
+            id: "1",
+            username: "BIVN",
+            avatar: "avatar1.png",
+            schedule: {
+                matches: [
+                    {
+                        startDate: new Date(2025, 2, 3, 8),
+                        initiatorId: "1",
+                        opponentId: "2",
+                        status: MatchStatus.Requested,
+                    }
+                ]
+            }
+        },
+        {
+            id: "2",
+            username: "2Guib",
+            avatar: "avatar2.png",
+            schedule: {
+                matches: [
+                    {
+                        startDate: new Date(2025, 2, 3, 8),
+                        initiatorId: "1",
+                        opponentId: "2",
+                        status: MatchStatus.Requested,
+                    }
+                ]
+            }
+        },
+        {
+            id: "3",
+            username: "inapolis",
+            avatar: "avatar3.png",
+            schedule: {
+                matches: [
+                    {
+                        startDate: new Date(2025, 2, 5, 15),
+                        initiatorId: "3",
+                        opponentId: "1",
+                        status: MatchStatus.Confirmed,
+                    }
+                ]
+            }
+        },
+        {
+            id: "4",
+            username: "Savitarian",
+            avatar: "avatar4.png",
+            schedule: {
+                matches: [
+                    {
+                        startDate: new Date(2025, 2, 7, 12),
+                        initiatorId: "1",
+                        opponentId: "4",
+                        status: MatchStatus.Finished,
+                    }
+                ]
+            }
+        },
+        {
+            id: "5",
+            username: "Juicepar",
+            avatar: "avatar5.png",
+            schedule: {
+                matches: [
+                    {
+                        startDate: new Date(2025, 2, 9, 18),
+                        initiatorId: "5",
+                        opponentId: "1",
+                        status: MatchStatus.Declined,
+                    }
+                ]
+            }
+        },
+        {
+            id: "6",
+            username: "Jack",
+            avatar: "avatar6.png",
+            schedule: {
+                matches: [
+                    {
+                        startDate: new Date(2025, 2, 11, 10),
+                        initiatorId: "1",
+                        opponentId: "6",
+                        status: MatchStatus.Requested,
+                    }
+                ]
+            }
+        }
+    ] as PubAccountInfo[];
 </script>
 
 <style lang="scss" scoped>

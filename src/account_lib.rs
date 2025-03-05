@@ -41,6 +41,27 @@ pub struct Schedule {
 pub struct Event {
     pub start_timestamp: u64,
     pub end_timestamp: u64,
+    pub repetition: Repetition,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum Repetition {
+    Once,
+    Daily(DailyRepetitionConfig),
+    Weekly,
+    Monthly,
+    Yearly,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct DailyRepetitionConfig {
+    pub monday: bool,
+    pub tuesday: bool,
+    pub wednesday: bool,
+    pub thursday: bool,
+    pub friday: bool,
+    pub saturday: bool,
+    pub sunday: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
