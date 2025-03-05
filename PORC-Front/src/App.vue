@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import DiscordUserComponent from './components/DiscordUserComponent.vue';
+import { ModalsContainer } from 'vue-final-modal';
 
 const isMenuOpen = ref(false);
 
@@ -19,12 +20,12 @@ function toggleMenu() {
         </div>
 
         <!-- Navigation -->
-        <nav class="justify-content-center text-center h-100 custom" :class="{ 'open': isMenuOpen, 'row': !isMenuOpen }">
-          <router-link to="/" :class="{'col-12': isMenuOpen, 'hidden': !isMenuOpen}" class="router-link col-2 h-100 custom">Tournament</router-link>
-          <router-link to="/match-planner" :class="{ 'col-12': isMenuOpen, 'hidden': !isMenuOpen }" class="router-link col-2 h-100 custom">Match Planner</router-link>
-          <router-link to="/signup" :class="{'col-12': isMenuOpen, 'hidden': !isMenuOpen}" class="router-link col-2 h-100 custom">Sign Up</router-link>
-          <router-link to="/rules" class="router-link col-2 h-100 custom" :class="{'col-12': isMenuOpen, 'hidden': !isMenuOpen}">Rules</router-link>
-          <router-link to="/faq" class="router-link col-2 h-100 custom" :class="{'col-12': isMenuOpen, 'hidden': !isMenuOpen}">FAQ</router-link>
+        <nav class="justify-content-center text-center h-100 custom" :class="{ open: isMenuOpen, row: !isMenuOpen }">
+            <router-link to="/" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Tournament</router-link>
+            <router-link to="/match-planner" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Match Planner</router-link>
+            <router-link to="/signup" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Sign Up</router-link>
+            <router-link to="/rules" class="router-link col-2 h-100 custom" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }">Rules</router-link>
+            <router-link to="/faq" class="router-link col-2 h-100 custom" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }">FAQ</router-link>
         </nav>
 
         <!-- Discord User Component -->
@@ -36,6 +37,7 @@ function toggleMenu() {
     <div class="row justify-content-center h-100 custom backgorund">
         <main class="col-xxl-4 col-xl-6-cust col-l-8-cust col-lg-8 col-md-9 col-11 p-0 custom">
             <router-view class="custom"></router-view>
+            <ModalsContainer />
         </main>
     </div>
 </template>

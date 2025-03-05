@@ -28,15 +28,7 @@
             </div>
             <div class="calendar-days" :class="{ own: ownCalendar }">
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day">
-                    <div
-                        v-for="hour in hours"
-                        :key="hour"
-                        class="calendar-hour-day"
-                        @click="
-                            console.log('click');
-                            open();
-                        "
-                    ></div>
+                    <div v-for="hour in hours" :key="hour" class="calendar-hour-day" @click="open()"></div>
                     <div
                         class="event avaliability p-1"
                         v-for="event in avaliabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
@@ -53,16 +45,16 @@
             </div>
         </div>
     </div>
-    <ModalsContainer />
 </template>
 
 <script lang="ts" setup>
 import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
-import { computed, onMounted, ref } from 'vue';
-import { ModalsContainer, useModal } from 'vue-final-modal';
+import { computed, h, onMounted, ref } from 'vue';
+import { useModal } from 'vue-final-modal';
 import ConfirmModal from './modals/ConfirmModal.vue';
+import EditAvaliabilityForm from './forms/EditAvaliabilityForm.vue';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -172,16 +164,35 @@ function getPlayer(id: string): PlayerModel {
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
+function addAvaliability(data: ScheduleEvent): void {
+    console.log('Added', data);
+}
+
+const formId = 'addAvaliabilityForm';
 const { open, close } = useModal({
     component: ConfirmModal,
     attrs: {
-        title: 'Hello World!',
-        onConfirm() {
+        title: 'Add avaliability',
+        formId: formId,
+        onCancel() {
+            close();
+        },
+        onSubmit(data: ScheduleEvent) {
+            console.log('Submitted', data);
+            addAvaliability(data);
             close();
         },
     },
     slots: {
-        default: '<p>The content of the modal</p>',
+        default: (slotProps) =>
+            h(EditAvaliabilityForm, {
+                formId: formId,
+                avaliability: {
+                    startDate: new Date(),
+                    endDate: new Date(),
+                } as ScheduleEvent,
+                formSubmit: slotProps.formSubmit,
+            }),
     },
 });
 </script>
