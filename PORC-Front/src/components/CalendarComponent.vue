@@ -28,15 +28,7 @@
             </div>
             <div class="calendar-days" :class="{ own: ownCalendar }">
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day">
-                    <div
-                        v-for="hour in hours"
-                        :key="hour"
-                        class="calendar-hour-day"
-                        @click="
-                            console.log('click');
-                            open();
-                        "
-                    ></div>
+                    <div v-for="hour in hours" :key="hour" class="calendar-hour-day" @click="open()"></div>
                     <div
                         class="event avaliability p-1"
                         v-for="event in avaliabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
@@ -53,16 +45,15 @@
             </div>
         </div>
     </div>
-    <ModalsContainer />
 </template>
 
 <script lang="ts" setup>
 import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
-import { computed, onMounted, ref } from 'vue';
-import { ModalsContainer, useModal } from 'vue-final-modal';
-import ConfirmModal from './modals/ConfirmModal.vue';
+import { computed, h, onMounted, ref } from 'vue';
+import { useModal } from 'vue-final-modal';
+import EditAvaliabilityModal from './modals/EditAvaliabilityModal.vue';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -172,16 +163,25 @@ function getPlayer(id: string): PlayerModel {
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
+function addAvaliability(data: ScheduleEvent): void {
+    console.log('Added', data);
+}
+
 const { open, close } = useModal({
-    component: ConfirmModal,
+    component: EditAvaliabilityModal,
     attrs: {
-        title: 'Hello World!',
-        onConfirm() {
+        title: 'Add avaliability',
+        avaliability: {
+            startDate: new Date(),
+            endDate: new Date(),
+        } as ScheduleEvent,
+        onCancel() {
             close();
         },
-    },
-    slots: {
-        default: '<p>The content of the modal</p>',
+        onSubmit(data: ScheduleEvent) {
+            addAvaliability(data);
+            close();
+        },
     },
 });
 </script>
