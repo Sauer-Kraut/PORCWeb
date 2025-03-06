@@ -24,17 +24,28 @@
         </div>
         <div class="calendar-body">
             <div class="calendar-hours">
-                <div v-for="hour in hours" :key="hour" class="calendar-hour">{{ hour }}</div>
+                <div v-for="hour in hours" :key="hour.name" class="calendar-hour">{{ hour.name }}</div>
             </div>
-            <div class="calendar-days" :class="{ own: ownCalendar }">
+            <div class="calendar-days">
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day">
-                    <div v-for="hour in hours" :key="hour" class="calendar-hour-day" @click="open()"></div>
+                    <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', hour.date)"></div>
                     <div
-                        class="event avaliability p-1"
+                        class="event availability p-1"
+                        :class="{ own: ownCalendar }"
                         v-for="event in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
                         :key="event.startDate.toISOString()"
                         :style="getEventStyle(event)"
-                    ></div>
+                        @click.stop="ownCalendar && editAvaliability(event)"
+                    >
+                        <div
+                            v-if="!ownCalendar"
+                            v-for="hour in getHoursInRange(event.startDate, event.endDate)"
+                            :key="hour.toDateString()"
+                            class="event-overlay"
+                            @click.stop="createEvent('match', hour)"
+                            :style="getHourStyle(hour, event.startDate, event.endDate)"
+                        ></div>
+                    </div>
                     <div
                         class="event match p-1"
                         v-for="event in matches.filter((e) => e.startDate.toDateString() === day.toDateString())"
@@ -53,7 +64,7 @@ import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
-import EditAvaliabilityModal from './modals/EditAvaliabilityModal.vue';
+import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -80,7 +91,7 @@ const viewMode = ref<'day' | 'week'>('week');
 const hours = Array.from({ length: 24 }, (_, i) => {
     const date = new Date();
     date.setHours(i, 0, 0, 0);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric' });
+    return { date: date, name: date.toLocaleTimeString('en-US', { hour: 'numeric' }) };
 });
 const currentWeekStart = ref(getMonday(new Date()));
 const currentDay = ref(new Date());
@@ -170,19 +181,45 @@ function getEventStyle(event: ScheduleEvent): { top: string; height: string } {
     };
 }
 
+function getHoursInRange(startDate: Date, endDate: Date): Date[] {
+    const hours = [];
+    const current = new Date(startDate);
+    while (current <= endDate) {
+        hours.push(new Date(current));
+        current.setHours(current.getHours() + 1);
+    }
+    return hours;
+}
+
+function getHourStyle(hour: Date, startDate: Date, endDate: Date): { top: string; height: string } {
+    const totalMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+    const minutesFromStart = (hour.getTime() - startDate.getTime()) / (1000 * 60);
+    const top = (minutesFromStart / totalMinutes) * 100;
+    const height = (60 / totalMinutes) * 100;
+    return {
+        top: `${top}%`,
+        height: `${height}%`,
+    };
+}
+
 function getPlayer(id: string): PlayerModel {
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
-function addAvaliability(data: ScheduleEvent): void {
-    console.log('Added', data);
+function createEvent(type: 'availability' | 'match', date: Date) {
+    console.log('Create event', type, date);
+}
+
+function editAvaliability(availability: ScheduleEvent) {
+    if (!props.ownCalendar) return;
+    console.log('editAvaliability', availability);
 }
 
 const { open, close } = useModal({
-    component: EditAvaliabilityModal,
+    component: EditAvailabilityModal,
     attrs: {
-        title: 'Add avaliability',
-        avaliability: {
+        title: 'Add availability',
+        availability: {
             startDate: new Date(),
             endDate: new Date(),
         } as ScheduleEvent,
@@ -190,7 +227,7 @@ const { open, close } = useModal({
             close();
         },
         onSubmit(data: ScheduleEvent) {
-            addAvaliability(data);
+            console.log(data);
             close();
         },
     },
@@ -258,31 +295,51 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                     border-bottom: $border-style;
                     position: relative;
                     height: $hour-height;
+
+                    &:hover {
+                        background-color: rgba(255, 255, 255, 0.1);
+                        cursor: pointer;
+                    }
                 }
             }
 
-            &.own {
-                .calendar-hour-day:hover {
-                    background-color: rgba(255, 255, 255, 0.1);
-                    cursor: pointer;
-                }
-            }
-
+            $event-radius: 0.5rem;
             .event {
                 position: absolute;
                 left: 2px;
                 right: 2px;
                 overflow: hidden;
-                border-radius: 0.5rem;
+                border-radius: $event-radius;
 
-                &.avaliability {
-                    background-color: rgb(57, 65, 141);
+                $availability-color: rgb(57, 65, 141);
+                &.availability {
+                    background-color: $availability-color;
                     color: white;
+                    &.own:hover {
+                        background-color: lighten($availability-color, 10%);
+                        cursor: pointer;
+                    }
                 }
 
+                $match-color: rgb(244, 93, 116);
                 &.match {
-                    background-color: rgb(244, 93, 116);
+                    background-color: $match-color;
                     color: white;
+                    // &:hover {
+                    //     background-color: lighten($match-color, 10%);
+                    //     cursor: pointer;
+                    // }
+                }
+
+                .event-overlay {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    border-radius: $event-radius;
+                    &:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                        cursor: pointer;
+                    }
                 }
             }
         }
