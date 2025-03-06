@@ -31,7 +31,7 @@
                     <div v-for="hour in hours" :key="hour" class="calendar-hour-day" @click="open()"></div>
                     <div
                         class="event avaliability p-1"
-                        v-for="event in avaliabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
+                        v-for="event in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
                         :key="event.startDate.toISOString()"
                         :style="getEventStyle(event)"
                     ></div>
@@ -51,7 +51,7 @@
 import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
-import { computed, h, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
 import EditAvaliabilityModal from './modals/EditAvaliabilityModal.vue';
 
@@ -61,8 +61,19 @@ const props = defineProps<{
     ownCalendar: boolean;
 }>();
 
-const avaliabilities = ref(splitEvents(props.schedule.avaliabilities));
+const availabilities = ref(splitEvents(props.schedule.availabilities));
 const matches = ref(props.schedule.matches);
+
+// Watch for changes in the schedule prop
+watch(
+    () => props.schedule,
+    (newSchedule) => {
+        console.log('new schedule: ', newSchedule, newSchedule.availabilities);
+        availabilities.value = splitEvents(newSchedule.availabilities);
+        matches.value = newSchedule.matches;
+    },
+    { deep: true },
+);
 
 const viewMode = ref<'day' | 'week'>('week');
 

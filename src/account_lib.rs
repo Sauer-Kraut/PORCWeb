@@ -103,13 +103,13 @@ impl Account {
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetAccountInfoRecv {
+pub struct PutAccountInfoRecv {
     pub title: String,
     pub ids: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetAccountInfoResp {
+pub struct PutAccountInfoResp {
     pub title: String,
     pub data: Option<Vec<PubAccountInfo>>,
     pub error: Option<String>
@@ -117,8 +117,8 @@ pub struct GetAccountInfoResp {
 
 
 
-pub async fn get_account_info(info: web::Json<GetAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for account infos".bold().cyan());
+pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
+    println!("\n{}", "Received PUT Request for account infos".bold().cyan());
 
     let (data_sender, data_receiver) = mpsc::channel();
     let (error_sender, error_receiver) = mpsc::channel();
@@ -140,7 +140,7 @@ pub async fn get_account_info(info: web::Json<GetAccountInfoRecv>, appstate: web
         }
 
         if account_infos.is_empty() {
-            error_sender.send("No accounts for ids found".to_string()).unwrap()
+            error_sender.send(format!("No accounts for the ids found")).unwrap()
         } else {
             data_sender.send(account_infos).unwrap()
         }
@@ -156,7 +156,7 @@ pub async fn get_account_info(info: web::Json<GetAccountInfoRecv>, appstate: web
         Err(_) => None,
     };
 
-    HttpResponse::Ok().json(GetAccountInfoResp {
+    HttpResponse::Ok().json(PutAccountInfoResp {
         title: "Account Info response".to_string(),
         data,
         error
@@ -321,20 +321,20 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetMatchEventRecvPackage {
+pub struct PutMatchEventRecvPackage {
     pub title: String,
     pub match_events: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetMatchEventRespPackage {
+pub struct PutMatchEventRespPackage {
     pub title: String,
     pub data: Vec<MatchEvent>,
     pub error: Option<String>
 }
 
-pub async fn get_match_event(info: web::Json<GetMatchEventRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for match events".bold().cyan());
+pub async fn put_match_event(info: web::Json<PutMatchEventRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
+    println!("\n{}", "Received PUT Request for match events".bold().cyan());
 
     let (data_sender, data_receiver) = mpsc::channel();
     let (error_sender, error_receiver) = mpsc::channel();
@@ -370,7 +370,7 @@ pub async fn get_match_event(info: web::Json<GetMatchEventRecvPackage>, appstate
 
     let data = data_receiver.recv().unwrap();
 
-    HttpResponse::Ok().json(GetMatchEventRespPackage {
+    HttpResponse::Ok().json(PutMatchEventRespPackage {
         title: "Server GET match events Respons".to_string(),
         data,
         error

@@ -2,7 +2,7 @@ import type { ScheduleEvent } from './ScheduleEventModel';
 import type { MatchEvent } from './MatchEventModel';
 
 export interface Schedule {
-    avaliabilities: ScheduleEvent[];
+    availabilities: ScheduleEvent[];
     matches: MatchEvent[];
     notes: string;
 }

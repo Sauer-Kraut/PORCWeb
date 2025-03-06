@@ -43,7 +43,7 @@ async function getLoggedIn() {
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/discord/logged-in`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
