@@ -20,10 +20,21 @@ const schedule = ref({
         {
             startDate: new Date(2025, 1, 24, 10, 30),
             endDate: new Date(2025, 1, 24, 15, 30),
+            repetition: {
+                type: 'Weekly',
+            },
         },
         {
-            startDate: new Date(2025, 1, 24, 16),
-            endDate: new Date(2025, 1, 24, 19),
+            startDate: new Date(2025, 2, 24, 16),
+            endDate: new Date(2025, 2, 24, 19),
+            repetition: {
+                type: 'Daily',
+                data: {
+                    monday: true,
+                    tuesday: true,
+                    sunday: true,
+                },
+            },
         },
         {
             startDate: new Date(2025, 1, 27, 14),
