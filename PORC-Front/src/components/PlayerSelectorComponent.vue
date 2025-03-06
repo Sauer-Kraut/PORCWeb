@@ -8,7 +8,7 @@
     import { defineProps, defineModel, ref } from 'vue';
 
     const schedule = ref({
-    avaliabilities: [
+    availabilities: [
         {
             startDate: new Date(2025, 1, 24, 10, 30),
             endDate: new Date(2025, 1, 24, 15, 30),
@@ -56,6 +56,7 @@
 
     const props = defineProps<{
         players: PubAccountInfo[];
+        observer_id: string;
     }>();
 
     const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
@@ -63,11 +64,11 @@
 
 <template>
     <div class="container">
-        <PlayerSelectionComponent v-for="player in props.players" v-bind:player="player" v-model:selected-player="selectedPlayer" v-bind:observer_id="'1'"></PlayerSelectionComponent>
+        <PlayerSelectionComponent v-for="player in props.players" v-bind:player="player" v-model:selected-player="selectedPlayer" v-bind:observer_id="observer_id"></PlayerSelectionComponent>
     </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '@/assets/scss/styles.scss';
 
     .container {
