@@ -5,16 +5,16 @@ import { ref } from 'vue';
 
 const props = defineProps<{
     formId: string;
-    avaliability: ScheduleEvent;
+    availability: ScheduleEvent;
     formSubmit?: (data: any) => void;
 }>();
 
-const avaliability = ref(props.avaliability);
+const availability = ref(props.availability);
 
 const emit = defineEmits(['submit']);
 
 function submit() {
-    const data = avaliability.value;
+    const data = availability.value;
     console.log('submitting form', props);
     if (props.formSubmit) {
         props.formSubmit(data);
@@ -27,11 +27,11 @@ function submit() {
     <form @submit.prevent="submit" :id="formId">
         <div class="form-group">
             <label for="startDate">Start Date</label>
-            <DatePicker v-model="avaliability.startDate" id="startDate" />
+            <DatePicker v-model="availability.startDate" id="startDate" />
         </div>
         <div class="form-group">
             <label for="endDate">End Date</label>
-            <DatePicker v-model="avaliability.endDate" id="endDate" />
+            <DatePicker v-model="availability.endDate" id="endDate" />
         </div>
     </form>
 </template>

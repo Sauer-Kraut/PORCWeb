@@ -108,7 +108,7 @@ watch(
 </script>
 
 <template>
-    <VueFinalModal content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
+    <VueFinalModal class="confirm-modal" content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
         <div class="porc-modal-content col-xl-2 col-md-6 col-11 p-4 rounded">
             <div>
                 <h3 class="mb-3 title">{{ title }}</h3>
@@ -182,6 +182,12 @@ watch(
 </template>
 
 <style scoped>
+.confirm-modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .porc-modal-content {
     background: linear-gradient(135deg, #8d7b78, #3b435b);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
