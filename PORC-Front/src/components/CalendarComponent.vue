@@ -160,8 +160,8 @@ function splitEvents(events: ScheduleEvent[]): ScheduleEventDisplay[] {
     events.forEach((event) => {
         let start = new Date(event.startDate);
         const end = new Date(event.endDate);
-        switch (event.repetition?.type ?? 'Once') {
-            case 'Once':
+        switch (event.repetition ?? Repetition.Once) {
+            case Repetition.Once:
                 while (start < end) {
                     const nextDay = new Date(start);
                     nextDay.setHours(23, 59, 0, 0); // Move to the next day
@@ -175,13 +175,12 @@ function splitEvents(events: ScheduleEvent[]): ScheduleEventDisplay[] {
                     start = nextDay;
                 }
                 break;
-            case 'Daily':
-                const rep = event.repetition as { type: 'Daily'; data: DailyRepetitionConfig };
-                for (const day of getRepetitionDays(rep.data)) {
+            case Repetition.Daily:
+                for (const day of getRepetitionDays(event.repetition_config)) {
                     splitEvents.push(getEventOfTheWeek(event, day));
                 }
                 break;
-            case 'Weekly':
+            case Repetition.Weekly:
                 const eventDayOfWeek = (start.getDay() + 6) % 7; // Adjust for week starting on Monday
                 splitEvents.push(getEventOfTheWeek(event, eventDayOfWeek));
                 break;
@@ -280,7 +279,7 @@ async function createEvent(type: 'availability' | 'match', date: Date) {
                 startDate: date,
                 endDate: new Date(date.getTime() + 60 * 60 * 1000),
                 repetition: Repetition.Once,
-                repetition_config: {monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false} as DailyRepetitionConfig,
+                repetition_config: { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false } as DailyRepetitionConfig,
             } as ScheduleEvent,
             async onCancel() {
                 close();
@@ -301,8 +300,6 @@ function editAvailability(availability: ScheduleEvent) {
     if (!props.ownCalendar) return;
     console.log('editAvaliability', availability);
 }
-
-
 </script>
 
 <style scoped lang="scss">

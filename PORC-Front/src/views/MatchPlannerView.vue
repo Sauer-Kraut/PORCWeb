@@ -4,7 +4,7 @@ import { MatchStatus } from '@/models/Calendar/MatchEventModel';
 import CalendarComponent from '@/components/CalendarComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
 import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
-import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
+import { Repetition, type ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
 import { onMounted, ref, watch } from 'vue';
@@ -167,8 +167,7 @@ async function getUserId() {
         console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
-    } 
-    else {
+    } else {
         isLoggedIn.value = true;
         user_id.value = res.id;
     }
