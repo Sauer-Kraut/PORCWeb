@@ -4,6 +4,7 @@ import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import type { SignUpInfo } from '@/models/SignUpInfoModel.ts';
 import DiscordUserComponent from '@/components/DiscordUserComponent.vue';
 import config from '@/config';
+import { getLoggedIn } from '@/API/GetLoggedIn';
 
 const displayError = ref(false);
 let errorMessage: string = 'This is an error message';
@@ -11,7 +12,7 @@ let errorMessage: string = 'This is an error message';
 const invalidFillOut = ref(false);
 const success = ref(false);
 
-const username = ref(null);
+const username = ref<String>("");
 const BP = ref(null);
 const region = ref(null);
 const isOnDiscord = ref(false);
@@ -110,55 +111,20 @@ function getCookieValue(name: string): string | null {
     return null; // Cookie not found
 }
 
-async function getLoggedIn() {
-    console.log('Trying to get Logged in status');
-    const id = getCookieValue('browser_id');
+async function getUserId() {
+    let res = await getLoggedIn();
 
-    if (id == null) {
-        isLoggedIn.value = false;
-        return null;
-    }
-
-    const data = getCookieValue('browser_id');
-
-    const requestData = JSON.stringify({
-        title: 'Logged in Request',
-        id: data,
-    });
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/discord/logged-in`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestData,
-        });
-
-        if (!response.ok) {
-            isLoggedIn.value = false;
-            throw new Error('Network response was not ok');
-        }
-
-        const json_data = await response.json();
-        // console.log('Success:', data);
-        if (json_data.error == null) {
-            // console.log("Logged in: ", json_data);
-            isLoggedIn.value = true;
-            username.value = json_data.data.user_info.username;
-            user_id = json_data.data.user_info.id;
-        } else {
-            isLoggedIn.value = false;
-        }
-    } catch (error) {
-        console.error('Error:', error);
+    if (typeof res === 'string') {
         errorMessage = 'internal server error';
         console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
+    } 
+    else {
+        isLoggedIn.value = true;
+        user_id = res.id;
+        username.value = res.username;
     }
-
-    return null;
 }
 
 async function getSignedUp() {

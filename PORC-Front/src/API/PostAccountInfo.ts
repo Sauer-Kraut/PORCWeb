@@ -14,8 +14,9 @@ export async function postUserInfo(user: PubAccountInfo): Promise<void | string>
         account_info: recvStruct,
     });
 
+    console.log('Request Data:', requestData);
     try {
-        const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
+        const response = await fetch(`${config.getBackendUrl()}/api/account/setinfo`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

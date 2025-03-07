@@ -6,6 +6,7 @@ use actix_web::{web, HttpResponse, Responder, cookie::Cookie};
 use colored::Colorize;
 use tokio;
 use std::collections::HashMap;
+use std::default;
 use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
 use crate::bot_communication::{make_bot_request_match};
@@ -42,12 +43,13 @@ pub struct Event {
     pub start_timestamp: u64,
     pub end_timestamp: u64,
     pub repetition: Repetition,
+    pub repetition_config: Option<DailyRepetitionConfig>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum Repetition {
     Once,
-    Daily(DailyRepetitionConfig),
+    Daily,
     Weekly,
     Monthly,
     Yearly,
@@ -406,18 +408,31 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
     let client_id = info.client_id.clone();
 
     let accounts_clone = appstate.accounts.clone();
-    let mut accounts_lock = accounts_clone.lock().await.clone();
 
     // We spawn an asyncronus thread in order to be able to handle many requests at once
     println!("startig async thread");
     tokio::task::spawn(async move {
+
+        let mut accounts_lock = accounts_clone.lock().await;
+        let mut accounts = accounts_lock.clone();
+
+        let mut error = "".to_string();
         
         match logins_clone.as_ref().lock().await.get(&client_id) {
             Some(entry) => {
                 let discord_id = entry.clone();
-                match accounts_lock.get_mut(&discord_id) {
-                    Some(value) => {*value = 
-                        Account{ 
+                match accounts.get_mut(&discord_id) {
+                    Some(value) => {
+                        let default_schedule = Schedule {
+                            availabilities: vec!(),
+                            matches: vec!(),
+                            notes: "".to_string(),
+                        };
+                        println!("old availabilities: {:?}, new availabilities: {:?}",  
+                            value.schedule.clone().unwrap_or(default_schedule.clone()).availabilities,
+                            info.account_info.schedule.clone().unwrap_or(default_schedule.clone()).availabilities);
+                            
+                        *value = Account{ 
                             user_info: DiscordUser {
                                 id: info.account_info.id.clone(),
                                 username: info.account_info.username.clone(),
@@ -426,16 +441,26 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
                                 email: value.user_info.email.clone(),
                             }, 
                             schedule: Some(Schedule {
-                                availabilities: info.account_info.schedule.clone().unwrap_or(Schedule{ availabilities: vec!(), matches: vec!(), notes: "".to_string() }).availabilities,
-                                matches: value.schedule.clone().unwrap_or(Schedule{ availabilities: vec!(), matches: vec!(), notes: "".to_string() }).matches,
-                                notes: info.account_info.schedule.clone().unwrap_or(Schedule{ availabilities: vec!(), matches: vec!(), notes: "".to_string() }).notes,
+                                availabilities: match info.account_info.schedule.clone() {
+                                    Some(schedule) => schedule.availabilities,
+                                    None => value.schedule.clone().unwrap_or(default_schedule.clone()).availabilities
+                                },
+                                matches: value.schedule.clone().unwrap_or(default_schedule.clone()).matches,
+                                notes: info.account_info.schedule.clone().unwrap_or(default_schedule.clone()).notes,
                             })
                         }}
-                    None => {error_sender.send("No account for discord id found".to_string()).unwrap();}
+                    None => error = "No account for discord id found".to_string()
                 }
             },
-            None => {error_sender.send("no login found for client id".to_string()).unwrap()}
+            None => error = "no login found for client id".to_string()
         };
+
+        if error == "".to_string() {
+            *accounts_lock = accounts;
+        } else {
+            error_sender.send(error).unwrap();
+        }
+
         drop(accounts_lock);
 
     }).await.unwrap();

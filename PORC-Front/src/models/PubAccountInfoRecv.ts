@@ -1,6 +1,6 @@
 import config from "@/config";
-import type { MatchStatus } from "./Calendar/MatchEventModel";
-import type { Repetition } from "./Calendar/ScheduleEventModel";
+import type { MatchEvent, MatchStatus } from "./Calendar/MatchEventModel";
+import type { DailyRepetitionConfig, Repetition, ScheduleEvent } from "./Calendar/ScheduleEventModel";
 import type { Schedule } from "./Calendar/ScheduleModel";
 import type { PubAccountInfo } from "./PubAccountInfo";
 
@@ -20,7 +20,8 @@ export interface ScheduleRecv {
 export interface ScheduleEventRecv {
     start_timestamp: number;
     end_timestamp: number;
-    repetition: Repetition;
+    repetition: string;
+    repetition_config: DailyRepetitionConfig | null;
 }
 
 export interface MatchEventRecv {
@@ -50,8 +51,17 @@ export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise
                 return {
                     startDate: new Date(event.start_timestamp * 1000),
                     endDate: new Date(event.end_timestamp * 1000),
-                    repetition: event.repetition
-                };
+                    repetition: event.repetition,
+                    repetition_config: event.repetition_config? event.repetition_config : {
+                        monday: false,
+                        tuesday: false,
+                        wednesday: false,
+                        thursday: false,
+                        friday: false,
+                        saturday: false,
+                        sunday: false
+                    }
+                } as ScheduleEvent;
             }),
             matches: matches.map(match => {
                 console.log("Match timestamp:", match.start_timestamp); // Add this line to log match timestamp
@@ -69,6 +79,7 @@ export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise
 }
 
 export function convertToPubAccountInfoRecv(info: PubAccountInfo): PubAccountInfoRecv {
+    console.log("Converting to PubAccountInfoRecv:", info); // Add this line to log the info object
     return {
         id: info.id,
         username: info.username,
@@ -77,11 +88,21 @@ export function convertToPubAccountInfoRecv(info: PubAccountInfo): PubAccountInf
             availabilities: info.schedule.availabilities.map(event => ({
                 start_timestamp: Math.floor(event.startDate.getTime() / 1000),
                 end_timestamp: Math.floor(event.endDate.getTime() / 1000),
-                repetition: event.repetition
-            })),
+                repetition: event.repetition,
+                repetition_config: event.repetition_config
+            } as ScheduleEventRecv)),
             matches: [], // Keep the match array empty
             notes: info.schedule.notes
         } : null
+    };
+}
+
+export function convertToMatchEventRecv(event: MatchEvent): MatchEventRecv {
+    return {
+        start_timestamp: Math.floor(event.startDate.getTime() / 1000),
+        initiator_id: event.initiatorId,
+        opponent_id: event.opponentId,
+        status: event.status
     };
 }
 
