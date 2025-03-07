@@ -12,43 +12,12 @@ import config from '@/config';
 import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import type { DivisionModel } from '@/models/DivisionModel';
 import { convertToPubAccountInfo, type PubAccountInfoRecv } from '@/models/PubAccountInfoRecv';
+import { getLoggedIn } from '@/API/GetLoggedIn';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const schedule = ref({
-    availabilities: [
-        {
-            startDate: new Date(2025, 1, 24, 10, 30),
-            endDate: new Date(2025, 1, 24, 15, 30),
-            repetition: {
-                type: 'Weekly',
-            },
-        },
-        {
-            startDate: new Date(2025, 2, 24, 16),
-            endDate: new Date(2025, 2, 24, 19),
-            repetition: {
-                type: 'Daily',
-                data: {
-                    monday: true,
-                    tuesday: true,
-                    sunday: true,
-                },
-            },
-        },
-        {
-            startDate: new Date(2025, 1, 27, 14),
-            endDate: new Date(2025, 1, 27, 18, 30),
-        },
-        {
-            startDate: new Date(2025, 1, 27, 0),
-            endDate: new Date(2025, 1, 27, 1),
-        },
-        {
-            startDate: new Date(2025, 1, 28, 10),
-            endDate: new Date(2025, 2, 2, 12),
-        },
-    ] as ScheduleEvent[],
+    availabilities: [] as ScheduleEvent[],
     matches: [
         {
             startDate: new Date(2025, 1, 24, 11),
@@ -190,66 +159,19 @@ function hideError() {
     displayError.value = false;
 }
 
-function getCookieValue(name: string): string | null {
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-        const [key, value] = cookie.split('=');
-        if (key === name) {
-            return decodeURIComponent(value);
-        }
-    }
-    return null; // Cookie not found
-}
+async function getUserId() {
+    let res = await getLoggedIn();
 
-async function getLoggedIn() {
-    console.log('Trying to get Logged in status');
-    const id = getCookieValue('browser_id');
-
-    if (id == null) {
-        isLoggedIn.value = false;
-        return null;
-    }
-
-    const data = getCookieValue('browser_id');
-
-    const requestData = JSON.stringify({
-        title: 'Logged in Request',
-        id: data,
-    });
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/discord/logged-in`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestData,
-        });
-
-        if (!response.ok) {
-            isLoggedIn.value = false;
-            throw new Error('Network response was not ok');
-        }
-
-        const json_data = await response.json();
-        // console.log('Success:', data);
-        if (json_data.error == null) {
-            // console.log("Logged in: ", json_data);
-            isLoggedIn.value = true;
-            user_id.value = json_data.data.user_info.id;
-            console.log('user id: ', user_id.value);
-        } else {
-            isLoggedIn.value = false;
-        }
-    } catch (error) {
-        console.error('Error:', error);
+    if (typeof res === 'string') {
         errorMessage = 'internal server error';
         console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
+    } 
+    else {
+        isLoggedIn.value = true;
+        user_id.value = res.id;
     }
-
-    return null;
 }
 
 const divisions = ref<DivisionModel[]>([]);
@@ -327,6 +249,10 @@ function getPlayerIds(): string[] {
 
 async function getPubPlayerInfos(ids: string[]) {
     console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
+    if (ids.length == 0 || ids[0] == 'default') {
+        playerinfos.value = [];
+        return;
+    }
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/account/info`, {
@@ -371,7 +297,7 @@ async function getPubPlayerInfos(ids: string[]) {
 }
 
 onMounted(() => {
-    getLoggedIn();
+    getUserId();
     getMatchPlan();
     setTimeout(() => {
         opponents.value = find_opponents();

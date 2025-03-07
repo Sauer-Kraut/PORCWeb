@@ -1,6 +1,7 @@
 import config from "@/config";
 import type { PubAccountInfo } from "../models/PubAccountInfo";
 import { getClientId } from "./clientIdentification";
+import { convertToPubAccountInfo } from "@/models/PubAccountInfoRecv";
 
 export async function getLoggedIn(): Promise<PubAccountInfo | string> {
     console.log('Trying to get Logged in status');
@@ -34,7 +35,7 @@ export async function getLoggedIn(): Promise<PubAccountInfo | string> {
             return jsonData.error;
         } 
         else {
-            return jsonData.data;
+            return convertToPubAccountInfo(jsonData.data);
         }
     } 
     catch (error) {

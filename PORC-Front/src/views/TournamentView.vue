@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue';
 import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import TimerComponent from '@/components/TimerComponent.vue';
 import config from '@/config';
+import { getLoggedIn } from '@/API/GetLoggedIn';
 
 /*
 const debugData = {
@@ -419,67 +420,21 @@ async function getMatchPlan() {
     }
 }
 
-function getCookieValue(name: string): string | null {
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-        const [key, value] = cookie.split('=');
-        if (key === name) {
-            return decodeURIComponent(value);
-        }
-    }
-    return null; // Cookie not found
-}
+async function getUserId() {
+    let res = await getLoggedIn();
 
-async function getLoggedIn(): Promise<string | null> {
-    console.log('Trying to get Logged in status');
-    const id = getCookieValue('browser_id');
-
-    if (id == null) {
-        return null;
-    }
-
-    const data = getCookieValue('browser_id');
-
-    const requestData = JSON.stringify({
-        title: 'Logged in Request',
-        id: data,
-    });
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/discord/logged-in`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestData,
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const response_json = await response.json();
-        // console.log('Success:', response_json);
-        if (response_json.error != null) {
-            return null;
-        } else {
-            // console.log("Logged in: ", response_json.data);
-            user = response_json.data.user_info.id as string;
-            // console.log("user: ", user)
-            return response_json;
-        }
-    } catch (error) {
-        console.error('Error:', error);
+    if (typeof res === 'string') {
         errorMessage = 'internal server error';
         console.log('Error message:', errorMessage);
         displayError.value = true;
+    } 
+    else {
+        user = res.id;
     }
-
-    return null;
 }
 
 onMounted(() => {
-    getLoggedIn();
+    getUserId();
     getMatchPlan();
 });
 </script>

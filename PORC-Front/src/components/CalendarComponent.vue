@@ -35,7 +35,7 @@
                         v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
                         :key="availability.startDate.toISOString()"
                         :style="getEventStyle(availability)"
-                        @click.stop="ownCalendar && editAvaliability(availability.event)"
+                        @click.stop="ownCalendar && editAvailability(availability.event)"
                     >
                         <div
                             v-if="!ownCalendar"
@@ -59,13 +59,14 @@
 </template>
 
 <script lang="ts" setup>
-import type { DailyRepetitionConfig, ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
+import { Repetition, type DailyRepetitionConfig, type ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
-import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
 import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
+import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
+import { AddAvailability } from '@/API/PostAvailability.ts';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -269,28 +270,39 @@ function getPlayer(id: string): PlayerModel {
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
-function createEvent(type: 'availability' | 'match', date: Date) {
+async function createEvent(type: 'availability' | 'match', date: Date) {
     console.log('Create event', type, date);
+    const { open, close } = useModal({
+        component: EditAvailabilityModal,
+        attrs: {
+            title: 'Add avaliability',
+            availability: {
+                startDate: date,
+                endDate: new Date(date.getTime() + 60 * 60 * 1000),
+                repetition: Repetition.Once,
+                repetition_config: {monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false} as DailyRepetitionConfig,
+            } as ScheduleEvent,
+            async onCancel() {
+                close();
+            },
+            async onSubmitAvailability(data: ScheduleEvent) {
+                console.log('submiting something', data);
+                let err = await AddAvailability(data);
+                if (err != null) {
+                    console.log('Error adding availability', err);
+                }
+            },
+        },
+    });
+    open();
 }
 
-function editAvaliability(availability: ScheduleEvent) {
+function editAvailability(availability: ScheduleEvent) {
     if (!props.ownCalendar) return;
     console.log('editAvaliability', availability);
 }
 
-const { open, close } = useModal({
-    component: EditAvailabilityModal,
-    attrs: {
-        title: 'Add avaliability',
-        startDate: new Date(Date.now()),
-        onCancel() {
-            close();
-        },
-        onSubmitAvailability(data: ScheduleEvent) {
-            console.log('submiting something', data);
-        },
-    },
-});
+
 </script>
 
 <style scoped lang="scss">

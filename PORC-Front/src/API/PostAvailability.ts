@@ -4,7 +4,7 @@ import { getClientId } from "./clientIdentification";
 import { getLoggedIn } from "./GetLoggedIn";
 import { postUserInfo } from "./PostAccountInfo";
 
-async function AddAvailability(avail: ScheduleEvent): Promise<void | string> {
+export async function AddAvailability(avail: ScheduleEvent): Promise<void | string> {
     console.log('Trying to add availability');
 
     let account = await getLoggedIn();
@@ -26,7 +26,7 @@ async function AddAvailability(avail: ScheduleEvent): Promise<void | string> {
     return err;
 }
 
-async function RemoveAvailability(avail: ScheduleEvent): Promise<void | string> {
+export async function RemoveAvailability(avail: ScheduleEvent): Promise<void | string> {
     console.log('Trying to remove availability');
 
     let account = await getLoggedIn();

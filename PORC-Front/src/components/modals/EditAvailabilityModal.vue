@@ -3,11 +3,11 @@ import type { DailyRepetitionConfig, ScheduleEvent } from '@/models/Calendar/Sch
 import { ref, watch } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 import DatePicker from '@vuepic/vue-datepicker';
-import type { Repetition } from '@/models/Calendar/ScheduleEventModel';
+import { Repetition } from '@/models/Calendar/ScheduleEventModel';
 
 const props = defineProps<{
     title?: string;
-    startDate: Date;
+    availability: ScheduleEvent;
 }>();
 
 const emit = defineEmits(['submitAvailability', 'cancel']);
@@ -18,15 +18,12 @@ function submit() {
     emit('submitAvailability', createAvailability());
 }
 
-const now = new Date();
-const oneHourLater = new Date();
-oneHourLater.setHours(now.getHours() + 1);
-const time = ref([{hours: now.getHours(), minutes: now.getMinutes(), seconds: now.getSeconds()}, {hours: oneHourLater.getHours(), minutes: oneHourLater.getMinutes(), seconds: oneHourLater.getSeconds()}]); // Initialize with the current date and one hour later
-const repetition = ref("Once"); // Initialize with a default value
-const daysOfWeek = ref<string[]>([]); // Initialize with an empty array
+const startDate = ref(props.availability.startDate);
+const endDate = ref(props.availability.endDate);
+const time = ref([{hours: startDate.value.getHours(), minutes: startDate.value.getMinutes(), seconds: startDate.value.getSeconds()}, {hours: endDate.value.getHours(), minutes: endDate.value.getMinutes(), seconds: endDate.value.getSeconds()}]); // Initialize with the current date and one hour later
+const repetition = ref(convertFromRepetition(props.availability.repetition, props.availability.repetition_config).repetitionType); // Initialize with a default value
+const daysOfWeek = ref<string[]>(convertFromRepetition(props.availability.repetition, props.availability.repetition_config).days); // Initialize with an empty array
 const daysSelectionToggle = ref(false);
-
-const startDate = ref(new Date(props.startDate));
 const dayLabel = ref(`${startDate.value.toLocaleString('en-US', { weekday: 'short' })} ${startDate.value.getDate()}`);
 
 function convertToDailyRepetitionConfig(days: string[]): DailyRepetitionConfig {
@@ -44,18 +41,33 @@ function convertToDailyRepetitionConfig(days: string[]): DailyRepetitionConfig {
 function convertToRepetition(repetitionType: string, days: string[]): Repetition {
     switch (repetitionType) {
         case "Once":
-            return { type: "Once" };
+            return Repetition.Once;
         case "Daily":
-            return { type: "Daily", data: convertToDailyRepetitionConfig(days) };
+            return Repetition.Daily;
         case "Weekly":
-            return { type: "Weekly" };
+            return Repetition.Weekly;;
         case "Monthly":
-            return { type: "Monthly" };
+            return Repetition.Monthly;;
         case "Yearly":
-            return { type: "Yearly" };
+            return Repetition.Yearly;;
         default:
-            return { type: "Once" };
+            return Repetition.Once;
     }
+}
+
+function convertFromRepetition(repetition: Repetition, repetition_config: DailyRepetitionConfig): { repetitionType: string; days: string[] } {
+    const days = [];
+            if (repetition_config?.monday) days.push("Monday");
+            if (repetition_config?.tuesday) days.push("Tuesday");
+            if (repetition_config?.wednesday) days.push("Wednesday");
+            if (repetition_config?.thursday) days.push("Thursday");
+            if (repetition_config?.friday) days.push("Friday");
+            if (repetition_config?.saturday) days.push("Saturday");
+            if (repetition_config?.sunday) days.push("Sunday");
+    return {
+        repetitionType: repetition,
+        days,
+    };
 }
 
 function convertTimeRangeToDates(timeRange: { hours: number; minutes: number; seconds: number }[]): Date[] {
@@ -67,11 +79,13 @@ function convertTimeRangeToDates(timeRange: { hours: number; minutes: number; se
 
 function createAvailability(): ScheduleEvent {
     const [startDate, endDate] = convertTimeRangeToDates(time.value);
+    console.log('startDate: ', startDate, "endDate: ", endDate);
     const repetitionConfig = convertToRepetition(repetition.value, daysOfWeek.value);
     return {
         startDate,
         endDate,
         repetition: repetitionConfig,
+        repetition_config: convertToDailyRepetitionConfig(daysOfWeek.value),
     };
 }
 
@@ -182,11 +196,6 @@ watch(
 </template>
 
 <style scoped>
-.confirm-modal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
 .porc-modal-content {
     background: linear-gradient(135deg, #8d7b78, #3b435b);

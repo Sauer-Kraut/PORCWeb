@@ -2,14 +2,16 @@ export interface ScheduleEvent {
     startDate: Date;
     endDate: Date;
     repetition: Repetition;
+    repetition_config: DailyRepetitionConfig;
 }
 
-export type Repetition =
-  | { type: "Once" }
-  | { type: "Daily"; data: DailyRepetitionConfig }
-  | { type: "Weekly" }
-  | { type: "Monthly" }
-  | { type: "Yearly" };
+export enum Repetition {
+  Once = 'Once',
+  Daily = 'Daily',
+  Weekly = 'Weekly',
+  Monthly = 'Monthly',
+  Yearly = 'Yearly',
+}
 
 export interface DailyRepetitionConfig {
   monday: boolean;
