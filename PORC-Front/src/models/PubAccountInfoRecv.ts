@@ -68,6 +68,23 @@ export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise
     };
 }
 
+export function convertToPubAccountInfoRecv(info: PubAccountInfo): PubAccountInfoRecv {
+    return {
+        id: info.id,
+        username: info.username,
+        avatar: info.avatar,
+        schedule: info.schedule ? {
+            availabilities: info.schedule.availabilities.map(event => ({
+                start_timestamp: Math.floor(event.startDate.getTime() / 1000),
+                end_timestamp: Math.floor(event.endDate.getTime() / 1000),
+                repetition: event.repetition
+            })),
+            matches: [], // Keep the match array empty
+            notes: info.schedule.notes
+        } : null
+    };
+}
+
 async function getMatchEvents(match_ids: string[]): Promise<MatchEventRecv[]> {
     console.log('Trying to get match events for the following match ids: ', match_ids);
 

@@ -238,7 +238,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                         account.schedule = Some(Schedule {
                             availabilities: vec!(),
                             matches: vec!(),
-                            notes: "this schedule was automatically generated".to_string(),
+                            notes: "".to_string(),
                         });
                     },
                     _ => {}
@@ -273,7 +273,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                         account.schedule = Some(Schedule {
                             availabilities: vec!(),
                             matches: vec!(),
-                            notes: "this schedule was automatically generated".to_string(),
+                            notes: "".to_string(),
                         });
                     },
                     _ => {}
@@ -396,7 +396,7 @@ pub struct PostAccountInfoRespPackage {
     pub error: Option<String>
 }
 
-
+// This cant alter matches, beacause these are handled via shared ids. Will simply ignore the matches field
 pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{} {}", "Received POST Request for account info of account:".bold().cyan(), info.account_info.username.bold().italic());
 
@@ -425,7 +425,11 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
                                 avatar: info.account_info.avatar.clone(),
                                 email: value.user_info.email.clone(),
                             }, 
-                            schedule: info.account_info.schedule.clone()
+                            schedule: Some(Schedule {
+                                availabilities: info.account_info.schedule.clone().unwrap_or(Schedule{ availabilities: vec!(), matches: vec!(), notes: "".to_string() }).availabilities,
+                                matches: value.schedule.clone().unwrap_or(Schedule{ availabilities: vec!(), matches: vec!(), notes: "".to_string() }).matches,
+                                notes: info.account_info.schedule.clone().unwrap_or(Schedule{ availabilities: vec!(), matches: vec!(), notes: "".to_string() }).notes,
+                            })
                         }}
                     None => {error_sender.send("No account for discord id found".to_string()).unwrap();}
                 }

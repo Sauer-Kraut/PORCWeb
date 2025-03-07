@@ -182,16 +182,12 @@ const { open, close } = useModal({
     component: EditAvaliabilityModal,
     attrs: {
         title: 'Add avaliability',
-        avaliability: {
-            startDate: new Date(),
-            endDate: new Date(),
-        } as ScheduleEvent,
+        startDate: new Date(Date.now()),
         onCancel() {
             close();
         },
-        onSubmit(data: ScheduleEvent) {
-            addAvaliability(data);
-            close();
+        onSubmitAvailability(data: ScheduleEvent) {
+            console.log('submiting something', data);
         },
     },
 });

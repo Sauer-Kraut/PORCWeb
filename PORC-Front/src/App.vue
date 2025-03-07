@@ -94,8 +94,8 @@ nav {
     top: 0%;
     right: 3%;
     width: 100px;
-    position: absolute;
-    z-index: 10000;
+    position: absolute; // Changed from absolute to fixed
+    z-index: 10;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -169,8 +169,8 @@ nav {
         top: 0%;
         right: 3%;
         width: 50px;
-        position: absolute;
-        z-index: 10000;
+        position: absolute; // Changed from absolute to fixed
+        z-index: 10;
         display: flex;
         justify-content: center;
         align-items: center;
