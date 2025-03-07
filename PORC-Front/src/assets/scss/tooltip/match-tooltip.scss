@@ -1,0 +1,16 @@
+.v-popper--theme-match-tooltip {
+    .v-popper__inner {
+        background: #f45d74;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+    }
+
+    .v-popper__arrow-outer {
+        border-color: #f45d74;
+    }
+
+    .v-popper__arrow-inner {
+        visibility: hidden;
+    }
+}

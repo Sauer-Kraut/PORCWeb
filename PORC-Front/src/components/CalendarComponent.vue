@@ -46,12 +46,17 @@
                             :style="getHourStyle(hour, availability.startDate, availability.endDate)"
                         ></div>
                     </div>
-                    <div
+                    <VDropdown
                         class="event match p-1"
                         v-for="event in matches.filter((e) => e.startDate.toDateString() === day.toDateString())"
                         :key="event.startDate.toISOString()"
                         :style="getEventStyle(event)"
-                    ></div>
+                        :theme="'match-tooltip'"
+                    >
+                        <div class="w-100 h-100"></div>
+
+                        <template #popper> Hello world </template>
+                    </VDropdown>
                 </div>
             </div>
         </div>
