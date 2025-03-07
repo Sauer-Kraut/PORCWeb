@@ -1,13 +1,15 @@
+@import '@/assets/scss/styles.scss';
+
 .v-popper--theme-match-tooltip {
     .v-popper__inner {
-        background: #f45d74;
-        padding: 10px;
+        background-color: $match-color;
+        color: #ffffff;
         border: none;
-        border-radius: 10px;
+        border-radius: $border-radius;
     }
 
     .v-popper__arrow-outer {
-        border-color: #f45d74;
+        border-color: $match-color;
     }
 
     .v-popper__arrow-inner {

@@ -22,12 +22,16 @@ const schedule = ref({
         {
             startDate: new Date(2025, 1, 24, 11),
             endDate: new Date(2025, 1, 24, 12),
+            initiatorId: '1',
+            opponentId: 'default',
+            status: MatchStatus.Requested,
         },
         {
             startDate: new Date(2025, 2, 3, 8),
             endDate: new Date(2025, 2, 3, 9),
-            initiatorId: '1',
+            initiatorId: 'default',
             opponentId: '2',
+            status: MatchStatus.Finished,
         },
     ] as MatchEvent[],
     notes: 'notes',
@@ -318,7 +322,7 @@ watch(selectedPlayer, (newValue) => {
         <div class="inner-container">
             <h1 class="titel">Match planner</h1>
             <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="opponents" :own-calendar="selectedPlayer?.id === user_id"> </CalendarComponent>
+            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="opponents" :own-calendar="selectedPlayer?.id === user_id" :own-id="user_id"> </CalendarComponent>
             <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
         </div>
     </div>

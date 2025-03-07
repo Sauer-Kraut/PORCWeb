@@ -28,9 +28,9 @@
             </div>
             <div class="calendar-days">
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day">
-                    <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', hour.date)"></div>
+                    <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)"></div>
                     <div
-                        class="event availability p-1"
+                        class="event availability"
                         :class="{ own: ownCalendar }"
                         v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
                         :key="availability.startDate.toISOString()"
@@ -42,20 +42,51 @@
                             v-for="hour in getHoursInRange(availability.startDate, availability.endDate)"
                             :key="hour.toDateString()"
                             class="event-overlay"
-                            @click.stop="createEvent('match', hour)"
+                            @click.stop="createEvent('match', day, hour)"
                             :style="getHourStyle(hour, availability.startDate, availability.endDate)"
                         ></div>
                     </div>
                     <VDropdown
-                        class="event match p-1"
-                        v-for="event in matches.filter((e) => e.startDate.toDateString() === day.toDateString())"
-                        :key="event.startDate.toISOString()"
-                        :style="getEventStyle(event)"
+                        class="event match"
+                        :class="{ blink: ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId }"
+                        v-for="match in matches.filter((e) => e.startDate.toDateString() === day.toDateString())"
+                        :key="match.startDate.toISOString()"
+                        :style="getEventStyle(match)"
                         :theme="'match-tooltip'"
+                        :dropdown="{ autoHide: true }"
                     >
-                        <div class="w-100 h-100"></div>
-
-                        <template #popper> Hello world </template>
+                        <div class="w-100 h-100 p-2 d-flex justify-content-end">
+                            <h5 class="pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></h5>
+                        </div>
+                        <template #popper>
+                            <div class="container p-3">
+                                <div class="row align-items-center">
+                                    <h4 class="col-auto">
+                                        <MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent>
+                                    </h4>
+                                    <h6 class="col">{{ match.startDate.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}</h6>
+                                    <h6 class="col-auto">
+                                        {{ match.startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }} -
+                                        {{ match.endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }}
+                                    </h6>
+                                </div>
+                                <div class="row">
+                                    <h5 class="col text-center">
+                                        {{ getPlayer(match.initiatorId).tag || 'Player 1' }}
+                                        &nbsp;&nbsp;&nbsp;vs.&nbsp;&nbsp;&nbsp;
+                                        {{ getPlayer(match.opponentId).tag || 'Player 2' }}
+                                    </h5>
+                                </div>
+                                <div class="row mt-4" v-if="ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId">
+                                    <div class="col">
+                                        <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Refuse</button>
+                                    </div>
+                                    <div class="col">
+                                        <button class="btn btn-sm btn-light w-100" @click="respondToMatch(match, true)"><i></i>Accept</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </VDropdown>
                 </div>
             </div>
@@ -69,14 +100,18 @@ import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { PlayerModel } from '@/models/PlayerModel';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
-import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
+import { MatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
 import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
+import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
 import { AddAvailability } from '@/API/PostAvailability.ts';
+import { postMatch } from '@/API/PostMatch';
+import { placements } from 'floating-vue';
 
 const props = defineProps<{
     schedule: Schedule;
     players: PlayerModel[];
     ownCalendar: boolean;
+    ownId: string;
 }>();
 
 // Watch for changes in the schedule prop
@@ -274,7 +309,9 @@ function getPlayer(id: string): PlayerModel {
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
-async function createEvent(type: 'availability' | 'match', date: Date) {
+async function createEvent(type: 'availability' | 'match', day: Date, hour: Date) {
+    const date = new Date(day);
+    date.setHours(hour.getHours(), hour.getMinutes(), hour.getSeconds(), hour.getMilliseconds());
     console.log('Create event', type, date);
     const { open, close } = useModal({
         component: EditAvailabilityModal,
@@ -304,6 +341,11 @@ async function createEvent(type: 'availability' | 'match', date: Date) {
 function editAvailability(availability: ScheduleEvent) {
     if (!props.ownCalendar) return;
     console.log('editAvaliability', availability);
+}
+
+async function respondToMatch(match: MatchEvent, accept: boolean) {
+    match.status = accept ? MatchStatus.Confirmed : MatchStatus.Declined;
+    await postMatch(match);
 }
 </script>
 
@@ -384,7 +426,6 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 overflow: hidden;
                 border-radius: $event-radius;
 
-                $availability-color: rgb(57, 65, 141);
                 &.availability {
                     background-color: $availability-color;
                     color: white;
@@ -394,7 +435,6 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                     }
                 }
 
-                $match-color: rgb(244, 93, 116);
                 &.match {
                     background-color: $match-color;
                     color: white;
@@ -402,6 +442,12 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                     //     background-color: lighten($match-color, 10%);
                     //     cursor: pointer;
                     // }
+
+                    &.blink {
+                        animation: wave 5s linear infinite;
+                        background: linear-gradient(90deg, $match-color, darken($match-color, 10%), $match-color);
+                        background-size: 300% 100%;
+                    }
                 }
 
                 .event-overlay {
@@ -414,6 +460,15 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                         cursor: pointer;
                     }
                 }
+            }
+        }
+
+        @keyframes wave {
+            0% {
+                background-position: 300% 0;
+            }
+            100% {
+                background-position: -300% 0;
             }
         }
 
