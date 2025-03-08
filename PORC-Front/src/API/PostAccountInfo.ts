@@ -1,11 +1,10 @@
-import config from "@/config";
-import type { PubAccountInfo } from "../models/PubAccountInfo";
-import { convertToPubAccountInfoRecv, type PubAccountInfoRecv } from "../models/PubAccountInfoRecv";
-import { getClientId } from "./clientIdentification";
-
+import config from '@/config';
+import type { PubAccountInfo } from '../models/PubAccountInfo';
+import { convertToPubAccountInfoRecv, type PubAccountInfoRecv } from '../models/PubAccountInfoRecv';
+import { getClientId } from './clientIdentification';
 
 export async function postUserInfo(user: PubAccountInfo): Promise<void | string> {
-    console.log('Trying to post Account Info');
+    //console.log('Trying to post Account Info');
 
     const recvStruct: PubAccountInfoRecv = convertToPubAccountInfoRecv(user);
     const requestData = JSON.stringify({
@@ -14,7 +13,7 @@ export async function postUserInfo(user: PubAccountInfo): Promise<void | string>
         account_info: recvStruct,
     });
 
-    console.log('Request Data:', requestData);
+    //console.log('Request Data:', requestData);
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/account/setinfo`, {
             method: 'POST',
@@ -31,12 +30,11 @@ export async function postUserInfo(user: PubAccountInfo): Promise<void | string>
         const jsonData = await response.json();
         // console.log('Success:', data);
         if (jsonData.error != null) {
-            console.log('Error occurred: ', jsonData.error);
+            //console.log('Error occurred: ', jsonData.error);
             return jsonData.error;
         }
-    } 
-    catch (error) {
-        console.log('Error occurred: ', error);
+    } catch (error) {
+        //console.log('Error occurred: ', error);
         return String(error);
     }
 }

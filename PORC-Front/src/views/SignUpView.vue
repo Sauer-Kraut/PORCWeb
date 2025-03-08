@@ -12,7 +12,7 @@ let errorMessage: string = 'This is an error message';
 const invalidFillOut = ref(false);
 const success = ref(false);
 
-const username = ref<String>("");
+const username = ref<String>('');
 const BP = ref(null);
 const region = ref(null);
 const isOnDiscord = ref(false);
@@ -24,7 +24,7 @@ const isSignedUp = ref(false);
 
 function showError(error: string) {
     errorMessage = error;
-    console.log('Error message:', errorMessage);
+    //console.log('Error message:', errorMessage);
     displayError.value = true;
 }
 
@@ -42,7 +42,7 @@ function hideWarning() {
 
 function showSuccess() {
     success.value = true;
-    getSignedUp()
+    getSignedUp();
 }
 
 function confirmInput() {
@@ -55,7 +55,7 @@ function confirmInput() {
 }
 
 async function postSignUp() {
-    console.log('Trying to get match plan');
+    //console.log('Trying to get match plan');
     const now = Math.floor(Date.now() / 1000);
 
     const data: SignUpInfo = {
@@ -63,7 +63,7 @@ async function postSignUp() {
         bp: Number(BP.value),
         region: String(region.value),
         discord_id: user_id,
-        date: String(now)
+        date: String(now),
     };
 
     const requestData = JSON.stringify({
@@ -95,7 +95,7 @@ async function postSignUp() {
             showSuccess();
         }
     } catch (error) {
-        console.log('Error: ', error);
+        //console.log('Error: ', error);
         showError('Internal server error');
     }
 }
@@ -105,11 +105,10 @@ async function getUserId() {
 
     if (typeof res === 'string') {
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
-    } 
-    else {
+    } else {
         isLoggedIn.value = true;
         user_id = res.id;
         username.value = res.username;
@@ -117,7 +116,7 @@ async function getUserId() {
 }
 
 async function getSignedUp() {
-    console.log('Trying to get signed up in status');
+    //console.log('Trying to get signed up in status');
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
@@ -133,15 +132,15 @@ async function getSignedUp() {
         }
 
         const data = await response.json();
-        console.log('Success:', data);
+        //console.log('Success:', data);
         isSignedUp.value = false;
 
         if (data.error == null) {
             const signUps = data.data;
             for (let i = 0; i < signUps.length; i++) {
-                console.log('checking sign up: ', signUps[i], ' against id: ', user_id);
+                //console.log('checking sign up: ', signUps[i], ' against id: ', user_id);
                 if (signUps[i].discord_id == user_id) {
-                    console.log('found user sign up');
+                    //console.log('found user sign up');
                     isSignedUp.value = true;
                 }
             }
@@ -149,7 +148,7 @@ async function getSignedUp() {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'Server communication error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
     }
@@ -246,7 +245,7 @@ onMounted(() => {
     font-style: bold;
     height: fit-content;
     display: flex;
-    justify-content: space-between
+    justify-content: space-between;
 }
 
 .titel-text {
@@ -287,7 +286,7 @@ onMounted(() => {
         font-style: bold;
         height: fit-content;
         display: flex;
-        justify-content: space-between
+        justify-content: space-between;
     }
 }
 </style>

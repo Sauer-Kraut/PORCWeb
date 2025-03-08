@@ -180,7 +180,7 @@ let errorMessage: string = 'This is an error message';
 
 function showError(error: string) {
     errorMessage = error;
-    console.log('Error message:', errorMessage);
+    //console.log('Error message:', errorMessage);
     displayError.value = true;
 }
 
@@ -193,7 +193,7 @@ async function getUserId() {
 
     if (typeof res === 'string') {
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
     } else {
@@ -205,7 +205,7 @@ async function getUserId() {
 const divisions = ref<DivisionModel[]>([]);
 
 async function getMatchPlan() {
-    console.log('Trying to get match plan');
+    //console.log('Trying to get match plan');
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
@@ -225,7 +225,7 @@ async function getMatchPlan() {
         if (data.error != null) {
             errorMessage = data.error;
 
-            console.log('Error message:', errorMessage);
+            //console.log('Error message:', errorMessage);
             displayError.value = true;
         } else {
             divisions.value = data.data.divisions as DivisionModel[];
@@ -233,11 +233,11 @@ async function getMatchPlan() {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
     }
 
-    console.log('Divisions:', divisions.value);
+    //console.log('Divisions:', divisions.value);
 }
 
 function divisionContainsUser(division: DivisionModel): boolean {
@@ -291,7 +291,7 @@ function getPlayerIds(): string[] {
 }
 
 async function getPubPlayerInfos(ids: string[]) {
-    console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
+    //console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
     if (ids.length == 0 || ids[0] == 'default') {
         playerinfos.value = [];
         return;
@@ -314,15 +314,15 @@ async function getPubPlayerInfos(ids: string[]) {
         }
 
         let data = await response.json();
-        console.log('Success:', data);
+        //console.log('Success:', data);
 
         if (data.error != null) {
             errorMessage = data.error;
-            console.log('Error message:', errorMessage);
+            //console.log('Error message:', errorMessage);
             displayError.value = true;
         } else {
             let recvPlayerInfos = data.data as PubAccountInfoRecv[];
-            console.log('Received PlayerInfos: ', recvPlayerInfos);
+            //console.log('Received PlayerInfos: ', recvPlayerInfos);
             let PlayerInfos = [] as PubAccountInfo[];
             for (const player of recvPlayerInfos) {
                 PlayerInfos.push(await convertToPubAccountInfo(player));
@@ -332,11 +332,11 @@ async function getPubPlayerInfos(ids: string[]) {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
     }
 
-    console.log('PlayerInfos:', playerinfos.value);
+    //console.log('PlayerInfos:', playerinfos.value);
 }
 
 async function reload() {
@@ -372,7 +372,7 @@ onMounted(() => {
 });
 
 watch(selectedPlayer, (newValue) => {
-    console.log('selected player: ', newValue?.schedule);
+    //console.log('selected player: ', newValue?.schedule);
 });
 </script>
 

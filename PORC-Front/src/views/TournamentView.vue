@@ -371,7 +371,7 @@ let globalTimer = 0;
 let TimerText = '';
 
 async function getMatchPlan() {
-    console.log('Trying to get match plan');
+    //console.log('Trying to get match plan');
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
@@ -391,7 +391,7 @@ async function getMatchPlan() {
         if (data.error != null) {
             errorMessage = data.error;
 
-            console.log('Error message:', errorMessage);
+            //console.log('Error message:', errorMessage);
             displayError.value = true;
         } else {
             divisions.value = data.data.divisions as DivisionModel[];
@@ -400,14 +400,14 @@ async function getMatchPlan() {
             const seasonPause = data.data.pause_end_timestamp;
             const season = data.data.season;
 
-            console.log('Current Season: ', season);
+            //console.log('Current Season: ', season);
 
             if (now > seasonEnd) {
-                console.log('Tournament Phase: Pause until ', seasonPause);
+                //console.log('Tournament Phase: Pause until ', seasonPause);
                 globalTimer = seasonPause;
                 TimerText = `Time remaining until season ${season + 1} of PORC`;
             } else {
-                console.log('Tournament Phase: Competing until ', seasonEnd);
+                //console.log('Tournament Phase: Competing until ', seasonEnd);
                 globalTimer = seasonEnd;
                 TimerText = `Time remaining for season ${season} of PORC`;
             }
@@ -415,7 +415,7 @@ async function getMatchPlan() {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
     }
 }
@@ -425,10 +425,9 @@ async function getUserId() {
 
     if (typeof res === 'string') {
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
-    } 
-    else {
+    } else {
         user = res.id;
     }
 }

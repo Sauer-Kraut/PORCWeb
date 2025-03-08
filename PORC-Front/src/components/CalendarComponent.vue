@@ -151,7 +151,7 @@ const emit = defineEmits(['reload']);
 watch(
     () => props.schedule,
     (newSchedule) => {
-        console.log('new schedule: ', newSchedule, newSchedule.availabilities);
+        //console.log('new schedule: ', newSchedule, newSchedule.availabilities);
         availabilities.value = splitEvents(newSchedule.availabilities);
         matches.value = newSchedule.matches;
     },
@@ -301,7 +301,7 @@ function getRepetitionDays(repetition: DailyRepetitionConfig): number[] {
     if (repetition.sunday) {
         days.push(6);
     }
-    console.log('Repetition days', days);
+    //console.log('Repetition days', days);
     return days;
 }
 
@@ -357,7 +357,7 @@ function matchTooltipTheme(match: MatchEvent): string {
 async function createEvent(type: 'availability' | 'match', day: Date, hour: Date) {
     const date = new Date(day);
     date.setHours(hour.getHours(), hour.getMinutes(), hour.getSeconds(), hour.getMilliseconds());
-    console.log('Create event', type, date);
+    //console.log('Create event', type, date);
     if (type == 'availability') {
         const { open, close } = useModal({
             component: EditAvailabilityModal,
@@ -374,10 +374,10 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     close();
                 },
                 async onSubmitAvailability(data: ScheduleEvent) {
-                    console.log('submiting something', data);
+                    //console.log('submiting something', data);
                     let err = await EditAvailability([data], []);
                     if (err != null) {
-                        console.log('Error adding availability', err);
+                        //console.log('Error adding availability', err);
                     }
                     close();
                     emit('reload')
@@ -401,10 +401,10 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     close();
                 },
                 async onSubmitAvailability(data: MatchEvent) {
-                    console.log('submiting something', data);
+                    //console.log('submiting something', data);
                     let err = await RequestMatch(data);
                     if (err != null) {
-                        console.log('Error adding availability', err);
+                        //console.log('Error adding availability', err);
                     }
                     close();
                     emit('reload')
@@ -417,7 +417,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
 
 function editAvailability(availability: ScheduleEvent) {
     if (!props.ownCalendar) return;
-    console.log('editAvaliability', availability);
+    //console.log('editAvaliability', availability);
     const { open, close } = useModal({
         component: EditAvailabilityModal,
         attrs: {
@@ -428,10 +428,10 @@ function editAvailability(availability: ScheduleEvent) {
             },
             create: false,
             async onSubmitAvailability(data: ScheduleEvent) {
-                console.log('submiting something', data);
+                //console.log('submiting something', data);
                 let err = await EditAvailability([data], [availability]);
                 if (err != null) {
-                    console.log('Error adding availability', err);
+                    //console.log('Error adding availability', err);
                 }
                 close();
                 emit('reload')

@@ -25,7 +25,10 @@ function remove() {
 
 const startDate = ref(props.availability.startDate);
 const endDate = ref(props.availability.endDate);
-const time = ref([{hours: startDate.value.getHours(), minutes: startDate.value.getMinutes(), seconds: startDate.value.getSeconds()}, {hours: endDate.value.getHours(), minutes: endDate.value.getMinutes(), seconds: endDate.value.getSeconds()}]); // Initialize with the current date and one hour later
+const time = ref([
+    { hours: startDate.value.getHours(), minutes: startDate.value.getMinutes(), seconds: startDate.value.getSeconds() },
+    { hours: endDate.value.getHours(), minutes: endDate.value.getMinutes(), seconds: endDate.value.getSeconds() },
+]); // Initialize with the current date and one hour later
 const repetition = ref(convertFromRepetition(props.availability.repetition, props.availability.repetition_config).repetitionType); // Initialize with a default value
 const daysOfWeek = ref<string[]>(convertFromRepetition(props.availability.repetition, props.availability.repetition_config).days); // Initialize with an empty array
 const daysSelectionToggle = ref(false);
@@ -33,28 +36,28 @@ const dayLabel = ref(`${startDate.value.toLocaleString('en-US', { weekday: 'shor
 
 function convertToDailyRepetitionConfig(days: string[]): DailyRepetitionConfig {
     return {
-        monday: days.includes("Monday"),
-        tuesday: days.includes("Tuesday"),
-        wednesday: days.includes("Wednesday"),
-        thursday: days.includes("Thursday"),
-        friday: days.includes("Friday"),
-        saturday: days.includes("Saturday"),
-        sunday: days.includes("Sunday"),
+        monday: days.includes('Monday'),
+        tuesday: days.includes('Tuesday'),
+        wednesday: days.includes('Wednesday'),
+        thursday: days.includes('Thursday'),
+        friday: days.includes('Friday'),
+        saturday: days.includes('Saturday'),
+        sunday: days.includes('Sunday'),
     };
 }
 
 function convertToRepetition(repetitionType: string, days: string[]): Repetition {
     switch (repetitionType) {
-        case "Once":
+        case 'Once':
             return Repetition.Once;
-        case "Daily":
+        case 'Daily':
             return Repetition.Daily;
-        case "Weekly":
-            return Repetition.Weekly;;
-        case "Monthly":
-            return Repetition.Monthly;;
-        case "Yearly":
-            return Repetition.Yearly;;
+        case 'Weekly':
+            return Repetition.Weekly;
+        case 'Monthly':
+            return Repetition.Monthly;
+        case 'Yearly':
+            return Repetition.Yearly;
         default:
             return Repetition.Once;
     }
@@ -62,13 +65,13 @@ function convertToRepetition(repetitionType: string, days: string[]): Repetition
 
 function convertFromRepetition(repetition: Repetition, repetition_config: DailyRepetitionConfig): { repetitionType: string; days: string[] } {
     const days = [];
-            if (repetition_config?.monday) days.push("Monday");
-            if (repetition_config?.tuesday) days.push("Tuesday");
-            if (repetition_config?.wednesday) days.push("Wednesday");
-            if (repetition_config?.thursday) days.push("Thursday");
-            if (repetition_config?.friday) days.push("Friday");
-            if (repetition_config?.saturday) days.push("Saturday");
-            if (repetition_config?.sunday) days.push("Sunday");
+    if (repetition_config?.monday) days.push('Monday');
+    if (repetition_config?.tuesday) days.push('Tuesday');
+    if (repetition_config?.wednesday) days.push('Wednesday');
+    if (repetition_config?.thursday) days.push('Thursday');
+    if (repetition_config?.friday) days.push('Friday');
+    if (repetition_config?.saturday) days.push('Saturday');
+    if (repetition_config?.sunday) days.push('Sunday');
     return {
         repetitionType: repetition,
         days,
@@ -76,14 +79,28 @@ function convertFromRepetition(repetition: Repetition, repetition_config: DailyR
 }
 
 function convertTimeRangeToDates(timeRange: { hours: number; minutes: number; seconds: number }[]): Date[] {
-    const startDate = new Date(props.availability.startDate.getFullYear(), props.availability.startDate.getMonth(), props.availability.startDate.getDate(), timeRange[0].hours, timeRange[0].minutes, timeRange[0].seconds);
-    const endDate = new Date(props.availability.startDate.getFullYear(), props.availability.startDate.getMonth(), props.availability.startDate.getDate(), timeRange[1].hours, timeRange[1].minutes, timeRange[1].seconds);
+    const startDate = new Date(
+        props.availability.startDate.getFullYear(),
+        props.availability.startDate.getMonth(),
+        props.availability.startDate.getDate(),
+        timeRange[0].hours,
+        timeRange[0].minutes,
+        timeRange[0].seconds,
+    );
+    const endDate = new Date(
+        props.availability.startDate.getFullYear(),
+        props.availability.startDate.getMonth(),
+        props.availability.startDate.getDate(),
+        timeRange[1].hours,
+        timeRange[1].minutes,
+        timeRange[1].seconds,
+    );
     return [startDate, endDate];
 }
 
 function createAvailability(): ScheduleEvent {
     const [startDate, endDate] = convertTimeRangeToDates(time.value);
-    console.log('startDate: ', startDate, "endDate: ", endDate);
+    //console.log('startDate: ', startDate, "endDate: ", endDate);
     const repetitionConfig = convertToRepetition(repetition.value, daysOfWeek.value);
     return {
         startDate,
@@ -96,14 +113,14 @@ function createAvailability(): ScheduleEvent {
 watch(
     () => daysOfWeek.value,
     (Selection) => {
-        console.log('selected days: ', Selection);
-        console.log('repetition: ', repetition.value);
-        if (repetition.value == "Daily") {
+        //console.log('selected days: ', Selection);
+        //console.log('repetition: ', repetition.value);
+        if (repetition.value == 'Daily') {
             daysSelectionToggle.value = true;
         } else {
             daysSelectionToggle.value = false;
         }
-        console.log('daysSelectionToggle: ', daysSelectionToggle.value);
+        //console.log('daysSelectionToggle: ', daysSelectionToggle.value);
     },
     { deep: true },
 );
@@ -111,21 +128,21 @@ watch(
 watch(
     () => repetition.value,
     (newRepetition) => {
-        console.log('selected days: ', daysOfWeek.value);
-        console.log('repetition: ', repetition.value);
-        if (newRepetition == "Daily") {
+        //console.log('selected days: ', daysOfWeek.value);
+        //console.log('repetition: ', repetition.value);
+        if (newRepetition == 'Daily') {
             daysSelectionToggle.value = true;
         } else {
             daysSelectionToggle.value = false;
         }
-        console.log('daysSelectionToggle: ', daysSelectionToggle.value);
-        console.log('time: ', time.value);
+        //console.log('daysSelectionToggle: ', daysSelectionToggle.value);
+        //console.log('time: ', time.value);
     },
     { deep: true },
 );
 
 onMounted(() => {
-    if (repetition.value == "Daily") {
+    if (repetition.value == 'Daily') {
         daysSelectionToggle.value = true;
     } else {
         daysSelectionToggle.value = false;
@@ -143,14 +160,7 @@ onMounted(() => {
                 <form @submit.prevent="submit">
                     <div class="form-group d-flex align-items-center">
                         <div class="dark-grey-box">{{ dayLabel }}</div>
-                        <DatePicker
-                            class="range_selector"
-                            v-model="time" 
-                            time-picker
-                            is-range
-                            :range="{ disableTimeRangeValidation: false }"
-                            placeholder="Select Time"
-                        />
+                        <DatePicker class="range_selector" v-model="time" time-picker is-range :range="{ disableTimeRangeValidation: false }" placeholder="Select Time" />
                     </div>
                     <div class="s-spacer"></div>
                     <div class="form-group">
@@ -163,31 +173,31 @@ onMounted(() => {
                             <option>Yearly</option>
                         </select>
                     </div>
-                    <div class="form-group transition" :class="{ 'days_selector': daysSelectionToggle, 'd-compressed': !daysSelectionToggle }">
+                    <div class="form-group transition" :class="{ days_selector: daysSelectionToggle, 'd-compressed': !daysSelectionToggle }">
                         <div class="spacer"></div>
                         <label>Repeat for:</label>
-                        <br>
+                        <br />
                         <div class="xs-spacer"></div>
                         <div class="btn-group-vertical" role="group" aria-label="Basic checkbox toggle button group">
-                            <input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off" v-model="daysOfWeek" value="Monday">
+                            <input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off" v-model="daysOfWeek" value="Monday" />
                             <label class="btn btn-outline-primary custom-btn" for="btncheck1">Monday</label>
 
-                            <input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off" v-model="daysOfWeek" value="Tuesday">
+                            <input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off" v-model="daysOfWeek" value="Tuesday" />
                             <label class="btn btn-outline-primary custom-btn" for="btncheck2">Tuesday</label>
 
-                            <input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off" v-model="daysOfWeek" value="Wednesday">
+                            <input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off" v-model="daysOfWeek" value="Wednesday" />
                             <label class="btn btn-outline-primary custom-btn" for="btncheck3">Wednesday</label>
 
-                            <input type="checkbox" class="btn-check" id="btncheck4" autocomplete="off" v-model="daysOfWeek" value="Thursday">
+                            <input type="checkbox" class="btn-check" id="btncheck4" autocomplete="off" v-model="daysOfWeek" value="Thursday" />
                             <label class="btn btn-outline-primary custom-btn" for="btncheck4">Thursday</label>
 
-                            <input type="checkbox" class="btn-check" id="btncheck5" autocomplete="off" v-model="daysOfWeek" value="Friday">
+                            <input type="checkbox" class="btn-check" id="btncheck5" autocomplete="off" v-model="daysOfWeek" value="Friday" />
                             <label class="btn btn-outline-primary custom-btn" for="btncheck5">Friday</label>
 
-                            <input type="checkbox" class="btn-check" id="btncheck6" autocomplete="off" v-model="daysOfWeek" value="Saturday">
+                            <input type="checkbox" class="btn-check" id="btncheck6" autocomplete="off" v-model="daysOfWeek" value="Saturday" />
                             <label class="btn btn-outline-primary custom-btn" for="btncheck6">Saturday</label>
 
-                            <input type="checkbox" class="btn-check" id="btncheck7" autocomplete="off" v-model="daysOfWeek" value="Sunday">
+                            <input type="checkbox" class="btn-check" id="btncheck7" autocomplete="off" v-model="daysOfWeek" value="Sunday" />
                             <label class="btn btn-outline-primary custom-btn" for="btncheck7">Sunday</label>
                         </div>
                     </div>
@@ -212,7 +222,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-
 .porc-modal-content {
     background: linear-gradient(135deg, #8d7b78, #3b435b);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -306,11 +315,11 @@ onMounted(() => {
     margin-bottom: 0.5rem;
 }
 
-.day-checkbox input[type="checkbox"] {
+.day-checkbox input[type='checkbox'] {
     display: none;
 }
 
-.day-checkbox input[type="checkbox"]:checked + label {
+.day-checkbox input[type='checkbox']:checked + label {
     background-color: #28488e; /* Darker background when checked */
     color: white !important; /* White text color when checked */
 }
@@ -320,7 +329,7 @@ onMounted(() => {
     color: black !important;
 }
 
-.day-checkbox input[type="checkbox"]:checked {
+.day-checkbox input[type='checkbox']:checked {
     background-color: #28488e !important; /* Darker background for the checkbox itself */
 }
 

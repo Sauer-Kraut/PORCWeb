@@ -24,7 +24,7 @@ function hideError() {
 }
 
 async function getPlayerRanking() {
-    console.log('Trying to get player ranking');
+    //console.log('Trying to get player ranking');
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/ranking`, {
@@ -43,7 +43,7 @@ async function getPlayerRanking() {
 
         if (data.error != null) {
             errorMessage = data.error;
-            console.log('Error message:', errorMessage);
+            //console.log('Error message:', errorMessage);
             displayError.value = true;
         } else {
             let playerPerformances = performances.value;
@@ -61,7 +61,7 @@ async function getPlayerRanking() {
 
             if (playerPerformances == performances.value) {
                 errorMessage = 'Divsion could not be found for ranking';
-                console.log('Error message:', errorMessage);
+                //console.log('Error message:', errorMessage);
                 displayError.value = true;
             } else {
                 performances.value = playerPerformances;
@@ -70,7 +70,7 @@ async function getPlayerRanking() {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
     }
 
