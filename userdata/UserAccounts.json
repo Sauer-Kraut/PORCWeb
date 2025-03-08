@@ -1,34 +1,223 @@
 {
+  "2001": {
+    "user_info": {
+      "id": "2001",
+      "username": "SilverWolf",
+      "discriminator": "2003",
+      "avatar": "silver_wolf.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741436892,
+          "end_timestamp": 1741440492,
+          "repetition": "Daily",
+          "repetition_config": {
+            "monday": true,
+            "tuesday": true,
+            "wednesday": true,
+            "thursday": true,
+            "friday": true,
+            "saturday": true,
+            "sunday": true
+          }
+        }
+      ],
+      "matches": [],
+      "notes": "Available daily in the morning."
+    }
+  },
+  "2002": {
+    "user_info": {
+      "id": "2002",
+      "username": "FrostFox",
+      "discriminator": "2004",
+      "avatar": "frost_fox.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741523292,
+          "end_timestamp": 1741526892,
+          "repetition": "Monthly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available on the first day of each month."
+    }
+  },
+  "1002": {
+    "user_info": {
+      "id": "1002",
+      "username": "ShinyPhoenixTheUndefeatedEaterOfStones",
+      "discriminator": "1002",
+      "avatar": "shiny_phoenix.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741350492,
+          "end_timestamp": 1741354092,
+          "repetition": "Weekly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [
+        "306467062530965514V1002@1741264092",
+        "1002V306467062530965514@1741413600",
+        "1002V306467062530965514@1741348800"
+      ],
+      "notes": "Prefers evening matches."
+    }
+  },
+  "3001": {
+    "user_info": {
+      "id": "3001",
+      "username": "BronzeBear",
+      "discriminator": "3001",
+      "avatar": "bronze_bear.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741609692,
+          "end_timestamp": 1741613292,
+          "repetition": "Yearly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available on New Year's Day."
+    }
+  },
+  "3002": {
+    "user_info": {
+      "id": "3002",
+      "username": "CopperCrab",
+      "discriminator": "3002",
+      "avatar": "copper_crab.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741696092,
+          "end_timestamp": 1741699692,
+          "repetition": "Once",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available for one-time matches."
+    }
+  },
+  "4003": {
+    "user_info": {
+      "id": "4003",
+      "username": "BlazingDragon",
+      "discriminator": "4003",
+      "avatar": "blazing_dragon.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741955292,
+          "end_timestamp": 1741958892,
+          "repetition": "Once",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available for special events."
+    }
+  },
+  "4001": {
+    "user_info": {
+      "id": "4001",
+      "username": "WildTiger",
+      "discriminator": "4001",
+      "avatar": "wild_tiger.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741782492,
+          "end_timestamp": 1741786092,
+          "repetition": "Weekly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available every Monday."
+    }
+  },
+  "4002": {
+    "user_info": {
+      "id": "4002",
+      "username": "ShadowPanther",
+      "discriminator": "4002",
+      "avatar": "shadow_panther.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741868892,
+          "end_timestamp": 1741872492,
+          "repetition": "Daily",
+          "repetition_config": {
+            "monday": true,
+            "tuesday": true,
+            "wednesday": true,
+            "thursday": true,
+            "friday": true,
+            "saturday": true,
+            "sunday": true
+          }
+        }
+      ],
+      "matches": [],
+      "notes": "Available daily in the evening."
+    }
+  },
   "306467062530965514": {
     "user_info": {
       "id": "306467062530965514",
-      "username": "Sauerkraut",
-      "discriminator": "0000",
-      "avatar": null,
+      "username": "GoldenEagle",
+      "discriminator": "1001",
+      "avatar": "golden_eagle.png",
       "email": null
     },
     "schedule": {
-      "availabilities": [],
-      "matches": [
-        "178905571682942976V306467062530965514@1741460400"
+      "availabilities": [
+        {
+          "start_timestamp": 1741006800,
+          "end_timestamp": 1741010400,
+          "repetition": "Once",
+          "repetition_config": {
+            "monday": false,
+            "tuesday": false,
+            "wednesday": false,
+            "thursday": false,
+            "friday": false,
+            "saturday": false,
+            "sunday": false
+          }
+        }
       ],
-      "notes": ""
-    }
-  },
-  "178905571682942976": {
-    "user_info": {
-      "id": "178905571682942976",
-      "username": "2Guib",
-      "discriminator": "0000",
-      "avatar": null,
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [],
       "matches": [
-        "178905571682942976V306467062530965514@1741460400"
+        "306467062530965514V1002@1741264092",
+        "1002V306467062530965514@1741413600",
+        "1002V306467062530965514@1741348800"
       ],
-      "notes": ""
+      "notes": "Available for matches on weekends."
     }
   }
 }

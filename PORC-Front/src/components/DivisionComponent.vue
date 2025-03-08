@@ -39,14 +39,14 @@ function selectRandomPlaceholder() {
 const isDivisionExpanded = ref(false);
 
 function toggleDivisionExpanded() {
-    console.log('I changed the divisoin expandension status');
+    //console.log('I changed the divisoin expandension status');
     isDivisionExpanded.value = !isDivisionExpanded.value;
 }
 
 const isLeaderbordExpanded = ref(true);
 
 function toggleLeaderbordExpanded() {
-    console.log('I changed the leaderbord expandension status');
+    //console.log('I changed the leaderbord expandension status');
     isLeaderbordExpanded.value = !isLeaderbordExpanded.value;
 }
 
@@ -97,11 +97,7 @@ onMounted(() => {
 <template>
     <div class="division">
         <div class="header p-2 allign-items-center d-flex">
-            <i
-                class="icon-chevron-down"
-                :class="{ 'arrow-down flipper': isDivisionExpanded, 'arrow-right flipper': !isDivisionExpanded }"
-                @click="toggleDivisionExpanded()"
-            ></i>
+            <i class="icon-chevron-down" :class="{ 'arrow-down flipper': isDivisionExpanded, 'arrow-right flipper': !isDivisionExpanded }" @click="toggleDivisionExpanded()"></i>
             <h4 class="m-0 pr-2">{{ division.name }}</h4>
         </div>
         <div :class="{ body: isDivisionExpanded, nothing: !isDivisionExpanded }" v-if="load">
@@ -136,12 +132,14 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+@import '@/assets/scss/styles.scss';
+
 .division {
     .header {
         background-color: #7b7b7b;
         padding: 1rem;
         height: 45px;
-        background: linear-gradient(135deg, #7a6464, #5b77e8);
+        background: $background-header;
     }
 
     .pr-2 {
@@ -197,7 +195,7 @@ onMounted(() => {
     }
 
     .leaderbord {
-        height: fit-content
+        height: fit-content;
     }
 
     .margin-cust {

@@ -13,7 +13,6 @@ const props = defineProps<{
 let userID = props.user_id;
 let Match = props.match;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const allowedEdit = ref(false);
 
 const isScored = ref(false);
@@ -37,18 +36,18 @@ function hideError() {
 
 function ShowModal() {
     showModal.value = true;
-    console.log('I am trieing to show the prompt');
+    //console.log('I am trieing to show the prompt');
 }
 
 function handleSave(updateInfo: MatchModel) {
-    console.log('Save event triggered', updateInfo);
+    //console.log('Save event triggered', updateInfo);
     showModal.value = false;
     updateMatchInfo(updateInfo);
 }
 
 async function updateMatchInfo(updateInfo: MatchModel) {
-    console.log('Trying to update match info');
-    console.log(updateInfo);
+    //console.log('Trying to update match info');
+    //console.log(updateInfo);
 
     if (!(typeof updateInfo === 'object' && updateInfo !== null)) {
         console.error('updateInfo is not an object or is null');
@@ -84,7 +83,7 @@ async function updateMatchInfo(updateInfo: MatchModel) {
         // console.log('Success:', data);
         if (data.error != null) {
             errorMessage = data.error;
-            console.log('Error message:', errorMessage);
+            //console.log('Error message:', errorMessage);
             displayError.value = true;
             matchData.p1score = null;
             matchData.p2score = null;
@@ -92,7 +91,7 @@ async function updateMatchInfo(updateInfo: MatchModel) {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'Internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
         matchData.p1score = null;
         matchData.p2score = null;
@@ -157,16 +156,13 @@ function checkScores() {
 
 <template>
     <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored && allowedEdit }">
-        <div
-            class="d-flex flex-column justify-content-center center match-score"
-            :class="{ 'col-10': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }"
-        >
-            <div class="d-flex justify-content-between" :class="{'winner': p1Win(match)}">
+        <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-10': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
+            <div class="d-flex justify-content-between" :class="{ winner: p1Win(match) }">
                 <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
                 <span class="player-score">{{ match.p1score }}</span>
             </div>
             <div class="divider"></div>
-            <div class="d-flex justify-content-between" :class="{'winner': p2Win(match)}">
+            <div class="d-flex justify-content-between" :class="{ winner: p2Win(match) }">
                 <span class="player-tag">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
                 <span class="player-score">{{ match.p2score }}</span>
             </div>

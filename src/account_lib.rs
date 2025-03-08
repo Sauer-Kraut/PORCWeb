@@ -6,6 +6,7 @@ use actix_web::{web, HttpResponse, Responder, cookie::Cookie};
 use colored::Colorize;
 use tokio;
 use std::collections::HashMap;
+use std::default;
 use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
 use crate::bot_communication::{make_bot_request_match};
@@ -41,6 +42,28 @@ pub struct Schedule {
 pub struct Event {
     pub start_timestamp: u64,
     pub end_timestamp: u64,
+    pub repetition: Repetition,
+    pub repetition_config: Option<DailyRepetitionConfig>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum Repetition {
+    Once,
+    Daily,
+    Weekly,
+    Monthly,
+    Yearly,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct DailyRepetitionConfig {
+    pub monday: bool,
+    pub tuesday: bool,
+    pub wednesday: bool,
+    pub thursday: bool,
+    pub friday: bool,
+    pub saturday: bool,
+    pub sunday: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -82,13 +105,13 @@ impl Account {
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetAccountInfoRecv {
+pub struct PutAccountInfoRecv {
     pub title: String,
     pub ids: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetAccountInfoResp {
+pub struct PutAccountInfoResp {
     pub title: String,
     pub data: Option<Vec<PubAccountInfo>>,
     pub error: Option<String>
@@ -96,8 +119,8 @@ pub struct GetAccountInfoResp {
 
 
 
-pub async fn get_account_info(info: web::Json<GetAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for account infos".bold().cyan());
+pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
+    println!("\n{}", "Received PUT Request for account infos".bold().cyan());
 
     let (data_sender, data_receiver) = mpsc::channel();
     let (error_sender, error_receiver) = mpsc::channel();
@@ -119,7 +142,7 @@ pub async fn get_account_info(info: web::Json<GetAccountInfoRecv>, appstate: web
         }
 
         if account_infos.is_empty() {
-            error_sender.send("No accounts for ids found".to_string()).unwrap()
+            error_sender.send(format!("No accounts for the ids found")).unwrap()
         } else {
             data_sender.send(account_infos).unwrap()
         }
@@ -135,7 +158,7 @@ pub async fn get_account_info(info: web::Json<GetAccountInfoRecv>, appstate: web
         Err(_) => None,
     };
 
-    HttpResponse::Ok().json(GetAccountInfoResp {
+    HttpResponse::Ok().json(PutAccountInfoResp {
         title: "Account Info response".to_string(),
         data,
         error
@@ -217,7 +240,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                         account.schedule = Some(Schedule {
                             availabilities: vec!(),
                             matches: vec!(),
-                            notes: "this schedule was automatically generated".to_string(),
+                            notes: "".to_string(),
                         });
                     },
                     _ => {}
@@ -252,7 +275,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                         account.schedule = Some(Schedule {
                             availabilities: vec!(),
                             matches: vec!(),
-                            notes: "this schedule was automatically generated".to_string(),
+                            notes: "".to_string(),
                         });
                     },
                     _ => {}
@@ -284,7 +307,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
         }
     }).await.unwrap();
 
-    appstate.refresh().await;
+    let _ = appstate.refresh().await;
 
     let error = match error_receiver.try_recv(){
         Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
@@ -302,20 +325,20 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetMatchEventRecvPackage {
+pub struct PutMatchEventRecvPackage {
     pub title: String,
     pub match_events: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetMatchEventRespPackage {
+pub struct PutMatchEventRespPackage {
     pub title: String,
     pub data: Vec<MatchEvent>,
     pub error: Option<String>
 }
 
-pub async fn get_match_event(info: web::Json<GetMatchEventRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for match events".bold().cyan());
+pub async fn put_match_event(info: web::Json<PutMatchEventRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
+    println!("\n{}", "Received PUT Request for match events".bold().cyan());
 
     let (data_sender, data_receiver) = mpsc::channel();
     let (error_sender, error_receiver) = mpsc::channel();
@@ -351,7 +374,7 @@ pub async fn get_match_event(info: web::Json<GetMatchEventRecvPackage>, appstate
 
     let data = data_receiver.recv().unwrap();
 
-    HttpResponse::Ok().json(GetMatchEventRespPackage {
+    HttpResponse::Ok().json(PutMatchEventRespPackage {
         title: "Server GET match events Respons".to_string(),
         data,
         error
@@ -377,7 +400,7 @@ pub struct PostAccountInfoRespPackage {
     pub error: Option<String>
 }
 
-
+// This cant alter matches, beacause these are handled via shared ids. Will simply ignore the matches field
 pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{} {}", "Received POST Request for account info of account:".bold().cyan(), info.account_info.username.bold().italic());
 
@@ -387,18 +410,31 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
     let client_id = info.client_id.clone();
 
     let accounts_clone = appstate.accounts.clone();
-    let mut accounts_lock = accounts_clone.lock().await.clone();
 
     // We spawn an asyncronus thread in order to be able to handle many requests at once
     println!("startig async thread");
     tokio::task::spawn(async move {
+
+        let mut accounts_lock = accounts_clone.lock().await;
+        let mut accounts = accounts_lock.clone();
+
+        let mut error = "".to_string();
         
         match logins_clone.as_ref().lock().await.get(&client_id) {
             Some(entry) => {
                 let discord_id = entry.clone();
-                match accounts_lock.get_mut(&discord_id) {
-                    Some(value) => {*value = 
-                        Account{ 
+                match accounts.get_mut(&discord_id) {
+                    Some(value) => {
+                        let default_schedule = Schedule {
+                            availabilities: vec!(),
+                            matches: vec!(),
+                            notes: "".to_string(),
+                        };
+                        println!("old availabilities: {:?}, new availabilities: {:?}",  
+                            value.schedule.clone().unwrap_or(default_schedule.clone()).availabilities,
+                            info.account_info.schedule.clone().unwrap_or(default_schedule.clone()).availabilities);
+                            
+                        *value = Account{ 
                             user_info: DiscordUser {
                                 id: info.account_info.id.clone(),
                                 username: info.account_info.username.clone(),
@@ -406,13 +442,27 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
                                 avatar: info.account_info.avatar.clone(),
                                 email: value.user_info.email.clone(),
                             }, 
-                            schedule: info.account_info.schedule.clone()
+                            schedule: Some(Schedule {
+                                availabilities: match info.account_info.schedule.clone() {
+                                    Some(schedule) => schedule.availabilities,
+                                    None => value.schedule.clone().unwrap_or(default_schedule.clone()).availabilities
+                                },
+                                matches: value.schedule.clone().unwrap_or(default_schedule.clone()).matches,
+                                notes: info.account_info.schedule.clone().unwrap_or(default_schedule.clone()).notes,
+                            })
                         }}
-                    None => {error_sender.send("No account for discord id found".to_string()).unwrap();}
+                    None => error = "No account for discord id found".to_string()
                 }
             },
-            None => {error_sender.send("no login found for client id".to_string()).unwrap()}
+            None => error = "no login found for client id".to_string()
         };
+
+        if error == "".to_string() {
+            *accounts_lock = accounts;
+        } else {
+            error_sender.send(error).unwrap();
+        }
+
         drop(accounts_lock);
 
     }).await.unwrap();

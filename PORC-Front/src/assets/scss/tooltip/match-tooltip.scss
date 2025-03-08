@@ -1,0 +1,38 @@
+@import '@/assets/scss/styles.scss';
+
+.v-popper--theme-match-tooltip {
+    .v-popper__inner {
+        background-color: $match-color;
+        color: #ffffff;
+        border: none;
+        border-radius: $border-radius;
+    }
+
+    .v-popper__arrow-outer {
+        border-color: $match-color;
+    }
+
+    .v-popper__arrow-inner {
+        visibility: hidden;
+    }
+}
+
+.v-popper--theme-match-request-tooltip {
+    .v-popper__inner {
+        background-color: $match-request-color;
+    }
+
+    .v-popper__arrow-outer {
+        border-color: $match-request-color;
+    }
+}
+
+.v-popper--theme-match-declined-tooltip {
+    .v-popper__inner {
+        background-color: $match-declined-color;
+    }
+
+    .v-popper__arrow-outer {
+        border-color: $match-declined-color;
+    }
+}

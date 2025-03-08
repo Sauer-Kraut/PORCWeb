@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { getLoggedIn } from '@/API/GetLoggedIn';
 import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import config from '@/config';
 import { onMounted, ref } from 'vue';
@@ -15,66 +16,24 @@ function hideError() {
     displayError.value = false;
 }
 
-function getCookieValue(name: string): string | null {
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-        const [key, value] = cookie.split('=');
-        if (key === name) {
-            return decodeURIComponent(value);
-        }
-    }
-    return null; // Cookie not found
-}
+async function getUserId() {
+    let res = await getLoggedIn();
 
-async function getLoggedIn() {
-    console.log('Trying to get Logged in status');
-    const id = getCookieValue('browser_id');
-
-    if (id == null) {
-        return null;
-    }
-
-    const data = getCookieValue('browser_id');
-
-    const requestData = JSON.stringify({
-        title: 'Logged in Request',
-        id: data,
-    });
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/discord/logged-in`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestData,
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const response_json = await response.json();
-        // console.log('Success:', data);
-        if (response_json.error == null) {
-            console.log('Logged in: ', response_json);
-            isLoggedIn.value = true;
-            const avatar = response_json.data.user_info.avatar;
-            const id = response_json.data.user_info.id;
-            url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
-        }
-    } catch (error) {
-        console.error('Error:', error);
+    if (typeof res === 'string') {
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
+        isLoggedIn.value = false;
+    } else {
+        isLoggedIn.value = true;
+        const avatar = res.avatar;
+        const id = res.id;
+        url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
     }
-
-    return null;
 }
 
 onMounted(() => {
-    getLoggedIn();
+    getUserId();
 });
 </script>
 

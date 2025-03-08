@@ -8,7 +8,7 @@ use tokio;
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
-use crate::account_lib::PubAccountInfo;
+use crate::account_lib::{PubAccountInfo, Schedule};
 use crate::{account_lib, sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, Player, SignUpInfo, StorageMod};
 use account_lib::{Account, DiscordUser};
 use async_std::fs;
@@ -48,7 +48,7 @@ pub struct PutRequestLoggedInRecvPackage {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PutRequestLoggedInSendPackage {
     pub title: String,
-    pub data: Option<Account>,
+    pub data: Option<PubAccountInfo>,
     pub error: Option<String>
 }
 
@@ -113,7 +113,11 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
         
         let new_account = Account {
             user_info: result.clone(),
-            schedule: None
+            schedule: Some(Schedule {
+                availabilities: vec!(),
+                matches: vec!(),
+                notes: "".to_string(),
+            })
         };
 
         accounts.insert(result.id, new_account);
@@ -210,7 +214,7 @@ pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appst
     };
 
     let data = match data_receiver.recv() {
-        Ok(data) => Some(data),
+        Ok(data) => Some(data.get_pub_info()),
         Err(_) => None,
     };
 

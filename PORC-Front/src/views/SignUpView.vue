@@ -4,6 +4,7 @@ import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import type { SignUpInfo } from '@/models/SignUpInfoModel.ts';
 import DiscordUserComponent from '@/components/DiscordUserComponent.vue';
 import config from '@/config';
+import { getLoggedIn } from '@/API/GetLoggedIn';
 
 const displayError = ref(false);
 let errorMessage: string = 'This is an error message';
@@ -11,7 +12,7 @@ let errorMessage: string = 'This is an error message';
 const invalidFillOut = ref(false);
 const success = ref(false);
 
-const username = ref(null);
+const username = ref<String>('');
 const BP = ref(null);
 const region = ref(null);
 const isOnDiscord = ref(false);
@@ -23,7 +24,7 @@ const isSignedUp = ref(false);
 
 function showError(error: string) {
     errorMessage = error;
-    console.log('Error message:', errorMessage);
+    //console.log('Error message:', errorMessage);
     displayError.value = true;
 }
 
@@ -41,7 +42,7 @@ function hideWarning() {
 
 function showSuccess() {
     success.value = true;
-    getSignedUp()
+    getSignedUp();
 }
 
 function confirmInput() {
@@ -54,7 +55,7 @@ function confirmInput() {
 }
 
 async function postSignUp() {
-    console.log('Trying to get match plan');
+    //console.log('Trying to get match plan');
     const now = Math.floor(Date.now() / 1000);
 
     const data: SignUpInfo = {
@@ -62,7 +63,7 @@ async function postSignUp() {
         bp: Number(BP.value),
         region: String(region.value),
         discord_id: user_id,
-        date: String(now)
+        date: String(now),
     };
 
     const requestData = JSON.stringify({
@@ -94,75 +95,28 @@ async function postSignUp() {
             showSuccess();
         }
     } catch (error) {
-        console.log('Error: ', error);
+        //console.log('Error: ', error);
         showError('Internal server error');
     }
 }
 
-function getCookieValue(name: string): string | null {
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-        const [key, value] = cookie.split('=');
-        if (key === name) {
-            return decodeURIComponent(value);
-        }
-    }
-    return null; // Cookie not found
-}
+async function getUserId() {
+    let res = await getLoggedIn();
 
-async function getLoggedIn() {
-    console.log('Trying to get Logged in status');
-    const id = getCookieValue('browser_id');
-
-    if (id == null) {
-        isLoggedIn.value = false;
-        return null;
-    }
-
-    const data = getCookieValue('browser_id');
-
-    const requestData = JSON.stringify({
-        title: 'Logged in Request',
-        id: data,
-    });
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/discord/logged-in`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestData,
-        });
-
-        if (!response.ok) {
-            isLoggedIn.value = false;
-            throw new Error('Network response was not ok');
-        }
-
-        const json_data = await response.json();
-        // console.log('Success:', data);
-        if (json_data.error == null) {
-            // console.log("Logged in: ", json_data);
-            isLoggedIn.value = true;
-            username.value = json_data.data.user_info.username;
-            user_id = json_data.data.user_info.id;
-        } else {
-            isLoggedIn.value = false;
-        }
-    } catch (error) {
-        console.error('Error:', error);
+    if (typeof res === 'string') {
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
+    } else {
+        isLoggedIn.value = true;
+        user_id = res.id;
+        username.value = res.username;
     }
-
-    return null;
 }
 
 async function getSignedUp() {
-    console.log('Trying to get signed up in status');
+    //console.log('Trying to get signed up in status');
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
@@ -178,15 +132,15 @@ async function getSignedUp() {
         }
 
         const data = await response.json();
-        console.log('Success:', data);
+        //console.log('Success:', data);
         isSignedUp.value = false;
 
         if (data.error == null) {
             const signUps = data.data;
             for (let i = 0; i < signUps.length; i++) {
-                console.log('checking sign up: ', signUps[i], ' against id: ', user_id);
+                //console.log('checking sign up: ', signUps[i], ' against id: ', user_id);
                 if (signUps[i].discord_id == user_id) {
-                    console.log('found user sign up');
+                    //console.log('found user sign up');
                     isSignedUp.value = true;
                 }
             }
@@ -194,7 +148,7 @@ async function getSignedUp() {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'Server communication error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
     }
@@ -291,7 +245,7 @@ onMounted(() => {
     font-style: bold;
     height: fit-content;
     display: flex;
-    justify-content: space-between
+    justify-content: space-between;
 }
 
 .titel-text {
@@ -332,7 +286,7 @@ onMounted(() => {
         font-style: bold;
         height: fit-content;
         display: flex;
-        justify-content: space-between
+        justify-content: space-between;
     }
 }
 </style>
