@@ -239,10 +239,10 @@ function find_opponents(): PlayerModel[] {
 
 function getPlayerIds(): string[] {
     let ids = [] as string[];
+    ids.push(user_id.value);
     for (const player of opponents.value) {
         ids.push(player.id);
     }
-    ids.push(user_id.value);
     return ids;
 }
 
@@ -284,6 +284,7 @@ async function getPubPlayerInfos(ids: string[]) {
                 PlayerInfos.push(await convertToPubAccountInfo(player));
             }
             playerinfos.value = PlayerInfos;
+            selectedPlayer.value = playerinfos.value[0];
         }
     } catch (error) {
         console.error('Error:', error);
@@ -318,7 +319,7 @@ watch(selectedPlayer, (newValue) => {
         <div class="inner-container">
             <h1 class="titel">Match planner</h1>
             <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="opponents" :own-calendar="selectedPlayer?.id === user_id"> </CalendarComponent>
+            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="opponents" :own-calendar="selectedPlayer?.id === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'"> </CalendarComponent>
             <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
         </div>
     </div>

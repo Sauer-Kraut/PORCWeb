@@ -3,6 +3,7 @@
     import type { PubAccountInfo } from '@/models/PubAccountInfo';
     import { MatchStatus } from '@/models/Calendar/MatchEventModel';
     import { onMounted, ref } from 'vue';
+import { filter_str } from '@/util/stringFilter';
 
     const props = defineProps<{
         player: PubAccountInfo;
@@ -85,7 +86,7 @@
 <template>
     <div class="body" :class="{ 'selected': selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
         <div class="contents">
-            {{ props.player.username }}
+            {{ filter_str(props.player.username, 14)}}
             <!-- <div class="icon icon-checkmark"></div> -->
             <div v-if="status==ObservedMatchStatus.HasRequested" class="icon hour-glas icon-hourglass_bottom"></div>
             <div v-else-if="status==ObservedMatchStatus.Finished" class="icon checkmark icon-checkmark"></div>

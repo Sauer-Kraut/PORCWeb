@@ -4,8 +4,9 @@ import { getClientId } from "./clientIdentification";
 import { getLoggedIn } from "./GetLoggedIn";
 import { postUserInfo } from "./PostAccountInfo";
 
-export async function AddAvailability(avail: ScheduleEvent): Promise<void | string> {
+export async function EditAvailability(addAvail: ScheduleEvent[], remAvail: ScheduleEvent[]): Promise<void | string> {
     console.log('Trying to add availability');
+    console.log("availabilities to remove: ", remAvail);
 
     let account = await getLoggedIn();
     if (typeof account === 'string') {
@@ -13,40 +14,25 @@ export async function AddAvailability(avail: ScheduleEvent): Promise<void | stri
     }
 
     if (account.schedule) {
-        account.schedule.availabilities.push(avail);
-    } else {
-        account.schedule = {
-            availabilities: [avail],
-            matches: [],
-            notes: '',
-        } as Schedule
-    }
-
-    let err = await postUserInfo(account);
-    return err;
-}
-
-export async function RemoveAvailability(avail: ScheduleEvent): Promise<void | string> {
-    console.log('Trying to remove availability');
-
-    let account = await getLoggedIn();
-    if (typeof account === 'string') {
-        return account;
-    }
-
-    if (account.schedule) {
-        let newAvailabilities = account.schedule.availabilities.filter(availability => availability !== avail);
-        if (newAvailabilities === account.schedule.availabilities) {
-            return 'Availability not found';
+        for (let avail of remAvail) {
+            let newAvailabilities = account.schedule.availabilities.filter(availability => availability != avail);
+            if (newAvailabilities === account.schedule.availabilities) {
+                return 'Availabilities to remove not found';
+            }
+            account.schedule.availabilities = newAvailabilities;
+            console.log("account schedule: ", account.schedule.availabilities)
         }
-        account.schedule.availabilities = newAvailabilities;
+        
+        account.schedule.availabilities.push(...addAvail);
     } else {
         account.schedule = {
-            availabilities: [],
+            availabilities: addAvail,
             matches: [],
             notes: '',
         } as Schedule
     }
+
+    console.log("new Availabilities: ", account.schedule.availabilities)
 
     let err = await postUserInfo(account);
     return err;

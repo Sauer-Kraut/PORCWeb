@@ -206,7 +206,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
         let mut lower_id = info.match_event.initiator_id.clone();
         let mut higher_id = info.match_event.opponent_id.clone();
 
-        if lower_id.parse::<i32>().unwrap() > higher_id.parse::<i32>().unwrap() {
+        if lower_id.parse::<i64>().unwrap() > higher_id.parse::<i64>().unwrap() {
             lower_id = info.match_event.opponent_id.clone();
             higher_id = info.match_event.initiator_id.clone();
         }

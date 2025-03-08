@@ -34,7 +34,7 @@ async function getUserId() {
 }
 
 onMounted(() => {
-    getLoggedIn();
+    getUserId();
 });
 </script>
 

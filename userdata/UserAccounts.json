@@ -1,46 +1,4 @@
 {
-  "4001": {
-    "user_info": {
-      "id": "4001",
-      "username": "WildTiger",
-      "discriminator": "4001",
-      "avatar": "wild_tiger.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741782492,
-          "end_timestamp": 1741786092,
-          "repetition": "Weekly",
-          "repetition_config": null
-        }
-      ],
-      "matches": [],
-      "notes": "Available every Monday."
-    }
-  },
-  "3001": {
-    "user_info": {
-      "id": "3001",
-      "username": "BronzeBear",
-      "discriminator": "3001",
-      "avatar": "bronze_bear.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741609692,
-          "end_timestamp": 1741613292,
-          "repetition": "Yearly",
-          "repetition_config": null
-        }
-      ],
-      "matches": [],
-      "notes": "Available on New Year's Day."
-    }
-  },
   "2001": {
     "user_info": {
       "id": "2001",
@@ -91,27 +49,6 @@
       "notes": "Available for one-time matches."
     }
   },
-  "4003": {
-    "user_info": {
-      "id": "4003",
-      "username": "BlazingDragon",
-      "discriminator": "4003",
-      "avatar": "blazing_dragon.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741955292,
-          "end_timestamp": 1741958892,
-          "repetition": "Once",
-          "repetition_config": null
-        }
-      ],
-      "matches": [],
-      "notes": "Available for special events."
-    }
-  },
   "4002": {
     "user_info": {
       "id": "4002",
@@ -141,6 +78,165 @@
       "notes": "Available daily in the evening."
     }
   },
+  "1002": {
+    "user_info": {
+      "id": "1002",
+      "username": "ShinyPhoenixTheUndefeatedEaterOfStones",
+      "discriminator": "1002",
+      "avatar": "shiny_phoenix.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741350492,
+          "end_timestamp": 1741354092,
+          "repetition": "Weekly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [
+        "306467062530965514V1002@1741264092"
+      ],
+      "notes": "Prefers evening matches."
+    }
+  },
+  "3001": {
+    "user_info": {
+      "id": "3001",
+      "username": "BronzeBear",
+      "discriminator": "3001",
+      "avatar": "bronze_bear.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741609692,
+          "end_timestamp": 1741613292,
+          "repetition": "Yearly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available on New Year's Day."
+    }
+  },
+  "4003": {
+    "user_info": {
+      "id": "4003",
+      "username": "BlazingDragon",
+      "discriminator": "4003",
+      "avatar": "blazing_dragon.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741955292,
+          "end_timestamp": 1741958892,
+          "repetition": "Once",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available for special events."
+    }
+  },
+  "4001": {
+    "user_info": {
+      "id": "4001",
+      "username": "WildTiger",
+      "discriminator": "4001",
+      "avatar": "wild_tiger.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741782492,
+          "end_timestamp": 1741786092,
+          "repetition": "Weekly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available every Monday."
+    }
+  },
+  "306467062530965514": {
+    "user_info": {
+      "id": "306467062530965514",
+      "username": "GoldenEagle",
+      "discriminator": "1001",
+      "avatar": "golden_eagle.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741264092,
+          "end_timestamp": 1741347692,
+          "repetition": "Once",
+          "repetition_config": {
+            "monday": false,
+            "tuesday": false,
+            "wednesday": false,
+            "thursday": false,
+            "friday": false,
+            "saturday": false,
+            "sunday": false
+          }
+        },
+        {
+          "start_timestamp": 1741323600,
+          "end_timestamp": 1741327200,
+          "repetition": "Daily",
+          "repetition_config": {
+            "monday": false,
+            "tuesday": true,
+            "wednesday": false,
+            "thursday": true,
+            "friday": false,
+            "saturday": false,
+            "sunday": true
+          }
+        },
+        {
+          "start_timestamp": 1741264092,
+          "end_timestamp": 1741261292,
+          "repetition": "Once",
+          "repetition_config": {
+            "monday": false,
+            "tuesday": false,
+            "wednesday": false,
+            "thursday": false,
+            "friday": false,
+            "saturday": false,
+            "sunday": false
+          }
+        },
+        {
+          "start_timestamp": 1741264092,
+          "end_timestamp": 1741261292,
+          "repetition": "Once",
+          "repetition_config": {
+            "monday": false,
+            "tuesday": false,
+            "wednesday": false,
+            "thursday": false,
+            "friday": false,
+            "saturday": false,
+            "sunday": false
+          }
+        }
+      ],
+      "matches": [
+        "306467062530965514V1002@1741264092"
+      ],
+      "notes": "Available for matches on weekends."
+    }
+  },
   "2002": {
     "user_info": {
       "id": "2002",
@@ -160,94 +256,6 @@
       ],
       "matches": [],
       "notes": "Available on the first day of each month."
-    }
-  },
-  "1002": {
-    "user_info": {
-      "id": "1002",
-      "username": "ShinyPhoenix",
-      "discriminator": "1002",
-      "avatar": "shiny_phoenix.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741350492,
-          "end_timestamp": 1742354092,
-          "repetition": "Weekly",
-          "repetition_config": null
-        }
-      ],
-      "matches": [
-        "306467062530965514V1002@1741264092"
-      ],
-      "notes": "Prefers evening matches."
-    }
-  },
-  "306467062530965514": {
-    "user_info": {
-      "id": "306467062530965514",
-      "username": "GoldenEagle",
-      "discriminator": "1001",
-      "avatar": "golden_eagle.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741264092,
-          "end_timestamp": 1742347692,
-          "repetition": "Once",
-          "repetition_config": null
-        },
-        {
-          "start_timestamp": 1741327200,
-          "end_timestamp": 1741352400,
-          "repetition": "Once",
-          "repetition_config": {
-            "monday": false,
-            "tuesday": false,
-            "wednesday": false,
-            "thursday": false,
-            "friday": false,
-            "saturday": false,
-            "sunday": false
-          }
-        },
-        {
-          "start_timestamp": 1741320000,
-          "end_timestamp": 1741323600,
-          "repetition": "Once",
-          "repetition_config": {
-            "monday": false,
-            "tuesday": false,
-            "wednesday": false,
-            "thursday": false,
-            "friday": false,
-            "saturday": false,
-            "sunday": false
-          }
-        },
-        {
-          "start_timestamp": 1741305600,
-          "end_timestamp": 1741309200,
-          "repetition": "Once",
-          "repetition_config": {
-            "monday": false,
-            "tuesday": false,
-            "wednesday": false,
-            "thursday": false,
-            "friday": false,
-            "saturday": false,
-            "sunday": false
-          }
-        }
-      ],
-      "matches": [
-        "306467062530965514V1002@1741264092"
-      ],
-      "notes": "Available for matches on weekends."
     }
   }
 }
