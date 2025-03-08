@@ -118,7 +118,7 @@ function createMatch(): MatchEvent {
 }
 
 .range_selector {
-    width: 80%;
+    width: 75%;
     border: none; /* Remove default border */
     border-radius: 0; /* Remove default border radius */
     margin-left: -10px; /* Make the DatePicker overlap the grey box */
@@ -215,7 +215,8 @@ function createMatch(): MatchEvent {
 
 .dark-grey-box {
     background-color: #cfcfcf;
-    width: 70px; /* Adjust width as needed */
+    width: auto !important; /* Adjust width as needed */
+    min-width: 80px;
     height: 37.5px; /* Match the height of the DatePicker */
     margin-right: 0; /* Remove space between the box and DatePicker */
     display: flex;

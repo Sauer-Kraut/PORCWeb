@@ -188,6 +188,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
     
     let accounts_clone = appstate.accounts.clone();
     let matchevents_clone = appstate.matchevents.clone();
+    let matchplan_clone = appstate.matchplan.clone();
 
     // We spawn an asyncronus thread in order to be able to handle many requests at once
     println!("startig async thread");
@@ -200,6 +201,9 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
 
         let mut matchevents_lock = matchevents_clone.lock().await;
         let mut matchevents = matchevents_lock.clone();
+
+        let mut matchplan_lock = matchplan_clone.lock().await;
+        let mut matchplan = matchplan_lock.clone();
         
         let initiator = accounts.get_mut(&info.match_event.initiator_id);
 
@@ -224,7 +228,16 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                     opponent_id: info.match_event.opponent_id.clone(),
                     status: MatchStatus::Requested,
                 };
-                match make_bot_request_match(matchevent.clone()) {
+                let mut league = "".to_string();
+                for division in matchplan.unwrap().divisions.iter() {
+                    for player in division.players.iter() {
+                        if (player.id == info.match_event.initiator_id ||
+                            player.id == info.match_event.opponent_id) {
+                                league = division.name.clone();
+                            }
+                    }
+                }
+                match make_bot_request_match(matchevent.clone(), league).await {
                     Ok(_) => {},
                     Err(err) => {error = err}
                 }

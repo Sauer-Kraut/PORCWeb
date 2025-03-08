@@ -7,6 +7,8 @@ use std::sync::{mpsc, Arc, LockResult};
 use serde::{Deserialize, Serialize};
 use crate::account_lib::MatchEvent;
 use crate::{sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, MatchPlan, Player, Record, SignUpInfo, StorageMod};
+use reqwest::Client;
+use serde_json::json;
 
 
 
@@ -323,6 +325,27 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
 }
 
 
-pub fn make_bot_request_match(matchevent: MatchEvent) -> Result<(), String>{
+pub async fn make_bot_request_match(matchevent: MatchEvent, league: String) -> Result<(), String>{
+    let client = Client::new();
+    
+    let url = "http://localhost:8085/porcbot/event";
+    let body = json!({
+        "start_timestamp": format!("{}", matchevent.start_timestamp),
+        "challenger_id": matchevent.initiator_id,
+        "opponent_id": matchevent.opponent_id,
+        "league": league
+    });
+
+    let response = client
+        .put(url)
+        .json(&body)
+        .send()
+        .await;
+
+    match response {
+        Ok(_) => {},
+        Err(err) => return Err(err.to_string()),
+    };
+
     Ok(())
 }

@@ -1,4 +1,25 @@
 {
+  "2002": {
+    "user_info": {
+      "id": "2002",
+      "username": "FrostFox",
+      "discriminator": "2004",
+      "avatar": "frost_fox.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741523292,
+          "end_timestamp": 1741526892,
+          "repetition": "Monthly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available on the first day of each month."
+    }
+  },
   "4001": {
     "user_info": {
       "id": "4001",
@@ -18,24 +39,6 @@
       ],
       "matches": [],
       "notes": "Available every Monday."
-    }
-  },
-  "306467062530965514": {
-    "user_info": {
-      "id": "306467062530965514",
-      "username": "GoldenEagle",
-      "discriminator": "1001",
-      "avatar": "golden_eagle.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [],
-      "matches": [
-        "306467062530965514V1002@1741264092",
-        "1002V306467062530965514@1741413600",
-        "1002V306467062530965514@1741348800"
-      ],
-      "notes": "Available for matches on weekends."
     }
   },
   "3001": {
@@ -79,30 +82,13 @@
       "matches": [
         "306467062530965514V1002@1741264092",
         "1002V306467062530965514@1741413600",
-        "1002V306467062530965514@1741348800"
+        "1002V306467062530965514@1741348800",
+        "1002V306467062530965514@1741064400",
+        "1002V306467062530965514@1741143600",
+        "1002V306467062530965514@1741147200",
+        "1002V306467062530965514@1741248000"
       ],
       "notes": "Prefers evening matches."
-    }
-  },
-  "2002": {
-    "user_info": {
-      "id": "2002",
-      "username": "FrostFox",
-      "discriminator": "2004",
-      "avatar": "frost_fox.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741523292,
-          "end_timestamp": 1741526892,
-          "repetition": "Monthly",
-          "repetition_config": null
-        }
-      ],
-      "matches": [],
-      "notes": "Available on the first day of each month."
     }
   },
   "3002": {
@@ -124,6 +110,49 @@
       ],
       "matches": [],
       "notes": "Available for one-time matches."
+    }
+  },
+  "306467062530965514": {
+    "user_info": {
+      "id": "306467062530965514",
+      "username": "GoldenEagle",
+      "discriminator": "1001",
+      "avatar": "golden_eagle.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [],
+      "matches": [
+        "306467062530965514V1002@1741264092",
+        "1002V306467062530965514@1741413600",
+        "1002V306467062530965514@1741348800",
+        "1002V306467062530965514@1741064400",
+        "1002V306467062530965514@1741143600",
+        "1002V306467062530965514@1741147200",
+        "1002V306467062530965514@1741248000"
+      ],
+      "notes": "Available for matches on weekends."
+    }
+  },
+  "4003": {
+    "user_info": {
+      "id": "4003",
+      "username": "BlazingDragon",
+      "discriminator": "4003",
+      "avatar": "blazing_dragon.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741955292,
+          "end_timestamp": 1741958892,
+          "repetition": "Once",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available for special events."
     }
   },
   "4002": {
@@ -153,27 +182,6 @@
       ],
       "matches": [],
       "notes": "Available daily in the evening."
-    }
-  },
-  "4003": {
-    "user_info": {
-      "id": "4003",
-      "username": "BlazingDragon",
-      "discriminator": "4003",
-      "avatar": "blazing_dragon.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741955292,
-          "end_timestamp": 1741958892,
-          "repetition": "Once",
-          "repetition_config": null
-        }
-      ],
-      "matches": [],
-      "notes": "Available for special events."
     }
   },
   "2001": {
