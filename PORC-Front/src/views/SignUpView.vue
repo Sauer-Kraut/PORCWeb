@@ -159,6 +159,9 @@ async function getSignedUp() {
 onMounted(() => {
     getLoggedIn();
     getSignedUp();
+    setTimeout(() => {
+        getSignedUp();
+    }, 300); // Wait for 500 milliseconds
 });
 </script>
 
