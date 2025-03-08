@@ -17,49 +17,9 @@ import { getLoggedIn } from '@/API/GetLoggedIn';
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const schedule = ref({
-    availabilities: [
-        {
-            startDate: new Date(2025, 1, 24, 10),
-            endDate: new Date(2025, 1, 24, 15),
-        },
-    ] as ScheduleEvent[],
-    matches: [
-        {
-            startDate: new Date(2025, 1, 24, 11),
-            endDate: new Date(2025, 1, 24, 12),
-            initiatorId: '1',
-            opponentId: 'default',
-            status: MatchStatus.Requested,
-        },
-        {
-            startDate: new Date(2025, 1, 25, 7),
-            endDate: new Date(2025, 1, 25, 8),
-            initiatorId: 'default',
-            opponentId: '2',
-            status: MatchStatus.Declined,
-        },
-        {
-            startDate: new Date(2025, 1, 25, 13),
-            endDate: new Date(2025, 1, 25, 14),
-            initiatorId: '1',
-            opponentId: 'default',
-            status: MatchStatus.Confirmed,
-        },
-        {
-            startDate: new Date(2025, 2, 3, 8),
-            endDate: new Date(2025, 2, 3, 9),
-            initiatorId: 'default',
-            opponentId: '2',
-            status: MatchStatus.Finished,
-        },
-    ] as MatchEvent[],
-    notes: `Ca va oui, sauf que l'avion perd de l'altitude, on fonce sur les arbres et je n'aurai pas le temps de sortir les trains d'atterissage. Ce qui va, c'est que je suis là\n
-
-On est en 1955 les gars, faut se réveiller. Les ânes partout, les djellabas, l'écriture illisible, ça va hein ! S'agirait de grandir ! S'agirait de grandir... Moi j'suis dans le poulet, eh ben j'vois rien que dans le poulet c'est un bordel !\n
-
-Bon, écoutez mon p'tit. Heu. J'ai fait mon boulot, moi. J'ai redressé l'avion, j'vous ai sauvé la vie. Là, je viens de tuer un croco. Alors si vous vous voulez qu'on travaille d'égal à égal, faudrait vous y mettre : vous pourriez au moins vous occuper du manger.\n
-
-Non mais oh ! Comment tu parles de ton père ?! T'as pas honte ? Qui c'est qui t'a nourri ? Jamais moi je parlerai comme ça de mon père, jamais ! Moi mon père il était charon et j'peux te dire que ça filait doux. Ça, la mère de La Bath elle moufetait pas. Et les gamins pareil !\n`,
+    availabilities: [] as ScheduleEvent[],
+    matches: [] as MatchEvent[],
+    notes: ``,
 } as Schedule);
 
 const players = [
@@ -297,6 +257,8 @@ async function getPubPlayerInfos(ids: string[]) {
         return;
     }
 
+    let filteredIds = [...new Set(ids)];
+
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/account/info`, {
             method: 'PUT',
@@ -305,7 +267,7 @@ async function getPubPlayerInfos(ids: string[]) {
             },
             body: JSON.stringify({
                 title: 'Pub Player Infos Request',
-                ids: ids,
+                ids: filteredIds,
             }),
         });
 
@@ -322,7 +284,7 @@ async function getPubPlayerInfos(ids: string[]) {
             displayError.value = true;
         } else {
             let recvPlayerInfos = data.data as PubAccountInfoRecv[];
-            //console.log('Received PlayerInfos: ', recvPlayerInfos);
+            // console.log('Received PlayerInfos: ', recvPlayerInfos);
             let PlayerInfos = [] as PubAccountInfo[];
             for (const player of recvPlayerInfos) {
                 PlayerInfos.push(await convertToPubAccountInfo(player));
@@ -347,6 +309,8 @@ async function reload() {
     participants.value = opponents.value;
     participants.value.push(...find_user());
     participants.value = [...new Set(participants.value)]; // Ensure unique participants
+    playerinfos.value = [...new Set(playerinfos.value)];
+    // console.log("playerinfos: ", playerinfos.value);
     for (let player of playerinfos.value) {
         if (player.id == selectedPlayerId) {
             selectedPlayer.value = player;

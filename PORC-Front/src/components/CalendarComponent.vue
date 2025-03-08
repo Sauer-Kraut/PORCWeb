@@ -339,7 +339,7 @@ function getHourStyle(hour: Date, startDate: Date, endDate: Date): { top: string
 }
 
 function getPlayer(id: string): PlayerModel {
-    console.log("players: ", props.players);
+    //console.log("players: ", props.players);
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
@@ -377,7 +377,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     //console.log('submiting something', data);
                     let err = await EditAvailability([data], []);
                     if (err != null) {
-                        //console.log('Error adding availability', err);
+                        console.log('Error adding availability', err);
                     }
                     close();
                     emit('reload')
@@ -404,7 +404,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     //console.log('submiting something', data);
                     let err = await RequestMatch(data);
                     if (err != null) {
-                        //console.log('Error adding availability', err);
+                        console.log('Error adding availability', err);
                     }
                     close();
                     emit('reload')
@@ -431,13 +431,13 @@ function editAvailability(availability: ScheduleEvent) {
                 //console.log('submiting something', data);
                 let err = await EditAvailability([data], [availability]);
                 if (err != null) {
-                    //console.log('Error adding availability', err);
+                    console.log('Error adding availability', err);
                 }
                 close();
                 emit('reload')
             },
             async onDelete() {
-                console.log('deleting something');
+                //console.log('deleting something');
                 let err = await EditAvailability([], [availability]);
                 if (err != null) {
                     console.log('Error removing availability', err);
@@ -450,8 +450,12 @@ function editAvailability(availability: ScheduleEvent) {
     open();
 }
 
-function deleteAvailability(availability: ScheduleEvent) {
-    console.log('deleteAvaliability', availability);
+async function deleteAvailability(availability: ScheduleEvent) {
+    let err = await EditAvailability([], [availability]);
+    if (err != null) {
+        console.log('Error removing availability', err);
+    }
+    emit('reload')
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
