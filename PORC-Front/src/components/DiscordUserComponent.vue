@@ -21,11 +21,10 @@ async function getUserId() {
 
     if (typeof res === 'string') {
         errorMessage = 'internal server error';
-        console.log('Error message:', errorMessage);
+        //console.log('Error message:', errorMessage);
         displayError.value = true;
         isLoggedIn.value = false;
-    } 
-    else {
+    } else {
         isLoggedIn.value = true;
         const avatar = res.avatar;
         const id = res.id;

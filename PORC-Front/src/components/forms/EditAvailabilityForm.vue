@@ -15,7 +15,7 @@ const emit = defineEmits(['submit']);
 
 function submit() {
     const data = availability.value;
-    console.log('submitting form', props);
+    //console.log('submitting form', props);
     if (props.formSubmit) {
         props.formSubmit(data);
     }

@@ -20,7 +20,7 @@ function handleSubmit() {
 }
 
 function submit(data: any) {
-    console.log('formsubmit', data);
+    //console.log('formsubmit', data);
     emit('submit', data);
 }
 </script>

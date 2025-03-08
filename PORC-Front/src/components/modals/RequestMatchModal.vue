@@ -18,19 +18,18 @@ const emit = defineEmits(['submitAvailability', 'cancel']);
 // const avaliability = ref(props.avaliability);
 
 function submit() {
-    console.log("time: ", time.value, " start date: ", startDate.value)
+    //console.log("time: ", time.value, " start date: ", startDate.value)
     emit('submitAvailability', createMatch());
 }
 
 const startDate = ref(props.match.startDate);
 const time = ref({
-  hours: props.match.startDate.getHours(),
-  minutes: props.match.startDate.getMinutes()
+    hours: props.match.startDate.getHours(),
+    minutes: props.match.startDate.getMinutes(),
 });
 const dayLabel = ref(`${startDate.value.toLocaleString('en-US', { weekday: 'short' })} ${startDate.value.getDate()}`);
 
-
-function convertTimeToDate(time: {hours: number; minutes: number;}): Date {
+function convertTimeToDate(time: { hours: number; minutes: number }): Date {
     const date = new Date(props.match.startDate.getFullYear(), props.match.startDate.getMonth(), props.match.startDate.getDate(), time.hours, time.minutes);
     return date;
 }
@@ -56,12 +55,7 @@ function createMatch(): MatchEvent {
                 <form @submit.prevent="submit">
                     <div class="form-group d-flex align-items-center middle">
                         <div class="dark-grey-box">{{ dayLabel }}</div>
-                        <DatePicker
-                            class="range_selector"
-                            v-model="time" 
-                            time-picker
-                            placeholder="Select Time"
-                        />
+                        <DatePicker class="range_selector" v-model="time" time-picker placeholder="Select Time" />
                     </div>
                     <div class="s-spacer"></div>
                     <div class="dark-grey-box-wide middle">VS. {{ filter_str(props.opponentUsername, 10) }}</div>
@@ -82,7 +76,6 @@ function createMatch(): MatchEvent {
 </template>
 
 <style scoped>
-
 .porc-modal-content {
     background: linear-gradient(135deg, #8d7b78, #3b435b);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -176,11 +169,11 @@ function createMatch(): MatchEvent {
     margin-bottom: 0.5rem;
 }
 
-.day-checkbox input[type="checkbox"] {
+.day-checkbox input[type='checkbox'] {
     display: none;
 }
 
-.day-checkbox input[type="checkbox"]:checked + label {
+.day-checkbox input[type='checkbox']:checked + label {
     background-color: #28488e; /* Darker background when checked */
     color: white !important; /* White text color when checked */
 }
@@ -190,7 +183,7 @@ function createMatch(): MatchEvent {
     color: black !important;
 }
 
-.day-checkbox input[type="checkbox"]:checked {
+.day-checkbox input[type='checkbox']:checked {
     background-color: #28488e !important; /* Darker background for the checkbox itself */
 }
 
