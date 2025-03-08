@@ -34,7 +34,13 @@ const schedule = ref({
             status: MatchStatus.Finished,
         },
     ] as MatchEvent[],
-    notes: 'notes',
+    notes: `Ca va oui, sauf que l'avion perd de l'altitude, on fonce sur les arbres et je n'aurai pas le temps de sortir les trains d'atterissage. Ce qui va, c'est que je suis là\n
+
+On est en 1955 les gars, faut se réveiller. Les ânes partout, les djellabas, l'écriture illisible, ça va hein ! S'agirait de grandir ! S'agirait de grandir... Moi j'suis dans le poulet, eh ben j'vois rien que dans le poulet c'est un bordel !\n
+
+Bon, écoutez mon p'tit. Heu. J'ai fait mon boulot, moi. J'ai redressé l'avion, j'vous ai sauvé la vie. Là, je viens de tuer un croco. Alors si vous vous voulez qu'on travaille d'égal à égal, faudrait vous y mettre : vous pourriez au moins vous occuper du manger.\n
+
+Non mais oh ! Comment tu parles de ton père ?! T'as pas honte ? Qui c'est qui t'a nourri ? Jamais moi je parlerai comme ça de mon père, jamais ! Moi mon père il était charon et j'peux te dire que ça filait doux. Ça, la mère de La Bath elle moufetait pas. Et les gamins pareil !\n`,
 } as Schedule);
 
 const players = [
