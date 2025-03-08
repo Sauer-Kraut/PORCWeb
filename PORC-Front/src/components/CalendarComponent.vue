@@ -53,7 +53,6 @@
                         :key="match.startDate.toISOString()"
                         :style="getEventStyle(match)"
                         :theme="'match-tooltip'"
-                        :dropdown="{ autoHide: true }"
                     >
                         <div class="w-100 h-100 p-2 d-flex justify-content-end">
                             <h5 class="pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></h5>
@@ -92,6 +91,25 @@
             </div>
         </div>
     </div>
+    <div class="container mt-3 mb-5 px-auto px-md-5">
+        <form @submit.prevent="submitNote" v-if="ownCalendar">
+            <div class="row">
+                <div class="col-12">
+                    <label for="noteTextArea" class="form-label fw-bold">Notes</label>
+                    <textarea v-model="schedule.notes" class="form-control notes-area mb-3" id="noteTextArea"></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">Save</button>
+                </div>
+            </div>
+        </form>
+        <div v-else>
+            <div class="mb-3 fw-bold">Your opponent notes :</div>
+            <div v-html="lineBreak(schedule.notes)"></div>
+        </div>
+    </div>
 </template>
 
 <script lang="ts" setup>
@@ -107,6 +125,9 @@ import { EditAvailability } from '@/API/PostAvailability.ts';
 import RequestMatchModal from './modals/RequestMatchModal.vue';
 import { RequestMatch } from '@/API/PostMatch';
 import { postMatch } from '@/API/PostMatch';
+import { getLoggedIn } from '@/API/GetLoggedIn';
+import { postUserInfo } from '@/API/PostAccountInfo';
+import lineBreak from '@/util/LineBreakFilter';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -397,6 +418,24 @@ async function respondToMatch(match: MatchEvent, accept: boolean) {
     match.status = accept ? MatchStatus.Confirmed : MatchStatus.Declined;
     await postMatch(match);
 }
+
+async function submitNote() {
+    let res = await getLoggedIn();
+
+    if (typeof res === 'string') {
+        console.log('User not logged in');
+    } else {
+        if (res.schedule == null) {
+            res.schedule = {
+                availabilities: [],
+                matches: [],
+                notes: '',
+            };
+        }
+        res.schedule.notes = props.schedule.notes;
+        await postUserInfo(res);
+    }
+}
 </script>
 
 <style scoped lang="scss">
@@ -539,5 +578,11 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             }
         }
     }
+}
+
+.notes-area {
+    min-height: 150px !important;
+    background-color: transparent;
+    color: white;
 }
 </style>
