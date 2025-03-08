@@ -37,6 +37,9 @@
                         :style="getEventStyle(availability)"
                         @click.stop="ownCalendar && editAvailability(availability.event)"
                     >
+                        <div class="cross" v-if="ownCalendar" @click.stop="deleteAvailability(availability.event)">
+                            <i class="icon-cross"></i>
+                        </div>
                         <div
                             v-if="!ownCalendar"
                             v-for="hour in getHoursInRange(availability.startDate, availability.endDate)"
@@ -411,6 +414,10 @@ function editAvailability(availability: ScheduleEvent) {
     open();
 }
 
+function deleteAvailability(availability: ScheduleEvent) {
+    console.log('deleteAvaliability', availability);
+}
+
 async function respondToMatch(match: MatchEvent, accept: boolean) {
     match.status = accept ? MatchStatus.Confirmed : MatchStatus.Declined;
     await postMatch(match);
@@ -497,9 +504,20 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 &.availability {
                     background-color: $availability-color;
                     color: white;
+
+                    .cross {
+                        position: absolute;
+                        top: 5px;
+                        right: 5px;
+                        display: none;
+                    }
+
                     &.own:hover {
                         background-color: lighten($availability-color, 10%);
                         cursor: pointer;
+                        .cross {
+                            display: block;
+                        }
                     }
                 }
 
