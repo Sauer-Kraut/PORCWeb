@@ -4,6 +4,7 @@ import type { PubAccountInfo } from '@/models/PubAccountInfo';
 import { MatchStatus, ObservedMatchStatus } from '@/models/Calendar/MatchEventModel';
 import { onMounted, ref } from 'vue';
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
+import { filter_str } from '@/util/stringFilter';
 
 const props = defineProps<{
     player: PubAccountInfo;
@@ -22,7 +23,7 @@ async function select() {
 <template>
     <div class="body" :class="{ selected: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
         <div class="contents">
-            {{ props.player.username }}
+            {{ filter_str(props.player.username, 14)}}
             <!-- <div class="icon icon-checkmark"></div> -->
             <MatchStatusComponent :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []"></MatchStatusComponent>
         </div>

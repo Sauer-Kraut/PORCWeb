@@ -103,15 +103,17 @@ import { useModal } from 'vue-final-modal';
 import { MatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
 import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
-import { AddAvailability } from '@/API/PostAvailability.ts';
+import { EditAvailability } from '@/API/PostAvailability.ts';
+import RequestMatchModal from './modals/RequestMatchModal.vue';
+import { RequestMatch } from '@/API/PostMatch';
 import { postMatch } from '@/API/PostMatch';
-import { placements } from 'floating-vue';
 
 const props = defineProps<{
     schedule: Schedule;
     players: PlayerModel[];
     ownCalendar: boolean;
     ownId: string;
+    scheduleUserId: string;
 }>();
 
 // Watch for changes in the schedule prop
@@ -313,34 +315,82 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
     const date = new Date(day);
     date.setHours(hour.getHours(), hour.getMinutes(), hour.getSeconds(), hour.getMilliseconds());
     console.log('Create event', type, date);
-    const { open, close } = useModal({
-        component: EditAvailabilityModal,
-        attrs: {
-            title: 'Add avaliability',
-            availability: {
-                startDate: date,
-                endDate: new Date(date.getTime() + 60 * 60 * 1000),
-                repetition: Repetition.Once,
-                repetition_config: { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false } as DailyRepetitionConfig,
-            } as ScheduleEvent,
-            async onCancel() {
-                close();
+    if (type == 'availability') {
+        const { open, close } = useModal({
+            component: EditAvailabilityModal,
+            attrs: {
+                title: 'Add avaliability',
+                availability: {
+                    startDate: date,
+                    endDate: new Date(date.getTime() + 60 * 60 * 1000),
+                    repetition: Repetition.Once,
+                    repetition_config: { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false } as DailyRepetitionConfig,
+                } as ScheduleEvent,
+                async onCancel() {
+                    close();
+                },
+                async onSubmitAvailability(data: ScheduleEvent) {
+                    console.log('submiting something', data);
+                    let err = await EditAvailability([data], []);
+                    if (err != null) {
+                        console.log('Error adding availability', err);
+                    }
+                    close();
+                },
             },
-            async onSubmitAvailability(data: ScheduleEvent) {
-                console.log('submiting something', data);
-                let err = await AddAvailability(data);
-                if (err != null) {
-                    console.log('Error adding availability', err);
-                }
+        });
+        open();
+    } else {
+        const { open, close } = useModal({
+            component: RequestMatchModal,
+            attrs: {
+                title: 'Request Match',
+                match: {
+                    startDate: date,
+                    initiatorId: props.ownId,
+                    opponentId: props.scheduleUserId,
+                    status: MatchStatus.Requested,
+                } as MatchEvent,
+                opponentUsername: getPlayer(props.scheduleUserId).tag,
+                async onCancel() {
+                    close();
+                },
+                async onSubmitAvailability(data: MatchEvent) {
+                    console.log('submiting something', data);
+                    let err = await RequestMatch(data);
+                    if (err != null) {
+                        console.log('Error adding availability', err);
+                    }
+                    close();
+                },
             },
-        },
-    });
-    open();
+        });
+        open();
+    }
 }
 
 function editAvailability(availability: ScheduleEvent) {
     if (!props.ownCalendar) return;
     console.log('editAvaliability', availability);
+    const { open, close } = useModal({
+        component: EditAvailabilityModal,
+        attrs: {
+            title: 'Edit avaliability',
+            availability: availability,
+            async onCancel() {
+                close();
+            },
+            async onSubmitAvailability(data: ScheduleEvent) {
+                console.log('submiting something', data);
+                let err = await EditAvailability([data], [availability]);
+                if (err != null) {
+                    console.log('Error adding availability', err);
+                }
+                close();
+            },
+        },
+    });
+    open();
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DailyRepetitionConfig, ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 import DatePicker from '@vuepic/vue-datepicker';
 import { Repetition } from '@/models/Calendar/ScheduleEventModel';
@@ -71,9 +71,8 @@ function convertFromRepetition(repetition: Repetition, repetition_config: DailyR
 }
 
 function convertTimeRangeToDates(timeRange: { hours: number; minutes: number; seconds: number }[]): Date[] {
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeRange[0].hours, timeRange[0].minutes, timeRange[0].seconds);
-    const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeRange[1].hours, timeRange[1].minutes, timeRange[1].seconds);
+    const startDate = new Date(props.availability.startDate.getFullYear(), props.availability.startDate.getMonth(), props.availability.startDate.getDate(), timeRange[0].hours, timeRange[0].minutes, timeRange[0].seconds);
+    const endDate = new Date(props.availability.startDate.getFullYear(), props.availability.startDate.getMonth(), props.availability.startDate.getDate(), timeRange[1].hours, timeRange[1].minutes, timeRange[1].seconds);
     return [startDate, endDate];
 }
 
@@ -119,6 +118,14 @@ watch(
     },
     { deep: true },
 );
+
+onMounted(() => {
+    if (repetition.value == "Daily") {
+        daysSelectionToggle.value = true;
+    } else {
+        daysSelectionToggle.value = false;
+    }
+});
 </script>
 
 <template>
@@ -136,7 +143,7 @@ watch(
                             v-model="time" 
                             time-picker
                             is-range
-                            :range="{ disableTimeRangeValidation: true }"
+                            :range="{ disableTimeRangeValidation: false }"
                             placeholder="Select Time"
                         />
                     </div>
