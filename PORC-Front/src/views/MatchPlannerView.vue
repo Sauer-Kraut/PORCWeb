@@ -17,7 +17,12 @@ import { getLoggedIn } from '@/API/GetLoggedIn';
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const schedule = ref({
-    availabilities: [] as ScheduleEvent[],
+    availabilities: [
+        {
+            startDate: new Date(2025, 1, 24, 10),
+            endDate: new Date(2025, 1, 24, 15),
+        },
+    ] as ScheduleEvent[],
     matches: [
         {
             startDate: new Date(2025, 1, 24, 11),
@@ -25,6 +30,20 @@ const schedule = ref({
             initiatorId: '1',
             opponentId: 'default',
             status: MatchStatus.Requested,
+        },
+        {
+            startDate: new Date(2025, 1, 25, 7),
+            endDate: new Date(2025, 1, 25, 8),
+            initiatorId: 'default',
+            opponentId: '2',
+            status: MatchStatus.Declined,
+        },
+        {
+            startDate: new Date(2025, 1, 25, 13),
+            endDate: new Date(2025, 1, 25, 14),
+            initiatorId: '1',
+            opponentId: 'default',
+            status: MatchStatus.Confirmed,
         },
         {
             startDate: new Date(2025, 2, 3, 8),
@@ -323,7 +342,14 @@ watch(selectedPlayer, (newValue) => {
         <div class="inner-container">
             <h1 class="titel">Match planner</h1>
             <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="opponents" :own-calendar="selectedPlayer?.id === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'"> </CalendarComponent>
+            <CalendarComponent
+                :schedule="selectedPlayer?.schedule ?? schedule"
+                :players="opponents"
+                :own-calendar="selectedPlayer?.id === user_id"
+                :ownId="user_id"
+                :scheduleUserId="selectedPlayer?.id ?? 'default'"
+            >
+            </CalendarComponent>
             <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
         </div>
     </div>
