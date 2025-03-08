@@ -50,12 +50,16 @@
                         ></div>
                     </div>
                     <VDropdown
+                        v-for="match in matches.filter((m) => m.startDate.toDateString() === day.toDateString() && displayMatch(m))"
                         class="event match"
-                        :class="{ blink: ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId }"
-                        v-for="match in matches.filter((e) => e.startDate.toDateString() === day.toDateString())"
+                        :class="{
+                            request: match.status === MatchStatus.Requested,
+                            declined: match.status === MatchStatus.Declined,
+                            blink: ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId,
+                        }"
                         :key="match.startDate.toISOString()"
                         :style="getEventStyle(match)"
-                        :theme="'match-tooltip'"
+                        :theme="matchTooltipTheme(match)"
                     >
                         <div class="w-100 h-100 p-2 d-flex justify-content-end">
                             <h5 class="pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></h5>
@@ -81,7 +85,7 @@
                                 </div>
                                 <div class="row mt-4" v-if="ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId">
                                     <div class="col">
-                                        <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Refuse</button>
+                                        <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Decline</button>
                                     </div>
                                     <div class="col">
                                         <button class="btn btn-sm btn-light w-100" @click="respondToMatch(match, true)"><i></i>Accept</button>
@@ -339,6 +343,17 @@ function getPlayer(id: string): PlayerModel {
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
+function displayMatch(match: MatchEvent): boolean {
+    return match.status === MatchStatus.Confirmed || match.status === MatchStatus.Requested || match.initiatorId === props.ownId || match.opponentId === props.ownId;
+}
+
+function matchTooltipTheme(match: MatchEvent): string {
+    if (match.status === MatchStatus.Declined) {
+        return 'match-declined-tooltip';
+    }
+    return match.status === MatchStatus.Requested ? 'match-request-tooltip' : 'match-tooltip';
+}
+
 async function createEvent(type: 'availability' | 'match', day: Date, hour: Date) {
     const date = new Date(day);
     date.setHours(hour.getHours(), hour.getMinutes(), hour.getSeconds(), hour.getMilliseconds());
@@ -563,15 +578,19 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 &.match {
                     background-color: $match-color;
                     color: white;
-                    // &:hover {
-                    //     background-color: lighten($match-color, 10%);
-                    //     cursor: pointer;
-                    // }
 
-                    &.blink {
-                        animation: wave 5s linear infinite;
-                        background: linear-gradient(90deg, $match-color, darken($match-color, 10%), $match-color);
-                        background-size: 300% 100%;
+                    &.request {
+                        background-color: $match-request-color;
+
+                        &.blink {
+                            animation: wave 5s linear infinite;
+                            background: linear-gradient(90deg, $match-color, darken($match-request-color, 10%), $match-request-color);
+                            background-size: 300% 100%;
+                        }
+                    }
+
+                    &.declined {
+                        background-color: $match-declined-color;
                     }
                 }
 

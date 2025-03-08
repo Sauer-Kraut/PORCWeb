@@ -26,14 +26,14 @@ app.use(FloatingVue, {
             eagerMount: true,
             placement: 'bottom',
         },
+        'match-request-tooltip': {
+            $extend: 'match-tooltip',
+        },
+        'match-declined-tooltip': {
+            $extend: 'match-tooltip',
+        },
     },
 });
 app.use(router);
 app.use(createVfm());
 app.mount('#app');
-
-export default {
-    ...PopperWrapper,
-    name: 'VMatchTooltip',
-    vPopperTheme: 'match-tooltip',
-};

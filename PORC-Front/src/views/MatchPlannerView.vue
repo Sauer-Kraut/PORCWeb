@@ -17,7 +17,12 @@ import { getLoggedIn } from '@/API/GetLoggedIn';
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const schedule = ref({
-    availabilities: [] as ScheduleEvent[],
+    availabilities: [
+        {
+            startDate: new Date(2025, 1, 24, 10),
+            endDate: new Date(2025, 1, 24, 15),
+        },
+    ] as ScheduleEvent[],
     matches: [
         {
             startDate: new Date(2025, 1, 24, 11),
@@ -27,6 +32,20 @@ const schedule = ref({
             status: MatchStatus.Requested,
         },
         {
+            startDate: new Date(2025, 1, 25, 7),
+            endDate: new Date(2025, 1, 25, 8),
+            initiatorId: 'default',
+            opponentId: '2',
+            status: MatchStatus.Declined,
+        },
+        {
+            startDate: new Date(2025, 1, 25, 13),
+            endDate: new Date(2025, 1, 25, 14),
+            initiatorId: '1',
+            opponentId: 'default',
+            status: MatchStatus.Confirmed,
+        },
+        {
             startDate: new Date(2025, 2, 3, 8),
             endDate: new Date(2025, 2, 3, 9),
             initiatorId: 'default',
@@ -34,13 +53,13 @@ const schedule = ref({
             status: MatchStatus.Finished,
         },
     ] as MatchEvent[],
-    notes: `Ca va oui, sauf que l'avion perd de l'altitude, on fonce sur les arbres et je n'aurai pas le temps de sortir les trains d'atterissage. Ce qui va, c'est que je suis l√†\n
+    notes: `Ca va oui, sauf que l'avion perd de l'altitude, on fonce sur les arbres et je n'aurai pas le temps de sortir les trains d'atterissage. Ce qui va, c'est que je suis l‡\n
 
-On est en 1955 les gars, faut se r√©veiller. Les √¢nes partout, les djellabas, l'√©criture illisible, √ßa va hein ! S'agirait de grandir ! S'agirait de grandir... Moi j'suis dans le poulet, eh ben j'vois rien que dans le poulet c'est un bordel !\n
+On est en 1955 les gars, faut se rÈveiller. Les ‚nes partout, les djellabas, l'Ècriture illisible, Áa va hein ! S'agirait de grandir ! S'agirait de grandir... Moi j'suis dans le poulet, eh ben j'vois rien que dans le poulet c'est un bordel !\n
 
-Bon, √©coutez mon p'tit. Heu. J'ai fait mon boulot, moi. J'ai redress√© l'avion, j'vous ai sauv√© la vie. L√†, je viens de tuer un croco. Alors si vous vous voulez qu'on travaille d'√©gal √† √©gal, faudrait vous y mettre : vous pourriez au moins vous occuper du manger.\n
+Bon, Ècoutez mon p'tit. Heu. J'ai fait mon boulot, moi. J'ai redressÈ l'avion, j'vous ai sauvÈ la vie. L‡, je viens de tuer un croco. Alors si vous vous voulez qu'on travaille d'Ègal ‡ Ègal, faudrait vous y mettre : vous pourriez au moins vous occuper du manger.\n
 
-Non mais oh ! Comment tu parles de ton p√®re ?! T'as pas honte ? Qui c'est qui t'a nourri ? Jamais moi je parlerai comme √ßa de mon p√®re, jamais ! Moi mon p√®re il √©tait charon et j'peux te dire que √ßa filait doux. √áa, la m√®re de La Bath elle moufetait pas. Et les gamins pareil !\n`,
+Non mais oh ! Comment tu parles de ton pËre ?! T'as pas honte ? Qui c'est qui t'a nourri ? Jamais moi je parlerai comme Áa de mon pËre, jamais ! Moi mon pËre il Ètait charon et j'peux te dire que Áa filait doux. «a, la mËre de La Bath elle moufetait pas. Et les gamins pareil !\n`,
 } as Schedule);
 
 const players = [
