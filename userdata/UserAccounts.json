@@ -1,52 +1,62 @@
 {
-  "2001": {
+  "4001": {
     "user_info": {
-      "id": "2001",
-      "username": "SilverWolf",
-      "discriminator": "2003",
-      "avatar": "silver_wolf.png",
+      "id": "4001",
+      "username": "WildTiger",
+      "discriminator": "4001",
+      "avatar": "wild_tiger.png",
       "email": null
     },
     "schedule": {
       "availabilities": [
         {
-          "start_timestamp": 1741436892,
-          "end_timestamp": 1741440492,
-          "repetition": "Daily",
-          "repetition_config": {
-            "monday": true,
-            "tuesday": true,
-            "wednesday": true,
-            "thursday": true,
-            "friday": true,
-            "saturday": true,
-            "sunday": true
-          }
-        }
-      ],
-      "matches": [],
-      "notes": "Available daily in the morning."
-    }
-  },
-  "2002": {
-    "user_info": {
-      "id": "2002",
-      "username": "FrostFox",
-      "discriminator": "2004",
-      "avatar": "frost_fox.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741523292,
-          "end_timestamp": 1741526892,
-          "repetition": "Monthly",
+          "start_timestamp": 1741782492,
+          "end_timestamp": 1741786092,
+          "repetition": "Weekly",
           "repetition_config": null
         }
       ],
       "matches": [],
-      "notes": "Available on the first day of each month."
+      "notes": "Available every Monday."
+    }
+  },
+  "306467062530965514": {
+    "user_info": {
+      "id": "306467062530965514",
+      "username": "GoldenEagle",
+      "discriminator": "1001",
+      "avatar": "golden_eagle.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [],
+      "matches": [
+        "306467062530965514V1002@1741264092",
+        "1002V306467062530965514@1741413600",
+        "1002V306467062530965514@1741348800"
+      ],
+      "notes": "Available for matches on weekends."
+    }
+  },
+  "3001": {
+    "user_info": {
+      "id": "3001",
+      "username": "BronzeBear",
+      "discriminator": "3001",
+      "avatar": "bronze_bear.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741609692,
+          "end_timestamp": 1741613292,
+          "repetition": "Yearly",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available on New Year's Day."
     }
   },
   "1002": {
@@ -74,25 +84,25 @@
       "notes": "Prefers evening matches."
     }
   },
-  "3001": {
+  "2002": {
     "user_info": {
-      "id": "3001",
-      "username": "BronzeBear",
-      "discriminator": "3001",
-      "avatar": "bronze_bear.png",
+      "id": "2002",
+      "username": "FrostFox",
+      "discriminator": "2004",
+      "avatar": "frost_fox.png",
       "email": null
     },
     "schedule": {
       "availabilities": [
         {
-          "start_timestamp": 1741609692,
-          "end_timestamp": 1741613292,
-          "repetition": "Yearly",
+          "start_timestamp": 1741523292,
+          "end_timestamp": 1741526892,
+          "repetition": "Monthly",
           "repetition_config": null
         }
       ],
       "matches": [],
-      "notes": "Available on New Year's Day."
+      "notes": "Available on the first day of each month."
     }
   },
   "3002": {
@@ -114,48 +124,6 @@
       ],
       "matches": [],
       "notes": "Available for one-time matches."
-    }
-  },
-  "4003": {
-    "user_info": {
-      "id": "4003",
-      "username": "BlazingDragon",
-      "discriminator": "4003",
-      "avatar": "blazing_dragon.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741955292,
-          "end_timestamp": 1741958892,
-          "repetition": "Once",
-          "repetition_config": null
-        }
-      ],
-      "matches": [],
-      "notes": "Available for special events."
-    }
-  },
-  "4001": {
-    "user_info": {
-      "id": "4001",
-      "username": "WildTiger",
-      "discriminator": "4001",
-      "avatar": "wild_tiger.png",
-      "email": null
-    },
-    "schedule": {
-      "availabilities": [
-        {
-          "start_timestamp": 1741782492,
-          "end_timestamp": 1741786092,
-          "repetition": "Weekly",
-          "repetition_config": null
-        }
-      ],
-      "matches": [],
-      "notes": "Available every Monday."
     }
   },
   "4002": {
@@ -187,37 +155,54 @@
       "notes": "Available daily in the evening."
     }
   },
-  "306467062530965514": {
+  "4003": {
     "user_info": {
-      "id": "306467062530965514",
-      "username": "GoldenEagle",
-      "discriminator": "1001",
-      "avatar": "golden_eagle.png",
+      "id": "4003",
+      "username": "BlazingDragon",
+      "discriminator": "4003",
+      "avatar": "blazing_dragon.png",
       "email": null
     },
     "schedule": {
       "availabilities": [
         {
-          "start_timestamp": 1741006800,
-          "end_timestamp": 1741010400,
+          "start_timestamp": 1741955292,
+          "end_timestamp": 1741958892,
           "repetition": "Once",
+          "repetition_config": null
+        }
+      ],
+      "matches": [],
+      "notes": "Available for special events."
+    }
+  },
+  "2001": {
+    "user_info": {
+      "id": "2001",
+      "username": "SilverWolf",
+      "discriminator": "2003",
+      "avatar": "silver_wolf.png",
+      "email": null
+    },
+    "schedule": {
+      "availabilities": [
+        {
+          "start_timestamp": 1741436892,
+          "end_timestamp": 1741440492,
+          "repetition": "Daily",
           "repetition_config": {
-            "monday": false,
-            "tuesday": false,
-            "wednesday": false,
-            "thursday": false,
-            "friday": false,
-            "saturday": false,
-            "sunday": false
+            "monday": true,
+            "tuesday": true,
+            "wednesday": true,
+            "thursday": true,
+            "friday": true,
+            "saturday": true,
+            "sunday": true
           }
         }
       ],
-      "matches": [
-        "306467062530965514V1002@1741264092",
-        "1002V306467062530965514@1741413600",
-        "1002V306467062530965514@1741348800"
-      ],
-      "notes": "Available for matches on weekends."
+      "matches": [],
+      "notes": "Available daily in the morning."
     }
   }
 }
