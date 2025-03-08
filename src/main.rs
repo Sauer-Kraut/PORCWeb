@@ -205,6 +205,12 @@ impl AppState {
                 }
             }
 
+            for player in matchplan.players.iter_mut() {
+                player.tag = accounts.get(&player.id).unwrap_or(
+                    &Account { user_info: DiscordUser { id: "".to_string(), username: "".to_string(), discriminator: "".to_string(), avatar: None, email: None}, schedule: None}
+                ).user_info.username.clone()
+            }
+
             let res = StorageMod::save_matchplan(matchplan.clone());
             println!("Saving matchplan data: {:?}", res);
         }

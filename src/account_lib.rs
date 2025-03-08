@@ -239,7 +239,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                 }
                 match make_bot_request_match(matchevent.clone(), league).await {
                     Ok(_) => {},
-                    Err(err) => {error = err}
+                    Err(err) => {println!("Got the following error while trying to communitcate with porcbot: {:?} fuck it we ball", err)}
                 }
                 matchevents.insert(match_key.clone(), matchevent);
             },

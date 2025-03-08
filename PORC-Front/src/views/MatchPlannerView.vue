@@ -321,15 +321,15 @@ async function reload() {
 onMounted(() => {
     getUserId();
     getMatchPlan();
-    setTimeout(() => {
+    setTimeout(async () => {
         opponents.value = find_opponents();
-        getPubPlayerInfos(getPlayerIds());
+        await getPubPlayerInfos(getPlayerIds());
         selectedPlayer.value = playerinfos.value[0];
-        setTimeout(() => {
+        setTimeout(async () => {
             opponents.value = find_opponents();
             participants.value = find_opponents();
             participants.value.push(...find_user());
-            getPubPlayerInfos(getPlayerIds());
+            await getPubPlayerInfos(getPlayerIds());
             selectedPlayer.value = playerinfos.value[0];
         }, 500); // Wait for 500 milliseconds
     }, 120); // Wait for 500 milliseconds
@@ -346,17 +346,17 @@ watch(selectedPlayer, (newValue) => {
             <h1 class="titel">Match planner</h1>
             <div class="desptiption">
                 <label class="description">
-                        This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with you opponents (if you are participating in a running season),
-                        and accept requests yourself.
-                        <br><br>
-                        To set an availibility, simply click on your own calendar. By clicking on an opponents callendar you can challange them to a match.
-                        If you challange an opponent they will be <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
-                        <br><br>
-                        You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be immportant for planning matches, such as exeptions, preferences, or a funny quote.
+                    This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a running season),
+                    and accept requests yourself.
+                    <br><br>
+                    To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match.
+                    If you challenge an opponent they will be <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
+                    <br><br>
+                    You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as exceptions, preferences, or a funny quote.
                 </label>
             </div>
             <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="participants" :own-calendar="selectedPlayer?.id === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'" v-on:reload="reload"> </CalendarComponent>
+            <CalendarComponent v-if="selectedPlayer?.schedule" :schedule="selectedPlayer?.schedule ?? schedule" :players="participants" :own-calendar="selectedPlayer?.id === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'" v-on:reload="reload"> </CalendarComponent>
             <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
         </div>
     </div>
