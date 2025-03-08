@@ -52,6 +52,18 @@ async function select() {
     }
 }
 
+@media (max-width: 1699px) and (min-width: 499px) {
+    .body {
+        width: calc(50%); /* Ensures 4 items per row */
+    }
+}
+
+@media (max-width: 499px) {
+    .body {
+        width: calc(100%); /* Ensures 4 items per row */
+    }
+}
+
 .contents {
     display: flex;
     justify-content: center;

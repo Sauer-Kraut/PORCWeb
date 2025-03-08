@@ -5,7 +5,7 @@ import { getLoggedIn } from "./GetLoggedIn";
 import { postUserInfo } from "./PostAccountInfo";
 
 export async function EditAvailability(addAvail: ScheduleEvent[], remAvail: ScheduleEvent[]): Promise<void | string> {
-    console.log('Trying to add availability');
+    console.log('Trying to add / remove availability');
     console.log("availabilities to remove: ", remAvail);
 
     let account = await getLoggedIn();
@@ -16,8 +16,10 @@ export async function EditAvailability(addAvail: ScheduleEvent[], remAvail: Sche
     if (account.schedule) {
         for (let avail of remAvail) {
             let newAvailabilities = account.schedule.availabilities.filter(availability => availability != avail);
-            if (newAvailabilities === account.schedule.availabilities) {
+            if (newAvailabilities == account.schedule.availabilities) {
                 return 'Availabilities to remove not found';
+            } else {
+                
             }
             account.schedule.availabilities = newAvailabilities;
             console.log("account schedule: ", account.schedule.availabilities)

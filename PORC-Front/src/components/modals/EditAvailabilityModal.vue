@@ -8,14 +8,19 @@ import { Repetition } from '@/models/Calendar/ScheduleEventModel';
 const props = defineProps<{
     title?: string;
     availability: ScheduleEvent;
+    create: boolean;
 }>();
 
-const emit = defineEmits(['submitAvailability', 'cancel']);
+const emit = defineEmits(['submitAvailability', 'cancel', 'delete']);
 
 // const avaliability = ref(props.avaliability);
 
 function submit() {
     emit('submitAvailability', createAvailability());
+}
+
+function remove() {
+    emit('delete');
 }
 
 const startDate = ref(props.availability.startDate);
@@ -196,6 +201,10 @@ onMounted(() => {
                     <div class="col-md-4 col-xl-6 mt-2 mt-md-0">
                         <button @click="submit" class="btn btn-primary w-100">Confirm</button>
                     </div>
+                </div>
+                <div class="col-12" v-if="!create">
+                    <div class="s-spacer"></div>
+                    <button @click="remove" class="btn btn-outline-danger w-100">Delete</button>
                 </div>
             </div>
         </div>

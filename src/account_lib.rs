@@ -307,6 +307,8 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
         }
     }).await.unwrap();
 
+    let _ = appstate.refresh().await;
+
     let error = match error_receiver.try_recv(){
         Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
         Err(_) => None,

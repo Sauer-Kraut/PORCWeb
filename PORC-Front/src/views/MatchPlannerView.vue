@@ -226,6 +226,7 @@ function divisionContainsUser(division: DivisionModel): boolean {
 }
 
 const opponents = ref<PlayerModel[]>([]);
+const participants = ref<PlayerModel[]>([]);
 
 function find_opponents(): PlayerModel[] {
     let opponents = [] as PlayerModel[];
@@ -239,6 +240,20 @@ function find_opponents(): PlayerModel[] {
         }
     }
     return opponents;
+}
+
+function find_user(): PlayerModel[] {
+    let playerlist = [];
+    for (const division of divisions.value) {
+        if (divisionContainsUser(division)) {
+            for (const player of division.players) {
+                if (player.id == user_id.value) {
+                    playerlist.push(player);
+                }
+            }
+        }
+    }
+    return playerlist;
 }
 
 function getPlayerIds(): string[] {
@@ -288,7 +303,6 @@ async function getPubPlayerInfos(ids: string[]) {
                 PlayerInfos.push(await convertToPubAccountInfo(player));
             }
             playerinfos.value = PlayerInfos;
-            selectedPlayer.value = playerinfos.value[0];
         }
     } catch (error) {
         console.error('Error:', error);
@@ -300,15 +314,34 @@ async function getPubPlayerInfos(ids: string[]) {
     console.log('PlayerInfos:', playerinfos.value);
 }
 
+async function reload() {
+    const selectedPlayerId = selectedPlayer.value?.id ?? "0";
+    await getMatchPlan();
+    await getPubPlayerInfos(getPlayerIds());
+    opponents.value = find_opponents();
+    participants.value = opponents.value;
+    participants.value.push(...find_user());
+    participants.value = [...new Set(participants.value)]; // Ensure unique participants
+    for (let player of playerinfos.value) {
+        if (player.id == selectedPlayerId) {
+            selectedPlayer.value = player;
+        }
+    }
+}
+
 onMounted(() => {
     getUserId();
     getMatchPlan();
     setTimeout(() => {
         opponents.value = find_opponents();
         getPubPlayerInfos(getPlayerIds());
+        selectedPlayer.value = playerinfos.value[0];
         setTimeout(() => {
             opponents.value = find_opponents();
+            participants.value = find_opponents();
+            participants.value.push(...find_user());
             getPubPlayerInfos(getPlayerIds());
+            selectedPlayer.value = playerinfos.value[0];
         }, 500); // Wait for 500 milliseconds
     }, 120); // Wait for 500 milliseconds
 });
@@ -322,8 +355,19 @@ watch(selectedPlayer, (newValue) => {
     <div class="container-fill justify-content-center">
         <div class="inner-container">
             <h1 class="titel">Match planner</h1>
+            <div class="desptiption">
+                <label class="description">
+                        This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with you opponents (if you are participating in a running season),
+                        and accept requests yourself.
+                        <br><br>
+                        To set an availibility, simply click on your own calendar. By clicking on an opponents callendar you can challange them to a match.
+                        If you challange an opponent they will be <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
+                        <br><br>
+                        You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be immportant for planning matches, such as exeptions, preferences, or a funny quote.
+                </label>
+            </div>
             <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="opponents" :own-calendar="selectedPlayer?.id === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'"> </CalendarComponent>
+            <CalendarComponent :schedule="selectedPlayer?.schedule ?? schedule" :players="participants" :own-calendar="selectedPlayer?.id === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'" v-on:reload="reload"> </CalendarComponent>
             <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
         </div>
     </div>
@@ -347,5 +391,18 @@ watch(selectedPlayer, (newValue) => {
     margin: 3rem;
     font-style: bold;
     height: fit-content;
+}
+
+.description {
+    text-align: center;
+    justify-content: center;
+    line-height: 1.5;
+    padding: 2rem;
+    padding-top: 1rem !important;
+    padding-bottom: 5rem;
+}
+
+.highlight-text {
+    font-weight: 750;
 }
 </style>

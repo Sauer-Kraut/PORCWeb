@@ -72,9 +72,9 @@
                                 </div>
                                 <div class="row">
                                     <h5 class="col text-center">
-                                        {{ getPlayer(match.initiatorId).tag || 'Player 1' }}
+                                        {{ filter_str(getPlayer(match.initiatorId).tag || 'Player 1', 12) }}
                                         &nbsp;&nbsp;&nbsp;vs.&nbsp;&nbsp;&nbsp;
-                                        {{ getPlayer(match.opponentId).tag || 'Player 2' }}
+                                        {{ filter_str(getPlayer(match.opponentId).tag || 'Player 2', 12) }}
                                     </h5>
                                 </div>
                                 <div class="row mt-4" v-if="ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId">
@@ -107,6 +107,7 @@ import { EditAvailability } from '@/API/PostAvailability.ts';
 import RequestMatchModal from './modals/RequestMatchModal.vue';
 import { RequestMatch } from '@/API/PostMatch';
 import { postMatch } from '@/API/PostMatch';
+import { filter_str } from '@/util/stringFilter';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -115,6 +116,8 @@ const props = defineProps<{
     ownId: string;
     scheduleUserId: string;
 }>();
+
+const emit = defineEmits(['reload']);
 
 // Watch for changes in the schedule prop
 watch(
@@ -308,6 +311,7 @@ function getHourStyle(hour: Date, startDate: Date, endDate: Date): { top: string
 }
 
 function getPlayer(id: string): PlayerModel {
+    console.log("players: ", props.players);
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
 
@@ -326,6 +330,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     repetition: Repetition.Once,
                     repetition_config: { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false } as DailyRepetitionConfig,
                 } as ScheduleEvent,
+                create: true,
                 async onCancel() {
                     close();
                 },
@@ -336,6 +341,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                         console.log('Error adding availability', err);
                     }
                     close();
+                    emit('reload')
                 },
             },
         });
@@ -362,6 +368,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                         console.log('Error adding availability', err);
                     }
                     close();
+                    emit('reload')
                 },
             },
         });
@@ -380,6 +387,7 @@ function editAvailability(availability: ScheduleEvent) {
             async onCancel() {
                 close();
             },
+            create: false,
             async onSubmitAvailability(data: ScheduleEvent) {
                 console.log('submiting something', data);
                 let err = await EditAvailability([data], [availability]);
@@ -387,6 +395,16 @@ function editAvailability(availability: ScheduleEvent) {
                     console.log('Error adding availability', err);
                 }
                 close();
+                emit('reload')
+            },
+            async onDelete() {
+                console.log('deleting something');
+                let err = await EditAvailability([], [availability]);
+                if (err != null) {
+                    console.log('Error removing availability', err);
+                }
+                close();
+                emit('reload')
             },
         },
     });

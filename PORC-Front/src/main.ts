@@ -1,4 +1,4 @@
-import { createApp } from 'vue';
+import { createApp, Transition } from 'vue';
 import App from './App.vue';
 import router from './router';
 import { createVfm } from 'vue-final-modal';
@@ -19,7 +19,7 @@ app.use(FloatingVue, {
             $extend: 'menu',
             triggers: ['click', 'hover'],
             delay: {
-                show: 0,
+                show: 250,
                 hide: 200,
             },
             autoHide: true,

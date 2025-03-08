@@ -92,4 +92,22 @@
             margin-top: 0px;
         }
     }
+
+    @media (max-width: 1699px) and (min-width: 499px) {
+        .container {
+            &:hover * {
+                width: calc(50% - 3px);
+                margin: 1.5px;
+            }
+        }
+    }
+
+    @media (max-width: 499px) {
+        .container {
+            &:hover * {
+                width: calc(100% - 3px);
+                margin: 1.5px;
+            }
+        }
+    }
 </style>

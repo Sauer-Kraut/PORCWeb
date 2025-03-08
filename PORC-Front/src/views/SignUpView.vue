@@ -100,17 +100,6 @@ async function postSignUp() {
     }
 }
 
-function getCookieValue(name: string): string | null {
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-        const [key, value] = cookie.split('=');
-        if (key === name) {
-            return decodeURIComponent(value);
-        }
-    }
-    return null; // Cookie not found
-}
-
 async function getUserId() {
     let res = await getLoggedIn();
 
