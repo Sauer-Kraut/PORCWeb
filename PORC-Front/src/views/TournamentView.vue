@@ -426,7 +426,6 @@ async function getUserId() {
     if (typeof res === 'string') {
         errorMessage = 'internal server error';
         //console.log('Error message:', errorMessage);
-        displayError.value = true;
     } else {
         user = res.id;
     }

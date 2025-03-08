@@ -7,14 +7,9 @@ import { onMounted, ref } from 'vue';
 let url = 'default';
 const isLoggedIn = ref(false);
 const discordAuthURL = `${config.getDiscordUrl()}`;
-console.log(`${config.getDiscordUrl()}`);
+//console.log(`${config.getDiscordUrl()}`);
 
-const displayError = ref(false);
 let errorMessage: string = 'This is an error message';
-
-function hideError() {
-    displayError.value = false;
-}
 
 async function getUserId() {
     let res = await getLoggedIn();
@@ -22,7 +17,6 @@ async function getUserId() {
     if (typeof res === 'string') {
         errorMessage = 'internal server error';
         //console.log('Error message:', errorMessage);
-        displayError.value = true;
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
@@ -42,7 +36,6 @@ onMounted(() => {
         <img class="profile" v-if="isLoggedIn" :src="url" alt="Discord User Image" />
         <a class="LogInLink" v-if="!isLoggedIn" :href="discordAuthURL" target="_self">Log in</a>
     </div>
-    <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
 <style scoped>
