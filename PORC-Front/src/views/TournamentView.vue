@@ -366,7 +366,7 @@ function hideError() {
     displayError.value = false;
 }
 
-let user = '';
+let user = ref('');
 let globalTimer = 0;
 let TimerText = '';
 
@@ -427,7 +427,7 @@ async function getUserId() {
         errorMessage = 'internal server error';
         //console.log('Error message:', errorMessage);
     } else {
-        user = res.id;
+        user.value = res.id;
     }
 }
 
@@ -443,7 +443,7 @@ onMounted(() => {
         <TimerComponent :targetTimestamp="globalTimer" :season="4" :text="TimerText"></TimerComponent>
         <div class="row spacer"></div>
         <div class="pt-3">
-            <DivisionComponent v-for="division in divisions" :division="division" :key="division.name" :user_id="user" class="pb-5" />
+            <DivisionComponent v-for="division in divisions" :division="division" :key="division.name" :UserId="user" class="pb-5" />
         </div>
     </div>
     <div class="extender"></div>

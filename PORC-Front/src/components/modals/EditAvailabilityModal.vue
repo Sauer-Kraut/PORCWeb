@@ -169,8 +169,8 @@ onMounted(() => {
                             <option>Once</option>
                             <option>Daily</option>
                             <option>Weekly</option>
-                            <option>Monthly</option>
-                            <option>Yearly</option>
+                            <!-- <option>Monthly</option>
+                            <option>Yearly</option> -->
                         </select>
                     </div>
                     <div class="form-group transition" :class="{ days_selector: daysSelectionToggle, 'd-compressed': !daysSelectionToggle }">

@@ -250,7 +250,7 @@ function splitEvents(events: ScheduleEvent[]): ScheduleEventDisplay[] {
                 break;
             case Repetition.Daily:
                 for (const day of getRepetitionDays(event.repetition_config)) {
-                    splitEvents.push(getEventOfTheWeek(event, day));
+                    splitEvents.push(...splitEventDisplay(getEventOfTheWeek(event, day)));
                 }
                 break;
             case Repetition.Weekly:
@@ -262,20 +262,98 @@ function splitEvents(events: ScheduleEvent[]): ScheduleEventDisplay[] {
     return splitEvents;
 }
 
+function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] {
+    console.log("spliting event display: ", event);
+    const startDate = event.startDate;
+    const splitEvents: ScheduleEventDisplay[] = [];
+    let start = event.startDate.getDate();
+    let startMonth = event.startDate.getMonth();
+    let end = event.endDate.getDate();
+    let endMonth = event.endDate.getMonth();
+
+    console.log("start: ", start, " end: ", end)
+    
+    if ((end - start) > 0) {
+        const dayEnd = new Date(event.startDate);
+        dayEnd.setHours(23, 59, 0, 0)
+
+        console.log("start: ", startDate)
+
+        splitEvents.push({
+            startDate: new Date(event.startDate),
+            endDate: dayEnd,
+            event: event.event,
+        });
+
+        start += 1;
+
+        while (start < end) {
+            const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0)
+            const dayEnd = new Date(start, 23, 59, 0, 0);
+
+            splitEvents.push({
+                startDate: dayStart,
+                endDate: dayEnd,
+                event: event.event,
+            });
+            start += 1;
+        }
+
+        const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0)
+        splitEvents.push({
+            startDate: dayStart,
+            endDate: new Date(event.endDate),
+            event: event.event,
+        });
+    } 
+    else {
+        splitEvents.push({
+            startDate: new Date(event.startDate),
+            endDate: new Date(event.endDate),
+            event: event.event,
+        });
+    }
+
+    console.log("result: ", splitEvents);
+    return splitEvents
+}
+
 function getEventOfTheWeek(event: ScheduleEvent, day: number): ScheduleEventDisplay {
     const currentWeekEventDate = new Date(currentWeekStart.value);
     currentWeekEventDate.setDate(currentWeekStart.value.getDate() + day);
 
-    const currentWeekEventStart = new Date(currentWeekEventDate);
-    currentWeekEventStart.setHours(event.startDate.getHours(), event.startDate.getMinutes(), event.startDate.getSeconds(), event.startDate.getMilliseconds());
+    const startDay = event.startDate.getDate()
+    const endDay = event.endDate.getDate()
+    const dayDif = endDay - startDay;
 
-    const currentWeekEventEnd = new Date(currentWeekEventDate);
-    currentWeekEventEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds(), event.endDate.getMilliseconds());
-    return {
-        startDate: currentWeekEventStart,
-        endDate: currentWeekEventEnd,
-        event: event,
-    };
+    if (dayDif < 0) {
+        const currentWeekEventStart = new Date(currentWeekEventDate);
+        currentWeekEventStart.setHours(event.startDate.getHours(), event.startDate.getMinutes(), event.startDate.getSeconds(), event.startDate.getMilliseconds());
+
+        const currentWeekEventEnd = new Date(currentWeekEventDate);
+        currentWeekEventEnd.setDate(1);
+        currentWeekEventEnd.setMonth(currentWeekEventDate.getMonth() + 1);
+        currentWeekEventEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds(), event.endDate.getMilliseconds());
+
+        return {
+            startDate: currentWeekEventStart,
+            endDate: currentWeekEventEnd,
+            event: event,
+        };
+    } else {
+        const currentWeekEventStart = new Date(currentWeekEventDate);
+        currentWeekEventStart.setHours(event.startDate.getHours(), event.startDate.getMinutes(), event.startDate.getSeconds(), event.startDate.getMilliseconds());
+
+        const currentWeekEventEnd = new Date(currentWeekEventDate);
+        currentWeekEventEnd.setDate(currentWeekEventEnd.getDate() + dayDif);
+        currentWeekEventEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds(), event.endDate.getMilliseconds());
+
+        return {
+            startDate: currentWeekEventStart,
+            endDate: currentWeekEventEnd,
+            event: event,
+        };
+    }
 }
 
 function getRepetitionDays(repetition: DailyRepetitionConfig): number[] {

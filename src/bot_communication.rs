@@ -309,9 +309,9 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
                 }
             }
         }
-
-        appstate.refresh().await;
     }).await.unwrap();
+
+    let _ = appstate.refresh().await;
 
     let error = match error_receiver.try_recv(){
         Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
@@ -344,7 +344,10 @@ pub async fn make_bot_request_match(matchevent: MatchEvent, league: String) -> R
 
     match response {
         Ok(_) => {},
-        Err(err) => return Err(err.to_string()),
+        Err(err) => {
+            println!("{}{:?}", "enountered error while sending plan match request: ".red(), err);
+            return Err(err.to_string())
+        },
     };
 
     Ok(())
