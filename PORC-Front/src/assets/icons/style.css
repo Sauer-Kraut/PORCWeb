@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'icomoon';
-  src:  url('fonts/icomoon.eot?pikj3g');
-  src:  url('fonts/icomoon.eot?pikj3g#iefix') format('embedded-opentype'),
-    url('fonts/icomoon.ttf?pikj3g') format('truetype'),
-    url('fonts/icomoon.woff?pikj3g') format('woff'),
-    url('fonts/icomoon.svg?pikj3g#icomoon') format('svg');
+  src:  url('fonts/icomoon.eot?vspm3a');
+  src:  url('fonts/icomoon.eot?vspm3a#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?vspm3a') format('truetype'),
+    url('fonts/icomoon.woff?vspm3a') format('woff'),
+    url('fonts/icomoon.svg?vspm3a#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -31,7 +31,7 @@
 .icon-stopwatch:before {
   content: "\e908";
 }
-.icon-calender_check:before {
+.icon-calander_check:before {
   content: "\e909";
 }
 .icon-calender_busy:before {
@@ -69,4 +69,10 @@
 }
 .icon-chevron-up:before {
   content: "\e903";
+}
+.icon-bell-o:before {
+  content: "\e90f";
+}
+.icon-bell:before {
+  content: "\e910";
 }
