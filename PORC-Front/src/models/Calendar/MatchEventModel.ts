@@ -16,7 +16,7 @@ export enum MatchStatus {
 
 export enum ObservedMatchStatus {
     HasRequested = 'HasRequested', // hourglass_bottom
-    HasBeenRequested = 'HasBeenRequested', // exclimation_mark
+    HasBeenRequested = 'HasBeenRequested', // bell
     Confirmed = 'Confirmed', // calander_check
     Finished = 'Finished', // checkmark
     Declined = 'Declined', // calander_busy

@@ -62,7 +62,7 @@
                         :theme="matchTooltipTheme(match)"
                     >
                         <div class="w-100 h-100 p-2 d-flex justify-content-end">
-                            <h5 class="pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></h5>
+                            <div class="match-status pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></div>
                         </div>
                         <template #popper>
                             <div class="container p-3">
@@ -380,7 +380,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                         console.log('Error adding availability', err);
                     }
                     close();
-                    emit('reload')
+                    emit('reload');
                 },
             },
         });
@@ -407,7 +407,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                         console.log('Error adding availability', err);
                     }
                     close();
-                    emit('reload')
+                    emit('reload');
                 },
             },
         });
@@ -434,7 +434,7 @@ function editAvailability(availability: ScheduleEvent) {
                     console.log('Error adding availability', err);
                 }
                 close();
-                emit('reload')
+                emit('reload');
             },
             async onDelete() {
                 //console.log('deleting something');
@@ -443,7 +443,7 @@ function editAvailability(availability: ScheduleEvent) {
                     console.log('Error removing availability', err);
                 }
                 close();
-                emit('reload')
+                emit('reload');
             },
         },
     });
@@ -455,7 +455,7 @@ async function deleteAvailability(availability: ScheduleEvent) {
     if (err != null) {
         console.log('Error removing availability', err);
     }
-    emit('reload')
+    emit('reload');
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
@@ -595,6 +595,12 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
                     &.declined {
                         background-color: $match-declined-color;
+                    }
+
+                    .match-status {
+                        display: flex;
+                        align-items: center;
+                        font-size: 1.25rem;
                     }
                 }
 

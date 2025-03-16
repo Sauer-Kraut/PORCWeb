@@ -23,7 +23,7 @@ async function select() {
 <template>
     <div class="body" :class="{ selected: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
         <div class="contents">
-            {{ filter_str(props.player.username, 14)}}
+            {{ filter_str(props.player.username, 14) }}
             <!-- <div class="icon icon-checkmark"></div> -->
             <MatchStatusComponent :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []"></MatchStatusComponent>
         </div>
@@ -79,34 +79,21 @@ async function select() {
 }
 
 .icon {
-    position: sticky;
-    width: 2rem !important;
-    height: 2rem;
-    background-size: cover;
-    background-position: center;
-    border-radius: 50%;
-    margin: 0 !important;
     padding: 0;
     border: 0;
     transition: 0.3s;
     margin-left: 20% !important;
 }
 
-.checkmark {
-    margin-top: 1.05rem !important;
-}
-
 .calander {
-    margin-top: 1.1rem !important;
     font-size: larger;
 }
 
 .hour-glas {
-    margin-top: 0.95rem !important;
     font-size: larger;
 }
 
-.icon-calender_check {
+.icon-calander_check {
     color: rgb(147, 255, 47);
 }
 
@@ -116,6 +103,11 @@ async function select() {
 
 .icon-calender_busy {
     color: rgb(244, 93, 116);
+}
+
+.icon-bell-o {
+    color: lighten($match-request-color, 10%);
+    font-size: larger;
 }
 
 .selected {

@@ -1,0 +1,9 @@
+Go to https://icomoon.io/app/#/select/font
+
+Import the selection.json file and make your changes
+
+Download the new font
+
+Replace the fonts folder, selection.json and style.css
+
+Congrats you just changed the icons

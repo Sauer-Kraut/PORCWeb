@@ -50,13 +50,14 @@ const status = computed(() => {
     <div v-if="status == 'HasRequested'" class="icon hour-glas icon-hourglass_bottom"></div>
     <div v-else-if="status == 'Finished'" class="icon checkmark icon-checkmark"></div>
     <div v-else-if="status == 'Declined'" class="icon calander icon-calender_busy"></div>
-    <div v-else-if="status == 'HasBeenRequested'" class="icon exclimation icon-exclamation_mark">!</div>
-    <div v-else-if="status == 'Confirmed'" class="icon calander icon-calender_check"></div>
+    <div v-else-if="status == 'HasBeenRequested'" class="icon bell icon-bell-o"></div>
+    <div v-else-if="status == 'Confirmed'" class="icon calander icon-calander_check"></div>
     <div v-else-if="status == 'IsSelf'" class="icon calander icon-calender"></div>
 </template>
 
 <style lang="scss" scoped>
 .icon {
-    margin-left: 20% !important;
+    height: fit-content;
+    width: fit-content;
 }
 </style>
