@@ -299,4 +299,14 @@ impl AppState {
         };
         println!("Saving dialogue data: {}\n", res_dis);
     }
+
+    pub async fn refresh_dialogues(&self) {
+        println!("\nRefreshing dialogues... ");
+        let res = StorageMod::save_dialogues(self.dialogues.lock().await.clone());
+        let res_dis = match res {
+            Ok(_) => "Ok".green(),
+            Err(err) => format!("Error: {err:?}").red(),
+        };
+        println!("Saving dialogue data: {}\n", res_dis);
+    }
 }

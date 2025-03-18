@@ -23,7 +23,7 @@ pub async fn check_dialogues(appstate: &AppState) -> Result<(), String> {
         }
 
         drop(builders_lock);
-        appstate.refresh().await; // safes after every dialogue to avoid losing data on error or crash, especially since the discord API always takes a bit so the function takes a few seconds
+        appstate.refresh_dialogues().await; // safes after every dialogue to avoid losing data on error or crash, especially since the discord API always takes a bit so the function takes a few seconds
     }
     Ok(())
 }
