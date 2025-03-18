@@ -5,8 +5,12 @@ use colored::Colorize;
 use tokio;
 use std::sync::{mpsc, Arc, LockResult};
 use serde::{Deserialize, Serialize};
-use crate::account_lib::MatchEvent;
-use crate::{sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, MatchPlan, Player, Record, SignUpInfo, StorageMod};
+use super::account_lib::MatchEvent;
+use super::data_lib::{Division, MatchPlan, Player};
+use super::storage_lib::{Record, StorageMod};
+use crate::porcbot::dialogue_module::dialogue_initiator::DialogueInitator;
+use crate::AppState;
+use super::client_communication::{SignUpInfo, GetRequestPlanPackage, GetRequestSignUpPackage};
 use reqwest::Client;
 use serde_json::json;
 
@@ -73,7 +77,9 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
     tokio::task::spawn(async move {
 
         let plan_binding = match_plan.lock().await;
-        let locked_plan = plan_binding.as_ref();
+        let locked_plan = plan_binding.clone();
+        drop(plan_binding);
+
         let mut signup_binding = sign_ups.lock().await;
         let signups_locked: &mut Vec<SignUpInfo> = signup_binding.as_mut();
 
@@ -128,7 +134,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
 
                     let players = players_to_keep.iter().filter(|player| {
                         for signup in signups_locked.iter(){
-                            if sanetize_username(&signup.username) == sanetize_username(&player.tag) {
+                            if signup.discord_id == player.id {
                                 signups_locked.remove(signups_locked.iter().position(|x| x.username == signup.username).unwrap());
                                 return true;
                             }
@@ -267,9 +273,10 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
     println!("startig async thread");
     tokio::task::spawn(async move {
 
+        let sign_ups_clone = sign_ups.lock().await.clone();
+
         let mut plan_binding = match_plan.lock().await;
         let locked_plan = plan_binding.as_ref();
-        let mut signup_binding = sign_ups.lock().await;
 
         let blue_error = check_blueprint(blueprint.clone());
 
@@ -292,7 +299,7 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
 
                                 let record = Record {
                                     match_plan: Some(l.clone()),
-                                    sign_ups: signup_binding.clone(),
+                                    sign_ups: sign_ups_clone,
                                     season: l.season as usize,
                                 };
 
@@ -302,16 +309,17 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
                         };
 
                         *plan_binding = Some(plan.clone());
-                        let _ = StorageMod::save_matchplan(plan).unwrap();
+                        drop(plan_binding);
+                        let mut signup_binding = sign_ups.lock().await;
                         *signup_binding = vec!();
                         let _ = StorageMod::save_signups(vec!()).unwrap();
                     }
                 }
             }
         }
-
-        appstate.refresh().await;
     }).await.unwrap();
+
+    let _ = appstate.refresh().await;
 
     let error = match error_receiver.try_recv(){
         Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
@@ -325,27 +333,17 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
 }
 
 
-pub async fn make_bot_request_match(matchevent: MatchEvent, league: String) -> Result<(), String>{
-    let client = Client::new();
-    
-    let url = "http://localhost:8085/porcbot/event";
-    let body = json!({
-        "start_timestamp": format!("{}", matchevent.start_timestamp),
-        "challenger_id": matchevent.initiator_id,
-        "opponent_id": matchevent.opponent_id,
-        "league": league
-    });
-
-    let response = client
-        .put(url)
-        .json(&body)
-        .send()
-        .await;
-
-    match response {
-        Ok(_) => {},
-        Err(err) => return Err(err.to_string()),
+pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, appstate: &AppState) -> Result<(), String>{
+    let parsed_opponent_id = match matchevent.opponent_id.parse() {
+        Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
+        Ok(v) => v
     };
 
+    let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
+
+    let dialogeus_clone = appstate.dialogues.clone();
+    let mut dialogues_lock = dialogeus_clone.lock().await;
+
+    dialogues_lock.push(builder);
     Ok(())
 }

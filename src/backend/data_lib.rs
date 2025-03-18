@@ -3,10 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
-use crate::bot_communication::PlanBlueprint;
-use crate::{AppState, PlayerBlueprint};
+use crate::AppState;
 
-
+use super::bot_communication::{PlanBlueprint, PlayerBlueprint};
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

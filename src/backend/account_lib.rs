@@ -9,8 +9,11 @@ use std::collections::HashMap;
 use std::default;
 use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
-use crate::bot_communication::{make_bot_request_match};
-use crate::{sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, Player, SignUpInfo, StorageMod};
+use super::bot_communication::make_bot_request_match;
+use super::data_lib::{Division, MatchPlan, Player};
+use super::client_communication::{SignUpInfo, GetRequestPlanPackage, GetRequestSignUpPackage};
+use super::storage_lib::StorageMod;
+use crate::AppState;
 use async_std::fs;
 use reqwest::Client;
 use uuid::Uuid;
@@ -72,6 +75,21 @@ pub struct MatchEvent {
     pub initiator_id: String,
     pub opponent_id: String,
     pub status: MatchStatus
+}
+
+impl MatchEvent{
+
+    pub fn get_id(&self) -> String {
+        let mut lower_id = self.initiator_id.clone();
+        let mut higher_id = self.opponent_id.clone();
+
+        if lower_id.parse::<i64>().unwrap() > higher_id.parse::<i64>().unwrap() {
+            lower_id = self.opponent_id.clone();
+            higher_id = self.initiator_id.clone();
+        }
+
+        format!("{}V{}@{}", lower_id, higher_id, self.start_timestamp)
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -190,6 +208,8 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
     let matchevents_clone = appstate.matchevents.clone();
     let matchplan_clone = appstate.matchplan.clone();
 
+    let state_clone = appstate.clone();
+
     // We spawn an asyncronus thread in order to be able to handle many requests at once
     println!("startig async thread");
     tokio::task::spawn(async move {
@@ -207,15 +227,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
         
         let initiator = accounts.get_mut(&info.match_event.initiator_id);
 
-        let mut lower_id = info.match_event.initiator_id.clone();
-        let mut higher_id = info.match_event.opponent_id.clone();
-
-        if lower_id.parse::<i64>().unwrap() > higher_id.parse::<i64>().unwrap() {
-            lower_id = info.match_event.opponent_id.clone();
-            higher_id = info.match_event.initiator_id.clone();
-        }
-
-        let match_key = format!("{}V{}@{}", lower_id, higher_id, info.match_event.start_timestamp);
+        let match_key = info.match_event.get_id();
 
         match matchevents.get_mut(&match_key) {
             Some(matchevent) => {
@@ -237,7 +249,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
                             }
                     }
                 }
-                match make_bot_request_match(matchevent.clone(), league).await {
+                match make_bot_request_match(matchevent.clone(), league, &state_clone).await {
                     Ok(_) => {},
                     Err(err) => {println!("Got the following error while trying to communitcate with porcbot: {:?} fuck it we ball", err)}
                 }
@@ -419,7 +431,11 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
 
     let (error_sender, error_receiver) = mpsc::channel();
 
-    let logins_clone = appstate.logins.clone();
+    let logins_mutex = appstate.logins.clone();
+    let logins_lock = logins_mutex.lock().await;
+    let logins_clone = logins_lock.clone();
+    drop(logins_lock);
+
     let client_id = info.client_id.clone();
 
     let accounts_clone = appstate.accounts.clone();
@@ -433,7 +449,7 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
 
         let mut error = "".to_string();
         
-        match logins_clone.as_ref().lock().await.get(&client_id) {
+        match logins_clone.get(&client_id) {
             Some(entry) => {
                 let discord_id = entry.clone();
                 match accounts.get_mut(&discord_id) {

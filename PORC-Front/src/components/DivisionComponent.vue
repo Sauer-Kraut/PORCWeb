@@ -2,18 +2,17 @@
 import type { DivisionModel } from '@/models/DivisionModel';
 import MatchScoreComponent from './MatchScoreComponent.vue';
 import LeaderbordComponent from './LeaderbordComponent.vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     division: DivisionModel;
-    user_id: string;
+    UserId: string;
 }>();
 
-const UserId = ref(props.user_id);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-let AllowEdit = false;
-let load = false;
-let empty = false;
+let AllowEdit = ref(false);
+let load = ref(false);
+let empty = ref(false);
 
 const placeholders = [
     "Shh... The scores are still taking their beauty sleep. If you keep being this loud you'll wake them up! (✧ω✧)",
@@ -54,9 +53,9 @@ function containsUser(): boolean {
     let found = false;
     for (let i = 0; i < props.division.players.length; i++) {
         // console.log("iterating");
-        // console.log("checking ", props.division.players[i], " against self ", UserId.value);
-        if (props.division.players[i].id == UserId.value) {
-            AllowEdit = true;
+        console.log("checking ", props.division.players[i], " against self ", props.UserId);
+        if (props.division.players[i].id == props.UserId) {
+            AllowEdit.value = true;
             isDivisionExpanded.value = true;
             found = true;
             return true;
@@ -64,7 +63,7 @@ function containsUser(): boolean {
     }
 
     if (!found) {
-        AllowEdit = !true;
+        AllowEdit.value = !true;
         isDivisionExpanded.value = !true;
     }
 
@@ -73,13 +72,23 @@ function containsUser(): boolean {
 
 function amEmpty(): boolean {
     if (props.division.players.length < 2) {
-        empty = true;
+        empty.value = true;
         return true;
     } else {
-        empty = !true;
+        empty.value = !true;
         return !true;
     }
 }
+
+watch(
+    () => props.UserId,
+    (newId) => {
+        //console.log('new schedule: ', newSchedule, newSchedule.availabilities);
+        empty.value = amEmpty();
+        AllowEdit.value = containsUser();
+    },
+    { deep: true },
+);
 
 onMounted(() => {
     setTimeout(() => {
@@ -87,9 +96,9 @@ onMounted(() => {
         // console.log("division user: ", containsUser());
         selectRandomPlaceholder();
         isDivisionExpanded.value = true;
-        empty = amEmpty();
-        AllowEdit = containsUser();
-        load = true;
+        empty.value = amEmpty();
+        AllowEdit.value = containsUser();
+        load.value = true;
     }, 70); // Wait for 500 milliseconds
 });
 </script>
@@ -108,7 +117,7 @@ onMounted(() => {
                     @click="toggleLeaderbordExpanded()"
                 >
                     <div v-for="[key, match] in Object.entries(division.matches)" :key="key" class="col-12 col-sm-6 col-xs-12 col-lg-3-cust p-3-cust">
-                        <MatchScoreComponent :match="match" :user_id="user_id" />
+                        <MatchScoreComponent :match="match" :user_id="props.UserId" />
                     </div>
                 </div>
                 <div

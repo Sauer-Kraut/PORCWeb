@@ -18,7 +18,7 @@ const region = ref(null);
 const isOnDiscord = ref(false);
 
 const isLoggedIn = ref(true);
-let user_id = 'default';
+let user_id = ref('default');
 
 const isSignedUp = ref(false);
 
@@ -62,7 +62,7 @@ async function postSignUp() {
         username: String(username.value),
         bp: Number(BP.value),
         region: String(region.value),
-        discord_id: user_id,
+        discord_id: user_id.value,
         date: String(now),
     };
 
@@ -110,7 +110,7 @@ async function getUserId() {
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
-        user_id = res.id;
+        user_id.value = res.id;
         username.value = res.username;
     }
 }
@@ -139,7 +139,7 @@ async function getSignedUp() {
             const signUps = data.data;
             for (let i = 0; i < signUps.length; i++) {
                 //console.log('checking sign up: ', signUps[i], ' against id: ', user_id);
-                if (signUps[i].discord_id == user_id) {
+                if (signUps[i].discord_id == user_id.value) {
                     //console.log('found user sign up');
                     isSignedUp.value = true;
                 }
@@ -156,11 +156,11 @@ async function getSignedUp() {
     return null;
 }
 
-onMounted(() => {
-    getLoggedIn();
-    getSignedUp();
-    setTimeout(() => {
-        getSignedUp();
+onMounted(async () => {
+    await getUserId();
+    await getSignedUp();
+    setTimeout(async () => {
+        await getSignedUp();
     }, 300); // Wait for 500 milliseconds
 });
 </script>
@@ -170,11 +170,11 @@ onMounted(() => {
         <div class="inner-container">
             <div class="titel col-10">
                 <h1 class="titel-text">Sign Up</h1>
-                <h3 v-if="isSignedUp" class="conformation icon-checkmark"></h3>
+                <h3 v-if="isSignedUp && user_id != 'default'" class="conformation icon-checkmark"></h3>
             </div>
             <div class="form-container col-10">
                 <form>
-                    <fieldset :disabled="!isLoggedIn || isSignedUp">
+                    <fieldset :disabled="!isLoggedIn || isSignedUp || user_id == 'default'">
                         <legend>User Info</legend>
                         <div class="p-3"></div>
                         <div class="mb-3">
@@ -237,7 +237,7 @@ onMounted(() => {
 }
 
 .button {
-    background-color: #828ae0;
+    //background-color: #828ae0;
     border-color: black;
     border: none;
     font-weight: 400;

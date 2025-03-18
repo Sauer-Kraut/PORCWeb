@@ -41,6 +41,11 @@ export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise
     }
 
     let matches = recv.schedule ? await getMatchEvents(recv.schedule.matches) : [];
+    const dummySchedule = ({
+        availabilities: [] as ScheduleEvent[],
+        matches: [] as MatchEvent[],
+        notes: "",
+    } as Schedule)
     return {
         id: recv.id,
         username: recv.username,
@@ -78,7 +83,7 @@ export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise
                   }),
                   notes: recv.schedule.notes,
               } as Schedule)
-            : null,
+            : dummySchedule,
     };
 }
 

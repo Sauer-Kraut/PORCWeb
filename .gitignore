@@ -2,3 +2,4 @@
 /userdata
 Cargo.lock
 secrets.json
+.env

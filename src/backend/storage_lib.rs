@@ -1,5 +1,9 @@
-use crate::account_lib::{Account, DiscordUser, MatchEvent};
-use crate::{discord_communication, MatchPlan, SignUpInfo};
+use crate::porcbot::dialogue_module::dialogue_builder::DialogueBuilder;
+
+use super::account_lib::{Account, DiscordUser, MatchEvent};
+use super::discord_communication;
+use super::data_lib::MatchPlan;
+use super::client_communication::SignUpInfo;
 use askama::filters::format;
 use discord_communication::TokenRequestParam;
 use serde::{Serialize, Deserialize};
@@ -16,6 +20,8 @@ const SECRETS_PATH: &str = "secrets.json";
 const RECORDINGS_PATH: &str = "static/records";
 const CONFIG_PATH: &str = "config.json";
 const MATCHEVENTS_PATH: &str = "userdata/SeasonMatches.json";
+const DIALOGUES_PATH: &str = "userdata/ActiveDialogues.json";
+
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -148,6 +154,23 @@ impl StorageMod {
         file.read_to_string(&mut json)?;
         let matchevents: HashMap<String, MatchEvent> = serde_json::from_str(&json)?;
         Ok(matchevents)
+    }
+    
+    pub fn save_dialogues(dialogues: Vec<DialogueBuilder>) -> Result<(), io::Error> {
+        let path = DIALOGUES_PATH;
+        let json = serde_json::to_string_pretty(&dialogues)?;
+        let mut file = File::create(path)?;
+        file.write_all(json.as_bytes())?;
+        Ok(())
+    }
+
+    pub fn read_dialogues() -> Result<Vec<DialogueBuilder>, io::Error> {
+        let path = DIALOGUES_PATH;
+        let mut file = File::open(path)?;
+        let mut json = "".to_string();
+        file.read_to_string(&mut json)?;
+        let dialogues: Vec<DialogueBuilder> = serde_json::from_str(&json)?;
+        Ok(dialogues)
     }
 
 }

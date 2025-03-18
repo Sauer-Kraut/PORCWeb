@@ -22,20 +22,7 @@ const schedule = ref({
     notes: ``,
 } as Schedule);
 
-const players = [
-    {
-        id: '1',
-        tag: '2Guib',
-    },
-    {
-        id: '2',
-        tag: 'Sauerkraut',
-    },
-    {
-        id: '3',
-        tag: 'Bibin',
-    },
-] as PlayerModel[];
+const players = [] as PlayerModel[];
 
 // const playerinfos = [
 //         {
@@ -318,19 +305,30 @@ async function reload() {
     }
 }
 
-onMounted(() => {
-    getUserId();
-    getMatchPlan();
+function selectSelf() {
+    for (let player of playerinfos.value) {
+        if (player.id == user_id.value) {
+            console.log("found self: ", player, "against user id: ", user_id.value);
+            selectedPlayer.value = player;
+        } else {
+            console.log("Not self: ", player, "against user id: ", user_id.value);
+        }
+    }
+}
+
+onMounted(async () => {
+    await getUserId();
+    await getMatchPlan();
     setTimeout(async () => {
         opponents.value = find_opponents();
         await getPubPlayerInfos(getPlayerIds());
-        selectedPlayer.value = playerinfos.value[0];
+        selectSelf();
         setTimeout(async () => {
             opponents.value = find_opponents();
             participants.value = find_opponents();
             participants.value.push(...find_user());
             await getPubPlayerInfos(getPlayerIds());
-            selectedPlayer.value = playerinfos.value[0];
+            selectSelf();
         }, 500); // Wait for 500 milliseconds
     }, 120); // Wait for 500 milliseconds
 });
@@ -356,7 +354,7 @@ watch(selectedPlayer, (newValue) => {
                 </label>
             </div>
             <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent v-if="selectedPlayer?.schedule" :schedule="selectedPlayer?.schedule ?? schedule" :players="participants" :own-calendar="selectedPlayer?.id === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'" v-on:reload="reload"> </CalendarComponent>
+            <CalendarComponent v-if="selectedPlayer?.schedule" :schedule="selectedPlayer?.schedule ?? schedule" :players="participants" :own-calendar="(selectedPlayer?.id ?? user_id) === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'" v-on:reload="reload"> </CalendarComponent>
             <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
         </div>
     </div>
