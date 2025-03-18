@@ -1,28 +1,30 @@
-pub mod data_lib;
-pub mod client_communication;
-pub mod storage_lib;
-pub mod bot_communication;
-pub mod discord_communication;
-pub mod account_lib;
-use discord_communication::{discord_callback, put_logged_in};
-use account_lib::*;
+mod backend;
+mod porcbot;
+
+use backend::data_lib::*;
+use backend::discord_communication::{discord_callback, put_logged_in};
+use backend::account_lib::*;
+use backend::storage_lib::*;
+use backend::client_communication::*;
+use backend::bot_communication::*;
+
 use async_std::sync::Mutex;
-use actix_web::FromRequest;
-use bot_communication::*;
-use futures::future::{ready, Ready};
-use data_lib::*;
-use storage_lib::*;
-use client_communication::*;
 use async_std::fs;
 use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http;
 use actix_files::Files;
 use colored::Colorize;
+use porcbot::config::{BOT_TOKEN, INTENTS};
+use porcbot::dialogue_module::dialogue_builder::DialogueBuilder;
+use porcbot::tasks::events::bot_event_handler::BotEventHandler;
+use porcbot::tasks::functions::check_dialogues::check_dialogues;
+use serenity::Client;
 use tokio;
 use std::collections::HashMap;
 use std::sync::{Arc};
 use tokio::sync::RwLock;
+use tokio::time::{sleep, Duration};
 
 
 
@@ -82,7 +84,57 @@ async fn main() -> std::io::Result<()> {
     let config = Arc::new(StorageMod::read_config()?);
     let port = config.port.clone();
 
-    println!("\n{}\n\n", "Server has launched");
+    println!("read 7");
+    let dialogues = Arc::new(Mutex::new(StorageMod::read_dialogues()?));
+
+    let appstate = AppState {
+        matchplan,
+        signups,
+        logins,
+        accounts,
+        matchevents,
+        config: config.clone(),
+        dialogues
+    };
+
+    let appstate_clone = appstate.clone();
+
+    // spawns bot dialogue checker loop
+    tokio::spawn(async move {
+
+        let appstate_clone_2 = appstate_clone.clone();
+
+        let _dialogue_task = tokio::task::spawn(async move {
+            println!("\n{}", "Bot dialogue check loop has launched");
+            loop {
+                println!("checking active dialogues");
+                match check_dialogues(&appstate_clone).await {
+                    Ok(_) => (),
+                    Err(err) => println!("{}", format!("An error has occured while checking active dialogues: {err}").red()),
+                }
+                println!("finished checking active dialogues");
+                sleep(Duration::from_secs(360)).await; // waits 6 minutes between each loop
+            }
+        });
+
+        let _bot_task = tokio::task::spawn(async move {
+            let token = BOT_TOKEN.as_ref().clone();
+            let intents = INTENTS.as_ref().clone();
+
+            let mut client = Client::builder(token, intents)
+                .event_handler(BotEventHandler{
+                    appstate: appstate_clone_2
+                })
+                .await
+                .expect("Error creating client");
+
+            if let Err(why) = client.start().await {
+                println!("Client error: {:?}", why);
+            }
+        });
+    });
+
+    println!("\n{}", "Server has launched".bright_white());
 
     HttpServer::new(move || {
         App::new()
@@ -100,14 +152,7 @@ async fn main() -> std::io::Result<()> {
                 .allow_any_header()
                 .supports_credentials()
                 .max_age(3600))
-            .app_data(web::Data::new(AppState {
-                matchplan: matchplan.clone(),
-                signups: signups.clone(),
-                logins: logins.clone(),
-                accounts: accounts.clone(),
-                matchevents: matchevents.clone(),
-                config: config.clone()
-            }))
+            .app_data(web::Data::new(appstate.clone()))
             .service(web::resource("/").to(index))
             .service(web::resource("/signup").to(index))
             .service(web::resource("/rules").to(index))
@@ -148,20 +193,21 @@ async fn main() -> std::io::Result<()> {
 }
 
 
-
+#[derive(Clone)]
 pub struct AppState {
     matchplan: Arc<Mutex<Option<MatchPlan>>>,
     signups: Arc<Mutex<Vec<SignUpInfo>>>,
     logins: Arc<Mutex<HashMap<String, String>>>,
     accounts: Arc<Mutex<HashMap<String, Account>>>,
     matchevents: Arc<Mutex<HashMap<String, MatchEvent>>>,
+    dialogues: Arc<Mutex<Vec<DialogueBuilder>>>,
     config: Arc<Config>
 }
 
 impl AppState {
 
     pub async fn refresh(&self) {
-        println!("Refreshing appstate... ");
+        println!("\nRefreshing appstate... ");
 
         let accounts_clone = self.accounts.clone();
         let accounts = accounts_clone.lock().await;
@@ -214,16 +260,43 @@ impl AppState {
             }
 
             let res = StorageMod::save_matchplan(matchplan.clone());
-            println!("Saving matchplan data: {:?}", res);
+            let res = StorageMod::save_logins(self.logins.lock().await.clone());
+            let res_dis = match res {
+                Ok(_) => "Ok".green(),
+                Err(err) => format!("Error: {err:?}").red(),
+            };
+            println!("Saving matchplan data: {}", res_dis);
         }
 
         let res = StorageMod::save_accounts(accounts.clone());
-        println!("Saving account data: {:?}", res);
+        let res_dis = match res {
+            Ok(_) => "Ok".green(),
+            Err(err) => format!("Error: {err:?}").red(),
+        };
+        println!("Saving account data: {}", res_dis);
         let res = StorageMod::save_logins(self.logins.lock().await.clone());
-        println!("Saving login data: {:?}", res);
+        let res_dis = match res {
+            Ok(_) => "Ok".green(),
+            Err(err) => format!("Error: {err:?}").red(),
+        };
+        println!("Saving login data: {}", res_dis);
         let res = StorageMod::save_signups(self.signups.lock().await.clone());
-        println!("Saving signup data: {:?}", res);
+        let res_dis = match res {
+            Ok(_) => "Ok".green(),
+            Err(err) => format!("Error: {err:?}").red(),
+        };
+        println!("Saving signup data: {}", res_dis);
         let res = StorageMod::save_matchevents(self.matchevents.lock().await.clone());
-        println!("Saving matchevent data: {:?}", res);
+        let res_dis = match res {
+            Ok(_) => "Ok".green(),
+            Err(err) => format!("Error: {err:?}").red(),
+        };
+        println!("Saving matchevent data: {}", res_dis);
+        let res = StorageMod::save_dialogues(self.dialogues.lock().await.clone());
+        let res_dis = match res {
+            Ok(_) => "Ok".green(),
+            Err(err) => format!("Error: {err:?}").red(),
+        };
+        println!("Saving dialogue data: {}\n", res_dis);
     }
 }

@@ -8,14 +8,18 @@ use tokio;
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
-use crate::account_lib::{PubAccountInfo, Schedule};
-use crate::{account_lib, sanetize_username, AppState, Division, GetRequestPlanPackage, GetRequestSignUpPackage, Player, SignUpInfo, StorageMod};
-use account_lib::{Account, DiscordUser};
 use async_std::fs;
 use reqwest::Client;
 use uuid::Uuid;
 use actix_web::cookie::time::OffsetDateTime;
 use std::time::{SystemTime, Duration};
+
+use crate::AppState;
+use crate::backend::account_lib::DiscordUser;
+
+use super::account_lib::PubAccountInfo;
+use super::storage_lib::StorageMod;
+use super::account_lib::{Account, Schedule};
 
 
 
@@ -188,23 +192,25 @@ pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appst
     let client_id = info.id.clone();
 
     let accounts_clone = appstate.accounts.clone();
-    let accounts_lock = accounts_clone.lock().await.clone();
+    let accounts_lock = accounts_clone.lock().await;
+    let accounts_clone = accounts_lock.clone();
+
+    drop(accounts_lock);
 
     // We spawn an asyncronus thread in order to be able to handle many requests at once
     println!("startig async thread");
     tokio::task::spawn(async move {
         
-        match logins_clone.as_ref().lock().await.get(&client_id) {
+        match logins_clone.as_ref().lock().await.clone().get(&client_id) {
             Some(entry) => {
                 let discord_id = entry.clone();
-                match accounts_lock.get(&discord_id) {
+                match accounts_clone.get(&discord_id) {
                     Some(value) => {let _ = data_sender.send(value.clone());}
                     None => {error_sender.send("No account for discord id found".to_string()).unwrap();}
                 }
             },
             None => {error_sender.send("no login found for client id".to_string()).unwrap()}
         };
-        drop(accounts_lock);
 
     }).await.unwrap();
 
