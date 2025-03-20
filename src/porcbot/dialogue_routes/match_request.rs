@@ -80,7 +80,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                                             };
                                             let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, planed_event.id.get());
                                             let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} has been accepted:
-{event_link}"));
+{event_link}")).await;
                                             info.event_id = Some(planed_event.id.get());
                                             return Ok(Some(4))}, // confirmation via website was registered
                                         MatchStatus::Finished => return Ok(Some(6)), // match is already finished. status has been updated
@@ -158,7 +158,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
                     let timestamp = &info.match_info.start_timestamp;
                     let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been accepted:
-{event_link}"));
+{event_link}")).await;
                     Ok(Some(600))
                 })))))
             },
@@ -204,7 +204,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
                     let timestamp = &info.match_info.start_timestamp;
                     let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been declined:
-{event_link}"));
+{event_link}")).await;
                     Ok(Some(600))
                 })))))
             },
@@ -258,7 +258,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
                     let timestamp = &info.match_info.start_timestamp;
                     let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been accepted:
-{event_link}"));
+{event_link}")).await;
                     Ok(Some(600))
                 })))))
             },
@@ -298,7 +298,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                         Ok(v) => v
                     };
                     let timestamp = &info.match_info.start_timestamp;
-                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been declined"));
+                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been declined")).await;
                     Ok(Some(600))
                 })))))
             },

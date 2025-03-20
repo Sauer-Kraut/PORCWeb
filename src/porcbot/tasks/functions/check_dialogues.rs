@@ -18,7 +18,7 @@ pub async fn check_dialogues(appstate: &AppState) -> Result<(), String> {
                     println!("{}\n{}{}", "An error occured while checking a dialogue:".red(), e.bright_red(), " - dialogue check was therefore skiped".yellow());
                     continue;
                 } else {
-                    if plan.index == 600 {
+                    if plan.index == 600 || plan.index == 400  {
                     builders_lock.remove(index);
                     } else {
                         *builder = plan.get_builder();
