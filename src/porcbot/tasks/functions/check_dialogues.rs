@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::AppState;
 
 pub async fn check_dialogues(appstate: &AppState) -> Result<(), String> {
@@ -12,11 +14,15 @@ pub async fn check_dialogues(appstate: &AppState) -> Result<(), String> {
         match entry {
             Some(builder) => {
                 let mut plan = builder.clone().build().await?;
-                plan.check(appstate).await?;
-                if plan.index == 600 {
-                    builders_lock.remove(index);
+                if let Err(e) = plan.check(appstate).await {
+                    println!("{}\n{}{}", "An error occured while checking a dialogue:".red(), e.bright_red(), " - dialogue check was therefore skiped".yellow());
+                    continue;
                 } else {
-                    *builder = plan.get_builder();
+                    if plan.index == 600 {
+                    builders_lock.remove(index);
+                    } else {
+                        *builder = plan.get_builder();
+                    }
                 }
             },
             None => (),

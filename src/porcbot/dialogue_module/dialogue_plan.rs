@@ -1,5 +1,7 @@
 use std::mem;
 
+use colored::Colorize;
+
 use crate::{backend::account_lib::MatchEvent, porcbot::{dialogue_routes::match_request::MatchRequestData, util::{dm_send::*, prompt_message_send::*}}, AppState};
 use super::{dialogue_builder::DialogueBuilder, dialogue_data::{self, *}, dialogue_step::*};
 
@@ -21,7 +23,16 @@ impl <'a, 'b> DialoguePlan<'a> {
         };
 
         // Scope the mutable borrow to the block
-        let next_index = current_step.check_completion(&mut self.dialogue_data, app_state).await?;
+        let res_next_index = current_step.check_completion(&mut self.dialogue_data, app_state).await;
+
+        let next_index = match res_next_index {
+            Ok(i) => i,
+            Err(err) => {
+                println!("{}\n{}", "An error occured while checking a dialogue:".red(), err.bright_red());
+                self.dialogue_data.error = Some(err);
+                Some(400)
+            },
+        };
 
         // Now you can call `next` without conflicting borrows
         match next_index {
@@ -38,6 +49,11 @@ impl <'a, 'b> DialoguePlan<'a> {
         if target_index == 600 {
             println!("A dialogue has reached its end");
             Ok(())
+        } 
+        else if target_index == 400 {
+            let error_step = DialogueStep::default_error();
+            let _ = send_dm(self.dialogue_data.user_id, error_step.get_message(&self.dialogue_data).await?).await?;
+            return Ok(())
         } else {
             if let Some(step) = self.steps.get(target_index as usize) {
                 match step.condition {

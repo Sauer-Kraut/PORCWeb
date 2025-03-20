@@ -5,7 +5,8 @@ use crate::{backend::account_lib::MatchEvent, porcbot::dialogue_routes::match_re
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DialogueData {
     pub user_id: u64,
-    pub data: CaseData
+    pub data: CaseData,
+    pub error: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

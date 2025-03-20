@@ -100,21 +100,6 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                                     if confirmation {
                                         entry.status = MatchStatus::Confirmed;
                                         let planed_event = create_discord_event(match_info.clone(), info.division_name.clone()).await?;
-                                        let parsed_opponent_id = match match_info.opponent_id.parse() {
-                                            Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
-                                            Ok(v) => v
-                                        };
-                                        let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
-                                            Ok(v) => v.name,
-                                            Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
-                                        };
-                                        let parsed_initiator_id = match match_info.initiator_id.parse() {
-                                            Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
-                                            Ok(v) => v
-                                        };
-                                        let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, planed_event.id.get());
-                                        let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} has been accepted:
-{event_link}"));
                                         info.event_id = Some(planed_event.id.get());
                                         return Ok(Some(1)) // confirmation has been registered
                                     }
@@ -148,7 +133,32 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     Ok(format!("Your match against {challenger_tag} has been registered successfully. An event has been created on the PORC discord server: 
 {event_link}"))
                 })))), 
-                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|_dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                    let info: &mut MatchRequestData = match &mut dialogue_data.data {
+                        dialogue_data::CaseData::MatchRequest(match_request_data) => match_request_data,
+                        _ => panic!("Dialogue Route has incorect Case data")
+                    };
+                    let match_info: MatchEvent = info.match_info.clone();
+                    let parsed_opponent_id = match match_info.opponent_id.parse() {
+                        Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                        Ok(v) => v.name,
+                        Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
+                    };
+                    let parsed_initiator_id = match match_info.initiator_id.parse() {
+                        Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let event_id = match info.event_id {
+                        Some(id) => id,
+                        None => return Err(format!("couldnt find event id for event that should be configured"))
+                    };
+                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
+                    let timestamp = &info.match_info.start_timestamp;
+                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been accepted:
+{event_link}"));
                     Ok(Some(600))
                 })))))
             },
@@ -169,7 +179,32 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     Ok(format!("Your decline against {challenger_tag} has been registered successfully."))
                 })))), 
-                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|_dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                    let info: &mut MatchRequestData = match &mut dialogue_data.data {
+                        dialogue_data::CaseData::MatchRequest(match_request_data) => match_request_data,
+                        _ => panic!("Dialogue Route has incorect Case data")
+                    };
+                    let match_info: MatchEvent = info.match_info.clone();
+                    let parsed_opponent_id = match match_info.opponent_id.parse() {
+                        Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                        Ok(v) => v.name,
+                        Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
+                    };
+                    let parsed_initiator_id = match match_info.initiator_id.parse() {
+                        Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let event_id = match info.event_id {
+                        Some(id) => id,
+                        None => return Err(format!("couldnt find event id for event that should be configured"))
+                    };
+                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
+                    let timestamp = &info.match_info.start_timestamp;
+                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been declined:
+{event_link}"));
                     Ok(Some(600))
                 })))))
             },
@@ -198,7 +233,32 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     Ok(format!("Your confirmation of your match against **{challenger_tag}** via the website has been registered successfully."))
                 })))), 
-                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|_dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                    let info: &mut MatchRequestData = match &mut dialogue_data.data {
+                        dialogue_data::CaseData::MatchRequest(match_request_data) => match_request_data,
+                        _ => panic!("Dialogue Route has incorect Case data")
+                    };
+                    let match_info: MatchEvent = info.match_info.clone();
+                    let parsed_opponent_id = match match_info.opponent_id.parse() {
+                        Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                        Ok(v) => v.name,
+                        Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
+                    };
+                    let parsed_initiator_id = match match_info.initiator_id.parse() {
+                        Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let event_id = match info.event_id {
+                        Some(id) => id,
+                        None => return Err(format!("couldnt find event id for event that should be configured"))
+                    };
+                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
+                    let timestamp = &info.match_info.start_timestamp;
+                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been accepted:
+{event_link}"));
                     Ok(Some(600))
                 })))))
             },
@@ -219,7 +279,26 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     Ok(format!("Your decline of your match against **{challenger_tag}** via the website has been registered successfully."))
                 })))), 
-                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|_dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                    let info: &mut MatchRequestData = match &mut dialogue_data.data {
+                        dialogue_data::CaseData::MatchRequest(match_request_data) => match_request_data,
+                        _ => panic!("Dialogue Route has incorect Case data")
+                    };
+                    let match_info: MatchEvent = info.match_info.clone();
+                    let parsed_opponent_id = match match_info.opponent_id.parse() {
+                        Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                        Ok(v) => v.name,
+                        Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
+                    };
+                    let parsed_initiator_id = match match_info.initiator_id.parse() {
+                        Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
+                        Ok(v) => v
+                    };
+                    let timestamp = &info.match_info.start_timestamp;
+                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been declined"));
                     Ok(Some(600))
                 })))))
             },

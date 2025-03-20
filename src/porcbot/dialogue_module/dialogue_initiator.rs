@@ -15,7 +15,8 @@ impl DialogueInitator {
                     match_info,
                     division_name,
                     event_id: None,
-                })
+                }),
+                error: None
             },
             index: 0
         };

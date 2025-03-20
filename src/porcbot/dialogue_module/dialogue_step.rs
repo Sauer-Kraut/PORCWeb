@@ -36,6 +36,24 @@ impl<'a, 'b> DialogueStep<'a> {
     pub async fn get_message(&self, dialogue_data: &DialogueData) -> Result<String, String> {
         (self.message.lock().await)(dialogue_data).await
     }
+
+    pub fn default_error() -> DialogueStep<'a> {
+        DialogueStep {  //400 error occurred
+            message: Arc::new(Mutex::new(Box::new(|dialogue_data: &DialogueData| Box::pin(async move {
+                let error = match dialogue_data.error.clone() {
+                    None => {
+                        return Ok("Oh no, looks like an unidentified error occurred while processing your conversation. You might want to contact a mod about this one, in theory this shouldnt be possible".to_string())
+                    },
+                    Some(err) => err
+                };
+                Ok(format!("Oh no, an error occurred while processing one of our conversations! Sory for that, here is the error:
+{error}"))
+            })))), 
+            condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|_dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
+                Ok(Some(600))
+            })))))
+        }
+    }
 }
 
 #[derive(Clone)]
