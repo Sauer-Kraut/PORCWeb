@@ -4,9 +4,9 @@ use actix_web::web;
 use async_std::sync::Mutex;
 use futures::TryFutureExt;
 use serde::{Deserialize, Serialize};
-use serenity::all::{User, UserId};
+use serenity::{all::{User, UserId}, model::event};
 
-use crate::{backend::account_lib::{put_match_event, MatchEvent, MatchStatus, PutMatchEventRecvPackage}, porcbot::{config::get_http, dialogue_module::{dialogue_data::{self, CaseData, DialogueData}, dialogue_plan::DialoguePlan, dialogue_step::{DialogueStep, StepCondition}}, util::create_event::create_discord_event}, AppState};
+use crate::{backend::account_lib::{put_match_event, MatchEvent, MatchStatus, PutMatchEventRecvPackage}, porcbot::{config::get_http, dialogue_module::{dialogue_data::{self, CaseData, DialogueData}, dialogue_plan::DialoguePlan, dialogue_step::{DialogueStep, StepCondition}}, util::{create_event::create_discord_event, dm_send::send_dm}}, AppState};
 use crate::porcbot::config::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -65,8 +65,23 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                                     match entry.status {
                                         MatchStatus::Requested => return Ok(None),
                                         MatchStatus::Confirmed => {
-                                            let event = create_discord_event(match_info, info.division_name.clone()).await?;
-                                            info.event_id = Some(event.id.get());
+                                            let planed_event = create_discord_event(match_info.clone(), info.division_name.clone()).await?;
+                                            let parsed_opponent_id = match match_info.opponent_id.parse() {
+                                                Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
+                                                Ok(v) => v
+                                            };
+                                            let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                                                Ok(v) => v.name,
+                                                Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
+                                            };
+                                            let parsed_initiator_id = match match_info.initiator_id.parse() {
+                                                Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
+                                                Ok(v) => v
+                                            };
+                                            let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, planed_event.id.get());
+                                            let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} has been accepted:
+{event_link}"));
+                                            info.event_id = Some(planed_event.id.get());
                                             return Ok(Some(4))}, // confirmation via website was registered
                                         MatchStatus::Finished => return Ok(Some(6)), // match is already finished. status has been updated
                                         MatchStatus::Declined => return Ok(Some(5)), // decline via website was registered
@@ -84,8 +99,23 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                                 Some(entry) => {
                                     if confirmation {
                                         entry.status = MatchStatus::Confirmed;
-                                        let event = create_discord_event(match_info, info.division_name.clone()).await?;
-                                        info.event_id = Some(event.id.get());
+                                        let planed_event = create_discord_event(match_info.clone(), info.division_name.clone()).await?;
+                                        let parsed_opponent_id = match match_info.opponent_id.parse() {
+                                            Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
+                                            Ok(v) => v
+                                        };
+                                        let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                                            Ok(v) => v.name,
+                                            Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
+                                        };
+                                        let parsed_initiator_id = match match_info.initiator_id.parse() {
+                                            Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
+                                            Ok(v) => v
+                                        };
+                                        let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, planed_event.id.get());
+                                        let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} has been accepted:
+{event_link}"));
+                                        info.event_id = Some(planed_event.id.get());
                                         return Ok(Some(1)) // confirmation has been registered
                                     }
                                     else {
@@ -144,7 +174,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                 })))))
             },
             DialogueStep {  //3 internal error: couldnt find match in databank
-                message: Arc::new(Mutex::new(Box::new(|dialogue_data: &DialogueData| Box::pin(async move {
+                message: Arc::new(Mutex::new(Box::new(|_dialogue_data: &DialogueData| Box::pin(async move {
                     Ok(format!("Looks like I cant find your match in the databank :(. Feel free to contact the PORC mods about this"))
                 })))), 
                 condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|_dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {

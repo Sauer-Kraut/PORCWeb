@@ -69,6 +69,6 @@ pub async fn match_request_catch_up(appstate: &AppState) -> Result<(), String> {
 
     drop(matchplan_lock);
 
-    let _ = appstate.refresh().await;
+    let _ = appstate.refresh_dialogues().await;
     Ok(())
 }
