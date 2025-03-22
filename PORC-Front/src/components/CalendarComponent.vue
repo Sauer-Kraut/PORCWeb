@@ -83,12 +83,22 @@
                                         {{ filter_str(getPlayer(match.opponentId).tag || 'Player 2', 12) }}
                                     </h5>
                                 </div>
-                                <div class="row mt-4" v-if="ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId">
+                                <div class="row mt-4" v-if="match.status === MatchStatus.Requested && match.opponentId === ownId">
                                     <div class="col">
                                         <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Decline</button>
                                     </div>
                                     <div class="col">
                                         <button class="btn btn-sm btn-light w-100" @click="respondToMatch(match, true)"><i></i>Accept</button>
+                                    </div>
+                                </div>
+                                <div class="row mt-4" v-if="(match.status === MatchStatus.Confirmed && (match.initiatorId === ownId || match.opponentId === ownId)) || (match.initiatorId === ownId && match.status === MatchStatus.Requested)">
+                                    <div class="col">
+                                        <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Cancel</button>
+                                    </div>
+                                </div>
+                                <div class="row mt-4" v-if="match.initiatorId === ownId && match.status === MatchStatus.Declined">
+                                    <div class="col">
+                                        <button class="btn btn-sm btn-danger w-100" @click="deleteMatch(match)"><i></i>Delete</button>
                                     </div>
                                 </div>
                             </div>
@@ -272,7 +282,7 @@ function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] 
     let endMonth = event.endDate.getMonth();
 
     console.log("start: ", start, " end: ", end)
-    
+
     if ((end - start) > 0) {
         const dayEnd = new Date(event.startDate);
         dayEnd.setHours(23, 59, 0, 0)
@@ -305,7 +315,7 @@ function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] 
             endDate: new Date(event.endDate),
             event: event.event,
         });
-    } 
+    }
     else {
         splitEvents.push({
             startDate: new Date(event.startDate),
@@ -539,6 +549,15 @@ async function deleteAvailability(availability: ScheduleEvent) {
 async function respondToMatch(match: MatchEvent, accept: boolean) {
     match.status = accept ? MatchStatus.Confirmed : MatchStatus.Declined;
     await postMatch(match);
+}
+
+async function deleteMatch(match: MatchEvent) {
+    console.log('deleting match', match);
+    const index = matches.value.indexOf(match)
+    if (index !== -1) {
+      matches.value.splice(index, 1);
+    }
+
 }
 
 async function submitNote() {
