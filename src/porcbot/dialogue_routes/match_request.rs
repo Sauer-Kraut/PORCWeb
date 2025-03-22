@@ -197,14 +197,8 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                         Err(err) => return Err(format!("initiator id couldnt be parsed in dialogue route with error: {err}")),
                         Ok(v) => v
                     };
-                    let event_id = match info.event_id {
-                        Some(id) => id,
-                        None => return Err(format!("couldnt find event id for event that should be configured"))
-                    };
-                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
                     let timestamp = &info.match_info.start_timestamp;
-                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been declined:
-{event_link}")).await;
+                    let _ = send_dm(parsed_initiator_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been declined")).await;
                     Ok(Some(600))
                 })))))
             },
