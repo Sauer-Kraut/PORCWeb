@@ -28,7 +28,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 const props = defineProps<{
     targetTimestamp: number;
     text: string;
-    season: number;
+    season: string;
 }>();
 
 const days = ref(1);
@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    font-size: 3rem;
+    font-size: 3.5rem;
 }
 
 .time-unit {
@@ -100,7 +100,7 @@ onBeforeUnmount(() => {
 
 .label {
     display: block;
-    font-size: 2rem;
+    font-size: 2.5rem;
 }
 
 @media (max-width: 600px) {

@@ -100,39 +100,39 @@ async fn main() -> std::io::Result<()> {
     let appstate_clone = appstate.clone();
 
     // spawns bot dialogue checker loop
-    tokio::spawn(async move {
+    // tokio::spawn(async move {
 
-        let appstate_clone_2 = appstate_clone.clone();
+    //     let appstate_clone_2 = appstate_clone.clone();
 
-        let _dialogue_task = tokio::task::spawn(async move {
-            println!("\n{}", "Bot dialogue check loop has launched");
-            loop {
-                println!("checking active dialogues");
-                match check_dialogues(&appstate_clone).await {
-                    Ok(_) => (),
-                    Err(err) => println!("{}", format!("An error has occured while checking active dialogues: {err}").red()),
-                }
-                println!("finished checking active dialogues");
-                sleep(Duration::from_secs(360)).await; // waits 6 minutes between each loop
-            }
-        });
+    //     let _dialogue_task = tokio::task::spawn(async move {
+    //         println!("\n{}", "Bot dialogue check loop has launched");
+    //         loop {
+    //             println!("checking active dialogues");
+    //             match check_dialogues(&appstate_clone).await {
+    //                 Ok(_) => (),
+    //                 Err(err) => println!("{}", format!("An error has occured while checking active dialogues: {err}").red()),
+    //             }
+    //             println!("finished checking active dialogues");
+    //             sleep(Duration::from_secs(360)).await; // waits 6 minutes between each loop
+    //         }
+    //     });
 
-        let _bot_task = tokio::task::spawn(async move {
-            let token = BOT_TOKEN.as_ref().clone();
-            let intents = INTENTS.as_ref().clone();
+    //     let _bot_task = tokio::task::spawn(async move {
+    //         let token = BOT_TOKEN.as_ref().clone();
+    //         let intents = INTENTS.as_ref().clone();
 
-            let mut client = Client::builder(token, intents)
-                .event_handler(BotEventHandler{
-                    appstate: appstate_clone_2
-                })
-                .await
-                .expect("Error creating client");
+    //         let mut client = Client::builder(token, intents)
+    //             .event_handler(BotEventHandler{
+    //                 appstate: appstate_clone_2
+    //             })
+    //             .await
+    //             .expect("Error creating client");
 
-            if let Err(why) = client.start().await {
-                println!("Client error: {:?}", why);
-            }
-        });
-    });
+    //         if let Err(why) = client.start().await {
+    //             println!("Client error: {:?}", why);
+    //         }
+    //     });
+    // });
 
     println!("\n{}", "Server has launched".bright_white());
 

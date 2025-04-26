@@ -156,7 +156,7 @@ function checkScores() {
 
 <template>
     <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored && allowedEdit }">
-        <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-10': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
+        <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
             <div class="d-flex justify-content-between" :class="{ winner: p1Win(match) }">
                 <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
                 <span class="player-score">{{ match.p1score }}</span>
@@ -167,7 +167,7 @@ function checkScores() {
                 <span class="player-score">{{ match.p2score }}</span>
             </div>
         </div>
-        <div v-if="allowedEdit" class="edit" :class="{ 'col-2 p-0 justify-content-centered': !isScored }">
+        <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored }">
             <button class="edit-button" @click="ShowModal()" @click.stop><i class="icon-edit-pencil"></i></button>
         </div>
     </div>
@@ -179,13 +179,20 @@ function checkScores() {
 .match {
     background-color: #252727;
     // max-height: 45px;
-    height: 2.6rem;
+    height: 3.2rem;
     text-align: center;
+    max-width: 200px;
+    min-width: 200px;
+    padding: 0;
+    align-self: center;
+    margin: 0 !important;
 
     &.hover-edit {
         .match-score {
             transition: width 0.35s ease-in-out;
+            padding: 0 !important;
         }
+
         .edit {
             width: 0%;
             overflow: hidden;
@@ -196,11 +203,11 @@ function checkScores() {
 
     &.hover-edit:hover {
         .match-score {
-            width: 85%;
+            width: 80%;
         }
 
         .edit {
-            width: 15%;
+            width: 20%;
         }
     }
 }
@@ -224,14 +231,19 @@ function checkScores() {
 
 .player-tag {
     font-weight: 400;
+    font-size: 0.85rem;
+    padding: 0.1rem;
+    padding-left: 0.5rem;
 }
 
 .player-score {
     font-weight: 400;
+    font-size: 0.85rem;
+    padding-right: 0.5rem;
 }
 
 .divider {
-    border-top: 1.5px solid rgb(129, 129, 129);
+    border-top: 1.5px dotted rgb(129, 129, 129);
     border-color: rgb(179, 179, 179);
 }
 
@@ -257,12 +269,12 @@ function checkScores() {
     background: none;
     border: none;
     color: inherit; /* Ensure the text color is inherited */
-    font-size: 12px;
-    height: 20px;
-    width: 20px;
+    font-size: 0.9rem;
+    height: 2rem;
+    width: 2rem;
     margin-top: 10px;
     margin-bottom: 10px;
-    margin-left: -0.5rem;
+    // margin-left: -0.75rem;
     appearance: none;
     cursor: pointer; /* Ensure it still looks like a button */
 }
@@ -280,5 +292,16 @@ function checkScores() {
 
 .user {
     font-style: italic;
+}
+
+.match-score {
+    transition: width 0.35s ease-in-out;
+    padding: 0 !important;
+}
+
+@media (max-width: 600px) {
+    .match {
+        max-width: 100% !important;
+    }
 }
 </style>

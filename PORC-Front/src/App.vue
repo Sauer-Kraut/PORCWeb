@@ -57,7 +57,7 @@ onMounted(() => {
     </header>
 
     <div class="row justify-content-center h-100 custom backgorund">
-        <main class="col-xxl-4 col-xl-6-cust col-l-8-cust col-lg-8 col-md-9 col-11 p-0 custom">
+        <main class="col-12 p-0 custom row justify-content-center">
             <router-view class="custom"></router-view>
             <ModalsContainer />
         </main>
@@ -68,15 +68,18 @@ onMounted(() => {
 $header-color: rgb(241, 241, 241);
 
 header {
-    height: 90px;
+    height: 6rem;
     background-color: $header-color;
     overflow-x: hidden;
 }
 
 main {
     min-height: 100%;
-    background-color: #323232;
-    background: linear-gradient(135deg, #3a3938, #4a4f5b);
+
+    background: #313131;
+    background-image: url('assets/images/background/stacked-peaks-darker-spikier.svg');
+    background-size: cover; /* Scale the image to cover the entire container */
+
     overflow-x: hidden;
     scrollbar-color: #242424;
 }
@@ -94,6 +97,7 @@ nav {
         align-content: center;
         color: rgb(0, 0, 0);
         text-decoration: none;
+        font-size: large;
 
         &.router-link-active {
             background-color: darken($header-color, 4%);
