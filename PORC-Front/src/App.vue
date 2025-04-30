@@ -56,7 +56,7 @@ onMounted(() => {
         </div>
     </header>
 
-    <div class="row justify-content-center h-100 custom backgorund">
+    <div class="row justify-content-center h-100 custom backgorund" data-bs-theme="dark">
         <main class="col-12 p-0 custom row justify-content-center">
             <router-view class="custom"></router-view>
             <ModalsContainer />

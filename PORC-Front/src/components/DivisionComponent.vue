@@ -1,14 +1,15 @@
 <script lang="ts" setup>
-import type { DivisionModel } from '@/models/DivisionModel';
-import MatchScoreComponent from './MatchScoreComponent.vue';
-import LeaderbordComponent from './LeaderbordComponent.vue';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { errorMessages } from 'vue/compiler-sfc';
 import config from '@/config';
+import type { DivisionModel } from '@/models/DivisionModel';
+import { onMounted, ref, watch } from 'vue';
+import { errorMessages } from 'vue/compiler-sfc';
+import LeaderbordComponent from './LeaderbordComponent.vue';
+import MatchScoreComponent from './MatchScoreComponent.vue';
 
 const props = defineProps<{
     division: DivisionModel | null;
     UserId: string;
+    selectorHeight: number;
 }>();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -29,26 +30,13 @@ const placeholders = [
 ];
 
 // Reactive variable for dynamic height
-const divisionHeight = defineModel<string>('divisionHeight');
-const leaderbordHeight = ref(20);
-const divisionRef = ref<HTMLElement | null>(null);
-
-function getLeaderbordHeight() {
-    if (divisionRef.value) {
-        const heightInRem = divisionRef.value.clientHeight / 16; // Get the height in rem (1rem = 16px)
-        if (heightInRem < 20) {
-            leaderbordHeight.value = 20; // Set a minimum height of 20rem
-        } else {
-            leaderbordHeight.value = heightInRem; // Set the height in rem
-        }
-        console.log('Leaderbord height:', leaderbordHeight.value, 'rem');
-    }
-}
+const divisionHeight = ref(`${props.selectorHeight}px`); // Set the initial height to the selectorHeight prop
+const leaderbordHeight = ref(100);
+const leaderboardRef = ref<HTMLElement | null>(null);
 
 // Function to set the height of the division
 function setDivisionHeight() {
-    getLeaderbordHeight();
-    divisionHeight.value = `${leaderbordHeight.value}rem`; // Set the height in rem
+    divisionHeight.value = `${Math.max(leaderboardRef.value?.clientHeight ?? 0, props.selectorHeight)}px`; // Set the height in px
 }
 
 // Finding a solution which would work for this was fucking misserable
@@ -70,8 +58,6 @@ function toggleMatchesExtended() {
     }
 
     matchesExtended.value = !matchesExtended.value; // Toggle the state
-
-    console.log('Matches transform:', matchesTransform.value); // Log the height for debugging
 }
 
 const displayError = ref(false);
@@ -94,8 +80,6 @@ function containsUser(): boolean {
     let found = false;
     if (!props.division) return false;
     for (let i = 0; i < props.division.players.length; i++) {
-        // console.log("iterating");
-        console.log("checking ", props.division.players[i], " against self ", props.UserId);
         if (props.division.players[i].id == props.UserId) {
             AllowEdit.value = true;
             found = true;
@@ -123,8 +107,6 @@ function amEmpty(): boolean {
 const performances = ref([]);
 
 async function getPlayerRanking() {
-    //console.log('Trying to get player ranking');
-
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/ranking`, {
             method: 'GET',
@@ -138,19 +120,15 @@ async function getPlayerRanking() {
         }
 
         const data = await response.json();
-        // console.log('Success:', data);
 
         if (data.error != null) {
             errorMessage = data.error;
-            //console.log('Error message:', errorMessage);
             displayError.value = true;
         } else {
             let playerPerformances = performances.value;
-            // console.log("data", data.data);
 
             for (let i = 0; i < data.data.length; i++) {
                 const division = data.data[i][0];
-                // console.log("Division:", division);
 
                 if (division == props.division?.name) {
                     playerPerformances = data.data[i][1];
@@ -160,7 +138,6 @@ async function getPlayerRanking() {
 
             if (playerPerformances == performances.value) {
                 errorMessage = 'Divsion could not be found for ranking';
-                //console.log('Error message:', errorMessage);
                 displayError.value = true;
             } else {
                 performances.value = playerPerformances;
@@ -169,17 +146,13 @@ async function getPlayerRanking() {
     } catch (error) {
         console.error('Error:', error);
         errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
         displayError.value = true;
     }
-
-    // console.log("Performances:", performances);
 }
 
 watch(
     () => props.UserId,
     (newId) => {
-        //console.log('new schedule: ', newSchedule, newSchedule.availabilities);
         empty.value = amEmpty();
         AllowEdit.value = containsUser();
     },
@@ -189,30 +162,23 @@ watch(
 watch(
     () => props.division,
     async (newDivision) => {
-        console.log('Division updated:', newDivision);
         await getPlayerRanking();
-        console.log('Ranking updated:', performances.value);
         // Perform any updates needed when the division changes
         setDivisionHeight(); // Call the function to recalculate height
-    }
+    },
 );
 
 onMounted(async () => {
-    getLeaderbordHeight(); // Get the unextended height of the division
     setDivisionHeight();
 
     setTimeout(async () => {
-        // console.log("UserId: ", UserId.value);
-        // console.log("division user: ", containsUser());
         selectRandomPlaceholder();
         empty.value = amEmpty();
         AllowEdit.value = containsUser();
         load.value = true;
-        getLeaderbordHeight(); // Get the unextended height of the division
         setDivisionHeight();
         setTimeout(() => {
-            getLeaderbordHeight(); // Get the unextended height of the division
-            setDivisionHeight()
+            setDivisionHeight();
         }, 200); // Wait for 500 milliseconds
     }, 0); // Wait for 500 milliseconds
     await getPlayerRanking();
@@ -220,30 +186,28 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="division justify-content-center row">
-            <div class="display-flex justify-content-center row info-container" v-if="!empty" :style="{ height: divisionHeight }">
-                <div class="scroll-container col-8 col-xl-8 col-xml-11"
-                    :style="{ transform: matchesTransform }">
-                    <div
-                        class="row felx-1 display-flex justify-content-center transition-width matches"
-                        @click="toggleMatchesExtended()"
-                    >
+    <div class="division h-100 w-100">
+        <div class="row info-container" v-if="!empty" :style="{ height: divisionHeight }">
+            <div class="col-8 col-xl-8 col-xml-11 item-container d-flex flex-column align-items-center" :style="{ transform: matchesTransform, height: divisionHeight }">
+                <div class="scroll-container flex-grow-1">
+                    <div class="row justify-content-center transition-width matches">
                         <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="match-score-padding">
                             <MatchScoreComponent :match="match" :user_id="props.UserId" />
                         </div>
                     </div>
                 </div>
-                <div
-                    class="col-xxl-4 col-xml-11 col-10 display-flex justify-content-center p-3 leaderbord-container transition-width d-flex"
-                    ref="divisionRef"
-                    :style="{ transform: matchesTransform }"
-                >
-                    <LeaderbordComponent class="leaderbord" @close="toggleMatchesExtended" :performances="performances" :divisionName="division?.name || 'Unnamed Division'"/>
+                <div class="toggle-arrow mt-2" @click="toggleMatchesExtended"><i class="icon-chevron-down"></i></div>
+            </div>
+            <div class="col-xxl-4 col-xml-11 col-10 justify-content-center transition-width item-container d-flex h-100" :style="{ transform: matchesTransform }">
+                <div class="leaderboard-ref d-flex flex-column align-items-center" ref="leaderboardRef">
+                    <div class="toggle-arrow mb-2" @click="toggleMatchesExtended"><i class="icon-chevron-up"></i></div>
+                    <LeaderbordComponent class="leaderbord" :performances="performances" :divisionName="division?.name || 'Unnamed Division'" />
                 </div>
             </div>
-            <div v-else class="placekeeper">
-                <h2>{{ selectedPlaceholder }}</h2>
-            </div>
+        </div>
+        <div v-else class="placekeeper">
+            <h2>{{ selectedPlaceholder }}</h2>
+        </div>
     </div>
     <errorMessages v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
@@ -274,25 +238,41 @@ onMounted(async () => {
         transition: all 0.5s ease-in-out;
     }
 
-    @media (max-width: 1949px) {
+    @media (max-width: $leaderboard-breakpoint) {
         overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
     }
 }
 
 // holds all the content in case division is active
-.info-container { 
+.info-container {
     height: 10rem; // will imediatly be changed to the height of the leaderbord, avoids weird loading transition on page load though
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none; /* For Firefox */
     align-items: flex-start; /* Align items tightly to the top */
-    
+
     display: flex;
     flex-direction: row; /* Align items in a row */
 
-    @media (max-width: 1949px) {
+    @media (max-width: $leaderboard-breakpoint) {
         overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
     }
+}
+
+.item-container {
+    transition: all 0.7s ease-in-out !important;
+
+    @media (max-width: $leaderboard-breakpoint) {
+        margin-bottom: 5rem;
+    }
+
+    @media (min-width: $leaderboard-breakpoint) {
+        transform: none !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
+    }
+}
+.leaderbord-container {
+    height: fit-content;
+    transition: all 0.65s ease-in-out !important;
 }
 
 // container of limited height to hold match container as scrollable
@@ -302,12 +282,6 @@ onMounted(async () => {
     scrollbar-width: none; /* For Firefox */
     overflow-x: hidden;
     max-height: 100%;
-
-    transition: all 0.7s ease-in-out !important;
-
-    @media (max-width: 1949px) {
-        margin-bottom: 5rem;
-    }
 }
 
 // container of all match scores, will overflow if too many matches are present
@@ -315,11 +289,6 @@ onMounted(async () => {
     height: fit-content;
     justify-content: space-between !important; /* Align items to the left */
     overflow-y: auto !important;
-}
-
-.leaderbord-container {
-    height: fit-content;
-    transition: all 0.65s ease-in-out !important;
 }
 
 // leaderbord container
@@ -330,14 +299,34 @@ onMounted(async () => {
     flex-basis: auto; /* Allow it to take its intrinsic size */
 }
 
-
-
+.leaderboard-ref {
+    height: fit-content;
+}
 
 .match-score-padding {
     padding-left: 1rem;
     padding-right: 2rem;
-    padding-top: 1.3rem;
-    padding-bottom: 0.4rem;
+    padding-bottom: 1.7rem;
+}
+
+.toggle-arrow {
+    padding: 0.5rem;
+    height: 2rem;
+    width: 2rem;
+    border-radius: 2rem;
+    display: flex;
+    justify-content: center;
+    align-self: center;
+    cursor: pointer;
+
+    background-color: #495057;
+    &:hover {
+        background-color: darken(#495057, 10%);
+    }
+
+    @media (min-width: $leaderboard-breakpoint) {
+        display: none;
+    }
 }
 
 @media (max-width: 1199px) {
@@ -353,54 +342,38 @@ onMounted(async () => {
     }
 }
 
-
-
-
-
 // at 1949px matches and leaderbord start to stack on top of each other
-@media (max-width: 1949px) {
+@media (max-width: $leaderboard-breakpoint) {
     .col-xml-11 {
         width: 92.6%;
     }
 }
-
-
-
-
-
-
-
 
 .col-05 {
     width: 20px !important;
     height: 40px !important;
 }
 
+.transition-width {
+    transition: width 0.5s ease;
+}
 
+.col-12-cust {
+    width: 99%;
+}
 
-
-
-
-    .transition-width {
-        transition: width 0.5s ease;
+@media (min-width: 1599px) {
+    .row {
+        align-items: flex-start;
     }
+}
 
-    .col-12-cust {
-        width: 99%;
+@media (min-width: 599px) {
+    .match-score-padding {
+        min-width: 200px;
+        width: fit-content;
     }
-
-    @media (min-width: 1599px) {
-        .row {
-            align-items: flex-start;
-        }
-    }
-
-    @media (min-width: 599px) {
-        .match-score-padding {
-            min-width: 200px;
-            width: fit-content;
-        }
-    }
+}
 
 @media (max-width: 1599px) {
     .matches {
@@ -423,7 +396,7 @@ onMounted(async () => {
         padding: 0rem !important;
         margin: 0rem !important;
         overflow: hidden !important;
-    } 
+    }
 
     .conditional-break {
         display: none !important;
@@ -431,7 +404,7 @@ onMounted(async () => {
 }
 
 .conditional-break {
-    display: none
+    display: none;
 }
 
 .compressed {

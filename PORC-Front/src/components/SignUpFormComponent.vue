@@ -1,174 +1,160 @@
 <script setup lang="ts">
-    import { onMounted, ref } from 'vue';
-    import errorMessagePopup from '@/components/ErrorPopupModel.vue';
-    import type { SignUpInfo } from '@/models/SignUpInfoModel.ts';
-    import DiscordUserComponent from '@/components/DiscordUserComponent.vue';
-    import config from '@/config';
-    import { getLoggedIn } from '@/API/GetLoggedIn';
-    import { defineProps } from 'vue';
+import { onMounted, ref } from 'vue';
+import errorMessagePopup from '@/components/ErrorPopupModel.vue';
+import type { SignUpInfo } from '@/models/SignUpInfoModel.ts';
+import DiscordUserComponent from '@/components/DiscordUserComponent.vue';
+import config from '@/config';
+import { getLoggedIn } from '@/API/GetLoggedIn';
+import { defineProps } from 'vue';
 
-    const props = defineProps<{
-        season_name: string;
-    }>();
+const props = defineProps<{
+    season_name: string;
+}>();
 
+const displayError = ref(false);
+let errorMessage: string = 'This is an error message';
 
-    const displayError = ref(false);
-    let errorMessage: string = 'This is an error message';
+const invalidFillOut = ref(false);
+const success = ref(false);
 
-    const invalidFillOut = ref(false);
-    const success = ref(false);
+const username = ref<String>('');
+const BP = ref(null);
+const region = ref(null);
+const isOnDiscord = ref(false);
 
-    const username = ref<String>('');
-    const BP = ref(null);
-    const region = ref(null);
-    const isOnDiscord = ref(false);
+const isLoggedIn = ref(true);
+let user_id = ref('default');
 
-    const isLoggedIn = ref(true);
-    let user_id = ref('default');
+const isSignedUp = ref(false);
 
-    const isSignedUp = ref(false);
+function showError(error: string) {
+    errorMessage = error;
+    displayError.value = true;
+}
 
-    function showError(error: string) {
-        errorMessage = error;
-        //console.log('Error message:', errorMessage);
-        displayError.value = true;
+function hideError() {
+    displayError.value = false;
+}
+
+function showWarning() {
+    invalidFillOut.value = true;
+}
+
+function hideWarning() {
+    invalidFillOut.value = false;
+}
+
+function showSuccess() {
+    success.value = true;
+    getSignedUp();
+}
+
+function confirmInput() {
+    if (username.value != null && BP.value != null && region.value != null && isOnDiscord.value == true && isLoggedIn.value == true) {
+        hideWarning();
+        postSignUp();
+    } else {
+        showWarning();
     }
+}
 
-    function hideError() {
-        displayError.value = false;
-    }
+async function postSignUp() {
+    const now = Math.floor(Date.now() / 1000);
 
-    function showWarning() {
-        invalidFillOut.value = true;
-    }
+    const data: SignUpInfo = {
+        username: String(username.value),
+        bp: Number(BP.value),
+        region: String(region.value),
+        discord_id: user_id.value,
+        date: String(now),
+    };
 
-    function hideWarning() {
-        invalidFillOut.value = false;
-    }
+    const requestData = JSON.stringify({
+        title: 'Sign Up Request',
+        sing_up_info: data, // misspelled, but so is it in the backend
+    });
 
-    function showSuccess() {
-        success.value = true;
-        getSignedUp();
-    }
-
-    function confirmInput() {
-        if (username.value != null && BP.value != null && region.value != null && isOnDiscord.value == true && isLoggedIn.value == true) {
-            hideWarning();
-            postSignUp();
-        } else {
-            showWarning();
-        }
-    }
-
-    async function postSignUp() {
-        //console.log('Trying to get match plan');
-        const now = Math.floor(Date.now() / 1000);
-
-        const data: SignUpInfo = {
-            username: String(username.value),
-            bp: Number(BP.value),
-            region: String(region.value),
-            discord_id: user_id.value,
-            date: String(now),
-        };
-
-        const requestData = JSON.stringify({
-            title: 'Sign Up Request',
-            sing_up_info: data, // misspelled, but so is it in the backend
+    try {
+        const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: requestData,
         });
 
-        // console.log(requestData);
-
-        try {
-            const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: requestData,
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            const data = await response.json();
-            // console.log('Success:', data);
-
-            if (data.error != null) {
-                showError(data.error);
-            } else {
-                showSuccess();
-            }
-        } catch (error) {
-            //console.log('Error: ', error);
-            showError('Internal server error');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
-    }
 
-    async function getUserId() {
-        let res = await getLoggedIn();
+        const data = await response.json();
 
-        if (typeof res === 'string') {
-            errorMessage = 'internal server error';
-            //console.log('Error message:', errorMessage);
-            displayError.value = true;
-            isLoggedIn.value = false;
+        if (data.error != null) {
+            showError(data.error);
         } else {
-            isLoggedIn.value = true;
-            user_id.value = res.id;
-            username.value = res.username;
+            showSuccess();
         }
+    } catch (error) {
+        showError('Internal server error');
     }
+}
 
-    async function getSignedUp() {
-        //console.log('Trying to get signed up in status');
+async function getUserId() {
+    let res = await getLoggedIn();
 
-        try {
-            const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+    if (typeof res === 'string') {
+        errorMessage = 'internal server error';
+        displayError.value = true;
+        isLoggedIn.value = false;
+    } else {
+        isLoggedIn.value = true;
+        user_id.value = res.id;
+        username.value = res.username;
+    }
+}
 
-            if (!response.ok) {
-                isLoggedIn.value = false;
-                throw new Error('Network response was not ok');
-            }
+async function getSignedUp() {
+    try {
+        const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
-            const data = await response.json();
-            //console.log('Success:', data);
-            isSignedUp.value = false;
+        if (!response.ok) {
+            isLoggedIn.value = false;
+            throw new Error('Network response was not ok');
+        }
 
-            if (data.error == null) {
-                const signUps = data.data;
-                for (let i = 0; i < signUps.length; i++) {
-                    //console.log('checking sign up: ', signUps[i], ' against id: ', user_id);
-                    if (signUps[i].discord_id == user_id.value) {
-                        //console.log('found user sign up');
-                        isSignedUp.value = true;
-                    }
+        const data = await response.json();
+        isSignedUp.value = false;
+
+        if (data.error == null) {
+            const signUps = data.data;
+            for (let i = 0; i < signUps.length; i++) {
+                if (signUps[i].discord_id == user_id.value) {
+                    isSignedUp.value = true;
                 }
             }
-        } catch (error) {
-            console.error('Error:', error);
-            errorMessage = 'Server communication error';
-            //console.log('Error message:', errorMessage);
-            displayError.value = true;
-            isLoggedIn.value = false;
         }
-
-        return null;
+    } catch (error) {
+        console.error('Error:', error);
+        errorMessage = 'Server communication error';
+        displayError.value = true;
+        isLoggedIn.value = false;
     }
 
-    onMounted(async () => {
-        await getUserId();
+    return null;
+}
+
+onMounted(async () => {
+    await getUserId();
+    await getSignedUp();
+    setTimeout(async () => {
         await getSignedUp();
-        setTimeout(async () => {
-            await getSignedUp();
-        }, 300); // Wait for 500 milliseconds
-    });
+    }, 300); // Wait for 500 milliseconds
+});
 </script>
 
 <template>
@@ -196,7 +182,7 @@
                             <div class="col-5">
                                 <label for="disabledTextInput" class="form-label">BP</label>
                                 <input type="number" id="disabledTextInput" class="form-control input" placeholder="Your BP" v-model="BP" />
-                            </div>       
+                            </div>
                             <div class="col-6">
                                 <label for="disabledSelect" class="form-label">Region</label>
                                 <select id="disabledSelect" class="form-select input" v-model="region" placeholder="Select a region">
@@ -206,7 +192,7 @@
                                     <option>Austrailia</option>
                                     <option>Asia</option>
                                 </select>
-                            </div>                        
+                            </div>
                         </div>
                         <div class="p-1"></div>
                         <div class="mb-3">
@@ -231,7 +217,6 @@
 </template>
 
 <style scoped>
-
 .inner-container {
     border: rgb(222, 222, 222);
     border-width: 1.5px;
@@ -243,7 +228,7 @@
 }
 
 .input {
-        border-radius: 5px;
+    border-radius: 5px;
 }
 
 .dflex {

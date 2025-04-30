@@ -6,12 +6,8 @@ import config from '@/config';
 import { filter_str } from '@/util/stringFilter';
 
 const props = defineProps<{
-    divisionName: String,
-    performances: PlayerPerformance[],
-}>();
-
-const emit = defineEmits<{
-    (e: 'close'): void;
+    divisionName: String;
+    performances: PlayerPerformance[];
 }>();
 
 const displayError = ref(false);
@@ -86,13 +82,8 @@ watch(
         console.log('Performances updated:', newPerformances);
         internalPerformances.value = newPerformances;
     },
-    { immediate: true } // Ensure the watcher runs immediately on mount
+    { immediate: true }, // Ensure the watcher runs immediately on mount
 );
-
-function close() {
-    // console.log("I got clicked")
-    emit('close');
-}
 
 onMounted(async () => {
     internalPerformances.value = props.performances;
@@ -100,7 +91,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="leaderboard row justify-content-center d-flex" @click="close">
+    <div class="leaderboard row justify-content-center d-flex">
         <div class="row collum-title justify-content-center d-flex leaderboard-row">
             <div class="col-4 col-sm-3">Player</div>
             <div class="col-2 col-sm-1"></div>
@@ -109,8 +100,10 @@ onMounted(async () => {
             <div class="col-3 add-col">Rounds</div>
         </div>
         <div class="p-1"></div>
-        <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content"> 
-            <div class="col-4 col-sm-3 d-flex justify-content-center"><div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div></div>
+        <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content">
+            <div class="col-4 col-sm-3 d-flex justify-content-center">
+                <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
+            </div>
             <div class="col-2 col-sm-1"></div>
             <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
             <div class="col-1 add-col"></div>
@@ -128,17 +121,20 @@ onMounted(async () => {
     <errorMessages v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+$leaderboard-bg: #212529; //Bootstrap hardcoded
+$leaderboard-border: #495057; //Bootstrap hardcoded
+
 .leaderboard {
     width: 100%;
     text-align: center;
     border-radius: 11.5px;
     border-width: 1px;
-    border-color: rgb(143, 143, 143);
+    border-color: $leaderboard-border;
     border-style: solid;
     flex-wrap: none;
     min-width: 12rem;
-    background-color: #2e3030;
+    background-color: $leaderboard-bg;
     height: fit-content;
     transition: all 0.6s ease;
 }
@@ -155,7 +151,7 @@ onMounted(async () => {
     align-items: center;
     justify-content: center;
 
-    border-top: #d3d3d3 solid 1px;
+    border-top: $leaderboard-border solid 1px;
 
     * {
         text-align: center;
