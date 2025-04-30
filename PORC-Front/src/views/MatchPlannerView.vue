@@ -1,18 +1,17 @@
 <script lang="ts" setup>
-import type { PubAccountInfo } from '@/models/PubAccountInfo';
-import { MatchStatus } from '@/models/Calendar/MatchEventModel';
+import { getLoggedIn } from '@/API/GetLoggedIn';
 import CalendarComponent from '@/components/CalendarComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
-import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
-import { Repetition, type ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
-import type { Schedule } from '@/models/Calendar/ScheduleModel';
-import type { PlayerModel } from '@/models/PlayerModel';
-import { onMounted, ref, watch } from 'vue';
 import config from '@/config';
-import errorMessagePopup from '@/components/ErrorPopupModel.vue';
+import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
+import { type ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
+import type { Schedule } from '@/models/Calendar/ScheduleModel';
 import type { DivisionModel } from '@/models/DivisionModel';
+import type { PlayerModel } from '@/models/PlayerModel';
+import type { PubAccountInfo } from '@/models/PubAccountInfo';
 import { convertToPubAccountInfo, type PubAccountInfoRecv } from '@/models/PubAccountInfoRecv';
-import { getLoggedIn } from '@/API/GetLoggedIn';
+import { showErrorModal } from '@/services/ErrorModalService';
+import { onMounted, ref, watch } from 'vue';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -22,126 +21,16 @@ const schedule = ref({
     notes: ``,
 } as Schedule);
 
-const players = [] as PlayerModel[];
-
-// const playerinfos = [
-//         {
-//             id: "1",
-//             username: "BIVN",
-//             avatar: "avatar1.png",
-//             schedule: {
-//                 matches: [
-//                     {
-//                         startDate: new Date(2025, 2, 3, 8),
-//                         initiatorId: "306467062530965514",
-//                         opponentId: "2",
-//                         status: MatchStatus.Requested,
-//                     }
-//                 ]
-//             }
-//         },
-//         {
-//             id: "2",
-//             username: "2Guib",
-//             avatar: "avatar2.png",
-//             schedule: {
-//                 matches: [
-//                     {
-//                         startDate: new Date(2025, 2, 3, 8),
-//                         initiatorId: "306467062530965514",
-//                         opponentId: "2",
-//                         status: MatchStatus.Requested,
-//                     }
-//                 ]
-//             }
-//         },
-//         {
-//             id: "3",
-//             username: "inapolis",
-//             avatar: "avatar3.png",
-//             schedule: {
-//                 matches: [
-//                     {
-//                         startDate: new Date(2025, 2, 5, 15),
-//                         initiatorId: "3",
-//                         opponentId: "306467062530965514",
-//                         status: MatchStatus.Confirmed,
-//                     }
-//                 ]
-//             }
-//         },
-//         {
-//             id: "4",
-//             username: "Savitarian",
-//             avatar: "avatar4.png",
-//             schedule: {
-//                 matches: [
-//                     {
-//                         startDate: new Date(2025, 2, 7, 12),
-//                         initiatorId: "306467062530965514",
-//                         opponentId: "4",
-//                         status: MatchStatus.Finished,
-//                     }
-//                 ]
-//             }
-//         },
-//         {
-//             id: "5",
-//             username: "Juicepar",
-//             avatar: "avatar5.png",
-//             schedule: {
-//                 matches: [
-//                     {
-//                         startDate: new Date(2025, 2, 9, 18),
-//                         initiatorId: "5",
-//                         opponentId: "306467062530965514",
-//                         status: MatchStatus.Declined,
-//                     }
-//                 ]
-//             }
-//         },
-//         {
-//             id: "6",
-//             username: "Jack",
-//             avatar: "avatar6.png",
-//             schedule: {
-//                 matches: [
-//                     {
-//                         startDate: new Date(2025, 2, 11, 10),
-//                         initiatorId: "306467062530965514",
-//                         opponentId: "6",
-//                         status: MatchStatus.Requested,
-//                     }
-//                 ]
-//             }
-//         }
-//     ] as PubAccountInfo[];
-
 const playerinfos = ref<PubAccountInfo[]>([]);
 
 const isLoggedIn = ref(true);
 const user_id = ref('default');
 
-const displayError = ref(false);
-let errorMessage: string = 'This is an error message';
-
-function showError(error: string) {
-    errorMessage = error;
-    //console.log('Error message:', errorMessage);
-    displayError.value = true;
-}
-
-function hideError() {
-    displayError.value = false;
-}
-
 async function getUserId() {
     let res = await getLoggedIn();
 
     if (typeof res === 'string') {
-        errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
-        displayError.value = true;
+        showErrorModal('Internal server error');
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
@@ -170,18 +59,13 @@ async function getMatchPlan() {
         // data = debugData;
         // console.log('Success:', data);
         if (data.error != null) {
-            errorMessage = data.error;
-
-            //console.log('Error message:', errorMessage);
-            displayError.value = true;
+            showErrorModal(data.error);
         } else {
             divisions.value = data.data.divisions as DivisionModel[];
         }
     } catch (error) {
         console.error('Error:', error);
-        errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
-        displayError.value = true;
+        showErrorModal('Internal server error');
     }
 
     //console.log('Divisions:', divisions.value);
@@ -266,9 +150,7 @@ async function getPubPlayerInfos(ids: string[]) {
         //console.log('Success:', data);
 
         if (data.error != null) {
-            errorMessage = data.error;
-            //console.log('Error message:', errorMessage);
-            displayError.value = true;
+            showErrorModal(data.error);
         } else {
             let recvPlayerInfos = data.data as PubAccountInfoRecv[];
             // console.log('Received PlayerInfos: ', recvPlayerInfos);
@@ -279,17 +161,15 @@ async function getPubPlayerInfos(ids: string[]) {
             playerinfos.value = PlayerInfos;
         }
     } catch (error) {
-        console.error('Error:', error);
-        errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
-        displayError.value = true;
+        console.error('Player info Error:', error);
+        showErrorModal('Internal server error');
     }
 
     //console.log('PlayerInfos:', playerinfos.value);
 }
 
 async function reload() {
-    const selectedPlayerId = selectedPlayer.value?.id ?? "0";
+    const selectedPlayerId = selectedPlayer.value?.id ?? '0';
     await getMatchPlan();
     await getPubPlayerInfos(getPlayerIds());
     opponents.value = find_opponents();
@@ -308,10 +188,10 @@ async function reload() {
 function selectSelf() {
     for (let player of playerinfos.value) {
         if (player.id == user_id.value) {
-            console.log("found self: ", player, "against user id: ", user_id.value);
+            console.log('found self: ', player, 'against user id: ', user_id.value);
             selectedPlayer.value = player;
         } else {
-            console.log("Not self: ", player, "against user id: ", user_id.value);
+            console.log('Not self: ', player, 'against user id: ', user_id.value);
         }
     }
 }
@@ -344,18 +224,26 @@ watch(selectedPlayer, (newValue) => {
             <h1 class="titel">Match planner</h1>
             <div class="desptiption">
                 <label class="description">
-                    This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a running season),
-                    and accept requests yourself.
-                    <br><br>
-                    To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match.
-                    If you challenge an opponent they will be <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
-                    <br><br>
-                    You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as exceptions, preferences, or a funny quote.
+                    This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a running
+                    season), and accept requests yourself. <br /><br />
+                    To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match. If you challenge an opponent they will be
+                    <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
+                    <br /><br />
+                    You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as
+                    exceptions, preferences, or a funny quote.
                 </label>
             </div>
             <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent v-if="selectedPlayer?.schedule" :schedule="selectedPlayer?.schedule ?? schedule" :players="participants" :own-calendar="(selectedPlayer?.id ?? user_id) === user_id" :ownId="user_id" :scheduleUserId="selectedPlayer?.id ?? 'default'" v-on:reload="reload"> </CalendarComponent>
-            <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
+            <CalendarComponent
+                v-if="selectedPlayer?.schedule"
+                :schedule="selectedPlayer?.schedule ?? schedule"
+                :players="participants"
+                :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
+                :ownId="user_id"
+                :scheduleUserId="selectedPlayer?.id ?? 'default'"
+                v-on:reload="reload"
+            >
+            </CalendarComponent>
         </div>
     </div>
 </template>

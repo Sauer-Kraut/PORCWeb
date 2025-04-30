@@ -1,10 +1,9 @@
-import TournamentView from '@/views/TournamentView.vue'
-import NotFoundView from '@/views/NotFoundView.vue'
-import FAQView from '@/views/FAQView.vue'
-import RulesView from '@/views/RulesView.vue'
-import SignUpView from '@/views/SignUpView.vue'
+import TournamentView from '@/views/TournamentView.vue';
+import NotFoundView from '@/views/NotFoundView.vue';
+import FAQView from '@/views/FAQView.vue';
+import RulesView from '@/views/RulesView.vue';
 import MatchPlannerView from '@/views/MatchPlannerView.vue';
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [
     {
@@ -23,9 +22,9 @@ const routes: RouteRecordRaw[] = [
         component: RulesView,
     },
     {
-    path: '/faq',
-    name: 'FAQ',
-    component: FAQView,
+        path: '/faq',
+        name: 'FAQ',
+        component: FAQView,
     },
     {
         path: '/:pathMatch(.*)*',
@@ -33,13 +32,8 @@ const routes: RouteRecordRaw[] = [
         component: NotFoundView,
     },
     {
-        path: '/signup',
-        name: 'Sign Up',
-        component: SignUpView,
-    },
-    {
         path: '/discord/callback',
-    redirect: '/',
+        redirect: '/',
     },
 ];
 

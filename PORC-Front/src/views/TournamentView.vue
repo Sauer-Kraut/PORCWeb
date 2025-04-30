@@ -2,11 +2,11 @@
 import { getLoggedIn } from '@/API/GetLoggedIn';
 import DivisionComponent from '@/components/DivisionComponent.vue';
 import DivisionSelector from '@/components/DivisionSelector.vue';
-import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import SignUpFormComponent from '@/components/SignUpFormComponent.vue';
 import TimerComponent from '@/components/TimerComponent.vue';
 import config from '@/config';
 import type { DivisionModel } from '@/models/DivisionModel';
+import { showErrorModal } from '@/services/ErrorModalService';
 import { onMounted, ref, watch } from 'vue';
 
 const divisionColorMap = {
@@ -38,13 +38,6 @@ function getSelectorHeight() {
     return selectorRef.value ? selectorRef.value.clientHeight : 0;
 }
 
-const displayError = ref(false);
-let errorMessage: string = 'This is an error message';
-
-function hideError() {
-    displayError.value = false;
-}
-
 let user = ref('');
 let globalTimer = 0;
 let TimerText = '';
@@ -66,8 +59,7 @@ async function getMatchPlan() {
 
         let data = await response.json();
         if (data.error != null) {
-            errorMessage = data.error;
-            displayError.value = true;
+            showErrorModal(data.error);
         } else {
             divisions.value = data.data.divisions as DivisionModel[];
             const now = Math.floor(Date.now() / 1000);
@@ -88,9 +80,8 @@ async function getMatchPlan() {
             }
         }
     } catch (error) {
-        console.error('Error:', error);
-        errorMessage = 'internal server error';
-        displayError.value = true;
+        console.error('Match plan error:', error);
+        showErrorModal('Internal server error');
     }
 }
 
@@ -98,7 +89,7 @@ async function getUserId() {
     let res = await getLoggedIn();
 
     if (typeof res === 'string') {
-        errorMessage = 'internal server error';
+        showErrorModal('Internal server error');
     } else {
         user.value = res.id;
     }
@@ -135,7 +126,7 @@ onMounted(async () => {
                 </div>
             </div>
             <div class="col col-xxl-8 col-xml-8">
-                <DivisionComponent :selector-height="getSelectorHeight()" :division="selectedDivision ?? null" :UserId="user" class="pl-4rem" />
+                <DivisionComponent v-if="selectedDivision" :selector-height="getSelectorHeight()" :division="selectedDivision" :UserId="user" class="pl-4rem" />
             </div>
         </div>
 
@@ -164,7 +155,6 @@ onMounted(async () => {
         <div class="p-5 col-5"></div>
     </div>
     <div class="extender"></div>
-    <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
 <style lang="scss" scoped>

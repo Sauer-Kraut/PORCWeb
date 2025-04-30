@@ -45,7 +45,6 @@ onMounted(() => {
         <nav class="justify-content-center text-center h-100 custom" :class="{ open: isMenuOpen, row: !isMenuOpen }">
             <router-link to="/" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Tournament</router-link>
             <router-link to="/match-planner" v-if="isLoggedIn" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Match Planner</router-link>
-            <router-link to="/signup" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Sign Up</router-link>
             <router-link to="/rules" class="router-link col-2 h-100 custom" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }">Rules</router-link>
             <router-link to="/faq" class="router-link col-2 h-100 custom" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }">FAQ</router-link>
         </nav>

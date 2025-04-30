@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { MatchModel } from '@/models/MatchModel';
-import { ref, onMounted } from 'vue';
-import EditMatchComponent from './EditMatchComponent.vue';
-import ErrorPopupModel from './ErrorPopupModel.vue';
 import config from '@/config';
+import type { MatchModel } from '@/models/MatchModel';
+import { showErrorModal } from '@/services/ErrorModalService';
+import { onMounted, ref } from 'vue';
+import EditMatchComponent from './EditMatchComponent.vue';
 
 const props = defineProps<{
     match: MatchModel;
@@ -27,12 +27,6 @@ if (matchData.p1score != null && matchData.p2score != null) {
 }
 
 const showModal = ref(false);
-const displayError = ref(false);
-let errorMessage: string = 'This is an error message';
-
-function hideError() {
-    displayError.value = false;
-}
 
 function ShowModal() {
     showModal.value = true;
@@ -82,17 +76,13 @@ async function updateMatchInfo(updateInfo: MatchModel) {
         const data = await response.json();
         // console.log('Success:', data);
         if (data.error != null) {
-            errorMessage = data.error;
-            //console.log('Error message:', errorMessage);
-            displayError.value = true;
+            showErrorModal(data.error);
             matchData.p1score = null;
             matchData.p2score = null;
         }
     } catch (error) {
         console.error('Error:', error);
-        errorMessage = 'Internal server error';
-        //console.log('Error message:', errorMessage);
-        displayError.value = true;
+        showErrorModal('Internal server error');
         matchData.p1score = null;
         matchData.p2score = null;
     }
@@ -172,7 +162,6 @@ function checkScores() {
         </div>
     </div>
     <EditMatchComponent v-if="showModal" @save="handleSave" @close="showModal = false" :match="match" />
-    <ErrorPopupModel v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
 <style lang="scss" scoped>

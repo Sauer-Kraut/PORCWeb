@@ -1,77 +1,12 @@
 <script lang="ts" setup>
-import { ref, defineProps, onMounted, defineEmits, watch } from 'vue';
 import type { PlayerPerformance } from '@/models/PlayerPerformancModel';
-import { errorMessages } from 'vue/compiler-sfc';
-import config from '@/config';
 import { filter_str } from '@/util/stringFilter';
+import { defineProps, onMounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     divisionName: String;
     performances: PlayerPerformance[];
 }>();
-
-const displayError = ref(false);
-let errorMessage: string = 'This is an error message';
-
-const performances = ref<PlayerPerformance[]>([]);
-
-function hideError() {
-    displayError.value = false;
-}
-
-async function getPlayerRanking() {
-    //console.log('Trying to get player ranking');
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/ranking`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        // console.log('Success:', data);
-
-        if (data.error != null) {
-            errorMessage = data.error;
-            //console.log('Error message:', errorMessage);
-            displayError.value = true;
-        } else {
-            let playerPerformances = performances.value;
-            // console.log("data", data.data);
-
-            for (let i = 0; i < data.data.length; i++) {
-                const division = data.data[i][0];
-                // console.log("Division:", division);
-
-                if (division == props.divisionName) {
-                    playerPerformances = data.data[i][1];
-                    break;
-                }
-            }
-
-            if (playerPerformances == performances.value) {
-                errorMessage = 'Divsion could not be found for ranking';
-                //console.log('Error message:', errorMessage);
-                displayError.value = true;
-            } else {
-                performances.value = playerPerformances;
-            }
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
-        displayError.value = true;
-    }
-
-    // console.log("Performances:", performances);
-}
 
 const internalPerformances = ref<PlayerPerformance[]>([]);
 
@@ -118,7 +53,6 @@ onMounted(async () => {
         </div>
         </div> -->
     </div>
-    <errorMessages v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
 <style lang="scss" scoped>

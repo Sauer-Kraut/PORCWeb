@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { getLoggedIn } from '@/API/GetLoggedIn';
-import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import config from '@/config';
 import { onMounted, ref } from 'vue';
 

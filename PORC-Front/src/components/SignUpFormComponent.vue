@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import errorMessagePopup from '@/components/ErrorPopupModel.vue';
-import type { SignUpInfo } from '@/models/SignUpInfoModel.ts';
+import { getLoggedIn } from '@/API/GetLoggedIn';
 import DiscordUserComponent from '@/components/DiscordUserComponent.vue';
 import config from '@/config';
-import { getLoggedIn } from '@/API/GetLoggedIn';
-import { defineProps } from 'vue';
+import type { SignUpInfo } from '@/models/SignUpInfoModel.ts';
+import { showErrorModal } from '@/services/ErrorModalService';
+import { defineProps, onMounted, ref } from 'vue';
 
 const props = defineProps<{
     season_name: string;
 }>();
-
-const displayError = ref(false);
-let errorMessage: string = 'This is an error message';
 
 const invalidFillOut = ref(false);
 const success = ref(false);
@@ -26,15 +22,6 @@ const isLoggedIn = ref(true);
 let user_id = ref('default');
 
 const isSignedUp = ref(false);
-
-function showError(error: string) {
-    errorMessage = error;
-    displayError.value = true;
-}
-
-function hideError() {
-    displayError.value = false;
-}
 
 function showWarning() {
     invalidFillOut.value = true;
@@ -90,12 +77,13 @@ async function postSignUp() {
         const data = await response.json();
 
         if (data.error != null) {
-            showError(data.error);
+            showErrorModal(data.error);
         } else {
             showSuccess();
         }
     } catch (error) {
-        showError('Internal server error');
+        console.error('Sign up Error:', error);
+        showErrorModal('Internal server error');
     }
 }
 
@@ -103,8 +91,7 @@ async function getUserId() {
     let res = await getLoggedIn();
 
     if (typeof res === 'string') {
-        errorMessage = 'internal server error';
-        displayError.value = true;
+        showErrorModal('Internal server error');
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
@@ -140,8 +127,7 @@ async function getSignedUp() {
         }
     } catch (error) {
         console.error('Error:', error);
-        errorMessage = 'Server communication error';
-        displayError.value = true;
+        showErrorModal('Server communication error');
         isLoggedIn.value = false;
     }
 
@@ -212,7 +198,6 @@ onMounted(async () => {
                 </form>
             </div>
         </div>
-        <errorMessagePopup v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
     </div>
 </template>
 

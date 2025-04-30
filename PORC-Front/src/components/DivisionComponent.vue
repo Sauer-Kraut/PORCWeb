@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import config from '@/config';
 import type { DivisionModel } from '@/models/DivisionModel';
+import { showErrorModal } from '@/services/ErrorModalService';
 import { onMounted, ref, watch } from 'vue';
-import { errorMessages } from 'vue/compiler-sfc';
 import LeaderbordComponent from './LeaderbordComponent.vue';
 import MatchScoreComponent from './MatchScoreComponent.vue';
 
 const props = defineProps<{
-    division: DivisionModel | null;
+    division: DivisionModel;
     UserId: string;
     selectorHeight: number;
 }>();
@@ -37,9 +37,6 @@ function setPlaceholder() {
 }
 setPlaceholder();
 
-const rand = Math.floor(Math.random() * placeholders.length);
-console.log('Random number:', rand);
-
 // Reactive variable for dynamic height
 const divisionHeight = ref(`${props.selectorHeight}px`); // Set the initial height to the selectorHeight prop
 const leaderboardRef = ref<HTMLElement | null>(null);
@@ -68,13 +65,6 @@ function toggleMatchesExtended() {
     }
 
     matchesExtended.value = !matchesExtended.value; // Toggle the state
-}
-
-const displayError = ref(false);
-let errorMessage: string = 'This is an error message';
-
-function hideError() {
-    displayError.value = false;
 }
 
 function containsUser(): boolean {
@@ -113,8 +103,7 @@ async function getPlayerRanking() {
         const data = await response.json();
 
         if (data.error != null) {
-            errorMessage = data.error;
-            displayError.value = true;
+            showErrorModal(data.error);
         } else {
             let playerPerformances = performances.value;
 
@@ -128,16 +117,15 @@ async function getPlayerRanking() {
             }
 
             if (playerPerformances == performances.value) {
-                errorMessage = 'Divsion could not be found for ranking';
-                displayError.value = true;
+                console.log('Division not found for ranking:', props.division?.name);
+                showErrorModal('Divsion could not be found for ranking');
             } else {
                 performances.value = playerPerformances;
             }
         }
     } catch (error) {
-        console.error('Error:', error);
-        errorMessage = 'internal server error';
-        displayError.value = true;
+        console.error('Player ranking error:', error);
+        showErrorModal('Internal server error');
     }
 }
 
@@ -198,7 +186,6 @@ onMounted(async () => {
             <h2>{{ placeholder }}</h2>
         </div>
     </div>
-    <errorMessages v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
 <style lang="scss" scoped>
