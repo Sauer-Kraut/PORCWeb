@@ -15,7 +15,6 @@ const props = defineProps<{
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let AllowEdit = ref(false);
 let load = ref(false);
-let empty = ref(false);
 
 const placeholders = [
     "Shh... The scores are still taking their beauty sleep. If you keep being this loud you'll wake them up! (✧ω✧)",
@@ -29,9 +28,20 @@ const placeholders = [
     'bibin',
 ];
 
+// Reactive variable to hold the selected placeholder
+const placeholder = ref('');
+
+function setPlaceholder() {
+    const rand = Math.floor(Math.random() * placeholders.length);
+    placeholder.value = placeholders[rand];
+}
+setPlaceholder();
+
+const rand = Math.floor(Math.random() * placeholders.length);
+console.log('Random number:', rand);
+
 // Reactive variable for dynamic height
 const divisionHeight = ref(`${props.selectorHeight}px`); // Set the initial height to the selectorHeight prop
-const leaderbordHeight = ref(100);
 const leaderboardRef = ref<HTMLElement | null>(null);
 
 // Function to set the height of the division
@@ -67,15 +77,6 @@ function hideError() {
     displayError.value = false;
 }
 
-// Reactive variable to hold the selected placeholder
-const selectedPlaceholder = ref('');
-
-// Function to randomly select a placeholder
-function selectRandomPlaceholder() {
-    const randomIndex = Math.floor(Math.random() * placeholders.length);
-    selectedPlaceholder.value = placeholders[randomIndex];
-}
-
 function containsUser(): boolean {
     let found = false;
     if (!props.division) return false;
@@ -92,16 +93,6 @@ function containsUser(): boolean {
     }
 
     return false;
-}
-
-function amEmpty(): boolean {
-    if (props.division && props.division.players.length < 2) {
-        empty.value = true;
-        return true;
-    } else {
-        empty.value = !true;
-        return !true;
-    }
 }
 
 const performances = ref([]);
@@ -153,7 +144,6 @@ async function getPlayerRanking() {
 watch(
     () => props.UserId,
     (newId) => {
-        empty.value = amEmpty();
         AllowEdit.value = containsUser();
     },
     { deep: true },
@@ -162,6 +152,7 @@ watch(
 watch(
     () => props.division,
     async (newDivision) => {
+        setPlaceholder();
         await getPlayerRanking();
         // Perform any updates needed when the division changes
         setDivisionHeight(); // Call the function to recalculate height
@@ -172,14 +163,12 @@ onMounted(async () => {
     setDivisionHeight();
 
     setTimeout(async () => {
-        selectRandomPlaceholder();
-        empty.value = amEmpty();
         AllowEdit.value = containsUser();
         load.value = true;
         setDivisionHeight();
-        setTimeout(() => {
-            setDivisionHeight();
-        }, 200); // Wait for 500 milliseconds
+        // setTimeout(() => {
+        //     setDivisionHeight();
+        // }, 200); // Wait for 500 milliseconds
     }, 0); // Wait for 500 milliseconds
     await getPlayerRanking();
 });
@@ -187,7 +176,7 @@ onMounted(async () => {
 
 <template>
     <div class="division h-100 w-100">
-        <div class="row info-container" v-if="!empty" :style="{ height: divisionHeight }">
+        <div class="row info-container" v-if="division?.players.length" :style="{ height: divisionHeight }">
             <div class="col-8 col-xl-8 col-xml-11 item-container d-flex flex-column align-items-center" :style="{ transform: matchesTransform, height: divisionHeight }">
                 <div class="scroll-container flex-grow-1">
                     <div class="row justify-content-center transition-width matches">
@@ -205,8 +194,8 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
-        <div v-else class="placekeeper">
-            <h2>{{ selectedPlaceholder }}</h2>
+        <div v-else class="placekeeper rounded">
+            <h2>{{ placeholder }}</h2>
         </div>
     </div>
     <errorMessages v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
@@ -232,10 +221,10 @@ onMounted(async () => {
     overflow-y: auto;
     scrollbar-width: none;
 
-    transition: all 0.6s ease-in-out;
+    transition: all 0.7s ease-in-out;
 
     * {
-        transition: all 0.5s ease-in-out;
+        transition: all 0.7s ease-in-out;
     }
 
     @media (max-width: $leaderboard-breakpoint) {
@@ -327,6 +316,19 @@ onMounted(async () => {
     @media (min-width: $leaderboard-breakpoint) {
         display: none;
     }
+}
+
+.placekeeper {
+    width: 100%;
+    height: 100%;
+    background-color: #212529;
+    border-top: 1px solid #495057;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 3rem;
 }
 
 @media (max-width: 1199px) {

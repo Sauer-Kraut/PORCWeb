@@ -32,7 +32,6 @@ const divisionGradient = ref('linear-gradient(135deg, #3e3d3d, #393b44)');
 function setDivisionColor() {
     let gradientTarget = divisionColorMap[selectedDivision.value?.name.toLowerCase() as keyof typeof divisionColorMap] ?? '#74798c';
     divisionGradient.value = 'linear-gradient(135deg, #3e3d3d, 85%, ' + gradientTarget + ')'; // Set color gradient;
-    console.log('Division gradient set to:', divisionGradient.value);
 }
 
 function getSelectorHeight() {
