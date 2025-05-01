@@ -7,12 +7,28 @@ $border-radius: 1rem;
 $border-radius-sm: 1rem;
 
 //Custom
+
+$dark-bg: #212529; //Bootstrap hardcoded
+$dark-border: #495057; //Bootstrap hardcoded
 $background-header: linear-gradient(135deg, #7a6464, #5b77e8);
+$leaderboard-breakpoint: 1765px;
+
+//Division colors
+$division-colors: (
+    meteorite: #9175b3,
+    diamond: #78bfe6,
+    adamantium: #5cba96,
+    platinum: #9ed5dd,
+    gold: #cea52e,
+    silver: #9ba0b7,
+    iron: #74798c,
+    stone: #837572,
+);
+
+//Match planner events
 $availability-color: rgb(57, 65, 141);
 $match-color: rgb(244, 93, 116);
 $match-request-color: rgb(231, 146, 34);
 $match-declined-color: rgb(105, 120, 141);
-
-$leaderboard-breakpoint: 1765px;
 
 @import 'bootstrap/scss/bootstrap';

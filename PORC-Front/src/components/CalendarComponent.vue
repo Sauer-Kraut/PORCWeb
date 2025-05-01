@@ -19,7 +19,7 @@
             </div>
             <div class="calendar-header-days">
                 <div class="calendar-header-day"></div>
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date(2025, 2, 18).toDateString() }">
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
                     {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}
                 </div>
             </div>
@@ -29,7 +29,7 @@
                 <div v-for="hour in hours" :key="hour.name" class="calendar-hour">{{ hour.name }}</div>
             </div>
             <div class="calendar-days">
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date(2025, 2, 18).toDateString() }">
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
                     <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)"></div>
                     <div
                         class="event availability"

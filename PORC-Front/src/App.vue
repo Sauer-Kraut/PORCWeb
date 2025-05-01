@@ -1,10 +1,8 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-import DiscordUserComponent from './components/DiscordUserComponent.vue';
 import { ModalsContainer } from 'vue-final-modal';
 import { getLoggedIn } from './API/GetLoggedIn';
-import config from './config';
-import type { DivisionModel } from './models/DivisionModel';
+import DiscordUserComponent from './components/DiscordUserComponent.vue';
 
 const isMenuOpen = ref(false);
 function toggleMenu() {

@@ -1,0 +1,46 @@
+@import '@/assets/scss/styles.scss';
+
+.container-fill {
+    min-height: 100vh;
+}
+
+.page-header {
+    height: 40rem;
+    box-shadow: 0 0 0.5rem rgb(35, 35, 35);
+    background-size: cover;
+
+    @media (max-width: $leaderboard-breakpoint) {
+        height: 30rem;
+    }
+
+    @media (max-width: 600px) {
+        height: 20rem;
+    }
+}
+
+.part {
+    background: linear-gradient(135deg, #343232, #23252b);
+    transition: all 0.7s ease-in-out;
+    min-height: 20rem;
+    margin-top: 10rem !important;
+    overflow: hidden;
+
+    .part-title {
+        font-size: 2.25rem;
+        color: #ffffff;
+        text-align: left;
+        margin-bottom: 0.5rem;
+    }
+
+    .content-text {
+        font-size: 1.15rem;
+        line-height: 3.25rem;
+        color: #dcdcdc;
+        text-align: left;
+
+        @media screen and (max-width: 768px) {
+            font-size: 1.1rem;
+            line-height: 2.25rem;
+        }
+    }
+}

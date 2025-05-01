@@ -9,30 +9,12 @@ import type { DivisionModel } from '@/models/DivisionModel';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { onMounted, ref, watch } from 'vue';
 
-const divisionColorMap = {
-    meteorite: '#9175b3',
-    diamond: '#78bfe6',
-    adamantium: '#5cba96',
-    platinum: '#9ed5dd',
-    gold: '#cea52e',
-    silver: '#9ba0b7',
-    iron: '#74798c',
-    stone: '#837572',
-};
-
 const divisions = ref<DivisionModel[]>([]);
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
 selectedDivision.value = divisions.value[0] ?? null;
 
 // Reactive variable for dynamic height
 const selectorRef = ref<HTMLElement | null>(null);
-const divisionGradient = ref('linear-gradient(135deg, #3e3d3d, #393b44)');
-
-// Function to set the height of the division
-function setDivisionColor() {
-    let gradientTarget = divisionColorMap[selectedDivision.value?.name.toLowerCase() as keyof typeof divisionColorMap] ?? '#74798c';
-    divisionGradient.value = 'linear-gradient(135deg, #3e3d3d, 85%, ' + gradientTarget + ')'; // Set color gradient;
-}
 
 function getSelectorHeight() {
     return selectorRef.value ? selectorRef.value.clientHeight : 0;
@@ -109,23 +91,22 @@ onMounted(async () => {
     setTimeout(async () => {
         await getMatchPlan();
     }, 200);
-    setDivisionColor();
 });
 </script>
 
 <template>
-    <div class="body row justify-content-center">
-        <div class="timer col-12">
+    <div class="container-fill row justify-content-center">
+        <div class="page-header timer col-12">
             <TimerComponent :targetTimestamp="globalTimer" :season="season_name" :text="TimerText" class="timer-text"></TimerComponent>
         </div>
 
-        <div class="part row justify-content-start justify-content-sm-center pt-5 pb-5 w-100" :style="{ background: divisionGradient }" @click="setDivisionColor">
-            <div class="col-auto col-xxl-2 col-xml-3">
+        <div class="part row justify-content-start justify-content-sm-center pt-5 pb-5 w-100" :class="`division-${selectedDivision?.name?.toLowerCase() || 'iron'}`">
+            <div class="col-auto">
                 <div ref="selectorRef">
                     <DivisionSelector :divisions="divisions" :observer_id="user" v-model:selectedDivision="selectedDivision" class="" :style="{ 'max-width': '100%' }" />
                 </div>
             </div>
-            <div class="col col-xxl-8 col-xml-8">
+            <div class="col col-xxl-9 col-xml-8">
                 <DivisionComponent v-if="selectedDivision" :selector-height="getSelectorHeight()" :division="selectedDivision" :UserId="user" class="pl-4rem" />
             </div>
         </div>
@@ -160,60 +141,18 @@ onMounted(async () => {
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 
-.body {
+.container-fill {
     min-height: 100vh;
-    overflow: hidden;
-}
-
-.part {
-    background: linear-gradient(135deg, #343232, #23252b);
-    transition: all 0.7s ease-in-out;
-    // border-top: 1.5px solid #7b7b7b;
-    // border-bottom: 1.5px solid #7b7b7b;
-    min-height: 20rem;
-    margin-top: 10rem;
-
-    overflow: hidden;
-}
-
-.content-text {
-    font-size: 1.15rem;
-    line-height: 3.25rem;
-    color: #dcdcdc;
-    text-align: left;
-
-    @media screen and (max-width: 768px) {
-        font-size: 1.1rem;
-        line-height: 2.25rem;
-    }
-}
-
-.part-title {
-    font-size: 2.25rem;
-    color: #ffffff;
-    text-align: left;
-    margin-bottom: 0.5rem;
 }
 
 // Timer
 
 .timer {
-    height: 40rem;
     justify-content: center;
     display: flex;
     align-items: center;
     background-image: url('@/assets/images/CCHeaderWallpaper.png');
     // -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-    box-shadow: 0 0 0.5rem rgb(35, 35, 35);
-    background-size: cover;
-
-    @media (max-width: $leaderboard-breakpoint) {
-        height: 30rem;
-    }
-
-    @media (max-width: 600px) {
-        height: 20rem;
-    }
 }
 
 .timer-text {
@@ -225,6 +164,12 @@ onMounted(async () => {
 .division-container {
     height: fit-content;
     overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
+}
+
+@each $division, $color in $division-colors {
+    .division-#{$division} {
+        background: linear-gradient(120deg, #343232, 90%, darken($color, 10%));
+    }
 }
 
 // Registration

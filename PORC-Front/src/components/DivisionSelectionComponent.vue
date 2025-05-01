@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { DivisionModel } from '@/models/DivisionModel';
+import { getDivisionImage } from '@/util/ImageHelper';
 import { filter_str } from '@/util/stringFilter';
 
 const props = defineProps<{
@@ -16,10 +17,6 @@ async function select() {
 function active() {
     return selectedDivision.value && selectedDivision.value.name === props.division.name;
 }
-
-function getDivisionImage(divisionName: string): string {
-    return new URL(`../assets/images/divisions/${divisionName.toLowerCase()}.png`, import.meta.url).href;
-}
 </script>
 
 <template>
@@ -33,12 +30,10 @@ function getDivisionImage(divisionName: string): string {
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 
-$list-group-bg: #212529; //Bootstrap hardcoded
-
 .list-group-item {
     &.active {
-        background-color: lighten($list-group-bg, 10%) !important;
-        border-color: $list-group-border-color !important;
+        background-color: lighten($dark-bg, 10%) !important;
+        border-color: $dark-border !important;
     }
 
     @include media-breakpoint-down(sm) {

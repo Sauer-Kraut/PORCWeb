@@ -308,8 +308,8 @@ onMounted(async () => {
 .placekeeper {
     width: 100%;
     height: 100%;
-    background-color: #212529;
-    border-top: 1px solid #495057;
+    background-color: $dark-bg;
+    border-top: 1px solid $dark-border;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -165,11 +165,10 @@ function checkScores() {
 </template>
 
 <style lang="scss" scoped>
-$match-bg: #212529; //Bootstrap hardcoded
-$match-border: #495057; //Bootstrap hardcoded
+@import '@/assets/scss/styles.scss';
 
 .match {
-    background-color: $match-bg;
+    background-color: $dark-bg;
     // max-height: 45px;
     height: 3.2rem;
     text-align: center;
@@ -236,12 +235,12 @@ $match-border: #495057; //Bootstrap hardcoded
 
 .divider {
     border-top: 1.5px dotted rgb(129, 129, 129);
-    border-color: $match-border;
+    border-color: $dark-border;
 }
 
 .rounded-custom {
     border-radius: 11.5px;
-    border-color: $match-border;
+    border-color: $dark-border;
     border-style: solid;
     border-width: 1px;
 }

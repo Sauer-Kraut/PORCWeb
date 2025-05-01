@@ -28,11 +28,11 @@ function close() {
             <div class="modal-content col-xl-4 col-md-9" @click.stop>
                 <h3 class="title">Edit Match Scores</h3>
                 <div class="justify-content-center d-flex p-1">
-                    <label for="p1score" class="col-9">{{match.p1.tag}} score:</label>
+                    <label for="p1score" class="col-9">{{ match.p1.tag }} score:</label>
                     <input id="p1score" v-model="match.p1score" type="number" class="col-2 input" />
                 </div>
                 <div class="justify-content-center d-flex p-1">
-                    <label for="p2score" class="col-9">{{match.p2.tag}} score:</label>
+                    <label for="p2score" class="col-9">{{ match.p2.tag }} score:</label>
                     <input id="p2score" v-model="match.p2score" type="number" class="col-2 input" />
                 </div>
                 <div class="spacer"></div>

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { getLoggedIn } from '@/API/GetLoggedIn';
 import CalendarComponent from '@/components/CalendarComponent.vue';
+import MatchScoreComponent from '@/components/MatchScoreComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
 import config from '@/config';
 import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
@@ -11,6 +12,7 @@ import type { PlayerModel } from '@/models/PlayerModel';
 import type { PubAccountInfo } from '@/models/PubAccountInfo';
 import { convertToPubAccountInfo, type PubAccountInfoRecv } from '@/models/PubAccountInfoRecv';
 import { showErrorModal } from '@/services/ErrorModalService';
+import { getDivisionImage } from '@/util/ImageHelper';
 import { onMounted, ref, watch } from 'vue';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
@@ -38,7 +40,7 @@ async function getUserId() {
     }
 }
 
-const divisions = ref<DivisionModel[]>([]);
+const division = ref<DivisionModel>();
 
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
@@ -56,12 +58,17 @@ async function getMatchPlan() {
         }
 
         let data = await response.json();
-        // data = debugData;
-        // console.log('Success:', data);
         if (data.error != null) {
             showErrorModal(data.error);
         } else {
-            divisions.value = data.data.divisions as DivisionModel[];
+            division.value = data.data.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+
+            //DEBUG
+            //division.value = data.data.divisions.find((d: DivisionModel) => d.name === 'Silver');
+
+            if (!division.value) {
+                throw new Error('Division not found for user');
+            }
         }
     } catch (error) {
         console.error('Error:', error);
@@ -71,45 +78,15 @@ async function getMatchPlan() {
     //console.log('Divisions:', divisions.value);
 }
 
-function divisionContainsUser(division: DivisionModel): boolean {
-    let found = false;
-    for (let i = 0; i < division.players.length; i++) {
-        if (division.players[i].id == user_id.value) {
-            return true;
-        }
-    }
-    return false;
-}
-
 const opponents = ref<PlayerModel[]>([]);
 const participants = ref<PlayerModel[]>([]);
 
 function find_opponents(): PlayerModel[] {
-    let opponents = [] as PlayerModel[];
-    for (const division of divisions.value) {
-        if (divisionContainsUser(division)) {
-            for (const player of division.players) {
-                if (player.id != user_id.value) {
-                    opponents.push(player);
-                }
-            }
-        }
-    }
-    return opponents;
+    return division.value?.players.filter((player: PlayerModel) => player.id !== user_id.value) ?? [];
 }
 
 function find_user(): PlayerModel[] {
-    let playerlist = [];
-    for (const division of divisions.value) {
-        if (divisionContainsUser(division)) {
-            for (const player of division.players) {
-                if (player.id == user_id.value) {
-                    playerlist.push(player);
-                }
-            }
-        }
-    }
-    return playerlist;
+    return division.value?.players.filter((player: PlayerModel) => player.id === user_id.value) ?? [];
 }
 
 function getPlayerIds(): string[] {
@@ -212,17 +189,18 @@ onMounted(async () => {
         }, 500); // Wait for 500 milliseconds
     }, 120); // Wait for 500 milliseconds
 });
-
-watch(selectedPlayer, (newValue) => {
-    //console.log('selected player: ', newValue?.schedule);
-});
 </script>
 
 <template>
-    <div class="container-fill justify-content-center">
-        <div class="inner-container">
-            <h1 class="titel">Match planner</h1>
-            <div class="desptiption">
+    <div class="container-fill justify-content-center match-planner">
+        <div :class="`division-${division?.name.toLowerCase() || 'iron'}`">
+            <div class="page-header p-3">
+                <h1>Match planner</h1>
+                <div class="division rounded mt-5 px-5 py-3" v-if="division">
+                    <img :src="getDivisionImage(division.name)" class="division-icon" />
+                    <h2 class="ms-3 mb-0">{{ division.name }}</h2>
+                </div>
+                <!-- <div class="desptiption">
                 <label class="description">
                     This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a running
                     season), and accept requests yourself. <br /><br />
@@ -232,34 +210,105 @@ watch(selectedPlayer, (newValue) => {
                     You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as
                     exceptions, preferences, or a funny quote.
                 </label>
+            </div> -->
             </div>
-            <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-            <CalendarComponent
-                v-if="selectedPlayer?.schedule"
-                :schedule="selectedPlayer?.schedule ?? schedule"
-                :players="participants"
-                :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
-                :ownId="user_id"
-                :scheduleUserId="selectedPlayer?.id ?? 'default'"
-                v-on:reload="reload"
-            >
-            </CalendarComponent>
+            <div class="part matches" v-if="division">
+                <h2 class="mb-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
+                <div class="matches-container">
+                    <div
+                        v-for="[key, match] in Object.entries(division?.matches || {})"
+                        :key="key"
+                        class="match-score rounded"
+                        :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
+                    >
+                        <MatchScoreComponent :match="match" :user_id="user_id" />
+                    </div>
+                </div>
+            </div>
+            <div class="part">
+                <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
+                <CalendarComponent
+                    v-if="selectedPlayer?.schedule"
+                    :schedule="selectedPlayer?.schedule ?? schedule"
+                    :players="participants"
+                    :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
+                    :ownId="user_id"
+                    :scheduleUserId="selectedPlayer?.id ?? 'default'"
+                    v-on:reload="reload"
+                >
+                </CalendarComponent>
+            </div>
         </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
-.container-fill {
-    min-height: 100vh;
-}
+@import '@/assets/scss/styles.scss';
 
-.inner-container {
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-    display: flex;
-}
+.match-planner {
+    .page-header {
+        background-image: url('@/assets/images/MatchPlannerHeader.png');
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 20rem;
 
+        .division {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: $dark-bg;
+
+            .division-icon {
+                width: 5rem;
+                height: 5rem;
+                object-fit: contain;
+            }
+        }
+    }
+    .part {
+        padding: 3rem 5rem;
+    }
+
+    .division-icon {
+        width: 5rem;
+        height: 5rem;
+        object-fit: contain;
+    }
+
+    @each $division, $color in $division-colors {
+        .division-#{$division} {
+            .page-header .division {
+                border: 5px solid $color;
+            }
+
+            //TODO
+            .match-score.selected {
+                border: 4px solid $color;
+            }
+
+            .matches {
+                background: linear-gradient(120deg, #343232, 90%, darken($color, 10%));
+            }
+        }
+    }
+
+    .matches-container {
+        display: flex;
+        flex-wrap: wrap;
+        max-height: 20rem;
+        justify-content: space-between !important; /* Align items to the left */
+        overflow-y: auto;
+        scrollbar-width: none;
+
+        .match-score {
+            margin-left: 1rem;
+            margin-right: 2rem;
+            margin-bottom: 1.7rem;
+        }
+    }
+}
 .titel {
     justify-content: center;
     text-align: center;
@@ -274,7 +323,6 @@ watch(selectedPlayer, (newValue) => {
     line-height: 1.5;
     padding: 2rem;
     padding-top: 1rem !important;
-    padding-bottom: 5rem;
 }
 
 .highlight-text {

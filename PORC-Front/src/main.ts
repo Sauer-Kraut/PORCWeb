@@ -8,6 +8,7 @@ import 'vue-final-modal/style.css';
 import '@vuepic/vue-datepicker/dist/main.css';
 import 'floating-vue/dist/style.css';
 import './assets/scss/tooltip/match-tooltip.scss';
+import './assets/scss/pages.scss';
 import './assets/scss/styles.scss';
 import './assets/scss/global.scss';
 

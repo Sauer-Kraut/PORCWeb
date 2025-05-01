@@ -56,19 +56,18 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
-$leaderboard-bg: #212529; //Bootstrap hardcoded
-$leaderboard-border: #495057; //Bootstrap hardcoded
+@import '@/assets/scss/styles.scss';
 
 .leaderboard {
     width: 100%;
     text-align: center;
     border-radius: 11.5px;
     border-width: 1px;
-    border-color: $leaderboard-border;
+    border-color: $dark-border;
     border-style: solid;
     flex-wrap: none;
     min-width: 12rem;
-    background-color: $leaderboard-bg;
+    background-color: $dark-bg;
     height: fit-content;
     transition: all 0.6s ease;
 }
@@ -85,7 +84,7 @@ $leaderboard-border: #495057; //Bootstrap hardcoded
     align-items: center;
     justify-content: center;
 
-    border-top: $leaderboard-border solid 1px;
+    border-top: $dark-border solid 1px;
 
     * {
         text-align: center;

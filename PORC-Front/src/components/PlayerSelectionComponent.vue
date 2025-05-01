@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-/// <reference types="../../node_modules/.vue-global-types/vue_3.5_0_0_0.d.ts" />
-import type { PubAccountInfo } from '@/models/PubAccountInfo';
-import { MatchStatus, ObservedMatchStatus } from '@/models/Calendar/MatchEventModel';
-import { onMounted, ref } from 'vue';
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
+import type { PubAccountInfo } from '@/models/PubAccountInfo';
 import { filter_str } from '@/util/stringFilter';
+import { ref } from 'vue';
 
 const props = defineProps<{
     player: PubAccountInfo;
