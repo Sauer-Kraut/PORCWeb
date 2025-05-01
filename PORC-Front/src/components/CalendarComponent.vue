@@ -19,7 +19,9 @@
             </div>
             <div class="calendar-header-days">
                 <div class="calendar-header-day"></div>
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day">{{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}</div>
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date(2025, 2, 18).toDateString() }">
+                    {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}
+                </div>
             </div>
         </div>
         <div class="calendar-body">
@@ -27,7 +29,7 @@
                 <div v-for="hour in hours" :key="hour.name" class="calendar-hour">{{ hour.name }}</div>
             </div>
             <div class="calendar-days">
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day">
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date(2025, 2, 18).toDateString() }">
                     <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)"></div>
                     <div
                         class="event availability"
@@ -263,7 +265,7 @@ function splitEvents(events: ScheduleEvent[]): ScheduleEventDisplay[] {
 }
 
 function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] {
-    console.log("spliting event display: ", event);
+    console.log('spliting event display: ', event);
     const startDate = event.startDate;
     const splitEvents: ScheduleEventDisplay[] = [];
     let start = event.startDate.getDate();
@@ -271,13 +273,13 @@ function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] 
     let end = event.endDate.getDate();
     let endMonth = event.endDate.getMonth();
 
-    console.log("start: ", start, " end: ", end)
-    
-    if ((end - start) > 0) {
-        const dayEnd = new Date(event.startDate);
-        dayEnd.setHours(23, 59, 0, 0)
+    console.log('start: ', start, ' end: ', end);
 
-        console.log("start: ", startDate)
+    if (end - start > 0) {
+        const dayEnd = new Date(event.startDate);
+        dayEnd.setHours(23, 59, 0, 0);
+
+        console.log('start: ', startDate);
 
         splitEvents.push({
             startDate: new Date(event.startDate),
@@ -288,7 +290,7 @@ function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] 
         start += 1;
 
         while (start < end) {
-            const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0)
+            const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0);
             const dayEnd = new Date(start, 23, 59, 0, 0);
 
             splitEvents.push({
@@ -299,14 +301,13 @@ function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] 
             start += 1;
         }
 
-        const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0)
+        const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0);
         splitEvents.push({
             startDate: dayStart,
             endDate: new Date(event.endDate),
             event: event.event,
         });
-    } 
-    else {
+    } else {
         splitEvents.push({
             startDate: new Date(event.startDate),
             endDate: new Date(event.endDate),
@@ -314,16 +315,16 @@ function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] 
         });
     }
 
-    console.log("result: ", splitEvents);
-    return splitEvents
+    console.log('result: ', splitEvents);
+    return splitEvents;
 }
 
 function getEventOfTheWeek(event: ScheduleEvent, day: number): ScheduleEventDisplay {
     const currentWeekEventDate = new Date(currentWeekStart.value);
     currentWeekEventDate.setDate(currentWeekStart.value.getDate() + day);
 
-    const startDay = event.startDate.getDate()
-    const endDay = event.endDate.getDate()
+    const startDay = event.startDate.getDate();
+    const endDay = event.endDate.getDate();
     const dayDif = endDay - startDay;
 
     if (dayDif < 0) {
@@ -571,12 +572,14 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
     width: 100%;
     .calendar-header {
         background: $background-header;
-        padding: 1rem ($hours-col / 2);
+        padding: 1rem ($hours-col / 2) 0;
         .calendar-header-days {
             display: flex;
             .calendar-header-day {
                 flex: 1;
                 text-align: center;
+                padding-bottom: 1rem;
+                box-sizing: border-box;
 
                 &:first-child {
                     width: $hours-col / 2;
@@ -719,6 +722,25 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 text-align: right;
                 padding-right: 0.5rem;
             }
+        }
+    }
+
+    .current-day {
+        &.calendar-header-day {
+            font-weight: bolder;
+            &::after {
+                content: '';
+                display: block;
+                position: relative;
+                width: 100%;
+                top: 1rem - 0.3rem;
+                border-bottom: 0.3rem solid rgb(162, 196, 212);
+                margin-bottom: -0.3rem;
+            }
+        }
+
+        &.calendar-day {
+            background-color: rgba(162, 196, 212, 0.05);
         }
     }
 }
