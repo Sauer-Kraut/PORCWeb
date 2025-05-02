@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import config from '@/config';
 
-const signUpURL = `${config.getBackendUrl()}/signup`;
+const signUpURL = `${config.getBackendUrl()}`;
 const discordServerURL = 'https://discord.gg/TUQd26DTzg';
 const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-on-discord/#what-is-a-discord-timestamp';
 </script>
@@ -20,16 +20,18 @@ const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-
 
                     <h2 class="lesser-title">How will my matches work?</h2>
                     <label class="answer">
-                        You can play your matches against opponents in any order. <span class="highlight-text">The goal is for everyone to complete all their matches</span> by the end of the season, so please plan accordingly and ahead
-                        of time. It is your responsibility to coordinate when and how to play your matches with each opponent.
+                        You can play your matches against opponents in any order. <span class="highlight-text">The goal is for everyone to complete all their matches</span> by the end of the season,
+                        so please plan accordingly and ahead of time. It is your responsibility to coordinate when and how to play your matches with each opponent.
                     </label>
 
                     <h2 class="lesser-title">How should I plan my matches?</h2>
                     <label class="answer">
-                        With the help of the <span class="highlight-text">Match Planner</span> , which you can easily access from the top menu if you are logged in, you can set your own schedule, including your availability and special notes. You can also view your opponents' schedules and challenge them.
-                        <br> When you challenge an opponent, <span class="highlight-text">they will be contacted via Discord by PORC Bot</span> with a prompt to accept or decline the request. They can respond directly on the website in their schedule. 
-                        <br> Once your opponent reacts to your request, you will automatically be informed of their response via Discord.
-                        If a request is accepted, an event will be created on the PORC Discord for the planned time, allowing other competitors to observe your match live in one of the stage channels on the PORC Discord server.
+                        With the help of the <span class="highlight-text">Match Planner</span> , which you can easily access from the top menu if you are logged in, you can set your own schedule,
+                        including your availability and special notes. You can also view your opponents' schedules and challenge them. <br />
+                        When you challenge an opponent, <span class="highlight-text">they will be contacted via Discord by PORC Bot</span> with a prompt to accept or decline the request. They can
+                        respond directly on the website in their schedule. <br />
+                        Once your opponent reacts to your request, you will automatically be informed of their response via Discord. If a request is accepted, an event will be created on the PORC
+                        Discord for the planned time, allowing other competitors to observe your match live in one of the stage channels on the PORC Discord server.
                     </label>
 
                     <h2 class="lesser-title">What happens if I don't play all my matches?</h2>
@@ -37,14 +39,14 @@ const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-
 
                     <h2 class="lesser-title">Which division will I be in?</h2>
                     <label class="answer">
-                        Your initial division placement is <span class="highlight-text">determined by your BP and estimated capabilities</span>. If you're unhappy with your placement, you can contest it before the season starts.
+                        Your initial division placement is <span class="highlight-text">determined by your BP and estimated capabilities</span>. If you're unhappy with your placement, you can contest
+                        it before the season starts.
                     </label>
 
                     <h2 class="lesser-title">How do I enter a score?</h2>
                     <label class="answer">
-                        To enter a score <span class="highlight-text">you have to be logged</span> in as the discord account you signed up with 
-                        and press on the pencil icon next to the match of yours you want to enter a score for.
-                        You can only enter scores for your own matches.
+                        To enter a score <span class="highlight-text">you have to be logged</span> in as the discord account you signed up with and press on the pencil icon next to the match of yours
+                        you want to enter a score for. You can only enter scores for your own matches.
                     </label>
 
                     <h2 class="lesser-title">My opponent isn't responding/showing up/forfeited - what now?</h2>

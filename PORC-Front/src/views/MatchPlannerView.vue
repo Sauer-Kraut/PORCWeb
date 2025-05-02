@@ -64,11 +64,7 @@ async function getMatchPlan() {
             division.value = data.data.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
 
             //DEBUG
-            //division.value = data.data.divisions.find((d: DivisionModel) => d.name === 'Silver');
-
-            if (!division.value) {
-                throw new Error('Division not found for user');
-            }
+            //division.value = data.data.divisions.find((d: DivisionModel) => d.name === 'Silver') ?? division.value;
         }
     } catch (error) {
         console.error('Error:', error);
@@ -154,7 +150,6 @@ async function reload() {
     participants.value.push(...find_user());
     participants.value = [...new Set(participants.value)]; // Ensure unique participants
     playerinfos.value = [...new Set(playerinfos.value)];
-    // console.log("playerinfos: ", playerinfos.value);
     for (let player of playerinfos.value) {
         if (player.id == selectedPlayerId) {
             selectedPlayer.value = player;
@@ -196,46 +191,22 @@ onMounted(async () => {
         <div :class="`division-${division?.name.toLowerCase() || 'iron'}`">
             <div class="page-header p-3">
                 <h1>Match planner</h1>
-                <div class="division rounded mt-5 px-5 py-3" v-if="division">
-                    <img :src="getDivisionImage(division.name)" class="division-icon" />
-                    <h2 class="ms-3 mb-0">{{ division.name }}</h2>
-                </div>
-                <!-- <div class="desptiption">
-                <label class="description">
-                    This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a running
-                    season), and accept requests yourself. <br /><br />
-                    To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match. If you challenge an opponent they will be
-                    <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
-                    <br /><br />
-                    You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as
-                    exceptions, preferences, or a funny quote.
-                </label>
-            </div> -->
             </div>
-            <div class="part matches" v-if="division">
-                <h2 class="mb-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
-                <div class="matches-container">
-                    <div
-                        v-for="[key, match] in Object.entries(division?.matches || {})"
-                        :key="key"
-                        class="match-score rounded"
-                        :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
-                    >
-                        <MatchScoreComponent :match="match" :user_id="user_id" :editMode="false" />
-                    </div>
+            <div class="part p-5">
+                <div class="desptiption">
+                    <label class="description">
+                        This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a
+                        running season), and accept requests yourself. <br /><br />
+                        To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match. If you challenge an opponent they will be
+                        <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
+                        <br /><br />
+                        You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as
+                        exceptions, preferences, or a funny quote.
+                    </label>
                 </div>
             </div>
-            <div class="part calendar">
-                <label class="description">
-                    This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a running
-                    season), and accept requests yourself. <br /><br />
-                    To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match. If you challenge an opponent they will be
-                    <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
-                    <br /><br />
-                    You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as
-                    exceptions, preferences, or a funny quote.
-                </label>
-                <div class="calendar-container">
+            <div class="calendar row flex-column-reverse flex-xl-row">
+                <div class="col-12 col-xl calendar-container">
                     <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="mb-3"></PlayerSelector>
                     <CalendarComponent
                         v-if="selectedPlayer?.schedule"
@@ -246,8 +217,22 @@ onMounted(async () => {
                         :scheduleUserId="selectedPlayer?.id ?? 'default'"
                         v-on:reload="reload"
                         class="calendar-component"
+                        :class="`division-${division?.name.toLowerCase() || 'iron'}`"
                     >
                     </CalendarComponent>
+                </div>
+                <div class="col-12 col-xl-5 ps-auto ps-xl-5 mb-5 mb-xl-auto" v-if="division">
+                    <h2 class="mb-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
+                    <div class="matches-container">
+                        <div
+                            v-for="[key, match] in Object.entries(division?.matches || {})"
+                            :key="key"
+                            class="match-score rounded"
+                            :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
+                        >
+                            <MatchScoreComponent :match="match" :user_id="user_id" :editMode="true" />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -260,8 +245,13 @@ onMounted(async () => {
 $match-border-width: 4px;
 
 .match-planner {
+    .part {
+        margin-top: 5rem !important;
+        margin-bottom: 5rem !important;
+    }
+
     .page-header {
-        background-image: url('@/assets/images/MatchPlannerHeader.png');
+        background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -281,7 +271,7 @@ $match-border-width: 4px;
             }
         }
     }
-    .part {
+    .calendar {
         padding: 3rem 10rem;
 
         @include media-breakpoint-down(xl) {
@@ -289,9 +279,21 @@ $match-border-width: 4px;
         }
 
         @include media-breakpoint-down(sm) {
-            padding: 2rem 2rem;
-            &.calendar {
-                padding: 2rem 0rem;
+            padding: 2rem 0rem;
+        }
+
+        .calendar-container {
+            &::after {
+                content: '';
+                position: relative;
+                top: 0;
+                bottom: 0;
+                height: 100%;
+                left: 50%; // Position the border in the middle
+                width: 1px; // Border width
+                background-color: rgba(255, 255, 255, 0.2); // Border color (adjust as needed)
+                transform: translateX(-50%); // Center the border
+                z-index: 1; // Ensure it appears above the background but below content
             }
         }
     }
@@ -313,7 +315,7 @@ $match-border-width: 4px;
             }
 
             .matches {
-                background: linear-gradient(120deg, #343232, 90%, darken($color, 10%));
+                background: linear-gradient(135deg, #343232, 90%, darken($color, 10%));
             }
         }
     }
@@ -322,18 +324,25 @@ $match-border-width: 4px;
         display: grid;
         grid-template-columns: repeat(auto-fill, 200px + $match-border-width * 2);
         grid-gap: 1rem;
-        justify-content: space-between !important; /* Align items to the left */
-        max-height: 20rem;
+        justify-content: start;
+        max-height: 60rem;
         overflow-y: auto;
         scrollbar-width: none;
 
         .match-score {
             width: fit-content;
             border: $match-border-width solid transparent;
+            transition: border-color 0.6s ease-in-out;
         }
 
-        @include media-breakpoint-down(lg) {
-            justify-content: center !important;
+        @include media-breakpoint-down(xl) {
+            max-height: 20rem;
+            justify-content: space-between;
+        }
+
+        @include media-breakpoint-down(sm) {
+            padding: 0rem 2rem;
+            justify-content: center;
         }
     }
 }

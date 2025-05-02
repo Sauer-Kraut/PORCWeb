@@ -19,11 +19,13 @@ async function select() {
 </script>
 
 <template>
-    <div class="body" :class="{ selected: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
-        <div class="contents">
-            {{ filter_str(props.player.username, 14) }}
-            <!-- <div class="icon icon-checkmark"></div> -->
-            <MatchStatusComponent :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []"></MatchStatusComponent>
+    <div>
+        <div class="body rounded" :class="{ selected: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
+            <div class="contents">
+                {{ filter_str(props.player.username, 14) }}
+                <!-- <div class="icon icon-checkmark"></div> -->
+                <MatchStatusComponent :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []"></MatchStatusComponent>
+            </div>
         </div>
     </div>
 </template>
@@ -32,12 +34,10 @@ async function select() {
 @import '@/assets/scss/styles.scss';
 
 .body {
-    width: calc(25%); /* Ensures 4 items per row */
-    background: rgb(50, 50, 50);
-    margin: 0%;
+    background: $dark-bg;
     box-sizing: border-box;
-    border-radius: 2px;
     height: 4rem;
+    margin: 0.25rem;
     cursor: pointer;
     transition: 0.3s;
 
@@ -46,19 +46,7 @@ async function select() {
     text-align: center !important;
 
     &:hover {
-        background: lighten(rgb(50, 50, 50), 10%);
-    }
-}
-
-@media (max-width: 1699px) and (min-width: 499px) {
-    .body {
-        width: calc(50%); /* Ensures 4 items per row */
-    }
-}
-
-@media (max-width: 499px) {
-    .body {
-        width: calc(100%); /* Ensures 4 items per row */
+        background: lighten($dark-bg, 10%);
     }
 }
 
@@ -80,7 +68,7 @@ async function select() {
     padding: 0;
     border: 0;
     transition: 0.3s;
-    margin-left: 20% !important;
+    margin-left: 0.5rem;
 }
 
 .calander {
@@ -109,7 +97,7 @@ async function select() {
 }
 
 .selected {
-    background: lighten(rgb(60, 60, 60), 10%);
+    background: lighten($dark-bg, 20%);
     transition: 0.2s;
 }
 </style>

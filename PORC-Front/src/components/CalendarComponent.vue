@@ -568,10 +568,16 @@ $hour-height: 2rem;
 $hours-col: 4rem;
 $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
+@each $division, $color in $division-colors {
+    .division-#{$division} .calendar-header {
+        background: linear-gradient(90deg, $dark-bg, 80%, darken($color, 10%));
+    }
+}
+
 .calendar-container {
     width: 100%;
     .calendar-header {
-        background: $background-header;
+        margin: 0.25rem;
         padding: 1rem ($hours-col / 2) 0;
         .calendar-header-days {
             display: flex;
