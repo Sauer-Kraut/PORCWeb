@@ -1,126 +1,3 @@
-<template>
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <div class="calendar-header-top row align-items-center mb-3">
-                <div class="col-auto day-arrows">
-                    <i @click="prevPeriod" class="icon-chevron-left px-2"></i>
-                    <i @click="nextPeriod" class="icon-chevron-right px-2"></i>
-                </div>
-                <div class="col">{{ currentWeekStart.toLocaleDateString('en-US', { month: 'long' }) }} {{ currentWeekStart.getFullYear() }}</div>
-                <div class="col-auto">
-                    <div class="btn-group" role="group">
-                        <input type="radio" class="btn-check" name="viewMode" id="weekView" autocomplete="off" v-model="viewMode" value="week" />
-                        <label class="btn btn-outline-light btn-sm" for="weekView">Week</label>
-
-                        <input type="radio" class="btn-check" name="viewMode" id="dayView" autocomplete="off" v-model="viewMode" value="day" />
-                        <label class="btn btn-outline-light btn-sm" for="dayView">Day</label>
-                    </div>
-                </div>
-            </div>
-            <div class="calendar-header-days">
-                <div class="calendar-header-day"></div>
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
-                    {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}
-                </div>
-            </div>
-        </div>
-        <div class="calendar-body">
-            <div class="calendar-hours">
-                <div v-for="hour in hours" :key="hour.name" class="calendar-hour">{{ hour.name }}</div>
-            </div>
-            <div class="calendar-days">
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
-                    <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)"></div>
-                    <div
-                        class="event availability"
-                        :class="{ own: ownCalendar }"
-                        v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
-                        :key="availability.startDate.toISOString()"
-                        :style="getEventStyle(availability)"
-                        @click.stop="ownCalendar && editAvailability(availability.event)"
-                    >
-                        <div class="cross" v-if="ownCalendar" @click.stop="deleteAvailability(availability.event)">
-                            <i class="icon-cross"></i>
-                        </div>
-                        <div
-                            v-if="!ownCalendar"
-                            v-for="hour in getHoursInRange(availability.startDate, availability.endDate)"
-                            :key="hour.toDateString()"
-                            class="event-overlay"
-                            @click.stop="createEvent('match', day, hour)"
-                            :style="getHourStyle(hour, availability.startDate, availability.endDate)"
-                        ></div>
-                    </div>
-                    <VDropdown
-                        v-for="match in matches.filter((m) => m.startDate.toDateString() === day.toDateString() && displayMatch(m))"
-                        class="event match"
-                        :class="{
-                            request: match.status === MatchStatus.Requested,
-                            declined: match.status === MatchStatus.Declined,
-                            blink: ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId,
-                        }"
-                        :key="match.startDate.toISOString()"
-                        :style="getEventStyle(match)"
-                        :theme="matchTooltipTheme(match)"
-                    >
-                        <div class="w-100 h-100 p-2 d-flex justify-content-end">
-                            <div class="match-status pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></div>
-                        </div>
-                        <template #popper>
-                            <div class="container p-3">
-                                <div class="row align-items-center">
-                                    <h4 class="col-auto">
-                                        <MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent>
-                                    </h4>
-                                    <h6 class="col">{{ match.startDate.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}</h6>
-                                    <h6 class="col-auto">
-                                        {{ match.startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }} -
-                                        {{ match.endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }}
-                                    </h6>
-                                </div>
-                                <div class="row">
-                                    <h5 class="col text-center">
-                                        {{ filter_str(getPlayer(match.initiatorId).tag || 'Player 1', 12) }}
-                                        &nbsp;&nbsp;&nbsp;vs.&nbsp;&nbsp;&nbsp;
-                                        {{ filter_str(getPlayer(match.opponentId).tag || 'Player 2', 12) }}
-                                    </h5>
-                                </div>
-                                <div class="row mt-4" v-if="ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId">
-                                    <div class="col">
-                                        <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Decline</button>
-                                    </div>
-                                    <div class="col">
-                                        <button class="btn btn-sm btn-light w-100" @click="respondToMatch(match, true)"><i></i>Accept</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </VDropdown>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="container mt-3 mb-5 px-auto px-md-5">
-        <form @submit.prevent="submitNote" v-if="ownCalendar">
-            <div class="row">
-                <div class="col-12">
-                    <label for="noteTextArea" class="form-label fw-bold">Notes</label>
-                    <textarea v-model="schedule.notes" class="form-control notes-area mb-3" id="noteTextArea"></textarea>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 col-md-3">
-                    <button type="submit" class="btn btn-primary w-100">Save</button>
-                </div>
-            </div>
-        </form>
-        <div v-else>
-            <div class="mb-3 fw-bold">Your opponent notes :</div>
-            <div v-html="lineBreak(schedule.notes)"></div>
-        </div>
-    </div>
-</template>
-
 <script lang="ts" setup>
 import { Repetition, type DailyRepetitionConfig, type ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import type { Schedule } from '@/models/Calendar/ScheduleModel';
@@ -561,10 +438,133 @@ async function submitNote() {
 }
 </script>
 
+<template>
+    <div class="calendar-container">
+        <div class="calendar-header rounded">
+            <div class="calendar-header-top row align-items-center mb-3">
+                <div class="col-auto day-arrows">
+                    <i @click="prevPeriod" class="icon-chevron-left px-2"></i>
+                    <i @click="nextPeriod" class="icon-chevron-right px-2"></i>
+                </div>
+                <div class="col">{{ currentWeekStart.toLocaleDateString('en-US', { month: 'long' }) }} {{ currentWeekStart.getFullYear() }}</div>
+                <div class="col-auto">
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="viewMode" id="weekView" autocomplete="off" v-model="viewMode" value="week" />
+                        <label class="btn btn-outline-light btn-sm" for="weekView">Week</label>
+
+                        <input type="radio" class="btn-check" name="viewMode" id="dayView" autocomplete="off" v-model="viewMode" value="day" />
+                        <label class="btn btn-outline-light btn-sm" for="dayView">Day</label>
+                    </div>
+                </div>
+            </div>
+            <div class="calendar-header-days">
+                <div class="calendar-header-day"></div>
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
+                    {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}
+                </div>
+            </div>
+        </div>
+        <div class="calendar-body">
+            <div class="calendar-hours">
+                <div v-for="hour in hours" :key="hour.name" class="calendar-hour">{{ hour.name }}</div>
+            </div>
+            <div class="calendar-days">
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
+                    <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)"></div>
+                    <div
+                        class="event availability"
+                        :class="{ own: ownCalendar }"
+                        v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
+                        :key="availability.startDate.toISOString()"
+                        :style="getEventStyle(availability)"
+                        @click.stop="ownCalendar && editAvailability(availability.event)"
+                    >
+                        <div class="cross" v-if="ownCalendar" @click.stop="deleteAvailability(availability.event)">
+                            <i class="icon-cross"></i>
+                        </div>
+                        <div
+                            v-if="!ownCalendar"
+                            v-for="hour in getHoursInRange(availability.startDate, availability.endDate)"
+                            :key="hour.toDateString()"
+                            class="event-overlay"
+                            @click.stop="createEvent('match', day, hour)"
+                            :style="getHourStyle(hour, availability.startDate, availability.endDate)"
+                        ></div>
+                    </div>
+                    <VDropdown
+                        v-for="match in matches.filter((m) => m.startDate.toDateString() === day.toDateString() && displayMatch(m))"
+                        class="event match"
+                        :class="{
+                            request: match.status === MatchStatus.Requested,
+                            declined: match.status === MatchStatus.Declined,
+                            blink: ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId,
+                        }"
+                        :key="match.startDate.toISOString()"
+                        :style="getEventStyle(match)"
+                        :theme="matchTooltipTheme(match)"
+                    >
+                        <div class="w-100 h-100 p-2 d-flex justify-content-end">
+                            <div class="match-status pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></div>
+                        </div>
+                        <template #popper>
+                            <div class="container p-3">
+                                <div class="row align-items-center">
+                                    <h4 class="col-auto">
+                                        <MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent>
+                                    </h4>
+                                    <h6 class="col">{{ match.startDate.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}</h6>
+                                    <h6 class="col-auto">
+                                        {{ match.startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }} -
+                                        {{ match.endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }}
+                                    </h6>
+                                </div>
+                                <div class="row">
+                                    <h5 class="col text-center">
+                                        {{ filter_str(getPlayer(match.initiatorId).tag || 'Player 1', 12) }}
+                                        &nbsp;&nbsp;&nbsp;vs.&nbsp;&nbsp;&nbsp;
+                                        {{ filter_str(getPlayer(match.opponentId).tag || 'Player 2', 12) }}
+                                    </h5>
+                                </div>
+                                <div class="row mt-4" v-if="ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId">
+                                    <div class="col">
+                                        <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Decline</button>
+                                    </div>
+                                    <div class="col">
+                                        <button class="btn btn-sm btn-light w-100" @click="respondToMatch(match, true)"><i></i>Accept</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </VDropdown>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-3 mb-5 px-auto px-md-5">
+        <form @submit.prevent="submitNote" v-if="ownCalendar">
+            <div class="row">
+                <div class="col-12">
+                    <label for="noteTextArea" class="form-label fw-bold">Notes</label>
+                    <textarea v-model="schedule.notes" class="form-control notes-area mb-3" id="noteTextArea"></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">Save</button>
+                </div>
+            </div>
+        </form>
+        <div v-else>
+            <div class="mb-3 fw-bold">Your opponent notes :</div>
+            <div v-html="lineBreak(schedule.notes)"></div>
+        </div>
+    </div>
+</template>
+
 <style scoped lang="scss">
 @import '@/assets/scss/styles.scss';
 
-$hour-height: 40px;
+$hour-height: 2rem;
 $hours-col: 4rem;
 $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
@@ -610,20 +610,38 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
         .calendar-days {
             flex: 1;
             display: flex;
-            border-top: $border-style;
-            border-right: $border-style;
+            box-sizing: border-box;
 
             .calendar-day {
                 flex: 1;
+                border-top: $border-style;
                 border-left: $border-style;
+                border-bottom: $border-style;
+                box-sizing: border-box;
                 position: relative;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
+
+                &:first-child {
+                    border-top-left-radius: $border-radius;
+                    border-bottom-left-radius: $border-radius;
+                }
+
+                &:last-child {
+                    border-right: $border-style;
+                    border-top-right-radius: $border-radius;
+                    border-bottom-right-radius: $border-radius;
+                }
 
                 .calendar-hour-day {
-                    border-bottom: $border-style;
+                    box-sizing: border-box;
                     position: relative;
                     height: $hour-height;
+
+                    &:not(:last-child) {
+                        border-bottom: $border-style;
+                    }
 
                     &:hover {
                         background-color: rgba(255, 255, 255, 0.1);
@@ -714,7 +732,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             grid-template-rows: repeat(24, 1fr);
 
             .calendar-hour {
-                font-size: 0.8rem;
+                font-size: 0.6rem;
                 height: $hour-height;
                 line-height: $hour-height;
                 top: -$hour-height / 2;

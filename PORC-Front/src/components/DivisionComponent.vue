@@ -54,7 +54,7 @@ const matchesExtended = ref(true); // Reactive variable to track if matches are 
 const matchesTransform = ref('translate(0rem, 0rem)'); // Reactive variable to store the calculated height
 
 function toggleMatchesExtended() {
-    if (window.innerWidth > 1950) {
+    if (window.innerWidth > 1600) {
         return; // Do not toggle if the window width is less than 1600px
     }
 
@@ -167,9 +167,9 @@ onMounted(async () => {
         <div class="row info-container" v-if="division?.players.length" :style="{ height: divisionHeight }">
             <div class="col-8 col-xl-8 col-xml-11 item-container d-flex flex-column align-items-center" :style="{ transform: matchesTransform, height: divisionHeight }">
                 <div class="scroll-container flex-grow-1">
-                    <div class="row justify-content-center transition-width matches">
-                        <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="match-score-padding">
-                            <MatchScoreComponent :match="match" :user_id="props.UserId" />
+                    <div class="transition-width matches">
+                        <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="w-auto">
+                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="true" />
                         </div>
                     </div>
                 </div>
@@ -258,13 +258,26 @@ onMounted(async () => {
     scrollbar-width: none; /* For Firefox */
     overflow-x: hidden;
     max-height: 100%;
+    width: 100%;
+
+    @include media-breakpoint-down(sm) {
+        width: fit-content;
+    }
 }
 
 // container of all match scores, will overflow if too many matches are present
 .matches {
-    height: fit-content;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 200px);
+    grid-gap: 1rem;
     justify-content: space-between !important; /* Align items to the left */
-    overflow-y: auto !important;
+    width: 100%;
+    height: fit-content;
+
+    @include media-breakpoint-down(sm) {
+        display: flex;
+        flex-wrap: wrap;
+    }
 }
 
 // leaderbord container
@@ -277,12 +290,6 @@ onMounted(async () => {
 
 .leaderboard-ref {
     height: fit-content;
-}
-
-.match-score-padding {
-    padding-left: 1rem;
-    padding-right: 2rem;
-    padding-bottom: 1.7rem;
 }
 
 .toggle-arrow {
@@ -318,19 +325,6 @@ onMounted(async () => {
     padding: 3rem;
 }
 
-@media (max-width: 1199px) {
-    .match-score-padding {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-}
-
-@media (max-width: 599px) {
-    .match-score-padding {
-        margin-right: 0rem !important;
-    }
-}
-
 // at 1949px matches and leaderbord start to stack on top of each other
 @media (max-width: $leaderboard-breakpoint) {
     .col-xml-11 {
@@ -354,13 +348,6 @@ onMounted(async () => {
 @media (min-width: 1599px) {
     .row {
         align-items: flex-start;
-    }
-}
-
-@media (min-width: 599px) {
-    .match-score-padding {
-        min-width: 200px;
-        width: fit-content;
     }
 }
 

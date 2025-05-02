@@ -2,23 +2,23 @@
 import config from '@/config';
 import type { MatchModel } from '@/models/MatchModel';
 import { showErrorModal } from '@/services/ErrorModalService';
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import EditMatchComponent from './EditMatchComponent.vue';
 
-const props = defineProps<{
-    match: MatchModel;
-    user_id: string;
-}>();
+const props = withDefaults(
+    defineProps<{
+        match: MatchModel;
+        user_id: string;
+        editMode?: boolean;
+    }>(),
+    {
+        editMode: true, // Default value for editMode
+    },
+);
+const allowedEdit = ref(props.editMode && (props.match.p1.id === props.user_id || props.user_id === props.match.p2.id));
 
-let userID = props.user_id;
-let Match = props.match;
-
-const allowedEdit = ref(false);
-
-const isScored = ref(false);
-
-const p1User = ref(true);
-const p2User = ref(false);
+const p1User = ref(props.match.p1.id == props.user_id);
+const p2User = ref(props.match.p2.id == props.user_id);
 
 const matchData = props.match;
 
@@ -88,16 +88,6 @@ async function updateMatchInfo(updateInfo: MatchModel) {
     }
 }
 
-function containsUser(): boolean {
-    userID = props.user_id;
-    Match = props.match;
-    // console.log('user id: ', userID);
-    // console.log('match : ', Match);
-
-    allowedEdit.value = !(Match.p1.id != userID && Match.p2.id != userID);
-    return allowedEdit.value;
-}
-
 function p1Win(match: MatchModel): boolean {
     return (match.p1score ?? 0) > (match.p2score ?? 0);
 }
@@ -106,47 +96,17 @@ function p2Win(match: MatchModel): boolean {
     return (match.p2score ?? 0) > (match.p1score ?? 0);
 }
 
-function checkUser() {
-    // console.log("score: ", props.match.p1score, " - ", props.match.p2score);
-    p1User.value = props.match.p1.id == userID;
-    p2User.value = props.match.p2.id == userID;
-}
+const shortendP1tag = ref(props.match.p1.tag.length > 10 ? props.match.p1.tag.slice(0, 10) + '..' : props.match.p1.tag);
+const shortendP2tag = ref(props.match.p2.tag.length > 10 ? props.match.p2.tag.slice(0, 10) + '..' : props.match.p2.tag);
 
-const shortendP1tag = ref('');
-const shortendP2tag = ref('');
-
-function shortenTags() {
-    shortendP1tag.value = props.match.p1.tag.length > 10 ? props.match.p1.tag.slice(0, 10) + '..' : props.match.p1.tag;
-    shortendP2tag.value = props.match.p2.tag.length > 10 ? props.match.p2.tag.slice(0, 10) + '..' : props.match.p2.tag;
-}
-
-onMounted(() => {
-    containsUser();
-    checkScores();
-    checkUser();
-    shortenTags();
-
-    setTimeout(() => {
-        checkUser();
-        shortenTags();
-        setInterval(containsUser, 500);
-        setInterval(checkScores, 500);
-    }, 70);
-});
-
-// watch(() => allowedEdit, checkEditPermission);
-// watch(() => [props.match.p1score, props.match.p2score], checkScores);
-
-function checkScores() {
-    if (matchData.p1score != null && matchData.p2score != null) {
-        isScored.value = true;
-    }
+function isScored() {
+    return matchData.p1score != null && matchData.p2score != null;
 }
 </script>
 
 <template>
-    <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored && allowedEdit }">
-        <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
+    <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored() && allowedEdit }">
+        <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored() && allowedEdit, 'col-12': isScored() || !allowedEdit }">
             <div class="d-flex justify-content-between" :class="{ winner: p1Win(match) }">
                 <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
                 <span class="player-score">{{ match.p1score }}</span>
@@ -157,7 +117,7 @@ function checkScores() {
                 <span class="player-score">{{ match.p2score }}</span>
             </div>
         </div>
-        <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored }">
+        <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored() }">
             <button class="edit-button" @click="ShowModal()" @click.stop><i class="icon-edit-pencil"></i></button>
         </div>
     </div>

@@ -43,13 +43,14 @@ async function getMatchPlan() {
         if (data.error != null) {
             showErrorModal(data.error);
         } else {
+            await getUserId();
             divisions.value = data.data.divisions as DivisionModel[];
             const now = Math.floor(Date.now() / 1000);
             const seasonEnd = data.data.end_timestamp;
             const seasonPause = data.data.pause_end_timestamp;
             const season = data.data.season;
             season_name.value = data.data.season.toString();
-            selectedDivision.value = divisions.value[2] ?? null;
+            selectedDivision.value = divisions.value.find((division) => division.players.some((p) => p.id == user.value)) ?? divisions.value[0];
 
             console.log('got matchplan: ', data.data);
 
@@ -86,7 +87,6 @@ watch(
 );
 
 onMounted(async () => {
-    await getUserId();
     await getMatchPlan();
     setTimeout(async () => {
         await getMatchPlan();

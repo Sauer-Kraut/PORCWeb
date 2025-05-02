@@ -221,22 +221,34 @@ onMounted(async () => {
                         class="match-score rounded"
                         :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
                     >
-                        <MatchScoreComponent :match="match" :user_id="user_id" />
+                        <MatchScoreComponent :match="match" :user_id="user_id" :editMode="false" />
                     </div>
                 </div>
             </div>
-            <div class="part">
-                <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id"></PlayerSelector>
-                <CalendarComponent
-                    v-if="selectedPlayer?.schedule"
-                    :schedule="selectedPlayer?.schedule ?? schedule"
-                    :players="participants"
-                    :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
-                    :ownId="user_id"
-                    :scheduleUserId="selectedPlayer?.id ?? 'default'"
-                    v-on:reload="reload"
-                >
-                </CalendarComponent>
+            <div class="part calendar">
+                <label class="description">
+                    This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a running
+                    season), and accept requests yourself. <br /><br />
+                    To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match. If you challenge an opponent they will be
+                    <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
+                    <br /><br />
+                    You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as
+                    exceptions, preferences, or a funny quote.
+                </label>
+                <div class="calendar-container">
+                    <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="mb-3"></PlayerSelector>
+                    <CalendarComponent
+                        v-if="selectedPlayer?.schedule"
+                        :schedule="selectedPlayer?.schedule ?? schedule"
+                        :players="participants"
+                        :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
+                        :ownId="user_id"
+                        :scheduleUserId="selectedPlayer?.id ?? 'default'"
+                        v-on:reload="reload"
+                        class="calendar-component"
+                    >
+                    </CalendarComponent>
+                </div>
             </div>
         </div>
     </div>
@@ -244,6 +256,8 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
+
+$match-border-width: 4px;
 
 .match-planner {
     .page-header {
@@ -268,7 +282,18 @@ onMounted(async () => {
         }
     }
     .part {
-        padding: 3rem 5rem;
+        padding: 3rem 10rem;
+
+        @include media-breakpoint-down(xl) {
+            padding: 3rem 5rem;
+        }
+
+        @include media-breakpoint-down(sm) {
+            padding: 2rem 2rem;
+            &.calendar {
+                padding: 2rem 0rem;
+            }
+        }
     }
 
     .division-icon {
@@ -280,12 +305,11 @@ onMounted(async () => {
     @each $division, $color in $division-colors {
         .division-#{$division} {
             .page-header .division {
-                border: 5px solid $color;
+                border: $match-border-width solid $color;
             }
 
-            //TODO
             .match-score.selected {
-                border: 4px solid $color;
+                border-color: $color;
             }
 
             .matches {
@@ -295,17 +319,21 @@ onMounted(async () => {
     }
 
     .matches-container {
-        display: flex;
-        flex-wrap: wrap;
-        max-height: 20rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 200px + $match-border-width * 2);
+        grid-gap: 1rem;
         justify-content: space-between !important; /* Align items to the left */
+        max-height: 20rem;
         overflow-y: auto;
         scrollbar-width: none;
 
         .match-score {
-            margin-left: 1rem;
-            margin-right: 2rem;
-            margin-bottom: 1.7rem;
+            width: fit-content;
+            border: $match-border-width solid transparent;
+        }
+
+        @include media-breakpoint-down(lg) {
+            justify-content: center !important;
         }
     }
 }
