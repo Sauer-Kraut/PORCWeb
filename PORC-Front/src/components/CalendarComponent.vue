@@ -540,7 +540,7 @@ async function submitNote() {
             </div>
         </div>
     </div>
-    <div class="container mt-3 mb-5 px-auto px-md-5">
+    <div class="container mt-3 mb-5 px-auto px-md-5 notes-container">
         <form @submit.prevent="submitNote" v-if="ownCalendar">
             <div class="row">
                 <div class="col-12">
@@ -767,6 +767,10 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             background-color: rgba(162, 196, 212, 0.05);
         }
     }
+}
+
+.notes-container {
+    min-height: 250px;
 }
 
 .notes-area {

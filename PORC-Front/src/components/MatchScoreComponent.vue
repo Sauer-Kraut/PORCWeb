@@ -21,11 +21,7 @@ const allowedEdit = ref(props.editMode && (props.match.p1.id === props.user_id |
 const p1User = ref(props.match.p1.id == props.user_id);
 const p2User = ref(props.match.p2.id == props.user_id);
 
-const matchData = props.match;
-
-if (matchData.p1score != null && matchData.p2score != null) {
-    isScored.value = true;
-}
+var isScored = ref(props.match.p1score != null && props.match.p2score != null);
 
 function editMatch() {
     const { open, close } = useModal({
@@ -76,14 +72,16 @@ async function updateMatchInfo(updateInfo: MatchModel) {
         // console.log('Success:', data);
         if (data.error != null) {
             showErrorModal(data.error);
-            matchData.p1score = null;
-            matchData.p2score = null;
+            props.match.p1score = null;
+            props.match.p2score = null;
+        } else {
+            isScored.value = props.match.p1score != null && props.match.p2score != null;
         }
     } catch (error) {
         console.error('Error:', error);
         showErrorModal('Internal server error');
-        matchData.p1score = null;
-        matchData.p2score = null;
+        props.match.p1score = null;
+        props.match.p2score = null;
     }
 }
 
@@ -97,17 +95,13 @@ function p2Win(match: MatchModel): boolean {
 
 const shortendP1tag = ref(props.match.p1.tag.length > 10 ? props.match.p1.tag.slice(0, 10) + '..' : props.match.p1.tag);
 const shortendP2tag = ref(props.match.p2.tag.length > 10 ? props.match.p2.tag.slice(0, 10) + '..' : props.match.p2.tag);
-
-function isScored() {
-    return matchData.p1score != null && matchData.p2score != null;
-}
 </script>
 
 <template>
     <div>
         <!-- Some bootstrap shit i didnt find -->
-        <div class="rounded-custom match row" :class="{ 'hover-edit': isScored() && allowedEdit }">
-            <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored() && allowedEdit, 'col-12': isScored() || !allowedEdit }">
+        <div class="rounded-custom match row" :class="{ 'hover-edit': isScored && allowedEdit }">
+            <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
                 <div class="d-flex justify-content-between" :class="{ winner: p1Win(match) }">
                     <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
                     <span class="player-score">{{ match.p1score }}</span>
@@ -118,7 +112,7 @@ function isScored() {
                     <span class="player-score">{{ match.p2score }}</span>
                 </div>
             </div>
-            <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored() }">
+            <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored }">
                 <button class="edit-button" @click="editMatch()" @click.stop><i class="icon-edit-pencil"></i></button>
             </div>
         </div>

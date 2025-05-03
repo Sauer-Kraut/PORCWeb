@@ -17,13 +17,24 @@ async function select() {
 function active() {
     return selectedDivision.value && selectedDivision.value.name === props.division.name;
 }
+
+function getProgress() {
+    const matches = Object.entries(props.division.matches).map(([_, match]) => ({
+        done: match.p1score != null && match.p2score != null,
+    }));
+    return matches.length ? (matches.filter((match) => match.done).length / matches.length) * 100 : 0;
+}
 </script>
 
 <template>
-    <div class="list-group-item list-group-item-action d-flex align-items-center" :class="{ active: active() }" @click="select">
-        <img :src="getDivisionImage(props.division.name)" class="division-icon" />
-        <h5 class="d-none d-md-flex m-0 ms-2">{{ filter_str(props.division.name, 14) }}</h5>
-        <!-- <i class="icon-chevron-right d-flex align-items-center" v-if="active()"></i> -->
+    <div class="list-group-item list-group-item-action" :class="{ active: active(), [`division-${division?.name?.toLowerCase() || 'iron'}`]: true }" @click="select">
+        <div class="d-flex align-items-center">
+            <img :src="getDivisionImage(props.division.name)" class="division-icon" />
+            <h5 class="d-none d-md-flex m-0 ms-2">{{ filter_str(props.division.name, 14) }}</h5>
+        </div>
+        <div class="progress" role="progressbar">
+            <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
+        </div>
     </div>
 </template>
 
@@ -47,6 +58,21 @@ function active() {
         @include media-breakpoint-down(sm) {
             width: 2.5rem;
             height: 2.5rem;
+        }
+    }
+
+    .progress {
+        position: absolute; // Position the progress bar absolutely
+        bottom: 0; // Stick it to the bottom of the parent
+        left: 0;
+        right: 0;
+        height: 0.2rem; // Set the height of the progress bar
+        border-radius: 0;
+    }
+
+    @each $division, $color in $division-colors {
+        &.division-#{$division} .progress-bar {
+            background-color: $color;
         }
     }
 }
