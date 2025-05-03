@@ -5,16 +5,25 @@
 }
 
 .page-header {
-    height: 40rem;
+    height: 10rem;
     box-shadow: 0 0 0.5rem rgb(35, 35, 35);
     background-size: cover;
+    background-color: $dark-bg;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 
-    @media (max-width: $leaderboard-breakpoint) {
-        height: 30rem;
-    }
-
-    @media (max-width: 600px) {
+    &.img {
         height: 20rem;
+
+        @media (max-width: $leaderboard-breakpoint) {
+            height: 15rem;
+        }
+
+        @media (max-width: 600px) {
+            height: 10rem;
+        }
     }
 }
 
@@ -24,6 +33,10 @@
     min-height: 20rem;
     margin-top: 10rem !important;
     overflow: hidden;
+
+    &:first-of-type {
+        margin-top: 5rem !important;
+    }
 
     .part-title {
         font-size: 2.25rem;

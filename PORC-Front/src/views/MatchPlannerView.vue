@@ -189,7 +189,7 @@ onMounted(async () => {
 <template>
     <div class="container-fill justify-content-center match-planner">
         <div :class="`division-${division?.name.toLowerCase() || 'iron'}`">
-            <div class="page-header p-3">
+            <div class="page-header img p-3">
                 <h1>Match planner</h1>
             </div>
             <div class="part p-5">
@@ -254,25 +254,8 @@ $match-border-width: 4px;
 
     .page-header {
         background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 20rem;
-
-        .division {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: $dark-bg;
-
-            .division-icon {
-                width: 5rem;
-                height: 5rem;
-                object-fit: contain;
-            }
-        }
     }
+
     .calendar {
         padding: 3rem 10rem;
 
@@ -281,7 +264,7 @@ $match-border-width: 4px;
         }
 
         @include media-breakpoint-down(sm) {
-            padding: 2rem 0rem;
+            padding: 2rem 2rem;
         }
     }
 

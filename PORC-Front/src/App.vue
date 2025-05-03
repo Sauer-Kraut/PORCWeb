@@ -9,6 +9,10 @@ function toggleMenu() {
     isMenuOpen.value = !isMenuOpen.value;
 }
 
+function closeMenu() {
+    isMenuOpen.value = false;
+}
+
 const isLoggedIn = ref(false);
 const user_id = ref('default');
 let errorMessage: string = 'This is an error message';
@@ -36,7 +40,7 @@ onMounted(() => {
 
         <!-- Navigation -->
         <div class="row h-header">
-            <div class="col-3 col-md-auto h-header d-flex align-items-center d-md-none" @click="toggleMenu">
+            <div class="col-4 col-md-auto h-header d-flex align-items-center d-md-none" @click="toggleMenu">
                 <div class="burger-icon p-3">
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
@@ -46,14 +50,14 @@ onMounted(() => {
             <div class="logo col col-md-auto h-header d-flex align-items-center justify-content-center">
                 <img src="@/assets/images/porc-logo.svg" class="mx-0 mx-md-3 mx-lg-5" />
             </div>
-            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row pe-0 pe-md-auto justify-content-center text-center h-header">
-                <router-link to="/" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" @click="toggleMenu">Tournament</router-link>
-                <router-link to="/match-planner" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" v-if="isLoggedIn" @click="toggleMenu">Match Planner</router-link>
-                <router-link to="/rules" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" @click="toggleMenu">Rules</router-link>
-                <router-link to="/faq" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" @click="toggleMenu">FAQ</router-link>
+            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center h-header">
+                <router-link to="/" class="router-link col-12 col-md-3 px-0 h-header" @click="closeMenu">Tournament</router-link>
+                <router-link to="/match-planner" class="router-link col-12 col-md-3 px-0 h-header" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
+                <router-link to="/rules" class="router-link col-12 col-md-3 px-0 h-header" @click="closeMenu">Rules</router-link>
+                <router-link to="/faq" class="router-link col-12 col-md-3 px-0 h-header" @click="closeMenu">FAQ</router-link>
             </nav>
-            <div class="col-3 col-md-auto h-header d-flex align-items-center">
-                <DiscordUserComponent class="me-3"></DiscordUserComponent>
+            <div class="col-4 col-md-auto h-header d-flex align-items-center">
+                <DiscordUserComponent class="mx-0 mx-md-3 me-3"></DiscordUserComponent>
             </div>
         </div>
 

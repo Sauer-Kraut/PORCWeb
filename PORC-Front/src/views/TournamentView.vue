@@ -145,6 +145,18 @@ onMounted(async () => {
     min-height: 100vh;
 }
 
+.page-header {
+    height: 40rem;
+
+    @media (max-width: $leaderboard-breakpoint) {
+        height: 30rem;
+    }
+
+    @media (max-width: 600px) {
+        height: 20rem;
+    }
+}
+
 // Timer
 
 .timer {
