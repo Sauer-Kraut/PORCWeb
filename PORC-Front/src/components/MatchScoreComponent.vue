@@ -3,7 +3,8 @@ import config from '@/config';
 import type { MatchModel } from '@/models/MatchModel';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { ref } from 'vue';
-import EditMatchComponent from './EditMatchComponent.vue';
+import { useModal } from 'vue-final-modal';
+import EditMatchComponent from './modals/EditMatchComponent.vue';
 
 const props = withDefaults(
     defineProps<{
@@ -26,23 +27,24 @@ if (matchData.p1score != null && matchData.p2score != null) {
     isScored.value = true;
 }
 
-const showModal = ref(false);
-
-function ShowModal() {
-    showModal.value = true;
-    //console.log('I am trieing to show the prompt');
-}
-
-function handleSave(updateInfo: MatchModel) {
-    //console.log('Save event triggered', updateInfo);
-    showModal.value = false;
-    updateMatchInfo(updateInfo);
+function editMatch() {
+    const { open, close } = useModal({
+        component: EditMatchComponent,
+        attrs: {
+            match: props.match,
+            onSave: (updateInfo: any) => {
+                updateMatchInfo(updateInfo);
+                close();
+            },
+            onClose: () => {
+                close();
+            },
+        },
+    });
+    open();
 }
 
 async function updateMatchInfo(updateInfo: MatchModel) {
-    //console.log('Trying to update match info');
-    //console.log(updateInfo);
-
     if (!(typeof updateInfo === 'object' && updateInfo !== null)) {
         console.error('updateInfo is not an object or is null');
     }
@@ -56,9 +58,6 @@ async function updateMatchInfo(updateInfo: MatchModel) {
         title: 'updateMatch',
         match_info: Match,
     });
-
-    // console.log(Match);
-    // console.log(requestData);
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
@@ -118,10 +117,9 @@ function isScored() {
             </div>
         </div>
         <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored() }">
-            <button class="edit-button" @click="ShowModal()" @click.stop><i class="icon-edit-pencil"></i></button>
+            <button class="edit-button" @click="editMatch()" @click.stop><i class="icon-edit-pencil"></i></button>
         </div>
     </div>
-    <EditMatchComponent v-if="showModal" @save="handleSave" @close="showModal = false" :match="match" />
 </template>
 
 <style lang="scss" scoped>

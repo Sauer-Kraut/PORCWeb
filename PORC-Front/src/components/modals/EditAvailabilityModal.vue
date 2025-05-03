@@ -100,7 +100,6 @@ function convertTimeRangeToDates(timeRange: { hours: number; minutes: number; se
 
 function createAvailability(): ScheduleEvent {
     const [startDate, endDate] = convertTimeRangeToDates(time.value);
-    //console.log('startDate: ', startDate, "endDate: ", endDate);
     const repetitionConfig = convertToRepetition(repetition.value, daysOfWeek.value);
     return {
         startDate,
@@ -113,14 +112,11 @@ function createAvailability(): ScheduleEvent {
 watch(
     () => daysOfWeek.value,
     (Selection) => {
-        //console.log('selected days: ', Selection);
-        //console.log('repetition: ', repetition.value);
         if (repetition.value == 'Daily') {
             daysSelectionToggle.value = true;
         } else {
             daysSelectionToggle.value = false;
         }
-        //console.log('daysSelectionToggle: ', daysSelectionToggle.value);
     },
     { deep: true },
 );
@@ -128,15 +124,11 @@ watch(
 watch(
     () => repetition.value,
     (newRepetition) => {
-        //console.log('selected days: ', daysOfWeek.value);
-        //console.log('repetition: ', repetition.value);
         if (newRepetition == 'Daily') {
             daysSelectionToggle.value = true;
         } else {
             daysSelectionToggle.value = false;
         }
-        //console.log('daysSelectionToggle: ', daysSelectionToggle.value);
-        //console.log('time: ', time.value);
     },
     { deep: true },
 );

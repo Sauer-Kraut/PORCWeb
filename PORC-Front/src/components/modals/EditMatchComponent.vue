@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref, defineEmits } from 'vue';
 import type { MatchModel } from '@/models/MatchModel';
+import { VueFinalModal } from 'vue-final-modal';
 
 const props = defineProps<{
     match: MatchModel;
@@ -23,27 +24,39 @@ function close() {
 </script>
 
 <template>
-    <div class="modal-overlay" @click.stop>
-        <div class="row">
-            <div class="modal-content col-xl-4 col-md-9" @click.stop>
-                <h3 class="title">Edit Match Scores</h3>
-                <div class="justify-content-center d-flex p-1">
-                    <label for="p1score" class="col-9">{{ match.p1.tag }} score:</label>
-                    <input id="p1score" v-model="match.p1score" type="number" class="col-2 input" />
+    <VueFinalModal class="confirm-modal" content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
+        <div class="porc-modal-content col-xl-4 col-lg-6 col-11 p-4 rounded">
+            <h3 class="title">Edit Match Scores</h3>
+            <div class="justify-content-center d-flex p-1">
+                <label for="p1score" class="col-9">{{ match.p1.tag }} score:</label>
+                <input id="p1score" v-model="match.p1score" type="number" class="col-2 input" />
+            </div>
+            <div class="justify-content-center d-flex p-1">
+                <label for="p2score" class="col-9">{{ match.p2.tag }} score:</label>
+                <input id="p2score" v-model="match.p2score" type="number" class="col-2 input" />
+            </div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="row justify-content-center mt-3">
+                <div class="col-md-4 col-xl-6">
+                    <button @click="close" class="btn btn-outline-primary w-100">Cancel</button>
                 </div>
-                <div class="justify-content-center d-flex p-1">
-                    <label for="p2score" class="col-9">{{ match.p2.tag }} score:</label>
-                    <input id="p2score" v-model="match.p2score" type="number" class="col-2 input" />
+                <div class="col-md-4 col-xl-6 mt-2 mt-md-0">
+                    <button @click="save" class="btn btn-primary w-100">Save</button>
                 </div>
-                <div class="spacer"></div>
-                <button @click="save" class="col-11 button">Save</button>
-                <button @click="close" class="col-11 button">Cancel</button>
             </div>
         </div>
-    </div>
+    </VueFinalModal>
 </template>
 
 <style lang="scss" scoped>
+.porc-modal-content {
+    background: linear-gradient(135deg, #8d7b78, #3b435b);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    color: #ffffff;
+    transition: 0.5s;
+}
+
 .title {
     display: flex;
     text-align: center;
