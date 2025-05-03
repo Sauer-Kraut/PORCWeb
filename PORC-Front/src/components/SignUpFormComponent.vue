@@ -158,6 +158,7 @@ onMounted(async () => {
                         <label class="warning" v-if="invalidFillOut">Sign up is not valid</label>
                         <label class="warning" v-if="!isLoggedIn">Please Sign in with discord</label>
                         <label class="success" v-if="success">Sign up successfull!</label>
+                        <label class="success" v-if="!success && isSignedUp && user_id != 'default'">You're signed up for season {{ season_name }}!</label>
                         <div class="p-2"></div>
                         <div class="mb-3">
                             <label for="disabledTextInput" class="form-label">Discord username</label>

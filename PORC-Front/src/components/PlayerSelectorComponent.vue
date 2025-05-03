@@ -63,7 +63,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 </script>
 
 <template>
-    <div class="container m-0">
+    <div class="container-fluid">
         <!-- css nonsence of row not working  -->
         <div class="row flex-wrap-reverse">
             <PlayerSelectionComponent

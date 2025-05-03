@@ -205,8 +205,8 @@ onMounted(async () => {
                     </label>
                 </div>
             </div>
-            <div class="calendar row flex-column-reverse flex-xl-row">
-                <div class="col-12 col-xl calendar-container">
+            <div class="calendar row flex-column-reverse flex-xl-row justify-content-center">
+                <div class="col-12 calendar-container" :class="{ 'col-xl-7': division, 'col-lg-9 col-xxl-7 mx-auto': !division }">
                     <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="mb-3"></PlayerSelector>
                     <CalendarComponent
                         v-if="selectedPlayer?.schedule"
@@ -222,7 +222,9 @@ onMounted(async () => {
                     </CalendarComponent>
                 </div>
                 <div class="col-12 col-xl-5 ps-auto ps-xl-5 mb-5 mb-xl-auto" v-if="division">
-                    <h2 class="mb-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
+                    <h2 class="mb-3 d-flex align-items-center justify-content-center justify-content-xl-start">
+                        <img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}
+                    </h2>
                     <div class="matches-container">
                         <div
                             v-for="[key, match] in Object.entries(division?.matches || {})"
@@ -280,21 +282,6 @@ $match-border-width: 4px;
 
         @include media-breakpoint-down(sm) {
             padding: 2rem 0rem;
-        }
-
-        .calendar-container {
-            &::after {
-                content: '';
-                position: relative;
-                top: 0;
-                bottom: 0;
-                height: 100%;
-                left: 50%; // Position the border in the middle
-                width: 1px; // Border width
-                background-color: rgba(255, 255, 255, 0.2); // Border color (adjust as needed)
-                transform: translateX(-50%); // Center the border
-                z-index: 1; // Ensure it appears above the background but below content
-            }
         }
     }
 

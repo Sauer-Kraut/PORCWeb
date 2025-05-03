@@ -26,6 +26,7 @@ const placeholders = [
     "ᓚᘏᗢ - Looks like you're not the only one waiting for the tournament to start",
     'Due to technical difficulties, this scorebord has been determined incapable of displaying all of Juicepars achievements specifically',
     'bibin',
+    '2 rock win against 1 rock - Tamrell 2025',
 ];
 
 // Reactive variable to hold the selected placeholder
@@ -316,7 +317,7 @@ onMounted(async () => {
     width: 100%;
     height: 100%;
     background-color: $dark-bg;
-    border-top: 1px solid $dark-border;
+    border: 1px solid $dark-border;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -33,41 +33,69 @@ onMounted(() => {
 <template>
     <header>
         <!-- Burger Icon -->
-        <div class="burger-icon" @click="toggleMenu">
-            <span class="bar" :class="{ open: isMenuOpen }"></span>
-            <span class="bar" :class="{ open: isMenuOpen }"></span>
-            <span class="bar" :class="{ open: isMenuOpen }"></span>
-        </div>
 
         <!-- Navigation -->
-        <nav class="justify-content-center text-center h-100 custom" :class="{ open: isMenuOpen, row: !isMenuOpen }">
-            <router-link to="/" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Tournament</router-link>
-            <router-link to="/match-planner" v-if="isLoggedIn" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }" class="router-link col-2 h-100 custom">Match Planner</router-link>
-            <router-link to="/rules" class="router-link col-2 h-100 custom" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }">Rules</router-link>
-            <router-link to="/faq" class="router-link col-2 h-100 custom" :class="{ 'col-12': isMenuOpen, hidden: !isMenuOpen }">FAQ</router-link>
-        </nav>
+        <div class="row h-header">
+            <div class="col-3 col-md-auto h-header d-flex align-items-center d-md-none" @click="toggleMenu">
+                <div class="burger-icon p-3">
+                    <span class="bar" :class="{ open: isMenuOpen }"></span>
+                    <span class="bar" :class="{ open: isMenuOpen }"></span>
+                    <span class="bar" :class="{ open: isMenuOpen }"></span>
+                </div>
+            </div>
+            <div class="logo col col-md-auto h-header d-flex align-items-center justify-content-center">
+                <img src="@/assets/images/porc-logo.svg" class="mx-0 mx-md-3 mx-lg-5" />
+            </div>
+            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row pe-0 pe-md-auto justify-content-center text-center h-header">
+                <router-link to="/" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" @click="toggleMenu">Tournament</router-link>
+                <router-link to="/match-planner" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" v-if="isLoggedIn" @click="toggleMenu">Match Planner</router-link>
+                <router-link to="/rules" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" @click="toggleMenu">Rules</router-link>
+                <router-link to="/faq" class="router-link col-12 col-md-3 pe-0 pe-md-auto h-header" @click="toggleMenu">FAQ</router-link>
+            </nav>
+            <div class="col-3 col-md-auto h-header d-flex align-items-center">
+                <DiscordUserComponent class="me-3"></DiscordUserComponent>
+            </div>
+        </div>
 
         <!-- Discord User Component -->
-        <div class="custom discordUser">
-            <DiscordUserComponent></DiscordUserComponent>
-        </div>
     </header>
 
-    <div class="row justify-content-center h-100 custom backgorund" data-bs-theme="dark">
-        <main class="col-12 p-0 custom row justify-content-center">
-            <router-view class="custom"></router-view>
+    <div class="main row justify-content-center h-100 backgorund">
+        <main class="col-12 p-0 row justify-content-center" data-bs-theme="dark">
+            <router-view></router-view>
             <ModalsContainer />
         </main>
     </div>
 </template>
 
 <style lang="scss" scoped>
+@import '@/assets/scss/styles.scss';
+
 $header-color: rgb(241, 241, 241);
 
 header {
-    height: 6rem;
     background-color: $header-color;
-    overflow-x: hidden;
+    z-index: 1000; // Ensure the header is above other content
+    @include media-breakpoint-down(md) {
+        position: fixed; // Make the header fixed
+        top: 0; // Stick to the top of the viewport
+        left: 0;
+        right: 0;
+    }
+}
+
+.h-header {
+    min-height: 6rem;
+}
+
+@include media-breakpoint-down(md) {
+    .h-header {
+        min-height: 60px;
+    }
+
+    .main {
+        margin-top: 60px; // Adjust this value to match the height of your header
+    }
 }
 
 main {
@@ -86,11 +114,9 @@ main {
 }
 
 nav {
-    height: 100%;
     overflow-x: hidden;
 
     .router-link {
-        height: 100%;
         align-content: center;
         color: rgb(0, 0, 0);
         text-decoration: none;
@@ -106,24 +132,22 @@ nav {
             font-weight: bolder;
         }
     }
+
+    @include media-breakpoint-down(md) {
+        order: 5;
+    }
 }
 
-.custom {
-    overflow-x: hidden;
-    overflow-y: hidden;
-}
+.logo {
+    width: fit-content;
+    img {
+        height: 3.5rem;
 
-.discordUser {
-    top: 0%;
-    right: 3%;
-    width: 100px;
-    position: absolute; // Changed from absolute to fixed
-    z-index: 10;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 90px;
-    overflow-x: hidden;
+        @include media-breakpoint-down(md) {
+            height: 35px;
+        }
+        width: auto;
+    }
 }
 
 @media (max-width: 2400px) and (min-width: 1699px) {
@@ -145,11 +169,7 @@ nav {
 }
 
 .burger-icon {
-    display: none;
     cursor: pointer;
-    padding: 10px;
-    width: 100px;
-    position: absolute;
 }
 
 .burger-icon .bar {
@@ -172,80 +192,5 @@ nav {
 
 .burger-icon .bar.open:nth-child(3) {
     transform: rotate(-45deg) translate(5px, -5px);
-}
-
-/* Mobile Menu Styles */
-@media (max-width: 768px) {
-    .open {
-        margin-top: 0.15rem;
-        width: 100vw;
-    }
-
-    header {
-        height: auto;
-        min-height: 60px;
-        background-color: $header-color;
-        overflow-x: hidden;
-    }
-
-    .discordUser {
-        top: 0%;
-        right: 3%;
-        width: 50px;
-        position: absolute; // Changed from absolute to fixed
-        z-index: 10;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 50px;
-        overflow-x: hidden;
-    }
-
-    /* Hide the regular menu on mobile and show the burger */
-    nav {
-        height: 100%;
-        overflow-x: hidden;
-
-        .hidden {
-            height: 100%;
-            align-content: center;
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-            display: none;
-        }
-    }
-
-    .burger-icon {
-        display: block; // Show burger icon on small screens
-    }
-
-    /* Display the menu when open */
-    .row.open {
-        display: block; // Show the navigation items when the menu is open
-        width: 100%;
-        text-align: center;
-    }
-
-    .router-link {
-        display: block; // Make the links stack vertically
-        padding: 10px 0;
-    }
-}
-
-/* Desktop menu (default behavior) */
-@media (min-width: 769px) {
-    .burger-icon {
-        display: none; // Hide burger icon on large screens
-    }
-
-    .row {
-        display: flex;
-        justify-content: center;
-    }
-
-    .router-link {
-        padding: 10px 15px;
-        text-align: center;
-    }
 }
 </style>
