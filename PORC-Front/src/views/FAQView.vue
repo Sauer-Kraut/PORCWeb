@@ -11,7 +11,7 @@ const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-
         <h1>FAQ</h1>
     </div>
     <div class="container-fill justify-content-center">
-        <div class="part">
+        <div class="part part-text">
             <h2 class="lesser-title">How can I participate in PORC?</h2>
             <label class="answer">
                 To compete in PORC, you need to sign up before the start of the season you wish to participate in and join the
@@ -76,20 +76,8 @@ const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-
     //background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
 }
 
-.part {
-    padding: 5rem 20rem;
-
-    &:nth-of-type(2n) {
-        background: linear-gradient(135deg, darken(#343232, 5%), darken(#23252b, 5%));
-    }
-
-    @include media-breakpoint-down(xl) {
-        padding: 5rem 10rem;
-    }
-
-    @include media-breakpoint-down(md) {
-        padding: 2rem 2rem;
-    }
+.part:nth-of-type(2n) {
+    background: linear-gradient(135deg, darken(#343232, 5%), darken(#23252b, 5%));
 }
 
 .titel {

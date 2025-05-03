@@ -192,7 +192,7 @@ onMounted(async () => {
             <div class="page-header img p-3">
                 <h1>Match planner</h1>
             </div>
-            <div class="part p-5">
+            <div class="part part-text">
                 <div class="desptiption">
                     <label class="description">
                         This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a
