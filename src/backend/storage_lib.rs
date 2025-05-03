@@ -1,6 +1,9 @@
+use crate::liberary::account_lib::account::account::Account;
+
 use super::discord_communication;
 use discord_communication::TokenRequestParam;
 use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, self};
 
@@ -94,14 +97,14 @@ impl StorageMod {
     //     Ok(())
     // }
 
-    // pub fn read_accounts() -> Result<HashMap<String, Account>, io::Error> {
-    //     let path = ACCOUNTS_PATH;
-    //     let mut file = File::open(path)?;
-    //     let mut json = "".to_string();
-    //     file.read_to_string(&mut json)?;
-    //     let accounts: HashMap<String, Account> = serde_json::from_str(&json)?;
-    //     Ok(accounts)
-    // }
+    pub fn read_accounts() -> Result<HashMap<String, Account>, io::Error> {
+        let path = ACCOUNTS_PATH;
+        let mut file = File::open(path)?;
+        let mut json = "".to_string();
+        file.read_to_string(&mut json)?;
+        let accounts: HashMap<String, Account> = serde_json::from_str(&json)?;
+        Ok(accounts)
+    }
 
     pub fn read_secrets() -> Result<TokenRequestParam, io::Error> {
         let path = SECRETS_PATH;

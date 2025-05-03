@@ -110,7 +110,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
     };
 
 
-    match get_account(result.id, appstate.pool.clone()).await {
+    match get_account(result.id.clone(), appstate.pool.clone()).await {
         Ok(_) => {},
         Err(_) => {
             let new_account = Account {
@@ -191,7 +191,7 @@ pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appst
             }
         };
 
-        let account = get_account(login.account_id, appstate.pool.clone()).await;
+        let account = get_account(login.account_id.clone(), appstate.pool.clone()).await;
         match account {
             Ok(account) => {
                 let pub_account_info = account.get_pub_info();

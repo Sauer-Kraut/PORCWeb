@@ -6,12 +6,12 @@ pub struct DialogueInitator {}
 
 impl DialogueInitator {
 
-    pub async fn initiate_match_request<'a>(user_id: u64, division_name: String, match_info: MatchEvent) -> Result<DialogueBuilder, String> {
+    pub async fn initiate_match_request<'a>(user_id: String, division_name: String, match_info: MatchEvent) -> Result<DialogueBuilder, String> {
 
         let builder = DialogueBuilder {
             dialogue_id: None,
             dialogue_data: DialogueData {
-                user_id,
+                user_id: user_id.clone(),
                 data: CaseData::MatchRequest(MatchRequestData {
                     match_info,
                     division_name,

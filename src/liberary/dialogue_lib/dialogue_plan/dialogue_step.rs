@@ -19,11 +19,11 @@ impl<'a, 'b> DialogueStep<'a> {
                 return script.lock().await(dialogue_data, app_state).await;
             },
             StepCondition::React(script) => {
-                let check = check_reaction(dialogue_data.user_id, self.get_message(&dialogue_data).await?).await?;
+                let check = check_reaction(dialogue_data.user_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?, self.get_message(&dialogue_data).await?).await?;
                 return script.lock().await(check, dialogue_data, app_state).await
             },
             StepCondition::Response(script) => {
-                let check = check_response(dialogue_data.user_id, self.get_message(&dialogue_data).await?).await?;
+                let check = check_response(dialogue_data.user_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?, self.get_message(&dialogue_data).await?).await?;
                 return script.lock().await(check, dialogue_data, app_state).await
             },
             StepCondition::Custom(check, script) => {

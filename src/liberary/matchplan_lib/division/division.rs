@@ -47,7 +47,11 @@ impl Division {
                     if battle.p1score.is_some() && battle.p2score.is_some() {
 
                         matches += 1;
-                        rounds += battle.p1score.unwrap() + battle.p2score.unwrap();
+                        if battle.p1 == *player {
+                            rounds += battle.p1score.unwrap();
+                        } else {
+                            rounds += battle.p2score.unwrap();
+                        }
 
                         if battle.p1 == *player && battle.p1score.unwrap() > battle.p2score.unwrap() {
                             wins += 1;

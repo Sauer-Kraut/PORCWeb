@@ -23,10 +23,10 @@ struct QueryStruct {
 
 }
 
-pub async fn get_availabilities(account_id: u64, pool: PgPool) -> Result<Vec<Availability>, Box<dyn std::error::Error>> {
+pub async fn get_availabilities(account_id: String, pool: PgPool) -> Result<Vec<Availability>, Box<dyn std::error::Error + Send + Sync>> {
     let query_path = "src/liberary/account_lib/availability/storage/queries/get_availability.sql";
     let query = build_query(query_path, vec![
-        ArgumentType::Int(account_id as i64),
+        ArgumentType::String(account_id),
     ])?;
 
     let rows = sqlx::query_as::<Postgres, QueryStruct>(&query)

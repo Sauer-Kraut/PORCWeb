@@ -213,7 +213,7 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
 
 
 pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, appstate: &AppState) -> Result<(), String>{
-    let parsed_opponent_id = matchevent.opponent_id;
+    let parsed_opponent_id = matchevent.opponent_id.clone();
 
     let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
 

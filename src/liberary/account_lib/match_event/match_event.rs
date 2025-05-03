@@ -5,9 +5,9 @@ use serde::{Deserialize, Serialize};
 pub struct MatchEvent {
     pub id: Option<i32>, // Not meant to be used in order to store in databank, solely for identification among shedule
     pub start_timestamp: u64,
-    pub challenger_id: u64,
-    pub opponent_id: u64,
-    pub event_id: Option<u64>,
+    pub challenger_id: String,
+    pub opponent_id: String,
+    pub event_id: Option<String>,
     pub status: MatchStatus,
     pub season: String
 }

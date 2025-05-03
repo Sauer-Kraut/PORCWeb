@@ -11,7 +11,7 @@ pub async fn store_dialogue(builder: DialogueBuilder, pool: PgPool) -> Result<()
             let query_path = "src/liberary/dialogue_lib/dialogue_builder/storage/queries/update_dialogue_builder.sql";
             let query = build_query(query_path, vec![
                 ArgumentType::Int(dialogue_id as i64),
-                ArgumentType::Int(builder.dialogue_data.user_id as i64),
+                ArgumentType::String(builder.dialogue_data.user_id),
                 ArgumentType::JSONB(serde_json::to_value(builder.dialogue_data.data)?),
                 match builder.dialogue_data.error {
                     Some(ref error) => ArgumentType::String(error.clone()),
@@ -29,7 +29,7 @@ pub async fn store_dialogue(builder: DialogueBuilder, pool: PgPool) -> Result<()
 
             let query_path = "src/liberary/dialogue_lib/dialogue_builder/storage/queries/store_dialogue_builder.sql";
             let query = build_query(query_path, vec![
-                ArgumentType::Int(builder.dialogue_data.user_id as i64),
+                ArgumentType::String(builder.dialogue_data.user_id),
                 ArgumentType::JSONB(serde_json::to_value(builder.dialogue_data.data)?),
                 match builder.dialogue_data.error {
                     Some(ref error) => ArgumentType::String(error.clone()),

@@ -8,11 +8,11 @@ use crate::liberary::{matchplan_lib::{division::division::Division, matchplan::m
 #[derive(Debug)]
 struct QueryStruct {
     player_1_tag: String,
-    player_1_id: i64,
+    player_1_id: String,
     player_1_score: Option<i16>,
 
     player_2_tag: String,
-    player_2_id: i64,
+    player_2_id: String,
     player_2_score: Option<i16>,
 
     division_name: String,
@@ -40,12 +40,12 @@ pub async fn get_matchplan(season_name: String, pool: PgPool) -> Result<MatchPla
 
     for row in rows {
         let player_1 = Player {
-            id: row.player_1_id as u64,
+            id: row.player_1_id.parse()?,
             tag: row.player_1_tag.clone(),
             division: row.division_name.clone(),
         };
         let player_2 = Player {
-            id: row.player_2_id as u64,
+            id: row.player_2_id.parse()?,
             tag: row.player_2_tag.clone(),
             division: row.division_name.clone(),
         };

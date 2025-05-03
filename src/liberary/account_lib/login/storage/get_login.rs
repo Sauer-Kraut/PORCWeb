@@ -6,7 +6,7 @@ use crate::liberary::{account_lib::login::login::LogIn, util::functions::build_q
 #[derive(sqlx::FromRow)]
 #[derive(Debug)]
 struct QueryStruct {
-    id: i64,
+    id: String,
     created_at: DateTime<Utc>,
 }
 
@@ -22,7 +22,7 @@ pub async fn get_login(key: String, pool: PgPool) -> Result<LogIn, Box<dyn std::
 
     let login = LogIn {
         key: key,
-        account_id: row.id as u64,
+        account_id: row.id.parse()?,
         creation_timestamp: row.created_at.timestamp() as u64,
     };
 

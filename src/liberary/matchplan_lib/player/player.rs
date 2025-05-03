@@ -3,7 +3,7 @@ use std::fmt;
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Player {
-    pub id: u64,
+    pub id: String,
     pub tag: String,
     pub division: String
 }

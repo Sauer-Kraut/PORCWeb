@@ -48,15 +48,7 @@ pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web
         
         for user_id in info.ids.clone() {
 
-            let parsed_user_id = match user_id.parse::<u64>() {
-                Ok(value) => value,
-                Err(_) => {
-                    error_sender.send(format!("Could not parse user id: {}", user_id)).unwrap();
-                    continue;
-                }
-            };
-
-            match get_account(parsed_user_id, appstate.pool.clone()).await {
+            match get_account(user_id, appstate.pool.clone()).await {
                 Ok(value) => {account_infos.push(value.get_pub_info())}
                 Err(e) => {} // ignoring error, since finding nothing also returns an error
             }
@@ -110,7 +102,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
     let state_clone = appstate.clone();
     let mut error = None;
 
-    let match_event_entry = get_match_event(info.match_event.challenger_id, info.match_event.opponent_id, info.match_event.start_timestamp, info.match_event.season.clone(), appstate.pool.clone()).await;
+    let match_event_entry = get_match_event(info.match_event.challenger_id.clone(), info.match_event.opponent_id.clone(), info.match_event.start_timestamp, info.match_event.season.clone(), appstate.pool.clone()).await;
         
     match match_event_entry {
         Ok(_entry) => {
@@ -248,7 +240,7 @@ pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, apps
         }
     };
 
-    match update_availabilities(info.account_info.id, info.account_info.schedule.clone().unwrap_or(Schedule { availabilities: vec![], matches: vec![], note: "".to_owned()}).availabilities, appstate.pool.clone()).await {
+    match update_availabilities(info.account_info.id.clone(), info.account_info.schedule.clone().unwrap_or(Schedule { availabilities: vec![], matches: vec![], note: "".to_owned()}).availabilities, appstate.pool.clone()).await {
         Ok(_) => {},
         Err(err) => {
             error = Some(format!("Error while updating availabilities: {:?}", err));

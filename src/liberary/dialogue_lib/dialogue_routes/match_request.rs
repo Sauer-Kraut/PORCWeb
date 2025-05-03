@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use colored::Colorize;
 
 use actix_web::web;
 use async_std::sync::Mutex;
@@ -35,7 +36,7 @@ pub fn construct_match_request_plan(dialogue_data: DialogueData, index: u64, dia
                         dialogue_data::CaseData::MatchRequest(match_request_data) => match_request_data.match_info,
                         _ => panic!("Dialogue Route has incorect Case data")
                     };
-                    let parsed_challenger_id = match_info.challenger_id as u64;
+                    let parsed_challenger_id = match_info.challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?;
                     let challenger: String = match UserId::new(parsed_challenger_id).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
@@ -53,9 +54,9 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     let match_info: MatchEvent = info.match_info.clone();
                     let match_id: String = match_info.get_id();
 
-                    let mut entry = match get_match_event(match_info.challenger_id, match_info.opponent_id, match_info.start_timestamp, match_info.season.clone(), app_state.pool.clone()).await {
+                    let mut entry = match get_match_event(match_info.challenger_id.clone(), match_info.opponent_id.clone(), match_info.start_timestamp, match_info.season.clone(), app_state.pool.clone()).await {
                         Ok(v) => v,
-                        Err(err) => return Ok(Some(3)), // internal error: match couldnt be found in databank
+                        Err(err) => {println!("{}", format!("{}{}", "An error occured while checking dialogue: ".red(), err.to_string().bright_red())); return Ok(Some(3))}, // internal error: match couldnt be found in databank
                     };
                     
                     match reaction {
@@ -65,13 +66,13 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                                 MatchStatus::Requested => return Ok(None),
                                 MatchStatus::Confirmed => {
                                     let planed_event = create_discord_event(match_info.clone(), info.division_name.clone()).await?;
-                                    let opponent_tag: String = match UserId::new(match_info.opponent_id as u64).to_user(get_http()).await {
+                                    let opponent_tag: String = match UserId::new(match_info.opponent_id.clone().parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                                         Ok(v) => v.name,
                                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                                     };
 
                                     let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, planed_event.id.get());
-                                    let _ = send_dm(match_info.challenger_id as u64, format!("Your requested match with {opponent_tag} has been accepted:
+                                    let _ = send_dm(match_info.challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?, format!("Your requested match with {opponent_tag} has been accepted:
 {event_link}")).await;
                                     info.event_id = Some(planed_event.id.get());
 
@@ -118,7 +119,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_challenger_id = match_info.challenger_id;
-                    let challenger_tag: String = match UserId::new(parsed_challenger_id).to_user(get_http()).await {
+                    let challenger_tag: String = match UserId::new(parsed_challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -133,7 +134,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_opponent_id = match_info.opponent_id;
-                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -157,7 +158,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_challenger_id = match_info.challenger_id;
-                    let challenger_tag: String = match UserId::new(parsed_challenger_id).to_user(get_http()).await {
+                    let challenger_tag: String = match UserId::new(parsed_challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -170,7 +171,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_opponent_id = match_info.opponent_id;
-                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -196,7 +197,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_challenger_id = match_info.challenger_id;
-                    let challenger_tag: String = match UserId::new(parsed_challenger_id).to_user(get_http()).await {
+                    let challenger_tag: String = match UserId::new(parsed_challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -209,7 +210,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_opponent_id = match_info.opponent_id;
-                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -233,7 +234,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_challenger_id = match_info.challenger_id;
-                    let challenger_tag: String = match UserId::new(parsed_challenger_id).to_user(get_http()).await {
+                    let challenger_tag: String = match UserId::new(parsed_challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -246,7 +247,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_opponent_id = match_info.opponent_id;
-                    let opponent_tag: String = match UserId::new(parsed_opponent_id).to_user(get_http()).await {
+                    let opponent_tag: String = match UserId::new(parsed_opponent_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
@@ -264,7 +265,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     };
                     let match_info: MatchEvent = info.match_info.clone();
                     let parsed_challenger_id = match_info.challenger_id;
-                    let challenger_tag: String = match UserId::new(parsed_challenger_id).to_user(get_http()).await {
+                    let challenger_tag: String = match UserId::new(parsed_challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };

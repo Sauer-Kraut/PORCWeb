@@ -9,7 +9,7 @@ use crate::liberary::{account_lib::signup::signup::SignUpInfo, util::functions::
 #[derive(Debug)]
 struct QueryStruct {
     username: String,
-    account_id: i64,
+    account_id: String,
     created_at: DateTime<Utc>,
     region: String,
     bp: i64,
@@ -30,7 +30,7 @@ pub async fn get_signups(lower_date_bound: u64, upper_date_bound: Option<u64>, p
 
     for row in rows {
         let signup = SignUpInfo {
-            discord_id: row.account_id as u64,
+            discord_id: row.account_id.parse()?,
             username: row.username,
             region: row.region,
             bp: row.bp as u32,

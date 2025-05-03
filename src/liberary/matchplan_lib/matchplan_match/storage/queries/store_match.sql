@@ -2,8 +2,8 @@ DO $$
 DECLARE
     affected_id bigint;
 BEGIN
-    UPDATE matches SET score_1 = ($3), score_2 = ($4)
-    WHERE participant_1 = (
+    UPDATE matches SET score_challenger = ($3), score_opponent = ($4)
+    WHERE challenger = (
 
         SELECT id FROM participants WHERE account_id = ($1) AND division_id in (
 
@@ -11,7 +11,7 @@ BEGIN
         )
         LIMIT 1
     )
-    AND participant_2 = (
+    AND opponent = (
 
         SELECT id FROM participants WHERE account_id = ($2) AND division_id in (
 

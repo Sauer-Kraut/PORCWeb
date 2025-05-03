@@ -4,10 +4,10 @@ use crate::liberary::{account_lib::account::account::Account, util::functions::b
 
 
 // does not store the schedule beyond the schedule note
-pub async fn store_account(account: Account, pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn store_account(account: Account, pool: PgPool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let query_path = "src/liberary/account_lib/account/storage/queries/store_account.sql";
     let query = build_query(query_path, vec![
-        ArgumentType::Int(account.user_info.id as i64),
+        ArgumentType::String(account.user_info.id.to_string()),
         ArgumentType::String(account.user_info.username),
         ArgumentType::Int(account.user_info.discriminator as i64),
         match account.user_info.avatar {

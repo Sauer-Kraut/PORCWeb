@@ -21,7 +21,7 @@ pub struct DivisionBlueprint {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerBlueprint {
     pub tag: String,
-    pub id: u64
+    pub id: String
 }
 
 impl PartialEq for PlayerBlueprint {
@@ -48,7 +48,7 @@ impl MatchPlan {
                 order: division.order,
                 players: players_to_demote.clone().iter().map(|player: &division::player_performance::PlayerPerformance| PlayerBlueprint{
                     tag: player.player.tag.clone(),
-                    id: player.player.id,
+                    id: player.player.id.clone(),
                 }).collect()
             };
 
@@ -74,25 +74,25 @@ impl MatchPlan {
             if index > 0 {
                 division_blueprints.get_mut(index - 1).unwrap().players.extend(players_to_promote.iter().map(|player| PlayerBlueprint{
                     tag: player.player.tag.clone(),
-                    id: player.player.id,
+                    id: player.player.id.clone(),
                 }));
             } 
             else {
                 division_blueprint.players.extend(players_to_promote.iter().map(|player| PlayerBlueprint{
                     tag: player.player.tag.clone(),
-                    id: player.player.id,
+                    id: player.player.id.clone(),
                 }));
             }
 
             division_blueprint.players.extend(players_to_keep.iter().map(|player| PlayerBlueprint{
                 tag: player.player.tag.clone(),
-                id: player.player.id,
+                id: player.player.id.clone(),
             }));
 
             if index == ordered_divisions.len() - 1 {
                 division_blueprint.players.extend(players_to_demote.iter().map(|player| PlayerBlueprint{
                     tag: player.player.tag.clone(),
-                    id: player.player.id,
+                    id: player.player.id.clone(),
                 }));
             }
         }

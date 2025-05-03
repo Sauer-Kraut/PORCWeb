@@ -8,11 +8,11 @@ use crate::liberary::util::functions::build_query::*;
 #[derive(Debug)]
 struct QueryStruct {
     id: i64,
-    event_id: Option<i64>,
+    event_id: Option<String>,
     season: String,
     status_code: i16,
-    challenger_id: i64,
-    opponent_id: i64,
+    challenger_id: String,
+    opponent_id: String,
     start_timestamp: DateTime<Utc>,
 }
 
@@ -30,10 +30,10 @@ pub async fn get_match_events_from_ids(match_event_ids: Vec<i32>, pool: PgPool) 
             .await?;
         let match_event = MatchEvent {
             id: Some(row.id as i32),
-            event_id: row.event_id.map(|id| id as u64),
+            event_id: row.event_id,
             season: row.season,
-            challenger_id: row.challenger_id as u64,
-            opponent_id: row.opponent_id as u64,
+            challenger_id: row.challenger_id.parse()?,
+            opponent_id: row.opponent_id.parse()?,
             start_timestamp: row.start_timestamp.timestamp() as u64,
             status: MatchStatus::from_status_code(row.status_code)?,
         };

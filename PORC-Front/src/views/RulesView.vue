@@ -111,12 +111,15 @@
     min-height: 93vh;
 }
 
-.part:nth-of-type(n + 2) {
+.part:nth-of-type(n) {
     margin-top: 0 !important;
+    background: none !important;
 }
 
+
+
 .part:nth-of-type(2n) {
-    background: linear-gradient(135deg, darken(#343232, 5%), darken(#23252b, 5%));
+    background: none !important;
 }
 
 .page-header {

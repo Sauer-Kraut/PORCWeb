@@ -4,7 +4,7 @@ use crate::liberary::dialogue_lib::dialogue_routes::match_request::MatchRequestD
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DialogueData {
-    pub user_id: u64,
+    pub user_id: String,
     pub data: CaseData,
     pub error: Option<String>
 }

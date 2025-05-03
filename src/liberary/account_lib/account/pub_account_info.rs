@@ -5,7 +5,7 @@ use super::account::Account;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct PubAccountInfo {
-    pub id: u64,
+    pub id: String,
     pub username: String,
     pub avatar: Option<String>,
     pub schedule: Option<Schedule>
@@ -15,7 +15,7 @@ impl Account {
 
     pub fn get_pub_info(&self) -> PubAccountInfo {
         PubAccountInfo {
-            id: self.user_info.id,
+            id: self.user_info.id.clone(),
             username: self.user_info.username.clone(),
             avatar:  self.user_info.avatar.clone(),
             schedule: self.schedule.clone(),

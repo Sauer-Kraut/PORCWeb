@@ -2,8 +2,8 @@ use crate::porcbot::config;
 use config::*;
 use serenity::all::UserId;
 
-pub async fn send_dm(user_id: u64, content: String) -> Result<u64, String> {
-    let user_id = UserId::new(user_id as u64);
+pub async fn send_dm(user_id: String, content: String) -> Result<u64, String> {
+    let user_id = UserId::new(user_id.parse().map_err(|_| format!("couldnt parse userId {user_id:?}"))?);
 
     match user_id.create_dm_channel(get_http()).await {
         Ok(dm_channel) => {

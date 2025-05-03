@@ -54,16 +54,16 @@ impl <'a, 'b> DialoguePlan<'a> {
         } 
         else if target_index == 400 {
             let error_step = DialogueStep::default_error();
-            let _ = send_dm(self.dialogue_data.user_id, error_step.get_message(&self.dialogue_data).await?).await?;
+            let _ = send_dm(self.dialogue_data.user_id.clone(), error_step.get_message(&self.dialogue_data).await?).await?;
             return Ok(())
         } else {
             if let Some(step) = self.steps.get(target_index as usize) {
                 match step.condition {
                     StepCondition::React(_) => {
-                        let _ = send_prompt_dm(self.dialogue_data.user_id, step.get_message(&self.dialogue_data).await?).await?;
+                        let _ = send_prompt_dm(self.dialogue_data.user_id.clone(), step.get_message(&self.dialogue_data).await?).await?;
                     },
                     _ => {
-                        let _ = send_dm(self.dialogue_data.user_id, step.get_message(&self.dialogue_data).await?).await?;
+                        let _ = send_dm(self.dialogue_data.user_id.clone(), step.get_message(&self.dialogue_data).await?).await?;
                     },
                 }
                 self.index = target_index; // No mutable borrow of `self.dialogue_data` here

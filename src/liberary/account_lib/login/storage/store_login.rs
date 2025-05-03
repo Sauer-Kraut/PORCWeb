@@ -6,7 +6,7 @@ pub async fn store_login(login: LogIn, pool: PgPool) -> Result<(), Box<dyn std::
     let query_path = "src/liberary/account_lib/login/storage/queries/store_login.sql";
     let query = build_query(query_path, vec![
         ArgumentType::String(login.key),
-        ArgumentType::Int(login.account_id as i64),
+        ArgumentType::String(login.account_id.to_string()),
     ])?;
 
     let _res = sqlx::query(&query)

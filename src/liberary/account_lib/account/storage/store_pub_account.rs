@@ -7,7 +7,7 @@ use crate::liberary::{account_lib::account::pub_account_info::PubAccountInfo, ut
 pub async fn store_pub_account(account: PubAccountInfo, pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
     let query_path = "src/liberary/account_lib/account/storage/queries/store_pub_account.sql";
     let query = build_query(query_path, vec![
-        ArgumentType::Int(account.id as i64),
+        ArgumentType::String(account.id.to_string()),
         ArgumentType::String(account.username),
         match account.avatar {
             Some(ref avatar) => ArgumentType::String(avatar.clone()),
