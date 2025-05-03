@@ -104,20 +104,23 @@ function isScored() {
 </script>
 
 <template>
-    <div class="rounded-custom match d-flex row" :class="{ 'hover-edit': isScored() && allowedEdit }">
-        <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored() && allowedEdit, 'col-12': isScored() || !allowedEdit }">
-            <div class="d-flex justify-content-between" :class="{ winner: p1Win(match) }">
-                <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
-                <span class="player-score">{{ match.p1score }}</span>
+    <div>
+        <!-- Some bootstrap shit i didnt find -->
+        <div class="rounded-custom match row" :class="{ 'hover-edit': isScored() && allowedEdit }">
+            <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored() && allowedEdit, 'col-12': isScored() || !allowedEdit }">
+                <div class="d-flex justify-content-between" :class="{ winner: p1Win(match) }">
+                    <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
+                    <span class="player-score">{{ match.p1score }}</span>
+                </div>
+                <div class="divider"></div>
+                <div class="d-flex justify-content-between" :class="{ winner: p2Win(match) }">
+                    <span class="player-tag">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
+                    <span class="player-score">{{ match.p2score }}</span>
+                </div>
             </div>
-            <div class="divider"></div>
-            <div class="d-flex justify-content-between" :class="{ winner: p2Win(match) }">
-                <span class="player-tag">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
-                <span class="player-score">{{ match.p2score }}</span>
+            <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored() }">
+                <button class="edit-button" @click="editMatch()" @click.stop><i class="icon-edit-pencil"></i></button>
             </div>
-        </div>
-        <div v-if="allowedEdit" class="edit" :class="{ 'col-3 p-0 justify-content-centered': !isScored() }">
-            <button class="edit-button" @click="editMatch()" @click.stop><i class="icon-edit-pencil"></i></button>
         </div>
     </div>
 </template>
@@ -164,13 +167,6 @@ function isScored() {
 .match-text {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
-}
-
-.d-flex {
-    display: flex;
-    justify-content: center;
-    top: 0%;
-    font-size: 12.5px;
 }
 
 .p-cust {
