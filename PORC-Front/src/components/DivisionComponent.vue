@@ -165,7 +165,7 @@ onMounted(async () => {
 
 <template>
     <div class="division h-100 w-100">
-        <div class="row info-container" v-if="division?.players.length" :style="{ height: divisionHeight }">
+        <div class="row info-container w-100" v-if="division?.players.length" :style="{ height: divisionHeight }">
             <div class="col-8 col-xl-8 col-xml-11 item-container d-flex flex-column align-items-center" :style="{ transform: matchesTransform, height: divisionHeight }">
                 <div class="scroll-container flex-grow-1">
                     <div class="transition-width matches">

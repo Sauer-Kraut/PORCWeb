@@ -33,9 +33,22 @@
     min-height: 20rem;
     margin-top: 10rem !important;
     overflow: hidden;
+    padding: 2rem;
 
     &:first-of-type {
         margin-top: 5rem !important;
+    }
+
+    &.part-text {
+        padding: 5rem 30vw;
+
+        @include media-breakpoint-down(xxl) {
+            padding: 5rem 15vw;
+        }
+
+        @include media-breakpoint-down(md) {
+            padding: 2rem 5vw;
+        }
     }
 
     .part-title {

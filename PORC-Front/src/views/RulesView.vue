@@ -3,7 +3,7 @@
         <h1>PORC Rules</h1>
     </div>
     <div class="container-fill justify-content-center">
-        <div class="part">
+        <div class="part part-text">
             <h2 class="title mt-0">Set rules</h2>
             <ul>
                 <li class="rule">
@@ -49,7 +49,7 @@
                 </ol>
             </div>
         </div>
-        <div class="part">
+        <div class="part part-text">
             <h2 class="title mt-0">Scoring</h2>
             <ul>
                 <li>A match is defined as a best of 3 rounds with one player as host and the other as client. At the end of a game, scoring is decided as follows:</li>
@@ -61,7 +61,7 @@
                 <li>If a partie forfeits / fails to appear at an agreed time it counts as an automatic 3-0 win for the opposing player.</li>
             </ul>
         </div>
-        <div class="part">
+        <div class="part part-text">
             <h2 class="title mt-0">Placement and Promotion</h2>
             <ul>
                 <li>Your initial placement is determined by your amount of BP as well as your assessed skill.</li>
@@ -80,7 +80,7 @@
             </ul>
         </div>
 
-        <div class="part">
+        <div class="part part-text">
             <h2 class="title mt-0">Additional Notes</h2>
             <ul>
                 <li>Cheaters will be banned from competing, and all their matches will be marked as 3-0 losses to their opponents.</li>
@@ -111,24 +111,16 @@
     min-height: 93vh;
 }
 
-.page-header {
-    //background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
+.part:nth-of-type(n + 2) {
+    margin-top: 0 !important;
 }
 
-.part {
-    padding: 5rem 20rem;
+.part:nth-of-type(2n) {
+    background: linear-gradient(135deg, darken(#343232, 5%), darken(#23252b, 5%));
+}
 
-    &:nth-of-type(2n) {
-        background: linear-gradient(135deg, darken(#343232, 5%), darken(#23252b, 5%));
-    }
-
-    @include media-breakpoint-down(xl) {
-        padding: 5rem 10rem;
-    }
-
-    @include media-breakpoint-down(md) {
-        padding: 2rem 2rem;
-    }
+.page-header {
+    //background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
 }
 
 .title {

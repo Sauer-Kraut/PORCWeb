@@ -2,10 +2,14 @@
 import { ref, defineEmits } from 'vue';
 import type { MatchModel } from '@/models/MatchModel';
 import { VueFinalModal } from 'vue-final-modal';
+import { NULL } from 'sass';
 
 const props = defineProps<{
     match: MatchModel;
 }>();
+
+var p1score = ref(props.match.p1score ?? null);
+var p2score = ref(props.match.p2score ?? null);
 
 const emit = defineEmits<{
     (e: 'close'): void;
@@ -15,6 +19,8 @@ const emit = defineEmits<{
 const match = ref(props.match);
 
 function save() {
+    match.value.p1score = p1score.value;
+    match.value.p2score = p2score.value;
     emit('save', match.value);
 }
 
@@ -29,11 +35,11 @@ function close() {
             <h3 class="title">Edit Match Scores</h3>
             <div class="justify-content-center d-flex p-1">
                 <label for="p1score" class="col-9">{{ match.p1.tag }} score:</label>
-                <input id="p1score" v-model="match.p1score" type="number" class="col-2 input" />
+                <input id="p1score" v-model="p1score" type="number" class="col-2 input" />
             </div>
             <div class="justify-content-center d-flex p-1">
                 <label for="p2score" class="col-9">{{ match.p2.tag }} score:</label>
-                <input id="p2score" v-model="match.p2score" type="number" class="col-2 input" />
+                <input id="p2score" v-model="p2score" type="number" class="col-2 input" />
             </div>
             <div class="spacer"></div>
             <div class="spacer"></div>

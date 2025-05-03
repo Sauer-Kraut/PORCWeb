@@ -172,6 +172,13 @@ function selectSelf() {
     }
 }
 
+function getProgress() {
+    const matches = Object.entries(division?.value?.matches ?? {}).map(([_, match]) => ({
+        done: match.p1score != null && match.p2score != null,
+    }));
+    return matches.length ? (matches.filter((match) => match.done).length / matches.length) * 100 : 0;
+}
+
 onMounted(async () => {
     await getUserId();
     await getMatchPlan();
@@ -196,7 +203,7 @@ onMounted(async () => {
             <div class="page-header img p-3">
                 <h1>Match planner</h1>
             </div>
-            <div class="part p-5">
+            <!-- <div class="part part-text">
                 <div class="desptiption">
                     <label class="description">
                         This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a
@@ -208,7 +215,7 @@ onMounted(async () => {
                         exceptions, preferences, or a funny quote.
                     </label>
                 </div>
-            </div>
+            </div> -->
             <div class="calendar row flex-column-reverse flex-xl-row justify-content-center">
                 <div class="col-12 calendar-container" :class="{ 'col-xl-7': division, 'col-lg-9 col-xxl-7 mx-auto': !division }">
                     <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="mb-3"></PlayerSelector>
@@ -227,9 +234,15 @@ onMounted(async () => {
                     </CalendarComponent>
                 </div>
                 <div class="col-12 col-xl-5 ps-auto ps-xl-5 mb-5 mb-xl-auto" v-if="division">
-                    <h2 class="mb-3 d-flex align-items-center justify-content-center justify-content-xl-start">
-                        <img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}
-                    </h2>
+                    <div class="mb-3 d-flex justify-content-center justify-content-xl-start">
+                        <div class="division-title">
+                            <h2 class="mb-0 d-flex align-items-center"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
+                            <div class="progress" role="progressbar">
+                                <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="matches-container">
                         <div
                             v-for="[key, match] in Object.entries(division?.matches || {})"
@@ -273,6 +286,16 @@ $match-border-width: 4px;
         }
     }
 
+    .division-title {
+        display: flex;
+        flex-direction: column;
+        width: fit-content;
+
+        .progress {
+            height: 0.5rem;
+        }
+    }
+
     .division-icon {
         width: 5rem;
         height: 5rem;
@@ -291,6 +314,10 @@ $match-border-width: 4px;
 
             .matches {
                 background: linear-gradient(135deg, #343232, 90%, darken($color, 10%));
+            }
+
+            &.division-#{$division} .progress-bar {
+                background-color: $color;
             }
         }
     }
