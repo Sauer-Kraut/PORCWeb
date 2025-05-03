@@ -2,20 +2,20 @@ DO $$
 DECLARE
     affected_id bigint;
 BEGIN
-    UPDATE matches SET score_1 = $3, score_2 = $4
+    UPDATE matches SET score_1 = ($3), score_2 = ($4)
     WHERE participant_1 = (
 
-        SELECT id FROM participants WHERE account_id = $1 AND division_id in (
+        SELECT id FROM participants WHERE account_id = ($1) AND division_id in (
 
-            SELECT id FROM divisions WHERE season_name = $5
+            SELECT id FROM divisions WHERE season_name = ($5)
         )
         LIMIT 1
     )
     AND participant_2 = (
 
-        SELECT id FROM participants WHERE account_id = $2 AND division_id in (
+        SELECT id FROM participants WHERE account_id = ($2) AND division_id in (
 
-            SELECT id FROM divisions WHERE season_name = $5
+            SELECT id FROM divisions WHERE season_name = ($5)
         )
         LIMIT 1
     )

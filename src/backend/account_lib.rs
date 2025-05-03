@@ -10,6 +10,7 @@ use crate::liberary::account_lib::account::storage::get_account::get_account;
 use crate::liberary::account_lib::availability::storage::update_availabilities::update_availabilities;
 use crate::liberary::account_lib::match_event::match_event::MatchEvent;
 use crate::liberary::account_lib::match_event::storage::get_match_event::get_match_event;
+use crate::liberary::account_lib::match_event::storage::get_match_events_from_ids::get_match_events_from_ids;
 use crate::liberary::account_lib::schedule::schedule::Schedule;
 use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use crate::AppState;
@@ -167,15 +168,7 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PutMatchEventRecvPackage {
     pub title: String,
-    pub match_events: Vec<MatchEventInfo>
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct MatchEventInfo {
-    challenger_id: u64,
-    opponent_id: u64,
-    timestamp: u64,
-    season: String
+    match_events: Vec<i32>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -192,18 +185,28 @@ pub async fn put_match_event(info: web::Json<PutMatchEventRecvPackage>, appstate
     let mut error = None;
     let mut match_events= vec!();
 
-    for event in info.match_events.iter() {
-        let match_event_entry = get_match_event(event.challenger_id, event.opponent_id, event.timestamp, event.season.clone(), appstate.pool.clone()).await;
+    // for event in info.match_events.iter() {
+    //     let match_event_entry = get_match_event(event.challenger_id, event.opponent_id, event.timestamp, event.season.clone(), appstate.pool.clone()).await;
         
-        match match_event_entry {
-            Ok(entry) => {
-                match_events.push(entry);
-            },
-            Err(_) => {
-                error = Some(format!("No match event found for the match info: {:?}", event));
-            }
-        };
-    }
+    //     match match_event_entry {
+    //         Ok(entry) => {
+    //             match_events.push(entry);
+    //         },
+    //         Err(_) => {
+    //             error = Some(format!("No match event found for the match info: {:?}", event));
+    //         }
+    //     };
+    // }
+
+    let events = get_match_events_from_ids(info.match_events.clone(), appstate.pool.clone()).await;
+    match events {
+        Ok(events) => {
+            match_events = events;
+        },
+        Err(err) => {
+            error = Some(format!("Error while getting match events: {:?}", err));
+        }
+    };
 
     HttpResponse::Ok().json(PutMatchEventRespPackage {
         title: "Server GET match events Respons".to_string(),

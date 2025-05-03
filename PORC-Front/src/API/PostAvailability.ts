@@ -1,3 +1,4 @@
+import { showErrorModal } from '@/services/ErrorModalService';
 import type { DailyRepetitionConfig, ScheduleEvent } from '../models/Calendar/ScheduleEventModel';
 import type { Schedule } from '../models/Calendar/ScheduleModel';
 import { getClientId } from './clientIdentification';
@@ -91,12 +92,16 @@ export async function EditAvailability(addAvail: ScheduleEvent[], remAvail: Sche
         account.schedule = {
             availabilities: addAvail,
             matches: [],
-            notes: '',
+            note: '',
         } as Schedule;
     }
 
     //console.log("new Availabilities: ", account.schedule.availabilities)
 
     let err = await postUserInfo(account);
+    if (err != null) {
+        //console.log('Error occurred: ', err);
+        showErrorModal(err);
+    }
     return err;
 }

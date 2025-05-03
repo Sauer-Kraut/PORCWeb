@@ -29,7 +29,7 @@ pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<Str
 
     for (index, arg) in args.iter().enumerate() {
 
-        let argument_key = format!("${} ", index + 1);
+        let argument_key = format!("(${})", index + 1);
         let argument_value = match arg {
             ArgumentType::String(val) => format!("'{}'", val.replace("'", "")),
             ArgumentType::Int(val) => val.to_string(),

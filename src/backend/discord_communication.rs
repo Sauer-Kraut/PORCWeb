@@ -14,6 +14,7 @@ use crate::liberary::account_lib::account::pub_account_info::PubAccountInfo;
 use crate::liberary::account_lib::account::storage::get_account::get_account;
 use crate::liberary::account_lib::account::storage::store_account::store_account;
 use crate::liberary::account_lib::login::login::LogIn;
+use crate::liberary::account_lib::login::storage::get_login;
 use crate::liberary::account_lib::login::storage::store_login::store_login;
 use crate::liberary::account_lib::schedule::schedule::Schedule;
 use crate::AppState;
@@ -182,13 +183,15 @@ pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appst
     println!("\n{}", "Received PUT Request for logged in status".bold().cyan());
 
     let result: Result<PubAccountInfo, String> = 'scope: {
-        
-        let parsed_id = info.id.parse::<u64>();
-        if parsed_id.is_err() {
-            break 'scope Err(format!("Could not parse user id: {}", info.id));
-        }
 
-        let account = get_account(parsed_id.unwrap(), appstate.pool.clone()).await;
+        let login = match get_login::get_login(info.id.clone(), appstate.pool.clone()).await {
+            Ok(login) => login,
+            Err(err) => {
+                break 'scope Err(format!("Error while getting login: {:?}", err));
+            }
+        };
+
+        let account = get_account(login.account_id, appstate.pool.clone()).await;
         match account {
             Ok(account) => {
                 let pub_account_info = account.get_pub_info();

@@ -24,7 +24,7 @@ struct QueryStruct {
 }
 
 pub async fn get_availabilities(account_id: u64, pool: PgPool) -> Result<Vec<Availability>, Box<dyn std::error::Error>> {
-    let query_path = "src/liberary/account/storage/queries/retrieve/get_availability.sql";
+    let query_path = "src/liberary/account_lib/availability/storage/queries/get_availability.sql";
     let query = build_query(query_path, vec![
         ArgumentType::Int(account_id as i64),
     ])?;

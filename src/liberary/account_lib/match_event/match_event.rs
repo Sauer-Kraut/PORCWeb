@@ -45,6 +45,15 @@ impl MatchStatus {
             _ => Err("Invalid status code".to_string())
         }
     }
+
+    pub fn to_type_code(&self) -> i16 {
+        match self {
+            MatchStatus::Requested => 0,
+            MatchStatus::Confirmed => 1,
+            MatchStatus::Finished => 2,
+            MatchStatus::Declined => 3,
+        }
+    }
 }
 
 impl PartialEq for MatchEvent {

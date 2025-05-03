@@ -1,6 +1,6 @@
 SELECT 
-    av.start_time AS start_date,
-    av.end_time AS end_date,
+    av.start_date AS start_date,
+    av.end_date AS end_date,
 
     av.repetition_type AS repetition_type_code,
 
@@ -13,4 +13,4 @@ SELECT
     av.config_sun AS config_sun
 
 FROM availabilities av
-WHERE av.owner_id = 1;
+WHERE av.owner_id = ($1);

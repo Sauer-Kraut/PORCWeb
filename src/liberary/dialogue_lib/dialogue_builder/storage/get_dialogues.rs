@@ -17,7 +17,7 @@ struct QueryStruct {
 }
 
 pub async fn get_dialogues(limit: u16, min_age: u64, pool: PgPool) -> Result<Vec<DialogueBuilder>, Box<dyn std::error::Error>> {
-    let query_path = "src/liberary/account_lib/signup/storage/queries/get_signups.sql";
+    let query_path = "src/liberary/dialogue_lib/dialogue_builder/storage/queries/get_dialogues.sql";
     let query = build_query(query_path, vec![
         ArgumentType::Int(limit as i64),
         ArgumentType::Timestamptz(Utc::now() - chrono::Duration::seconds(min_age as i64)),

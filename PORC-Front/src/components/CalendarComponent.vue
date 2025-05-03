@@ -15,13 +15,15 @@ import { filter_str } from '@/util/stringFilter';
 import { getLoggedIn } from '@/API/GetLoggedIn';
 import { postUserInfo } from '@/API/PostAccountInfo';
 import lineBreak from '@/util/LineBreakFilter';
+import { showErrorModal } from '@/services/ErrorModalService';
 
 const props = defineProps<{
     schedule: Schedule;
     players: PlayerModel[];
     ownCalendar: boolean;
-    ownId: string;
-    scheduleUserId: string;
+    ownId: number;
+    scheduleUserId: number;
+    season: string;
 }>();
 
 const emit = defineEmits(['reload']);
@@ -294,7 +296,7 @@ function getHourStyle(hour: Date, startDate: Date, endDate: Date): { top: string
     };
 }
 
-function getPlayer(id: string): PlayerModel {
+function getPlayer(id: number): PlayerModel {
     //console.log("players: ", props.players);
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }
@@ -358,7 +360,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                 },
                 async onSubmitAvailability(data: MatchEvent) {
                     //console.log('submiting something', data);
-                    let err = await RequestMatch(data);
+                    let err = await RequestMatch(data, props.season);
                     if (err != null) {
                         console.log('Error adding availability', err);
                     }
@@ -416,7 +418,10 @@ async function deleteAvailability(availability: ScheduleEvent) {
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
     match.status = accept ? MatchStatus.Confirmed : MatchStatus.Declined;
-    await postMatch(match);
+    let res = await postMatch(match, props.season);
+    if (res != null) {
+        showErrorModal(res);
+    }
 }
 
 async function submitNote() {
@@ -429,10 +434,10 @@ async function submitNote() {
             res.schedule = {
                 availabilities: [],
                 matches: [],
-                notes: '',
+                note: '',
             };
         }
-        res.schedule.notes = props.schedule.notes;
+        res.schedule.note = props.schedule.note;
         await postUserInfo(res);
     }
 }
@@ -545,7 +550,7 @@ async function submitNote() {
             <div class="row">
                 <div class="col-12">
                     <label for="noteTextArea" class="form-label fw-bold">Notes</label>
-                    <textarea v-model="schedule.notes" class="form-control notes-area mb-3" id="noteTextArea"></textarea>
+                    <textarea v-model="schedule.note" class="form-control notes-area mb-3" id="noteTextArea"></textarea>
                 </div>
             </div>
             <div class="row">
@@ -556,7 +561,7 @@ async function submitNote() {
         </form>
         <div v-else>
             <div class="mb-3 fw-bold">Your opponent notes :</div>
-            <div v-html="lineBreak(schedule.notes)"></div>
+            <div v-html="lineBreak(schedule.note)"></div>
         </div>
     </div>
 </template>

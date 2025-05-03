@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::liberary::account_lib::match_event::match_event::MatchEvent;
 use crate::liberary::account_lib::signup::storage::get_signups::get_signups;
+use crate::liberary::dialogue_lib::dialogue_builder::storage::store_dialogue::store_dialogue;
 use crate::liberary::dialogue_lib::dialogue_initiator::dialogue_initiator::DialogueInitator;
 use crate::liberary::matchplan_lib::matchplan::storage::get_seasons::get_seasons;
 use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
@@ -216,13 +217,13 @@ pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, apps
 
     let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
 
-    // TODO!!!!! THIS ONE IS IMPORTANT!!!!
-    // let res = store_dialogue(builder, appstate.pool.clone()).await;
-    // match res {
-    //     Ok(_) => {},
-    //     Err(err) => {
-    //         return Err(format!("Error while storing dialogue: {:?}", err));
-    //     }
-    // };
+    /// TODO!!!!! THIS ONE IS IMPORTANT!!!!
+    let res = store_dialogue(builder, appstate.pool.clone()).await;
+    match res {
+        Ok(_) => {},
+        Err(err) => {
+            return Err(format!("Error while storing dialogue: {:?}", err));
+        }
+    };
     Ok(())
 }

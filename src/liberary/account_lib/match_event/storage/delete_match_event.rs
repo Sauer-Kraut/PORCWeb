@@ -4,7 +4,7 @@ use chrono::DateTime;
 use crate::liberary::{account_lib::match_event::match_event::MatchEvent, util::functions::build_query::*};
 
 pub async fn delete_match_event(match_event: MatchEvent, pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-    let query_path = "src/liberary/account/storage/queries/alter/delete_match_event.sql";
+    let query_path = "src/liberary/account_lib/match_event/storage/queries/delete_match_event.sql";
     let query = build_query(query_path, vec![
         ArgumentType::Timestamptz(DateTime::from_timestamp(match_event.start_timestamp as i64, 0).unwrap_or(DateTime::from_timestamp(0, 0).unwrap())),
         ArgumentType::Int(match_event.challenger_id as i64),

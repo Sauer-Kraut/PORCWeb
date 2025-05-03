@@ -11,7 +11,7 @@ struct QueryStruct {
 }
 
 pub async fn get_login(key: String, pool: PgPool) -> Result<LogIn, Box<dyn std::error::Error>> {
-    let query_path = "src/liberary/account/storage/queries/retrieve/get_login.sql";
+    let query_path = "src/liberary/account_lib/login/storage/queries/get_login.sql";
     let query = build_query(query_path, vec![
         ArgumentType::String(key.clone()),
     ])?;

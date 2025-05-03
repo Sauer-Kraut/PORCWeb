@@ -11,7 +11,7 @@ struct QueryStruct {
 }
 
 pub async fn get_schedule(account_id: u64, pool: PgPool) -> Result<Schedule, Box<dyn std::error::Error>> {
-    let query_path = "src/liberary/account/storage/queries/retrieve/get_schedule_note.sql";
+    let query_path = "src/liberary/account_lib/schedule/storage/queries/get_schedule_note.sql";
     let query = build_query(query_path, vec![
         ArgumentType::Int(account_id as i64),
     ])?;

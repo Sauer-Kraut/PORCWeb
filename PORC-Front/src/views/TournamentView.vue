@@ -20,9 +20,9 @@ function getSelectorHeight() {
     return selectorRef.value ? selectorRef.value.clientHeight : 0;
 }
 
-let user = ref('');
+let user = ref(0);
 let globalTimer = 0;
-let TimerText = '';
+let TimerText = ref('Time remaining until season 4 of PORC');
 
 const season_name = ref('0');
 
@@ -56,10 +56,11 @@ async function getMatchPlan() {
 
             if (now > seasonEnd) {
                 globalTimer = seasonPause;
-                TimerText = `Time remaining until season ${season + 1} of PORC`;
+                TimerText.value = `Time remaining until next season of PORC`;
+                console.log('season ended, timer set to pause end');
             } else {
                 globalTimer = seasonEnd;
-                TimerText = `Time remaining for season ${season} of PORC`;
+                TimerText.value = `Time remaining for season ${season} of PORC`;
             }
         }
     } catch (error) {

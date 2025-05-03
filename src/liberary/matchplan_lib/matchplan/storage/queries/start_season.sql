@@ -1,1 +1,1 @@
-SELECT * FROM initiate_season($1::jsonb)
+SELECT * FROM initiate_season(($1)::jsonb)

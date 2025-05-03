@@ -2,6 +2,7 @@ import config from '@/config';
 import type { PubAccountInfo } from '../models/PubAccountInfo';
 import { convertToPubAccountInfoRecv, type PubAccountInfoRecv } from '../models/PubAccountInfoRecv';
 import { getClientId } from './clientIdentification';
+import { showErrorModal } from '@/services/ErrorModalService';
 
 export async function postUserInfo(user: PubAccountInfo): Promise<void | string> {
     //console.log('Trying to post Account Info');
@@ -35,6 +36,7 @@ export async function postUserInfo(user: PubAccountInfo): Promise<void | string>
         }
     } catch (error) {
         //console.log('Error occurred: ', error);
+        showErrorModal(String(error));
         return String(error);
     }
 }

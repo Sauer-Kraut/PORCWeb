@@ -5,7 +5,7 @@ use crate::liberary::util::functions::build_query::*;
 use crate::liberary::account_lib::availability::availability::*;
 
 pub async fn delete_availability(account_id: u64, availability: Availability, pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-    let query_path = "src/liberary/account/storage/queries/alter/delete_availability.sql";
+    let query_path = "src/liberary/account_lib/availability/storage/queries/delete_availability.sql";
     let query = build_query(query_path, vec![
         ArgumentType::Int(account_id as i64),
         ArgumentType::Timestamptz(DateTime::from_timestamp(availability.start_timestamp as i64, 0).unwrap_or(DateTime::from_timestamp(0, 0).unwrap())),

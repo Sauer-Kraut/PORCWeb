@@ -20,5 +20,5 @@ JOIN participants pOpp ON pOpp.id = m.opponent
 JOIN accounts a1 ON a1.id = pCha.account_id
 JOIn accounts a2 ON a2.id =pOpp.account_id
 
-WHERE f.id = 1
+WHERE f.id = ($1)
 LIMIT 1;

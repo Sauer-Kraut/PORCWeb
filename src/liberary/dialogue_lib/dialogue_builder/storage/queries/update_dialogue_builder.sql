@@ -1,5 +1,5 @@
 INSERT INTO dialogues (id, user_id, dialogue_data, error, last_updated, index)
-VALUES ($1, 2$, 3$::jsonb, 4$, NOW()::timestamptz, $5)
+VALUES (($1), ($2), ($3)::jsonb, ($4), NOW()::timestamptz, ($5))
 ON CONFLICT (id) DO UPDATE
 SET
     error = EXCLUDED.error,

@@ -12,7 +12,7 @@ SELECT
 FROM accounts a
 JOIN participants p1 ON a.id = p1.account_id
 JOIN divisions d ON p1.division_id = d.id
-JOIN participants p2 ON $2 = p2.account_id AND p2.division_id = d.id
+JOIN participants p2 ON ($2) = p2.account_id AND p2.division_id = d.id
 JOIN matches m ON (p1.id = m.challenger AND p2.id = m.opponent) OR (p1.id = m.opponent AND p2.id = m.challenger)
 JOIN fights f ON f.match_id = m.id
 
@@ -22,5 +22,5 @@ JOIN participants pOpp ON pOpp.id = m.opponent
 JOIN accounts a1 ON a1.id = pCha.account_id
 JOIN accounts a2 ON a2.id = pOpp.account_id
 
-WHERE a.id = $1 AND f.date = $3::timestamptz AND d.season_name = $4
+WHERE a.id = ($1) AND f.date = ($3)::timestamptz AND d.season_name = ($4)
 LIMIT 1;

@@ -23,7 +23,7 @@ struct QueryStruct {
 }
 
 pub async fn get_matchplan(season_name: String, pool: PgPool) -> Result<MatchPlan, Box<dyn std::error::Error>> {
-    let query_path = "src/liberary/matchplan/storage/queries/get_matchplan.sql";
+    let query_path = "src/liberary/matchplan_lib/matchplan/storage/queries/get_matchplan.sql";
     let query = build_query(query_path, vec![
         ArgumentType::String(season_name.clone())
     ])?;
