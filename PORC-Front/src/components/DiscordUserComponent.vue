@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { getLoggedIn } from '@/API/GetLoggedIn';
-import errorMessagePopup from '@/components/ErrorPopupModel.vue';
 import config from '@/config';
 import { onMounted, ref } from 'vue';
 
@@ -32,7 +31,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="container justify-contents-center">
+    <div class="container">
         <img class="profile" v-if="isLoggedIn" :src="url" alt="Discord User Image" />
         <a class="LogInLink" v-if="!isLoggedIn" :href="discordAuthURL" target="_self">Log in</a>
     </div>
@@ -44,7 +43,7 @@ onMounted(() => {
     height: fit-content;
     overflow: hidden;
     align-items: center;
-    justify-content: center;
+    justify-content: end;
 }
 
 .profile {

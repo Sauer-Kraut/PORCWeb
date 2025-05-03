@@ -74,12 +74,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.title {
-    display: flex;
-    justify-content: center;
-    text-align: center;
-}
-
 .timer {
     display: flex;
     flex-wrap: wrap;

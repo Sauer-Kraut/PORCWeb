@@ -1,59 +1,59 @@
 <script lang="ts" setup>
-/// <reference types="../../node_modules/.vue-global-types/vue_3.5_0_0_0.d.ts" />
-import type { PubAccountInfo } from '@/models/PubAccountInfo';
-import { MatchStatus, ObservedMatchStatus } from '@/models/Calendar/MatchEventModel';
-import { onMounted, ref, watch } from 'vue';
-import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
-import { filter_str } from '@/util/stringFilter';
 import type { DivisionModel } from '@/models/DivisionModel';
+import { getDivisionImage } from '@/util/ImageHelper';
+import { filter_str } from '@/util/stringFilter';
 
 const props = defineProps<{
     division: DivisionModel;
     observer_id: string;
-    division_count: number;
 }>();
 
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
 
-const status = ref('');
-
-const bodyHeight = ref('2rem');
-
-function setHeight() {
-    let rows = Math.ceil(props.division_count / 2);
-    let percentage = 100 / rows;
-    bodyHeight.value = 'calc(' + percentage + '% - 1rem)';
-    console.log('Body Height:', bodyHeight.value);
-}
-
 async function select() {
     selectedDivision.value = props.division;
-    console.log('Selected Division:', selectedDivision.value);
 }
 
-watch(
-    () => props.division_count,
-    (newCount) => {
-        setHeight();
-    }
-);
-
-onMounted(() => {
-    setHeight();
-});
+function active() {
+    return selectedDivision.value && selectedDivision.value.name === props.division.name;
+}
 </script>
 
 <template>
-    <div class="body" :class="{ selected: selectedDivision && selectedDivision.name === props.division.name }" @click="select" :style="{ height: bodyHeight }">
-        <div class="contents">
-            {{ filter_str(props.division.name, 14) }}
-            <!-- <div class="icon icon-checkmark"></div> -->
-        </div>
+    <div class="list-group-item list-group-item-action d-flex align-items-center" :class="{ active: active() }" @click="select">
+        <img :src="getDivisionImage(props.division.name)" class="division-icon" />
+        <h5 class="d-none d-md-flex m-0 ms-2">{{ filter_str(props.division.name, 14) }}</h5>
+        <!-- <i class="icon-chevron-right d-flex align-items-center" v-if="active()"></i> -->
     </div>
 </template>
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
+
+.list-group-item {
+    &.active {
+        background-color: lighten($dark-bg, 10%) !important;
+        border-color: $dark-border !important;
+    }
+
+    @include media-breakpoint-down(sm) {
+        padding: 0.5rem !important;
+    }
+
+    .division-icon {
+        width: 3rem;
+        height: 3rem;
+        object-fit: contain;
+        @include media-breakpoint-down(sm) {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+    }
+}
+
+.list-group-item-action {
+    cursor: pointer;
+}
 
 .body {
     width: calc(50% - 1rem); /* Ensures 1 items per row */

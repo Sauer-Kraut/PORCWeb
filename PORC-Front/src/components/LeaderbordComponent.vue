@@ -1,81 +1,12 @@
 <script lang="ts" setup>
-import { ref, defineProps, onMounted, defineEmits, watch } from 'vue';
 import type { PlayerPerformance } from '@/models/PlayerPerformancModel';
-import { errorMessages } from 'vue/compiler-sfc';
-import config from '@/config';
 import { filter_str } from '@/util/stringFilter';
+import { defineProps, onMounted, ref, watch } from 'vue';
 
 const props = defineProps<{
-    divisionName: String,
-    performances: PlayerPerformance[],
+    divisionName: String;
+    performances: PlayerPerformance[];
 }>();
-
-const emit = defineEmits<{
-    (e: 'close'): void;
-}>();
-
-const displayError = ref(false);
-let errorMessage: string = 'This is an error message';
-
-const performances = ref<PlayerPerformance[]>([]);
-
-function hideError() {
-    displayError.value = false;
-}
-
-async function getPlayerRanking() {
-    //console.log('Trying to get player ranking');
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/ranking`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        // console.log('Success:', data);
-
-        if (data.error != null) {
-            errorMessage = data.error;
-            //console.log('Error message:', errorMessage);
-            displayError.value = true;
-        } else {
-            let playerPerformances = performances.value;
-            // console.log("data", data.data);
-
-            for (let i = 0; i < data.data.length; i++) {
-                const division = data.data[i][0];
-                // console.log("Division:", division);
-
-                if (division == props.divisionName) {
-                    playerPerformances = data.data[i][1];
-                    break;
-                }
-            }
-
-            if (playerPerformances == performances.value) {
-                errorMessage = 'Divsion could not be found for ranking';
-                //console.log('Error message:', errorMessage);
-                displayError.value = true;
-            } else {
-                performances.value = playerPerformances;
-            }
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
-        displayError.value = true;
-    }
-
-    // console.log("Performances:", performances);
-}
 
 const internalPerformances = ref<PlayerPerformance[]>([]);
 
@@ -86,13 +17,8 @@ watch(
         console.log('Performances updated:', newPerformances);
         internalPerformances.value = newPerformances;
     },
-    { immediate: true } // Ensure the watcher runs immediately on mount
+    { immediate: true }, // Ensure the watcher runs immediately on mount
 );
-
-function close() {
-    // console.log("I got clicked")
-    emit('close');
-}
 
 onMounted(async () => {
     internalPerformances.value = props.performances;
@@ -100,7 +26,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="leaderboard row justify-content-center d-flex" @click="close">
+    <div class="leaderboard row justify-content-center d-flex">
         <div class="row collum-title justify-content-center d-flex leaderboard-row">
             <div class="col-4 col-sm-3">Player</div>
             <div class="col-2 col-sm-1"></div>
@@ -109,8 +35,10 @@ onMounted(async () => {
             <div class="col-3 add-col">Rounds</div>
         </div>
         <div class="p-1"></div>
-        <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content"> 
-            <div class="col-4 col-sm-3 d-flex justify-content-center"><div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div></div>
+        <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content">
+            <div class="col-4 col-sm-3 d-flex justify-content-center">
+                <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
+            </div>
             <div class="col-2 col-sm-1"></div>
             <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
             <div class="col-1 add-col"></div>
@@ -125,20 +53,21 @@ onMounted(async () => {
         </div>
         </div> -->
     </div>
-    <errorMessages v-if="displayError" :errorMessage="errorMessage" @close="hideError" />
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '@/assets/scss/styles.scss';
+
 .leaderboard {
     width: 100%;
     text-align: center;
     border-radius: 11.5px;
     border-width: 1px;
-    border-color: rgb(143, 143, 143);
+    border-color: $dark-border;
     border-style: solid;
     flex-wrap: none;
     min-width: 12rem;
-    background-color: #2e3030;
+    background-color: $dark-bg;
     height: fit-content;
     transition: all 0.6s ease;
 }
@@ -155,7 +84,7 @@ onMounted(async () => {
     align-items: center;
     justify-content: center;
 
-    border-top: #d3d3d3 solid 1px;
+    border-top: $dark-border solid 1px;
 
     * {
         text-align: center;

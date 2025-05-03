@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-    /// <reference types="../../node_modules/.vue-global-types/vue_3.5_0_0_0.d.ts" />
-    import type { PubAccountInfo } from '@/models/PubAccountInfo';
-    import PlayerSelectionComponent from "@/components/PlayerSelectionComponent.vue";
-    import { MatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
-    import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
-    import type { Schedule } from '@/models/Calendar/ScheduleModel';
-    import { defineProps, defineModel, ref } from 'vue';
+/// <reference types="../../node_modules/.vue-global-types/vue_3.5_0_0_0.d.ts" />
+import type { PubAccountInfo } from '@/models/PubAccountInfo';
+import PlayerSelectionComponent from '@/components/PlayerSelectionComponent.vue';
+import { MatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
+import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
+import type { Schedule } from '@/models/Calendar/ScheduleModel';
+import { defineProps, defineModel, ref } from 'vue';
 
-    const schedule = ref({
+const schedule = ref({
     availabilities: [
         {
             startDate: new Date(2025, 1, 24, 10, 30),
@@ -33,81 +33,50 @@
     matches: [
         {
             startDate: new Date(2025, 2, 6, 20),
-            initiatorId: "7",
-            opponentId: "3",
+            initiatorId: '7',
+            opponentId: '3',
             status: MatchStatus.Confirmed,
         },
         {
             startDate: new Date(2025, 2, 3, 8),
-            initiatorId: "1",
-            opponentId: "7",
+            initiatorId: '1',
+            opponentId: '7',
             status: MatchStatus.Requested,
         },
     ] as MatchEvent[],
     notes: 'notes',
 } as Schedule);
 
-    const player = ref ({
-        id: "7",
-        username: "Omlette",
-        avatar: "uhh",
-        schedule: schedule.value,
-    } as PubAccountInfo);
+const player = ref({
+    id: '7',
+    username: 'Omlette',
+    avatar: 'uhh',
+    schedule: schedule.value,
+} as PubAccountInfo);
 
-    const props = defineProps<{
-        players: PubAccountInfo[];
-        observer_id: string;
-    }>();
+const props = defineProps<{
+    players: PubAccountInfo[];
+    observer_id: string;
+}>();
 
-    const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
+const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 </script>
 
 <template>
-    <div class="container">
-        <PlayerSelectionComponent v-for="player in props.players" v-bind:player="player" v-model:selected-player="selectedPlayer" v-bind:observer_id="observer_id"></PlayerSelectionComponent>
+    <div class="container-fluid">
+        <!-- css nonsence of row not working  -->
+        <div class="row flex-wrap-reverse">
+            <PlayerSelectionComponent
+                class="col-12 col-md-6 col-lg-6 col-xl-4 col-xxl-3 p-0"
+                v-for="player in props.players"
+                v-bind:player="player"
+                v-model:selected-player="selectedPlayer"
+                v-bind:observer_id="observer_id"
+            ></PlayerSelectionComponent>
+        </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
-    @import '@/assets/scss/styles.scss';
-
-    .container {
-        display: flex;
-        flex-wrap: wrap-reverse; /* Makes the last row come up to the top */
-        max-width: 100% !important;
-        width: 100% !important;
-        gap: 0px;
-        padding: 0 !important;
-        border: 0;
-        transition: 0.3s;
-        overflow: hidden;
-        margin-top: 6px;
-
-        &:hover * {
-            width: calc(25% - 3px);
-            margin: 1.5px;
-        }
-
-        &:hover {
-            margin-top: 0px;
-        }
-    }
-
-    @media (max-width: 1699px) and (min-width: 499px) {
-        .container {
-            &:hover * {
-                width: calc(50% - 3px);
-                margin: 1.5px;
-            }
-        }
-    }
-
-    @media (max-width: 499px) {
-        .container {
-            &:hover * {
-                width: calc(100% - 3px);
-                margin: 1.5px;
-            }
-        }
-    }
+@import '@/assets/scss/styles.scss';
 </style>
