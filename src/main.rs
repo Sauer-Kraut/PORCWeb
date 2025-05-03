@@ -1,10 +1,9 @@
 mod backend;
 mod porcbot;
+pub mod liberary;
 
-use backend::data_lib::*;
 use backend::discord_communication::{discord_callback, put_logged_in};
 use backend::account_lib::*;
-use backend::storage_lib::*;
 use backend::client_communication::*;
 use backend::bot_communication::*;
 
@@ -14,17 +13,26 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http;
 use actix_files::Files;
+use backend::storage_lib::{Config, StorageMod};
 use colored::Colorize;
+use liberary::account_lib::account::account::Account;
+use liberary::account_lib::account::discord_user::DiscordUser;
+use liberary::account_lib::match_event::match_event::MatchEvent;
+use liberary::account_lib::signup::signup::SignUpInfo;
+use liberary::dialogue_lib::dialogue_builder::dialogue_builder::DialogueBuilder;
+use liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
 use porcbot::config::{BOT_TOKEN, INTENTS};
-use porcbot::dialogue_module::dialogue_builder::DialogueBuilder;
 use porcbot::tasks::events::bot_event_handler::BotEventHandler;
 use porcbot::tasks::functions::check_dialogues::check_dialogues;
 use serenity::Client;
+use sqlx::*;
 use tokio;
 use std::collections::HashMap;
 use std::sync::{Arc};
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
+
+use dotenvy::dotenv;
 
 
 
@@ -61,40 +69,44 @@ async fn main() -> std::io::Result<()> {
     // let _ = StorageMod::save_matchplan(matchplan, "src/Season3MatchPlan.json")?;
 
     println!("read 1");
-    let read_plan = StorageMod::read_matchplan()?;
-
-    println!("read 2");
-    let logins = Arc::new(Mutex::new(StorageMod::read_logins()?));
-
-    // println!("Read Matchplan: {}", read_plan);
-
-    let matchplan = Arc::new(Mutex::new(Some(read_plan)));
-    // StorageMod::save_signups(vec!(), "src/Season4SignUps.json")?;
-    println!("read 3");
-    let signups = Arc::new(Mutex::new(StorageMod::read_signups()?));
-    // println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
-
-    println!("read 4");
-    let accounts = Arc::new(Mutex::new(StorageMod::read_accounts()?));
-
-    println!("read 5");
-    let matchevents = Arc::new(Mutex::new(StorageMod::read_matchevents()?));
-
-    println!("read 6");
     let config = Arc::new(StorageMod::read_config()?);
     let port = config.port.clone();
 
-    println!("read 7");
-    let dialogues = Arc::new(Mutex::new(StorageMod::read_dialogues()?));
+    // println!("read 1");
+    // let read_plan = StorageMod::read_matchplan()?;
+
+    // println!("read 2");
+    // let logins = Arc::new(Mutex::new(StorageMod::read_logins()?));
+
+    // // println!("Read Matchplan: {}", read_plan);
+
+    // let matchplan = Arc::new(Mutex::new(Some(read_plan)));
+    // // StorageMod::save_signups(vec!(), "src/Season4SignUps.json")?;
+    
+    // println!("read 3");
+    // let signups = Arc::new(Mutex::new(StorageMod::read_signups()?));
+    // // println!("secrets: {:?}", StorageMod::read_secrets().unwrap());
+
+    // println!("read 4");
+    // let accounts = Arc::new(Mutex::new(StorageMod::read_accounts()?));
+
+    // println!("read 5");
+    // let matchevents = Arc::new(Mutex::new(StorageMod::read_matchevents()?));
+
+    // println!("read 7");
+    // let dialogues = Arc::new(Mutex::new(StorageMod::read_dialogues()?));
+
+    dotenv().ok();
 
     let appstate = AppState {
-        matchplan,
-        signups,
-        logins,
-        accounts,
-        matchevents,
+        // matchplan,
+        // signups,
+        // logins,
+        // accounts,
+        // matchevents,
+        // dialogues,
         config: config.clone(),
-        dialogues
+        pool: PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap()
     };
 
     let appstate_clone = appstate.clone();
@@ -165,8 +177,8 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/api/sign-up")
             .route(web::get().to(get_sign_up_request))
             .route(web::post().to(add_sign_up_request)))
-            .service(web::resource("/api/sign-up/remove")
-            .route(web::post().to(remove_sign_up_request)))
+            // .service(web::resource("/api/sign-up/remove")
+            // .route(web::post().to(remove_sign_up_request)))
             .service(web::resource("/api/ranking")
             .route(web::get().to(get_player_ranking_request)))
             .service(web::resource("/api/plan-blueprint")
@@ -195,118 +207,119 @@ async fn main() -> std::io::Result<()> {
 
 #[derive(Clone)]
 pub struct AppState {
-    matchplan: Arc<Mutex<Option<MatchPlan>>>,
-    signups: Arc<Mutex<Vec<SignUpInfo>>>,
-    logins: Arc<Mutex<HashMap<String, String>>>,
-    accounts: Arc<Mutex<HashMap<String, Account>>>,
-    matchevents: Arc<Mutex<HashMap<String, MatchEvent>>>,
-    dialogues: Arc<Mutex<Vec<DialogueBuilder>>>,
-    config: Arc<Config>
+    // matchplan: Arc<Mutex<Option<MatchPlan>>>,
+    // signups: Arc<Mutex<Vec<SignUpInfo>>>,
+    // logins: Arc<Mutex<HashMap<String, String>>>,
+    // accounts: Arc<Mutex<HashMap<String, Account>>>,
+    // matchevents: Arc<Mutex<HashMap<String, MatchEvent>>>,
+    // dialogues: Arc<Mutex<Vec<DialogueBuilder>>>,
+    config: Arc<Config>,
+    pool: Pool<Postgres>
 }
 
-impl AppState {
+// impl AppState {
 
-    pub async fn refresh(&self) {
-        println!("\nRefreshing appstate... ");
+//     pub async fn refresh(&self) {
+//         println!("\nRefreshing appstate... ");
 
-        let accounts_clone = self.accounts.clone();
-        let accounts = accounts_clone.lock().await;
+//         let accounts_clone = self.accounts.clone();
+//         let accounts = accounts_clone.lock().await;
 
-        let matchplan_clone = self.matchplan.clone();
-        let mut matchplan_lock = matchplan_clone.lock().await;
+//         let matchplan_clone = self.matchplan.clone();
+//         let mut matchplan_lock = matchplan_clone.lock().await;
 
-        if let Some(matchplan) = matchplan_lock.as_mut() {
-            println!("Refreshing matchplan... ");
-            for division in matchplan.divisions.iter_mut() {
-                println!("Refreshing division {}... ", division.name);
+//         if let Some(matchplan) = matchplan_lock.as_mut() {
+//             println!("Refreshing matchplan... ");
+//             for division in matchplan.divisions.iter_mut() {
+//                 println!("Refreshing division {}... ", division.name);
 
-                for (_key, value) in division.matches.iter_mut() {
+//                 for (_key, value) in division.matches.iter_mut() {
 
-                    let account_p1 = accounts.get(&value.p1.id);
+//                     let account_p1 = accounts.get(&value.p1.id);
 
-                    match account_p1 {
-                        Some(account) => {
-                            if account.user_info.username != value.p1.tag {
-                                value.p1.tag = account.user_info.username.clone();
-                            }
-                        },
-                        None => {},
-                    }
+//                     match account_p1 {
+//                         Some(account) => {
+//                             if account.user_info.username != value.p1.tag {
+//                                 value.p1.tag = account.user_info.username.clone();
+//                             }
+//                         },
+//                         None => {},
+//                     }
 
-                    let account_p2 = accounts.get(&value.p2.id);
+//                     let account_p2 = accounts.get(&value.p2.id);
 
-                    match account_p2 {
-                        Some(account) => {
-                            if account.user_info.username != value.p2.tag {
-                                value.p2.tag = account.user_info.username.clone();
-                            }
-                        },
-                        None => {},
-                    }
-                }
+//                     match account_p2 {
+//                         Some(account) => {
+//                             if account.user_info.username != value.p2.tag {
+//                                 value.p2.tag = account.user_info.username.clone();
+//                             }
+//                         },
+//                         None => {},
+//                     }
+//                 }
 
-                for player in division.players.iter_mut() {
+//                 for player in division.players.iter_mut() {
 
-                    player.tag = accounts.get(&player.id).unwrap_or(
-                        &Account { user_info: DiscordUser { id: "".to_string(), username: "".to_string(), discriminator: "".to_string(), avatar: None, email: None}, schedule: None}
-                    ).user_info.username.clone()
-                }
-            }
+//                     player.tag = accounts.get(&player.id).unwrap_or(
+//                         &Account { user_info: DiscordUser { id: 0, username: "".to_string(), discriminator: 0, avatar: None, email: None}, schedule: None}
+//                     ).user_info.username.clone()
+//                 }
+//             }
 
-            for player in matchplan.players.iter_mut() {
-                player.tag = accounts.get(&player.id).unwrap_or(
-                    &Account { user_info: DiscordUser { id: "".to_string(), username: "".to_string(), discriminator: "".to_string(), avatar: None, email: None}, schedule: None}
-                ).user_info.username.clone()
-            }
+//             for player in matchplan.players.iter_mut() {
+//                 player.tag = accounts.get(&player.id).unwrap_or(
+//                     &Account { user_info: DiscordUser { id: 0, username: "".to_string(), discriminator: 0, avatar: None, email: None}, schedule: None}
+//                 ).user_info.username.clone()
+//             }
 
-            let res = StorageMod::save_matchplan(matchplan.clone());
-            let res = StorageMod::save_logins(self.logins.lock().await.clone());
-            let res_dis = match res {
-                Ok(_) => "Ok".green(),
-                Err(err) => format!("Error: {err:?}").red(),
-            };
-            println!("Saving matchplan data: {}", res_dis);
-        }
+//             let res = StorageMod::save_matchplan(matchplan.clone());
+//             let res = StorageMod::save_logins(self.logins.lock().await.clone());
+//             let res_dis = match res {
+//                 Ok(_) => "Ok".green(),
+//                 Err(err) => format!("Error: {err:?}").red(),
+//             };
+//             println!("Saving matchplan data: {}", res_dis);
+//         }
 
-        let res = StorageMod::save_accounts(accounts.clone());
-        let res_dis = match res {
-            Ok(_) => "Ok".green(),
-            Err(err) => format!("Error: {err:?}").red(),
-        };
-        println!("Saving account data: {}", res_dis);
-        let res = StorageMod::save_logins(self.logins.lock().await.clone());
-        let res_dis = match res {
-            Ok(_) => "Ok".green(),
-            Err(err) => format!("Error: {err:?}").red(),
-        };
-        println!("Saving login data: {}", res_dis);
-        let res = StorageMod::save_signups(self.signups.lock().await.clone());
-        let res_dis = match res {
-            Ok(_) => "Ok".green(),
-            Err(err) => format!("Error: {err:?}").red(),
-        };
-        println!("Saving signup data: {}", res_dis);
-        let res = StorageMod::save_matchevents(self.matchevents.lock().await.clone());
-        let res_dis = match res {
-            Ok(_) => "Ok".green(),
-            Err(err) => format!("Error: {err:?}").red(),
-        };
-        println!("Saving matchevent data: {}", res_dis);
-        let res = StorageMod::save_dialogues(self.dialogues.lock().await.clone());
-        let res_dis = match res {
-            Ok(_) => "Ok".green(),
-            Err(err) => format!("Error: {err:?}").red(),
-        };
-        println!("Saving dialogue data: {}\n", res_dis);
-    }
+//         let res = StorageMod::save_accounts(accounts.clone());
+//         let res_dis = match res {
+//             Ok(_) => "Ok".green(),
+//             Err(err) => format!("Error: {err:?}").red(),
+//         };
+//         println!("Saving account data: {}", res_dis);
+//         let res = StorageMod::save_logins(self.logins.lock().await.clone());
+//         let res_dis = match res {
+//             Ok(_) => "Ok".green(),
+//             Err(err) => format!("Error: {err:?}").red(),
+//         };
+//         println!("Saving login data: {}", res_dis);
+//         let res = StorageMod::save_signups(self.signups.lock().await.clone());
+//         let res_dis = match res {
+//             Ok(_) => "Ok".green(),
+//             Err(err) => format!("Error: {err:?}").red(),
+//         };
+//         println!("Saving signup data: {}", res_dis);
+//         let res = StorageMod::save_matchevents(self.matchevents.lock().await.clone());
+//         let res_dis = match res {
+//             Ok(_) => "Ok".green(),
+//             Err(err) => format!("Error: {err:?}").red(),
+//         };
+//         println!("Saving matchevent data: {}", res_dis);
+//         let res = StorageMod::save_dialogues(self.dialogues.lock().await.clone());
+//         let res_dis = match res {
+//             Ok(_) => "Ok".green(),
+//             Err(err) => format!("Error: {err:?}").red(),
+//         };
+//         println!("Saving dialogue data: {}\n", res_dis);
+//     }
 
-    pub async fn refresh_dialogues(&self) {
-        println!("\nRefreshing dialogues... ");
-        let res = StorageMod::save_dialogues(self.dialogues.lock().await.clone());
-        let res_dis = match res {
-            Ok(_) => "Ok".green(),
-            Err(err) => format!("Error: {err:?}").red(),
-        };
-        println!("Saving dialogue data: {}\n", res_dis);
-    }
-}
+//     pub async fn refresh_dialogues(&self) {
+//         println!("\nRefreshing dialogues... ");
+//         let res = StorageMod::save_dialogues(self.dialogues.lock().await.clone());
+//         let res_dis = match res {
+//             Ok(_) => "Ok".green(),
+//             Err(err) => format!("Error: {err:?}").red(),
+//         };
+//         println!("Saving dialogue data: {}\n", res_dis);
+//     }
+// }

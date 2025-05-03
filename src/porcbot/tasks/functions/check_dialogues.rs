@@ -1,35 +1,44 @@
 use colored::Colorize;
 
-use crate::AppState;
+use crate::{liberary::dialogue_lib::dialogue_builder::storage::{get_dialogues::get_dialogues, store_dialogue::store_dialogue}, AppState};
 
 pub async fn check_dialogues(appstate: &AppState) -> Result<(), String> {
-    let dialogues_clone = appstate.dialogues.clone();
-    let start_lenght = dialogues_clone.lock().await.len();
+    
+    let dialogues = match get_dialogues(10000, 300, appstate.pool.clone()).await {
+        Ok(dialogues) => dialogues,
+        Err(e) => return Err(format!("Error getting dialogues: {}", e))
+    };
 
-    for index in 0..start_lenght {
+    for _i in 0..(dialogues.len()) {
 
-        let mut builders_lock = dialogues_clone.lock().await;
-        let entry = builders_lock.get_mut(index);
-
-        match entry {
-            Some(builder) => {
-                let mut plan = builder.clone().build().await?;
-                if plan.index == 600 || plan.index == 400  {
-                    builders_lock.remove(index);
+        let mut plan = match get_dialogues(1, 300, appstate.pool.clone()).await {
+            Ok(dialogues) => {
+                if let Some(d) = dialogues.first() {
+                    d.clone().build().await?
                 } else {
-                    if let Err(e) = plan.check(appstate).await {
-                        println!("{}\n{}{}", "An error occured while checking a dialogue:".red(), e.bright_red(), " - dialogue check was therefore skiped".yellow());
-                        continue;
-                    } else {
-                        *builder = plan.get_builder();
-                    }
+                    continue;
                 }
             },
-            None => (),
-        }
+            Err(e) => return Err(format!("Error getting dialogues: {}", e))
+        };
 
-        drop(builders_lock);
-        appstate.refresh_dialogues().await; // safes after every dialogue to avoid losing data on error or crash, especially since the discord API always takes a bit so the function takes a few seconds
+        if let Err(e) = plan.check(appstate).await {
+            println!("{}\n{}{}", "An error occured while checking a dialogue: ".red(), e.bright_red(), " - dialogue check was therefore skiped".yellow());
+            match store_dialogue(plan.get_builder(), appstate.pool.clone()).await {
+                Ok(_) => {},
+                Err(e) => {
+                    return Err(format!("Error storing dialogue: {}", e))
+                }
+            };
+        } else {
+            match store_dialogue(plan.get_builder(), appstate.pool.clone()).await {
+                Ok(_) => {},
+                Err(e) => {
+                    return Err(format!("Error storing dialogue: {}", e))
+                }
+            };
+        }
     }
+    
     Ok(())
 }

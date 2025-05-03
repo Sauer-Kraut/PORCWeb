@@ -1,19 +1,26 @@
 use colored::Colorize;
 use serenity::prelude::*;
 
-use crate::backend::account_lib::{MatchEvent, MatchStatus};
 use crate::backend::bot_communication::make_bot_request_match;
-use crate::porcbot::dialogue_module::dialogue_data::CaseData;
+use crate::liberary::account_lib::match_event::match_event::{MatchEvent, MatchStatus};
+use crate::liberary::account_lib::match_event::storage::get_match_events::get_match_events;
+use crate::liberary::dialogue_lib::dialogue_builder::storage::get_dialogues::get_dialogues;
+use crate::liberary::dialogue_lib::dialogue_plan::dialogue_data::CaseData;
+use crate::liberary::matchplan_lib::matchplan::storage::get_seasons::get_seasons;
+use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use crate::AppState;
 
+
+// Command to go through all match events to see if they have accoring dialogues and creates any missing ones
+// TODO: unfinished and needs fixing, but isnt required for now and eats up my time
 pub async fn match_request_catch_up(appstate: &AppState) -> Result<(), String> {
 
     println!("{}", "Received command to catch up with match requests".magenta());
 
-    let dialogues_clone = appstate.dialogues.clone();
-    let dialogues_lock = dialogues_clone.lock().await;
-    let dialogues = dialogues_lock.clone();
-    drop(dialogues_lock);
+    let dialogues = match get_dialogues(100000, appstate.pool.clone()).await {
+        Ok(dialogues) => dialogues,
+        Err(e) => return Err(format!("Error getting dialogues: {}", e))
+    };
 
     let planed_matchevents: Vec<String> = dialogues.iter().filter_map(|dialogue| {
         match dialogue.dialogue_data.data.clone() {
@@ -24,13 +31,43 @@ pub async fn match_request_catch_up(appstate: &AppState) -> Result<(), String> {
             _ => return None
         }
     }).collect();
-    
-    let matchevents_clone = appstate.matchevents.clone();
-    let matchevents_lock = matchevents_clone.lock().await;
-    let matchevents = matchevents_lock.clone();
-    drop(matchevents_lock);
 
-    let matchevents_to_plan = matchevents.iter().filter(|(id, matchevent)| {
+    let seasons = get_seasons(appstate.pool.clone()).await;
+    let seasons = match seasons {
+        Ok(seasons) => seasons,
+        Err(e) => return Err(format!("Error getting seasons: {}", e))
+    };
+
+    let current_season = match seasons.first() {
+        Some(season_name) => {*season_name},
+        None => return Err("No active season found".to_string())
+    };
+
+    let matchplan = get_matchplan(current_season, appstate.pool.clone()).await;
+    let matchplan = match matchplan {
+        Ok(matchplan) => matchplan,
+        Err(e) => return Err(format!("Error getting matchplan: {}", e))
+    };
+
+    let mut match_events = vec!();
+
+    for player in matchplan.players.iter() {
+        let player_match_events = match get_match_events(player.id, appstate.pool.clone()).await {
+            Ok(player_match_events) => player_match_events,
+            Err(e) => return Err(format!("Error getting match events for player {}: {}", player.id, e))
+        };
+        match_events.extend(player_match_events);
+    }
+
+    let mut filtered_match_events = vec!();
+    for matchevent in match_events.iter() {
+        if !filtered_match_events.contains(matchevent) && 
+            matchevent.season == current_season {
+            filtered_match_events.push(matchevent.clone());
+        }
+    }
+
+    let matchevents_to_plan = filtered_match_events.iter().filter(|matchevent| {
         if let MatchStatus::Requested = matchevent.status {
             !planed_matchevents.contains(&id)
         } else {
@@ -52,8 +89,8 @@ pub async fn match_request_catch_up(appstate: &AppState) -> Result<(), String> {
         let mut league = None;
         for division in matchplan.divisions.iter() {
             for player in division.players.iter() {
-                if (player.id == matchevent.initiator_id ||
-                    player.id == matchevent.opponent_id) {
+                if (player.id == matchevent.challenger_id as i64 ||
+                    player.id == matchevent.opponent_id as i64) {
                     league = Some(division.name.clone());
                 }
             }
