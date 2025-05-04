@@ -22,3 +22,4 @@ JOIN divisions d ON p1.division_id = d.id
 JOIN seasons s ON s.season_name = d.season_name
 
 WHERE d.season_name = ($1)
+ORDER BY d.division_order ASC;

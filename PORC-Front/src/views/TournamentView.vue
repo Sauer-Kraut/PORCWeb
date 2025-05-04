@@ -73,7 +73,6 @@ async function getUserId() {
     let res = await getLoggedIn();
 
     if (typeof res === 'string') {
-        showErrorModal('Internal server error');
     } else {
         user.value = res.id;
     }

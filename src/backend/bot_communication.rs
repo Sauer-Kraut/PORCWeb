@@ -186,7 +186,8 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
     match check_blueprint(blueprint.clone()) {
         Some(err) => {
             error = Some(err);
-            return HttpResponse::InternalServerError().json(GenerateNewSeasonSendPackage {
+            println!("{} {}", "An Error occured:".red().bold(), error.clone().unwrap_or("".to_string()).red().bold());
+            return HttpResponse::Ok().json(GenerateNewSeasonSendPackage {
                 title: "Server New Season start Respons".to_string(),
                 error
             });
@@ -198,7 +199,8 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
         Ok(_) => {},
         Err(err) => {
             error = Some(format!("There was an error while starting the new season: {}", err));
-            return HttpResponse::InternalServerError().json(GenerateNewSeasonSendPackage {
+            println!("{} {}", "An Error occured:".red().bold(), error.clone().unwrap_or("".to_string()).red().bold());
+            return HttpResponse::Ok().json(GenerateNewSeasonSendPackage {
                 title: "Server New Season start Respons".to_string(),
                 error
             });

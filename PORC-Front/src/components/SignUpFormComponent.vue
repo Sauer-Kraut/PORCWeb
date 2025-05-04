@@ -91,7 +91,6 @@ async function getUserId() {
     let res = await getLoggedIn();
 
     if (typeof res === 'string') {
-        showErrorModal('Internal server error');
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
