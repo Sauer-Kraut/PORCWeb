@@ -2,7 +2,7 @@ DO $$
 DECLARE
     affected_id text;
 BEGIN
-    UPDATE matches SET score_1 = ($3), score_1 = ($4)
+    UPDATE matches SET score_1 = ($3), score_2 = ($4)
     WHERE participant_1 = (
 
         SELECT id FROM participants WHERE account_id = ($1) AND division_id in (
