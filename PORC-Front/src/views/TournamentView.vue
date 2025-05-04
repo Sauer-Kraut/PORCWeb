@@ -52,6 +52,9 @@ async function getMatchPlan() {
             season_name.value = data.data.season.toString();
             selectedDivision.value = divisions.value.find((division) => division.players.some((p) => p.id == user.value)) ?? divisions.value[0];
 
+            // Sort divisions by order
+            divisions.value.sort((a, b) => a.order - b.order);
+
             console.log('got matchplan: ', data.data);
 
             if (now > seasonEnd) {
@@ -102,7 +105,7 @@ onMounted(async () => {
 
         <div class="part row justify-content-start justify-content-sm-center pt-5 pb-5 w-100" :class="`division-${selectedDivision?.name?.toLowerCase() || 'iron'}`">
             <div class="col-auto">
-                <div ref="selectorRef">
+                <div ref="selectorRef" class="selector-container">
                     <DivisionSelector :divisions="divisions" :observer_id="user" v-model:selectedDivision="selectedDivision" class="" :style="{ 'max-width': '100%' }" />
                 </div>
             </div>
@@ -176,6 +179,12 @@ onMounted(async () => {
 .division-container {
     height: fit-content;
     overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
+}
+
+.selector-container {
+    overflow-x: hidden;
+    max-height: 25rem;
+    scrollbar-width: none; /* Firefox */
 }
 
 @each $division, $color in $division-colors {

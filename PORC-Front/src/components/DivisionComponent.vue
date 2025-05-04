@@ -257,7 +257,6 @@ onMounted(async () => {
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none; /* For Firefox */
-    overflow-x: hidden;
     max-height: 100%;
     width: 100%;
 
