@@ -66,7 +66,7 @@ async function getMatchPlan() {
             season_name.value = data.data.season.toString();
 
             //DEBUG
-            //division.value = data.data.divisions.find((d: DivisionModel) => d.name === 'Silver') ?? division.value;
+            //division.value = data.data.divisions.find((d: DivisionModel) => d.name === 'Stone') ?? division.value;
         }
     } catch (error) {
         console.error('Error:', error);
@@ -236,7 +236,7 @@ onMounted(async () => {
                 <div class="col-12 col-xl-5 ps-auto ps-xl-5 mb-5 mb-xl-auto" v-if="division">
                     <div class="mb-3 d-flex justify-content-center justify-content-xl-start">
                         <div class="division-title">
-                            <h2 class="mb-0 d-flex align-items-center"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
+                            <h2 class="mb-0 d-flex align-items-center me-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
                             <div class="progress" role="progressbar">
                                 <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
                             </div>
