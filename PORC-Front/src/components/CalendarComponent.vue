@@ -21,8 +21,8 @@ const props = defineProps<{
     schedule: Schedule;
     players: PlayerModel[];
     ownCalendar: boolean;
-    ownId: number;
-    scheduleUserId: number;
+    ownId: string;
+    scheduleUserId: string;
     season: string;
 }>();
 
@@ -296,7 +296,7 @@ function getHourStyle(hour: Date, startDate: Date, endDate: Date): { top: string
     };
 }
 
-function getPlayer(id: number): PlayerModel {
+function getPlayer(id: string): PlayerModel {
     //console.log("players: ", props.players);
     return props.players.find((p) => p.id === id) ?? ({} as PlayerModel);
 }

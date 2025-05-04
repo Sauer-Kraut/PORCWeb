@@ -15,7 +15,7 @@ export async function getLoggedIn(): Promise<PubAccountInfo | string> {
 
     const requestData = JSON.stringify({
         title: 'Logged in Request',
-        id: getClientId(),
+        id: clinet_id,
     });
 
     try {

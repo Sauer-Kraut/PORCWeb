@@ -33,14 +33,14 @@ const schedule = ref({
     matches: [
         {
             startDate: new Date(2025, 2, 6, 20),
-            initiatorId: 7,
-            opponentId: 3,
+            initiatorId: '7',
+            opponentId: '3',
             status: MatchStatus.Confirmed,
         },
         {
             startDate: new Date(2025, 2, 3, 8),
-            initiatorId: 1,
-            opponentId: 7,
+            initiatorId: '1',
+            opponentId: '7',
             status: MatchStatus.Requested,
         },
     ] as MatchEvent[],
@@ -48,7 +48,7 @@ const schedule = ref({
 } as Schedule);
 
 const player = ref({
-    id: 7,
+    id: '7',
     username: 'Omlette',
     avatar: 'uhh',
     schedule: schedule.value,
@@ -56,7 +56,7 @@ const player = ref({
 
 const props = defineProps<{
     players: PubAccountInfo[];
-    observer_id: number;
+    observer_id: string;
 }>();
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');

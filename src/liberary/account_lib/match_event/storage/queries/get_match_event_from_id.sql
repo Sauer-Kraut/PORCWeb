@@ -11,14 +11,14 @@ SELECT
 
 FROM fights f
 JOIN matches m ON f.match_id = m.id
-JOIN participants p ON m.challenger = p.id OR m.opponent = p.id
+JOIN participants p ON m.participant_1 = p.id OR m.participant_2 = p.id
 JOIN divisions d ON p.division_id = d.id
 
-JOIN participants pCha ON pCha.id = m.challenger
-JOIN participants pOpp ON pOpp.id = m.opponent
+JOIN participants pCha ON pCha.id = f.challenger
+JOIN participants pOpp ON (pOpp.id = m.participant_1 AND pOpp.id != pCha.id) OR (pOpp.id = m.participant_2 AND pOpp.id != pCha.id)
 
 JOIN accounts a1 ON a1.id = pCha.account_id
-JOIn accounts a2 ON a2.id =pOpp.account_id
+JOIn accounts a2 ON a2.id = pOpp.account_id
 
 WHERE f.id = ($1)
 LIMIT 1;

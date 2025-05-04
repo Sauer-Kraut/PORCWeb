@@ -8,7 +8,7 @@ import MatchScoreComponent from './MatchScoreComponent.vue';
 
 const props = defineProps<{
     division: DivisionModel;
-    UserId: number;
+    UserId: string;
     selectorHeight: number;
 }>();
 

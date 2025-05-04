@@ -26,7 +26,7 @@ const schedule = ref({
 const playerinfos = ref<PubAccountInfo[]>([]);
 
 const isLoggedIn = ref(true);
-const user_id = ref(0);
+const user_id = ref('0');
 
 async function getUserId() {
     let res = await getLoggedIn();

@@ -2,6 +2,6 @@ export interface SignUpInfo {
     username: string,
     bp: number,
     region: string,
-    discord_id: number,
+    discord_id: string,
     date: string
 }

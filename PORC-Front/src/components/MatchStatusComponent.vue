@@ -5,8 +5,8 @@ import { computed } from 'vue';
 const props = defineProps<{
     status: string;
     matches: MatchEvent[];
-    player_id?: number;
-    observer_id: number;
+    player_id?: string;
+    observer_id: string;
 }>();
 
 const status = computed(() => {

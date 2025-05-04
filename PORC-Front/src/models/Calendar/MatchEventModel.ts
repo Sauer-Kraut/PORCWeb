@@ -2,8 +2,8 @@ import type { ScheduleEvent } from './ScheduleEventModel';
 
 export interface MatchEvent extends ScheduleEvent {
     startDate: Date;
-    initiatorId: number;
-    opponentId: number;
+    initiatorId: string;
+    opponentId: string;
     status: MatchStatus;
 }
 

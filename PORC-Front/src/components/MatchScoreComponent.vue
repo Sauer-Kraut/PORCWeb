@@ -9,7 +9,7 @@ import EditMatchComponent from './modals/EditMatchComponent.vue';
 const props = withDefaults(
     defineProps<{
         match: MatchModel;
-        user_id: number;
+        user_id: string;
         editMode?: boolean;
     }>(),
     {

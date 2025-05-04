@@ -37,12 +37,8 @@ pub struct PutAccountInfoResp {
 pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received PUT Request for account infos".bold().cyan());
 
-    let (data_sender, data_receiver) = mpsc::channel();
-    let (error_sender, error_receiver) = mpsc::channel();
 
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
+    let result: Result<Vec<PubAccountInfo>, String> = 'scope: {
 
         let mut account_infos = vec!();
         
@@ -55,27 +51,29 @@ pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web
         }
 
         if account_infos.is_empty() {
-            error_sender.send(format!("No accounts for the ids found")).unwrap()
+            break 'scope Err(format!("No accounts for the ids found"));
         } else {
-            data_sender.send(account_infos).unwrap()
+            break 'scope Ok(account_infos);
         }
-    }).await.unwrap();
-
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
     };
 
-    let data = match data_receiver.recv() {
-        Ok(data) => Some(data),
-        Err(_) => None,
-    };
-
-    HttpResponse::Ok().json(PutAccountInfoResp {
-        title: "Account Info response".to_string(),
-        data,
-        error
-    })
+    match result {
+        Ok(data) => {
+            return HttpResponse::Ok().json(PutAccountInfoResp {
+                title: "Account Info response".to_string(),
+                data: Some(data),
+                error: None
+            })
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
+            return HttpResponse::Ok().json(PutAccountInfoResp {
+                title: "Account Info response".to_string(),
+                data: None,
+                error: Some(err)
+            })
+        }
+    }
 }
 
 
@@ -100,57 +98,75 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
     println!("\n{}", "Received POST Request for a match event".bold().cyan());
 
     let state_clone = appstate.clone();
-    let mut error = None;
 
-    let match_event_entry = get_match_event(info.match_event.challenger_id.clone(), info.match_event.opponent_id.clone(), info.match_event.start_timestamp, info.match_event.season.clone(), appstate.pool.clone()).await;
-        
-    match match_event_entry {
-        Ok(_entry) => {
-            match store_match_event(info.match_event.clone(), appstate.pool.clone()).await {
-                Ok(_) => {},
-                Err(err) => {
+    let result: Result<(), String> = 'scope: {
 
-                    error = Some(format!("Error while storing match event: {:?}", err));
-                }
-            };
-        },
-        Err(_) => {
-            match store_match_event(info.match_event.clone(), appstate.pool.clone()).await {
-                Ok(_) => {},
-                Err(err) => {
-                    error = Some(format!("Error while storing match event: {:?}", err));
-                }
-            };
+        let match_event_entry = get_match_event(info.match_event.challenger_id.clone(), info.match_event.opponent_id.clone(), info.match_event.start_timestamp, info.match_event.season.clone(), appstate.pool.clone()).await;
+            
+        match match_event_entry {
+            Ok(_entry) => {
+                match store_match_event(info.match_event.clone(), appstate.pool.clone()).await {
+                    Ok(_) => {
+                        break 'scope Ok(());
+                    },
+                    Err(err) => {
+                        break 'scope Err(format!("Error while storing match event: {:?}", err));
+                    }
+                };
+            },
+            Err(_) => {
+                match store_match_event(info.match_event.clone(), appstate.pool.clone()).await {
+                    Ok(_) => {},
+                    Err(err) => {
+                        break 'scope Err(format!("Error while storing match event: {:?}", err));
+                    }
+                };
 
 
-            match get_matchplan(info.match_event.season.clone(), appstate.pool.clone()).await {
-                Ok(matchplan) => {
-                    let mut league = "".to_string();
-                    for division in matchplan.divisions.iter() {
-                        for player in division.players.iter() {
-                            if (player.id == info.match_event.challenger_id ||
-                                player.id == info.match_event.opponent_id) {
-                                    league = division.name.clone();
-                                }
+                match get_matchplan(info.match_event.season.clone(), appstate.pool.clone()).await {
+                    Ok(matchplan) => {
+                        let mut league = "".to_string();
+                        for division in matchplan.divisions.iter() {
+                            for player in division.players.iter() {
+                                if (player.id == info.match_event.challenger_id ||
+                                    player.id == info.match_event.opponent_id) {
+                                        league = division.name.clone();
+                                    }
+                            }
+                        }
+
+                        match make_bot_request_match(info.match_event.clone(), league, &state_clone).await {
+                            Ok(_) => {
+                                break 'scope Ok(());
+                            },
+                            Err(err) => {
+                                break 'scope Err(format!("Got the following error while trying to communitcate with porcbot: {:?}", err)
+                            )}
                         }
                     }
-
-                    match make_bot_request_match(info.match_event.clone(), league, &state_clone).await {
-                        Ok(_) => {},
-                        Err(err) => {error = Some(format!("Got the following error while trying to communitcate with porcbot: {:?} fuck it we ball", err))}
+                    Err(err) => {
+                        break 'scope Err(format!("Error while getting matchplan: {:?}", err));
                     }
-                }
-                Err(err) => {
-                    error = Some(format!("Error while getting matchplan: {:?}", err));
-                }
-            };
+                };
+            }
+        }
+    };
+
+    match result {
+        Ok(_) => {
+            return HttpResponse::Ok().json(PostMatchEventRespPackage {
+                title: "Server Match Event update Respons".to_string(),
+                error: None
+            })
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
+            return HttpResponse::Ok().json(PostMatchEventRespPackage {
+                title: "Server Match Event update Respons".to_string(),
+                error: Some(err)
+            })
         }
     }
-
-    HttpResponse::Ok().json(PostMatchEventRespPackage {
-        title: "Server Match Event update Respons".to_string(),
-        error
-    })
 }
 
 

@@ -20,7 +20,7 @@ function getSelectorHeight() {
     return selectorRef.value ? selectorRef.value.clientHeight : 0;
 }
 
-let user = ref(0);
+let user = ref('0');
 let globalTimer = 0;
 let TimerText = ref('Time remaining until season 4 of PORC');
 

@@ -19,7 +19,7 @@ const region = ref(null);
 const isOnDiscord = ref(false);
 
 const isLoggedIn = ref(true);
-let user_id = ref(0);
+let user_id = ref('0');
 
 const isSignedUp = ref(false);
 
@@ -52,7 +52,7 @@ async function postSignUp() {
         username: String(username.value),
         bp: Number(BP.value),
         region: String(region.value),
-        discord_id: user_id.value,
+        discord_id: user_id.value.toString(),
         date: String(now),
     };
 
@@ -147,17 +147,17 @@ onMounted(async () => {
         <div class="inner-container">
             <div class="titel col-10">
                 <h1 class="titel-text">Sign Up</h1>
-                <h3 v-if="isSignedUp && user_id != 0" class="conformation icon-checkmark"></h3>
+                <h3 v-if="isSignedUp && user_id != '0'" class="conformation icon-checkmark"></h3>
             </div>
             <div class="form-container row">
                 <form class="col-12">
-                    <fieldset :disabled="!isLoggedIn || isSignedUp || user_id == 0">
+                    <fieldset :disabled="!isLoggedIn || isSignedUp || user_id == '0'">
                         <legend>Season {{ season_name }}</legend>
                         <div class="p-1" v-if="invalidFillOut || !isLoggedIn || success"></div>
                         <label class="warning" v-if="invalidFillOut">Sign up is not valid</label>
                         <label class="warning" v-if="!isLoggedIn">Please Sign in with discord</label>
                         <label class="success" v-if="success">Sign up successfull!</label>
-                        <label class="success" v-if="!success && isSignedUp && user_id != 0">You're signed up for season {{ season_name }}!</label>
+                        <label class="success" v-if="!success && isSignedUp && user_id != '0'">You're signed up for season {{ season_name }}!</label>
                         <div class="p-2"></div>
                         <div class="mb-3">
                             <label for="disabledTextInput" class="form-label">Discord username</label>

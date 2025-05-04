@@ -6,7 +6,7 @@ import type { PubAccountInfo } from './PubAccountInfo';
 import { showErrorModal } from '@/services/ErrorModalService';
 
 export interface PubAccountInfoRecv {
-    id: number;
+    id: string;
     username: string;
     avatar: string | null;
     schedule: ScheduleRecv | null;
@@ -28,9 +28,9 @@ export interface ScheduleEventRecv {
 export interface MatchEventRecv {
     id: number | null;
     start_timestamp: number;
-    challenger_id: number;
-    opponent_id: number;
-    event_id: number | null;
+    challenger_id: string;
+    opponent_id: string;
+    event_id: string | null;
     status: MatchStatus;
     season: String;
 }

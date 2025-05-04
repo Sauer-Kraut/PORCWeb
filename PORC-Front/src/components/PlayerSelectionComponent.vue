@@ -6,7 +6,7 @@ import { ref } from 'vue';
 
 const props = defineProps<{
     player: PubAccountInfo;
-    observer_id: number;
+    observer_id: string;
 }>();
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
