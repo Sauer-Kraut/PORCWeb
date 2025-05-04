@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h2 class="title">{{ TimerText }}</h2>
+        <h2 class="title">{{ text }}</h2>
         <div class="timer">
             <div class="time-unit">
                 <span class="number">{{ days }}</span>
@@ -64,7 +64,7 @@ onMounted(() => {
         setTimeout(() => {
             updateTime();
             timer = setInterval(updateTime, 500);
-        }, 70); // Fail safe in case 70mx is to short to load correctly so you dont need to wait for 500ms
+        }, 1000); // Fail safe in case 70mx is to short to load correctly so you dont need to wait for 500ms
     }, 70);
 });
 

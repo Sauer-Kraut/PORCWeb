@@ -2,6 +2,7 @@ import config from '@/config';
 import type { PubAccountInfo } from '../models/PubAccountInfo';
 import { getClientId } from './clientIdentification';
 import { convertToPubAccountInfo } from '@/models/PubAccountInfoRecv';
+import { showErrorModal } from '@/services/ErrorModalService';
 
 export async function getLoggedIn(): Promise<PubAccountInfo | string> {
     //console.log('Trying to get Logged in status');
@@ -38,6 +39,7 @@ export async function getLoggedIn(): Promise<PubAccountInfo | string> {
         }
     } catch (error) {
         //console.log('Error occurred: ', error);
+        showErrorModal(String(error));
         return String(error);
     }
 }

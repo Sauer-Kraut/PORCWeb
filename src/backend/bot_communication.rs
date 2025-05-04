@@ -1,54 +1,25 @@
-use async_std::sync::Mutex;
-use actix_web::FromRequest;
 use actix_web::{web, HttpResponse, Responder};
 use colored::Colorize;
-use tokio;
-use std::sync::{mpsc, Arc, LockResult};
 use serde::{Deserialize, Serialize};
-use super::account_lib::MatchEvent;
-use super::data_lib::{Division, MatchPlan, Player};
-use super::storage_lib::{Record, StorageMod};
-use crate::porcbot::dialogue_module::dialogue_initiator::DialogueInitator;
+
+use crate::liberary::account_lib::match_event::match_event::MatchEvent;
+use crate::liberary::account_lib::signup::storage::get_signups::get_signups;
+use crate::liberary::dialogue_lib::dialogue_builder::storage::store_dialogue::store_dialogue;
+use crate::liberary::dialogue_lib::dialogue_initiator::dialogue_initiator::DialogueInitator;
+use crate::liberary::matchplan_lib::matchplan::storage::get_seasons::get_seasons;
+use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
+use crate::liberary::matchplan_lib::matchplan::storage::start_season::start_season;
+use crate::liberary::matchplan_lib::matchplan_blueprint::matchplan_blueprint::PlanBlueprint;
 use crate::AppState;
-use super::client_communication::{SignUpInfo, GetRequestPlanPackage, GetRequestSignUpPackage};
-use reqwest::Client;
-use serde_json::json;
 
 
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PlanBlueprint {
-    pub divisions: Vec<DivisionBlueprint>,
-    pub players_to_sort: Vec<PlayerBlueprint>,
-    pub end_timestamp: Option<u64>,
-    pub pause_end_timestamp: Option<u64>,
-    pub season: u64
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DivisionBlueprint {
-    pub name: String,
-    pub order: usize,
-    pub players: Vec<PlayerBlueprint>
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct PlayerBlueprint {
-    pub tag: String,
-    pub id: String
-}
-
-impl PartialEq for PlayerBlueprint {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GetRequestPlanBlueprintPackage {
     pub title: String,
-    pub data: PlanBlueprint,
+    pub data: Option<PlanBlueprint>,
     pub error: Option<String>
 }
 
@@ -68,131 +39,77 @@ pub struct GenerateNewSeasonSendPackage {
 pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received GET Request for plan blueprint".bold().cyan());
 
-    let (data_sender, data_receiver) = mpsc::channel();
-    let match_plan = appstate.matchplan.clone();
-    let sign_ups = appstate.signups.clone();
+    let mut error = None;
 
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
+    let pool = appstate.pool.clone();
 
-        let plan_binding = match_plan.lock().await;
-        let locked_plan = plan_binding.clone();
-        drop(plan_binding);
+    let seasons = get_seasons(pool.clone()).await.unwrap_or(vec!());
+    let mut data = None;
 
-        let mut signup_binding = sign_ups.lock().await;
-        let signups_locked: &mut Vec<SignUpInfo> = signup_binding.as_mut();
 
-        match locked_plan {
-            Some(plan) => {
-
-                let mut division_blueprints: Vec<DivisionBlueprint> = Vec::new();
-                let mut players_to_demote = Vec::new();
-
-                for (index, division) in plan.divisions.iter().enumerate(){
-
-                    let players = division.generate_perfomance().await;
-
-                    let mut players_to_promote = Vec::new();
-                    let mut players_to_keep = players_to_demote.clone();
-                    players_to_demote.clear();
-
-                    for (index, player) in players.iter().enumerate() {
-                        if index as f32 <= division.players.len() as f32 / 3.0 {
-                            players_to_promote.push(player.player.clone());
-                        } 
-                        else if index as f32 >= division.players.len() as f32 / 3.0 * 2.0 {
-                            players_to_demote.push(player.player.clone());
-                        } 
-                        else {
-                            players_to_keep.push(player.player.clone());
-                        }
-                    }
-
-                    for player in players_to_promote.iter().filter(|player| {
-                        for signup in signups_locked.iter(){
-                            if signup.discord_id == signup.discord_id {
-                                signups_locked.remove(signups_locked.iter().position(|x| x.username == signup.username).unwrap());
-                                return true;
-                            }
-                        } 
-                        return false;
-                    }) {
-                        match division_blueprints.get_mut(((index as i32 - 1 as i32).max(0 as i32)) as usize) {
-                            Some(division_blueprint) => {
-                                let player_blueprint = PlayerBlueprint{
-                                    tag: player.tag.clone(),
-                                    id: player.id.clone(),
-                                };
-                                division_blueprint.players.push(player_blueprint);
-                            },
-                            None => {
-                                players_to_keep.push(player.clone());
-                            }
-                        }
-                    }
-
-                    let players = players_to_keep.iter().filter(|player| {
-                        for signup in signups_locked.iter(){
-                            if signup.discord_id == player.id {
-                                signups_locked.remove(signups_locked.iter().position(|x| x.username == signup.username).unwrap());
-                                return true;
-                            }
-                        } 
-                        return false;
-                    }).map(|player| PlayerBlueprint{
-                        tag: player.tag.clone(),
-                        id: player.id.clone(),
-                    }).collect();
-
-                    let division_blueprint = DivisionBlueprint {
-                        name: division.name.clone(),
-                        order: division.order,
-                        players
-                    };
-                    
-                    division_blueprints.push(division_blueprint);
-                }
-
-            data_sender.send(PlanBlueprint {
-                divisions: division_blueprints,
-                players_to_sort: signups_locked.iter().map(|signup|PlayerBlueprint{
-                    tag: signup.username.clone(),
-                    id: signup.discord_id.clone(),
-                }).collect(),
-                end_timestamp: None,
-                pause_end_timestamp: None,
-                season: 0
-            }).unwrap();
-
-            },
-            None => {
-                data_sender.send(PlanBlueprint {
-                    divisions: Vec::new(),
-                    players_to_sort: signups_locked.iter().map(|signup| PlayerBlueprint{
-                        tag: signup.username.clone(),
-                        id: signup.discord_id.clone(),
-                    }).collect(),
-                    end_timestamp: None,
-                    pause_end_timestamp: None,
-                    season: 0
-                }).unwrap();
+    if seasons.len() > 0 {
+        
+        let current_season = seasons[0].clone();
+        let matchplan = match get_matchplan(current_season.clone(), pool.clone()).await {
+            Ok(v) => v,
+            Err(err) => {
+                error = Some(format!("There was an error while getting the matchplan: {}", err));
+                return HttpResponse::InternalServerError().json(GetRequestPlanBlueprintPackage {
+                    title: "Server match plan blueprint Respons".to_string(),
+                    data,
+                    error
+                });
             }
+        };
+
+        let mut last_season_end_timestamp = 0;
+        if seasons.len() > 1 {
+
+            let last_season = seasons[1].clone();
+            let last_matchplan = match get_matchplan(last_season.clone(), pool.clone()).await {
+                Ok(v) => v,
+                Err(err) => {
+                    error = Some(format!("There was an error while getting the matchplan: {}", err));
+                    return HttpResponse::InternalServerError().json(GetRequestPlanBlueprintPackage {
+                        title: "Server match plan blueprint Respons".to_string(),
+                        data,
+                        error
+                    });
+                }
+            };
+
+            last_season_end_timestamp = last_matchplan.pause_end_timestamp;
         }
 
-        
+        let signups = match get_signups(last_season_end_timestamp, None, pool.clone()).await {
+            Ok(v) => v,
+            Err(err) => {
+                error = Some(format!("There was an error while getting the signups: {}", err));
+                return HttpResponse::InternalServerError().json(GetRequestPlanBlueprintPackage {
+                    title: "Server match plan blueprint Respons".to_string(),
+                    data,
+                    error
+                });
+            }
+        };
 
-    }).await.unwrap();
+        let blueprint = matchplan.generate_blueprint(signups.clone()).await;
 
-    let data = data_receiver.recv().unwrap();
+        return HttpResponse::Ok().json(GetRequestPlanBlueprintPackage {
+            title: "Server match plan blueprint Respons".to_string(),
+            data: Some(blueprint),
+            error: None
+        });
+    }
+    else {
+        HttpResponse::Ok().json(GetRequestPlanBlueprintPackage {
+            title: "Server match plan blueprint Respons".to_string(),
+            data: None,
+            error: Some("no seasons available".to_string())
+        })
+    }
 
-    let error = None;
-
-    HttpResponse::Ok().json(GetRequestPlanBlueprintPackage {
-        title: "Server match plan blueprint Respons".to_string(),
-        data,
-        error
-    })
+    
 }
 
 
@@ -262,68 +179,30 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
 pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received POST Request for new season start".bold().magenta());
 
-    let (error_sender, error_receiver) = mpsc::channel();
-    let match_plan = appstate.matchplan.clone();
-    let sign_ups = appstate.signups.clone();
+    let mut error = None;
 
     let blueprint = info.plan.clone();
 
+    match check_blueprint(blueprint.clone()) {
+        Some(err) => {
+            error = Some(err);
+            return HttpResponse::InternalServerError().json(GenerateNewSeasonSendPackage {
+                title: "Server New Season start Respons".to_string(),
+                error
+            });
+        },
+        None => {}
+    };
 
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
-
-        let sign_ups_clone = sign_ups.lock().await.clone();
-
-        let mut plan_binding = match_plan.lock().await;
-        let locked_plan = plan_binding.as_ref();
-
-        let blue_error = check_blueprint(blueprint.clone());
-
-        match blue_error {
-            Some(err) => {
-                error_sender.send(format!("There is an issue with the provideed blueprint: {}", err)).unwrap();
-                return;
-            },
-            None => {
-                let plan_res = MatchPlan::generate(blueprint, false);
-
-                match plan_res {
-                    Err(err) => {
-                        error_sender.send(format!("There is an issue with the provideed blueprint: {}", err)).unwrap();
-                        return;
-                    },
-                    Ok(plan) => {
-                        match locked_plan {
-                            Some(l) => {
-
-                                let record = Record {
-                                    match_plan: Some(l.clone()),
-                                    sign_ups: sign_ups_clone,
-                                    season: l.season as usize,
-                                };
-
-                                let _ = StorageMod::save_record(record).unwrap();
-                            },
-                            None => {}
-                        };
-
-                        *plan_binding = Some(plan.clone());
-                        drop(plan_binding);
-                        let mut signup_binding = sign_ups.lock().await;
-                        *signup_binding = vec!();
-                        let _ = StorageMod::save_signups(vec!()).unwrap();
-                    }
-                }
-            }
+    match start_season(blueprint, appstate.pool.clone()).await {
+        Ok(_) => {},
+        Err(err) => {
+            error = Some(format!("There was an error while starting the new season: {}", err));
+            return HttpResponse::InternalServerError().json(GenerateNewSeasonSendPackage {
+                title: "Server New Season start Respons".to_string(),
+                error
+            });
         }
-    }).await.unwrap();
-
-    let _ = appstate.refresh().await;
-
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
     };
 
     HttpResponse::Ok().json(GenerateNewSeasonSendPackage {
@@ -334,16 +213,17 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
 
 
 pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, appstate: &AppState) -> Result<(), String>{
-    let parsed_opponent_id = match matchevent.opponent_id.parse() {
-        Err(err) => return Err(format!("opponent id couldnt be parsed in dialogue route with error: {err}")),
-        Ok(v) => v
-    };
+    let parsed_opponent_id = matchevent.opponent_id.clone();
 
     let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
 
-    let dialogeus_clone = appstate.dialogues.clone();
-    let mut dialogues_lock = dialogeus_clone.lock().await;
-
-    dialogues_lock.push(builder);
+    /// TODO!!!!! THIS ONE IS IMPORTANT!!!!
+    let res = store_dialogue(builder, appstate.pool.clone()).await;
+    match res {
+        Ok(_) => {},
+        Err(err) => {
+            return Err(format!("Error while storing dialogue: {:?}", err));
+        }
+    };
     Ok(())
 }

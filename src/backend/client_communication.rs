@@ -1,42 +1,29 @@
 use serde::{Deserialize, Serialize};
-use std::sync::mpsc;
 use colored::Colorize;
-use tokio;
 
-use crate::AppState;
-use super::data_lib::{Match, MatchPlan, PlayerPerformance};
-use super::storage_lib::StorageMod;
+use crate::{liberary::{account_lib::signup::{signup::SignUpInfo, storage::{get_signups::get_signups, store_signup::store_signup}}, matchplan_lib::{division::player_performance::PlayerPerformance, matchplan::{matchplan::MatchPlan, storage::{get_seasons, matchplan_get::get_matchplan}}, matchplan_match::{matchplan_match::Match, storage::match_store::update_match}}}, AppState};
 use actix_web::{web, Responder, HttpResponse};
 
 
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct SignUpInfo {
-    pub username: String,
-    pub bp: u32,
-    pub region: String,
-    pub discord_id: String,
-    pub date: String
-}
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GetRequestPlanPackage {
     pub title: String,
-    pub data: MatchPlan,
+    pub data: Option<MatchPlan>,
     pub error: Option<String>
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GetRequestSignUpPackage {
     pub title: String,
-    pub data: Vec<SignUpInfo>,
+    pub data: Option<Vec<SignUpInfo>>,
     pub error: Option<String>
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GetPlayerPerformancePackage {
     pub title: String,
-    pub data: Vec<(String, Vec<PlayerPerformance>)>,
+    pub data: Option<Vec<(String, Vec<PlayerPerformance>)>>,
     pub error: Option<String>
 }
 
@@ -59,274 +46,289 @@ pub struct PostRequestReturnPackage {
 }
 
 
-
+// Request to retrieve match plan for currrent season
+// TODO: will need to add fetch for other seasons later
 pub async fn get_match_plan_request(appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received GET Request for match plan".bold().cyan());
 
-    let (data_sender, data_receiver) = mpsc::channel();
-    let (error_sender, error_receiver) = mpsc::channel();
-    let matchplan = appstate.matchplan.clone();
+    let result: Result<MatchPlan, String> = 'scope: {
+        let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
 
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
-
-        let locked_matchplan = matchplan.lock().await;
-        let matchplan: Option<MatchPlan> = locked_matchplan.clone();
-
-        match matchplan {
-            Some(plan) => {
-                data_sender.send(plan.clone()).unwrap();
-            },
-            None => {
-                error_sender.send("No Match Plan found".to_owned()).unwrap();
-            }
+        if seasons.len() == 0 {
+            break 'scope Err(format!("No Match Plan found"));
         }
+        else {
 
-    }).await.unwrap();
+            let current_season = seasons[0].clone();
+            let matchplan = match get_matchplan(current_season.clone(), appstate.pool.clone()).await {
+                Ok(v) => v,
+                Err(err) => {
+                    break 'scope Err(format!("Couldnt get matchplan: {}", err));
+                }
+            };
 
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
+            break 'scope Ok(matchplan);
+        }
     };
 
-    let data = data_receiver.recv().unwrap();
-
-    HttpResponse::Ok().json(GetRequestPlanPackage {
-        title: "Server Match Plan Respons".to_string(),
-        data,
-        error
-    })
+    match result {
+        Ok(data) => {
+            return HttpResponse::Ok().json(GetRequestPlanPackage {
+                title: "Server Match Plan Respons".to_string(),
+                data: Some(data),
+                error: None
+            });
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
+            return HttpResponse::Ok().json(GetRequestPlanPackage {
+                title: "Server Match Plan Respons".to_string(),
+                data: None,
+                error: Some(err)
+            });
+        }
+    }
 }
 
 
 
+// Request to retrieve all player performance data for currrent season
+// TODO: will need to add fetch for other seasons later
 pub async fn get_player_ranking_request(appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received GET Request for match plan".bold().cyan());
 
-    let (data_sender, data_receiver) = mpsc::channel();
-    let (error_sender, error_receiver) = mpsc::channel();
-    let matchplan = appstate.matchplan.clone();
+    let result: Result<Vec<(String, Vec<PlayerPerformance>)>, String> = 'scope: {
 
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
+        let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
 
-        let mut output = Vec::new();
-
-        let locked_plan = matchplan.lock().await;
-        let plan = match locked_plan.as_ref() {
-            Some(plan) => plan,
-            None => {
-                error_sender.send("No Match Plan found".to_owned()).unwrap();
-                return;
-            }
-        };
-
-        for division in plan.divisions.iter() {
-            
-            let ranking = division.generate_perfomance().await;
-            output.push((division.name.clone(), ranking));
+        if seasons.len() == 0 {
+            break 'scope Err(format!("No Match Plan found"));
         }
+        else {
 
-        data_sender.send(output).unwrap();
+            let current_season = seasons[0].clone();
+            let matchplan = match get_matchplan(current_season.clone(), appstate.pool.clone()).await {
+                Ok(v) => v,
+                Err(err) => {
+                    break 'scope Err(format!("There was an error while getting the matchplan: {}", err));
+                }
+            };
+            
+            let divisions = matchplan.divisions;
+            let mut data = vec!();
 
-    }).await.unwrap();
+            for division in divisions {
+                let performance = division.generate_perfomance().await;
+                let res = (division.name, performance);
+                data.push(res);
+            }
 
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
+            break 'scope Ok(data);
+        }
     };
-
-    let data = data_receiver.recv().unwrap();
-
-    HttpResponse::Ok().json(GetPlayerPerformancePackage {
-        title: "Server Player Performance Respons".to_string(),
-        data,
-        error
-    })
+    
+    match result {
+        Ok(data) => {
+            return HttpResponse::Ok().json(GetPlayerPerformancePackage {
+                title: "Server Player Performance Respons".to_string(),
+                data: Some(data),
+                error: None
+            });
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
+            return HttpResponse::Ok().json(GetPlayerPerformancePackage {
+                title: "Server Player Performance Respons".to_string(),
+                data: None,
+                error: Some(err)
+            });
+        }
+    }
 }
 
 
-
+// Request to retrieve all recent sign ups
 pub async fn get_sign_up_request(appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received GET Request for sign ups".bold().cyan());
 
-    let (data_sender, data_receiver) = mpsc::channel();
-    let (error_sender, error_receiver) = mpsc::channel();
-    let signups = appstate.signups.clone();
+    let result: Result<Vec<SignUpInfo>, String> = 'scope: {
+        let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
 
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
+        if seasons.len() < 1 {
+            break 'scope Err(format!("No Match Plan found"));
+        }
+        else {
 
-        let locked_signups = signups.lock().await;
-        let signups: Vec<SignUpInfo> = locked_signups.clone();
+            let mut last_season_end_timestamp = 0;
 
-        data_sender.send(signups).unwrap_or_else( |err| {
-            error_sender.send(format!("Internal Server Error : {:?}", err)).unwrap();
-        });
+            if seasons.len() > 1 {
+                let last_season = seasons[1].clone();
+                let matchplan = match get_matchplan(last_season.clone(), appstate.pool.clone()).await {
+                    Ok(v) => v,
+                    Err(err) => {
+                        break 'scope Err(format!("There was an error while getting the matchplan: {}", err));
+                    }
+                };
+                last_season_end_timestamp = matchplan.pause_end_timestamp;
+            }
+        
+            let signups = match get_signups(last_season_end_timestamp, None, appstate.pool.clone()).await {
+                Ok(v) => v,
+                Err(err) => {
+                    break 'scope Err(format!("There was an error while getting the signups: {}", err));
+                }
+            };
 
-    }).await.unwrap();
-
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
+            break 'scope Ok(signups);
+        }
     };
 
-    let data = data_receiver.recv().unwrap();
-
-    HttpResponse::Ok().json(GetRequestSignUpPackage {
-        title: "Server Sign Ups Respons".to_string(),
-        data,
-        error
-    })
+    match result {
+        Ok(data) => {
+            return HttpResponse::Ok().json(GetRequestSignUpPackage {
+                title: "Server Sign Up Respons".to_string(),
+                data: Some(data),
+                error: None
+            });
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
+            return HttpResponse::Ok().json(GetRequestSignUpPackage {
+                title: "Server Sign Up Respons".to_string(),
+                data: None,
+                error: Some(err)
+            });
+        }
+    }
 }
 
 
+// Request to update a provided match of the current season
 pub async fn update_match_plan_request(info: web::Json<PostRequestMatchPackage>, appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received POST Request for match plan".bold().cyan());
 
-    let (error_sender, error_receiver) = mpsc::channel();
-    let matchplan = appstate.matchplan.clone();
+    let result: Result<(), String> = 'scope: {
 
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
+        let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
 
-        let mut locked_matchplan = matchplan.lock().await;
-
-        
-        if locked_matchplan.is_some() {
-            let mut plan = locked_matchplan.clone().unwrap();
-
-            match plan.update_match(info.match_info.clone()) {
+        if seasons.len() < 1 {
+            break 'scope Err(format!("No Match Plan found"));
+        }
+        else {
+            let current_season = seasons[0].clone();
+            
+            match update_match(info.match_info.clone(), current_season, appstate.pool.clone()).await {
                 Ok(_) => {
-                    *locked_matchplan = Some(plan.clone());
-                    match StorageMod::save_matchplan(plan.clone()) {
-                        Ok(_) => {},
-                        Err(err) => {
-                            error_sender.send(err.to_string()).unwrap();
-                        }
-                    }
+                    break 'scope Ok(());
                 },
                 Err(err) => {
-                    error_sender.send(err.to_string()).unwrap();
+                    break 'scope Err(format!("There was an error while updating the matchplan: {}", err));
                 }
-            }
-        } 
-        
-        else {
-            error_sender.send("No match plan found".to_owned()).unwrap();
+            };
         }
-
-    }).await.unwrap();
-
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
     };
 
-    HttpResponse::Ok().json(PostRequestReturnPackage {
-        title: "Server Match Plan Update Respons".to_string(),
-        error
-    })
+    match result {
+        Ok(_) => {
+            return HttpResponse::Ok().json(PostRequestReturnPackage {
+                title: "Server Match Plan Update Respons".to_string(),
+                error: None
+            });
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
+            return HttpResponse::Ok().json(PostRequestReturnPackage {
+                title: "Server Match Plan Update Respons".to_string(),
+                error: Some(err)
+            });
+        }
+    }
 }
 
 
+// Request do add a sign up
 pub async fn add_sign_up_request(info: web::Json<PostRequestSignUpPackage>, appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received POST Request for sign up".bold().cyan());
 
-    let (error_sender, error_receiver) = mpsc::channel();
-    let signups = appstate.signups.clone();
-
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
-
-        let mut locked_signups = signups.lock().await;
-        let mut signups: Vec<SignUpInfo> = locked_signups.clone();
-
-        for signup in signups.iter() {
-            if &signup.discord_id == &info.sing_up_info.discord_id {
-                error_sender.send(format!("Similar Sign Up already exists: {}", signup.username)).unwrap();
-                return;
-            }
-        }
-
-        signups.push(info.sing_up_info.clone());
-        *locked_signups = signups.clone();
-        match StorageMod::save_signups(signups.clone()) {
-            Ok(_) => {},
-            Err(err) => {
-                error_sender.send(err.to_string()).unwrap();
-            }
-        }
-
-    }).await.unwrap();
-
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
-    };
-
-    HttpResponse::Ok().json(PostRequestReturnPackage {
-        title: "Server Sign Up Add Respons".to_string(),
-        error
-    })
-}
-
-
-pub async fn remove_sign_up_request(info: web::Json<PostRequestSignUpPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for sign up".bold().cyan());
-
-    let (error_sender, error_receiver) = mpsc::channel();
-    let signups = appstate.signups.clone();
-
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
-
-        let mut locked_signups = signups.lock().await;
-        let mut signups: Vec<SignUpInfo> = locked_signups.clone();
-
-        let mut index_to_remove = None;
-
-        for (index, signup) in signups.iter().enumerate() {
-            if &signup.discord_id == &info.sing_up_info.discord_id {
-                index_to_remove = Some(index);
-            }
-        }
-
-        match index_to_remove {
-            Some(index) => {
-
-                signups.remove(index);
-                *locked_signups = signups.clone();
-                match StorageMod::save_signups(signups.clone()) {
-                    Ok(_) => {},
-                    Err(err) => {
-                        error_sender.send(err.to_string()).unwrap();
-                    }
-                }
+    let result: Result<(), String> = 'scope: {
+        match store_signup(info.sing_up_info.clone(), appstate.pool.clone()).await {
+            Ok(_) => {
+                break 'scope Ok(());
             },
-            None => {
-                error_sender.send("Sign up not found".to_string()).unwrap();
+            Err(err) => {
+                break 'scope Err(format!("There was an error while adding the sign up: {}", err));
             }
-        }
-
-    }).await.unwrap();
-
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
+        };
     };
 
-    HttpResponse::Ok().json(PostRequestReturnPackage {
-        title: "Server Sign Up Remove Respons".to_string(),
-        error
-    })
+    match result {
+        Ok(_) => {
+            return HttpResponse::Ok().json(PostRequestReturnPackage {
+                title: "Server Sign Up Add Respons".to_string(),
+                error: None
+            });
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
+            return HttpResponse::Ok().json(PostRequestReturnPackage {
+                title: "Server Sign Up Add Respons".to_string(),
+                error: Some(err)
+            });
+        }
+    }
 }
+
+
+// pub async fn remove_sign_up_request(info: web::Json<PostRequestSignUpPackage>, appstate: web::Data<AppState>) -> impl Responder {
+//     println!("\n{}", "Received POST Request for sign up".bold().cyan());
+
+//     let (error_sender, error_receiver) = mpsc::channel();
+//     let signups = appstate.signups.clone();
+
+//     // We spawn an asyncronus thread in order to be able to handle many requests at once
+//     println!("startig async thread");
+//     tokio::task::spawn(async move {
+
+//         let mut locked_signups = signups.lock().await;
+//         let mut signups: Vec<SignUpInfo> = locked_signups.clone();
+
+//         let mut index_to_remove = None;
+
+//         for (index, signup) in signups.iter().enumerate() {
+//             if &signup.discord_id == &info.sing_up_info.discord_id {
+//                 index_to_remove = Some(index);
+//             }
+//         }
+
+//         match index_to_remove {
+//             Some(index) => {
+
+//                 signups.remove(index);
+//                 *locked_signups = signups.clone();
+//                 match StorageMod::save_signups(signups.clone()) {
+//                     Ok(_) => {},
+//                     Err(err) => {
+//                         error_sender.send(err.to_string()).unwrap();
+//                     }
+//                 }
+//             },
+//             None => {
+//                 error_sender.send("Sign up not found".to_string()).unwrap();
+//             }
+//         }
+
+//     }).await.unwrap();
+
+//     let error = match error_receiver.try_recv(){
+//         Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
+//         Err(_) => None,
+//     };
+
+//     HttpResponse::Ok().json(PostRequestReturnPackage {
+//         title: "Server Sign Up Remove Respons".to_string(),
+//         error
+//     })
+// }
 
 pub fn sanetize_username(username: &str) -> String {
     username.to_lowercase().replace(" ", "")

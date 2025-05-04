@@ -1,0 +1,1 @@
+SELECT * FROM initiate_season(($1)::jsonb)

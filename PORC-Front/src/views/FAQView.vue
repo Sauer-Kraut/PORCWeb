@@ -77,7 +77,11 @@ const discordTimeStamps = 'https://www.geeksforgeeks.org/how-to-make-timestamps-
 }
 
 .part:nth-of-type(2n) {
-    background: linear-gradient(135deg, darken(#343232, 5%), darken(#23252b, 5%));
+    // background: linear-gradient(135deg, darken(#343232, 5%), darken(#23252b, 5%));
+}
+
+.part {
+    background: none !important;
 }
 
 .titel {

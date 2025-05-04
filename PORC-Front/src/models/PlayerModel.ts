@@ -1,5 +1,5 @@
 export interface PlayerModel {
-    id: string;
+    id: number;
     tag: string;
     division: string;
 }

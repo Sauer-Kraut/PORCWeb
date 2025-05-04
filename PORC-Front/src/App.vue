@@ -14,7 +14,7 @@ function closeMenu() {
 }
 
 const isLoggedIn = ref(false);
-const user_id = ref('default');
+const user_id = ref(0);
 let errorMessage: string = 'This is an error message';
 async function getUserId() {
     let res = await getLoggedIn();

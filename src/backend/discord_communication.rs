@@ -1,25 +1,23 @@
-use actix_http::cookie;
-use actix_web::cookie::time::error;
-use async_std::sync::Mutex;
-use actix_web::{FromRequest, HttpRequest};
 use actix_web::{web, HttpResponse, Responder, cookie::Cookie};
 use colored::Colorize;
-use tokio;
-use std::collections::HashMap;
-use std::sync::{mpsc, Arc};
 use serde::{Deserialize, Serialize};
 use async_std::fs;
 use reqwest::Client;
 use uuid::Uuid;
 use actix_web::cookie::time::OffsetDateTime;
-use std::time::{SystemTime, Duration};
+use std::time::Duration;
 
+use crate::backend::storage_lib::StorageMod;
+use crate::liberary::account_lib::account::account::Account;
+use crate::liberary::account_lib::account::discord_user::DiscordUser;
+use crate::liberary::account_lib::account::pub_account_info::PubAccountInfo;
+use crate::liberary::account_lib::account::storage::get_account::get_account;
+use crate::liberary::account_lib::account::storage::store_account::store_account;
+use crate::liberary::account_lib::login::login::LogIn;
+use crate::liberary::account_lib::login::storage::get_login;
+use crate::liberary::account_lib::login::storage::store_login::store_login;
+use crate::liberary::account_lib::schedule::schedule::Schedule;
 use crate::AppState;
-use crate::backend::account_lib::DiscordUser;
-
-use super::account_lib::PubAccountInfo;
-use super::storage_lib::StorageMod;
-use super::account_lib::{Account, Schedule};
 
 
 
@@ -95,14 +93,15 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
 
     println!("Discord User: {:?}", result);
 
-    let mut locked_logins = appstate.logins.lock().await;
-    let mut logins = locked_logins.clone();
-
     let session_id = generate_session_id().await;
 
-    logins.insert(session_id.clone(), result.id.clone());
-    *locked_logins = logins.clone();
-    match StorageMod::save_logins(logins) {
+    let login = LogIn {
+        key: session_id.clone(),
+        account_id: result.id.clone(),
+        creation_timestamp: 0,
+    };
+
+    match store_login(login, appstate.pool.clone()).await {
         Ok(_) => {},
         Err(err) => {
             println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
@@ -110,30 +109,27 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
         }
     };
 
-    let mut locked_accounts = appstate.accounts.lock().await;
-    let mut accounts = locked_accounts.clone();
 
-    if !accounts.contains_key(&result.id) {
-        
-        let new_account = Account {
-            user_info: result.clone(),
-            schedule: Some(Schedule {
-                availabilities: vec!(),
-                matches: vec!(),
-                notes: "".to_string(),
-            })
-        };
-
-        accounts.insert(result.id, new_account);
-        *locked_accounts = accounts.clone();
-        match StorageMod::save_accounts(accounts) {
-            Ok(_) => {},
-            Err(err) => {
-                println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
-                return HttpResponse::InternalServerError().body("")
-            }
-        };
-    }
+    match get_account(result.id.clone(), appstate.pool.clone()).await {
+        Ok(_) => {},
+        Err(_) => {
+            let new_account = Account {
+                user_info: result.clone(),
+                schedule: Some(Schedule {
+                    availabilities: vec!(),
+                    matches: vec!(),
+                    note: "".to_string(),
+                })
+            };
+            match store_account(new_account, appstate.pool.clone()).await {
+                Ok(_) => {},
+                Err(err) => {
+                    println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
+                    return HttpResponse::InternalServerError().body("")
+                }
+            };
+        }
+    };
 
     
     let expiry = OffsetDateTime::now_utc() + Duration::from_secs(60 * 60 * 24 * 30);
@@ -182,53 +178,48 @@ async fn exchang_code_for_token(code: &str, info: TokenRequestParam, url: String
 
 
 
+// Request to receive the account belonging to the provided account id
 pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
     println!("\n{}", "Received PUT Request for logged in status".bold().cyan());
 
-    let (data_sender, data_receiver) = mpsc::channel();
-    let (error_sender, error_receiver) = mpsc::channel();
+    let result: Result<PubAccountInfo, String> = 'scope: {
 
-    let logins_clone = appstate.logins.clone();
-    let client_id = info.id.clone();
-
-    let accounts_clone = appstate.accounts.clone();
-    let accounts_lock = accounts_clone.lock().await;
-    let accounts_clone = accounts_lock.clone();
-
-    drop(accounts_lock);
-
-    // We spawn an asyncronus thread in order to be able to handle many requests at once
-    println!("startig async thread");
-    tokio::task::spawn(async move {
-        
-        match logins_clone.as_ref().lock().await.clone().get(&client_id) {
-            Some(entry) => {
-                let discord_id = entry.clone();
-                match accounts_clone.get(&discord_id) {
-                    Some(value) => {let _ = data_sender.send(value.clone());}
-                    None => {error_sender.send("No account for discord id found".to_string()).unwrap();}
-                }
-            },
-            None => {error_sender.send("no login found for client id".to_string()).unwrap()}
+        let login = match get_login::get_login(info.id.clone(), appstate.pool.clone()).await {
+            Ok(login) => login,
+            Err(err) => {
+                break 'scope Err(format!("Error while getting login: {:?}", err));
+            }
         };
 
-    }).await.unwrap();
-
-    let error = match error_receiver.try_recv(){
-        Ok(err) => {println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); Some(err)},
-        Err(_) => None,
+        let account = get_account(login.account_id.clone(), appstate.pool.clone()).await;
+        match account {
+            Ok(account) => {
+                let pub_account_info = account.get_pub_info();
+                break 'scope Ok(pub_account_info);
+            },
+            Err(err) => {
+                break 'scope Err(format!("Error while getting account: {:?}", err));
+            }
+        }
     };
 
-    let data = match data_receiver.recv() {
-        Ok(data) => Some(data.get_pub_info()),
-        Err(_) => None,
-    };
-
-    HttpResponse::Ok().json(PutRequestLoggedInSendPackage {
-        title: "Server Logged in response".to_string(),
-        data,
-        error
-    })
+    match result {
+        Ok(account) => {
+            return HttpResponse::Ok().json(PutRequestLoggedInSendPackage {
+                title: "Account Info response".to_string(),
+                data: Some(account),
+                error: None
+            })
+        },
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); 
+            return HttpResponse::InternalServerError().json(PutRequestLoggedInSendPackage {
+                title: "Account Info response".to_string(),
+                data: None,
+                error: Some(err)
+            })
+        }
+    }
 }
 
 

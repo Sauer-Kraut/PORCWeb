@@ -20,13 +20,13 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 const schedule = ref({
     availabilities: [] as ScheduleEvent[],
     matches: [] as MatchEvent[],
-    notes: ``,
+    note: ``,
 } as Schedule);
 
 const playerinfos = ref<PubAccountInfo[]>([]);
 
 const isLoggedIn = ref(true);
-const user_id = ref('default');
+const user_id = ref(0);
 
 async function getUserId() {
     let res = await getLoggedIn();
@@ -41,6 +41,7 @@ async function getUserId() {
 }
 
 const division = ref<DivisionModel>();
+const season_name = ref('default');
 
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
@@ -62,6 +63,7 @@ async function getMatchPlan() {
             showErrorModal(data.error);
         } else {
             division.value = data.data.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+            season_name.value = data.data.season.toString();
 
             //DEBUG
             //division.value = data.data.divisions.find((d: DivisionModel) => d.name === 'Silver') ?? division.value;
@@ -87,9 +89,9 @@ function find_user(): PlayerModel[] {
 
 function getPlayerIds(): string[] {
     let ids = [] as string[];
-    ids.push(user_id.value);
+    ids.push(user_id.value.toString());
     for (const player of opponents.value) {
-        ids.push(player.id);
+        ids.push(player.id.toString());
     }
     return ids;
 }
@@ -102,6 +104,8 @@ async function getPubPlayerInfos(ids: string[]) {
     }
 
     let filteredIds = [...new Set(ids)];
+    console.log(getPlayerIds());
+    console.log('Filtered IDs:', filteredIds);
 
     try {
         const response = await fetch(`${config.getBackendUrl()}/api/account/info`, {
@@ -221,6 +225,7 @@ onMounted(async () => {
                         :players="participants"
                         :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
                         :ownId="user_id"
+                        :season="season_name"
                         :scheduleUserId="selectedPlayer?.id ?? 'default'"
                         v-on:reload="reload"
                         class="calendar-component"

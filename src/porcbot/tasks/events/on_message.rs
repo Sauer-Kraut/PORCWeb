@@ -1,5 +1,5 @@
 use crate::porcbot::config::{get_http, COMMAND_PREFIX};
-use crate::porcbot::tasks::commands::match_requests_catch_up::match_request_catch_up;
+// use crate::porcbot::tasks::commands::match_requests_catch_up::match_request_catch_up;
 use crate::porcbot::tasks::functions::has_role::{has_role, has_role_from_message};
 
 pub use super::bot_event_handler::BotEventHandler;
@@ -15,10 +15,20 @@ pub async fn on_message(me: &BotEventHandler, ctx: Context, msg: Message) {
     };
 
     match striped_message {
-        "match_request_catch_up" => {
+        // "match_request_catch_up" => {
+        //     if has_role_from_message(&ctx, &msg, "DEV").await {
+        //         match match_request_catch_up(&me.appstate).await {
+        //             Ok(_) => {let _ = msg.channel_id.say(get_http(), "match requests caught up successfully!").await;},
+        //             Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
+        //         }
+        //     } else {
+        //         let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
+        //     }
+        // },
+        "upload_accounts" => {
             if has_role_from_message(&ctx, &msg, "DEV").await {
-                match match_request_catch_up(&me.appstate).await {
-                    Ok(_) => {let _ = msg.channel_id.say(get_http(), "match requests caught up successfully!").await;},
+                match crate::porcbot::tasks::commands::upload_accounts::upload_accounts(&me.appstate).await {
+                    Ok(_) => {let _ = msg.channel_id.say(get_http(), "Accounts uploaded successfully!").await;},
                     Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
                 }
             } else {

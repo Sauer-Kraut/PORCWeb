@@ -1,17 +1,16 @@
 use serenity::all::*;
 use rand::Rng;
 
-use crate::porcbot::config::*;
-use crate::backend::account_lib::MatchEvent;
+use crate::{liberary::account_lib::match_event::match_event::MatchEvent, porcbot::config::*};
 
 pub async fn create_discord_event(match_event: MatchEvent, league: String) -> Result<ScheduledEvent, String>{
     let guild_id = GuildId::new(SERVER_ID);
-    let initiator_username = match UserId::new(match match_event.initiator_id.parse() {Ok(v) => v, Err(err) => return Err("couldnt parse initiator id into u64".to_string())}).to_user(get_http()).await {
+    let initiator_username = match UserId::new(match_event.challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
         Ok(user) => user.name,
         Err(_) => "Challenger".to_string(),
     };
 
-    let opponent_username = match UserId::new(match match_event.opponent_id.parse() {Ok(v) => v, Err(err) => return Err("couldnt parse opponent id into u64".to_string())}).to_user(get_http()).await {
+    let opponent_username = match UserId::new(match_event.opponent_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
         Ok(user) => user.name,
         Err(_) => "Opponent".to_string(),
     };

@@ -1,13 +1,14 @@
 import config from '@/config';
 import { convertToMatchEventRecv, type MatchEventRecv } from '../models/PubAccountInfoRecv';
 import { MatchStatus, type MatchEvent } from '../models/Calendar/MatchEventModel';
+import { showErrorModal } from '@/services/ErrorModalService';
 
-export async function postMatch(match: MatchEvent): Promise<void | string> {
+export async function postMatch(match: MatchEvent, season: string): Promise<void | string> {
     //console.log('Trying to post Account Info');
 
     const requestData = JSON.stringify({
         title: 'Match event POST Request',
-        match_event: convertToMatchEventRecv(match),
+        match_event: convertToMatchEventRecv(match, season),
     });
 
     try {
@@ -27,6 +28,7 @@ export async function postMatch(match: MatchEvent): Promise<void | string> {
         // console.log('Success:', data);
         if (jsonData.error != null) {
             //console.log('Error occurred: ', jsonData.error);
+            showErrorModal(jsonData.error);
             return jsonData.error;
         }
     } catch (error) {
@@ -35,7 +37,10 @@ export async function postMatch(match: MatchEvent): Promise<void | string> {
     }
 }
 
-export async function RequestMatch(match: MatchEvent): Promise<void | string> {
+export async function RequestMatch(match: MatchEvent, season: string) {
     match.status = MatchStatus.Requested;
-    return postMatch(match);
+    let res = await postMatch(match, season);
+    if (res != null) {
+        showErrorModal(res);
+    }
 }

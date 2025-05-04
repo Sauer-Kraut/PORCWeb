@@ -5,10 +5,10 @@ use serenity::all::UserId;
 use super::dm_send::send_dm;
 use super::add_reaction::add_reaction;
 
-pub async fn send_prompt_dm(user_id: u64, prompt: String) -> Result<(), String> {
-    let message_id = send_dm(user_id, prompt).await?;
+pub async fn send_prompt_dm(user_id: String, prompt: String) -> Result<(), String> {
+    let message_id = send_dm(user_id.clone(), prompt).await?;
 
-    match UserId::new(user_id as u64).create_dm_channel(get_http()).await {
+    match UserId::new(user_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).create_dm_channel(get_http()).await {
         Ok(dm_channel) => {
             let allowed_reactions = vec!(ACCEPT_EMOJI, DECLINE_EMOJI);
             for reaction in allowed_reactions.iter() {

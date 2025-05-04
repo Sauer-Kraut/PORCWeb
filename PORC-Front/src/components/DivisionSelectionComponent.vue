@@ -5,7 +5,7 @@ import { filter_str } from '@/util/stringFilter';
 
 const props = defineProps<{
     division: DivisionModel;
-    observer_id: string;
+    observer_id: number;
 }>();
 
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');

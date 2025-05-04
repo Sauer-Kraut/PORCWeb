@@ -3,9 +3,10 @@ import type { MatchEvent, MatchStatus } from './Calendar/MatchEventModel';
 import type { DailyRepetitionConfig, Repetition, ScheduleEvent } from './Calendar/ScheduleEventModel';
 import type { Schedule } from './Calendar/ScheduleModel';
 import type { PubAccountInfo } from './PubAccountInfo';
+import { showErrorModal } from '@/services/ErrorModalService';
 
 export interface PubAccountInfoRecv {
-    id: string;
+    id: number;
     username: string;
     avatar: string | null;
     schedule: ScheduleRecv | null;
@@ -13,22 +14,25 @@ export interface PubAccountInfoRecv {
 
 export interface ScheduleRecv {
     availabilities: ScheduleEventRecv[];
-    matches: string[];
-    notes: string;
+    matches: number[];
+    note: string;
 }
 
 export interface ScheduleEventRecv {
     start_timestamp: number;
     end_timestamp: number;
-    repetition: string;
+    repetition: Repetition;
     repetition_config: DailyRepetitionConfig | null;
 }
 
 export interface MatchEventRecv {
+    id: number | null;
     start_timestamp: number;
-    initiator_id: string;
-    opponent_id: string;
+    challenger_id: number;
+    opponent_id: number;
+    event_id: number | null;
     status: MatchStatus;
+    season: String;
 }
 
 export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise<PubAccountInfo> {
@@ -44,7 +48,7 @@ export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise
     const dummySchedule = ({
         availabilities: [] as ScheduleEvent[],
         matches: [] as MatchEvent[],
-        notes: "",
+        note: "",
     } as Schedule)
     return {
         id: recv.id,
@@ -76,12 +80,12 @@ export async function convertToPubAccountInfo(recv: PubAccountInfoRecv): Promise
                       return {
                           startDate: new Date(match.start_timestamp * 1000),
                           endDate: new Date(match.start_timestamp * 1000 + 3600000),
-                          initiatorId: match.initiator_id,
+                          initiatorId: match.challenger_id,
                           opponentId: match.opponent_id,
                           status: match.status,
                       };
                   }),
-                  notes: recv.schedule.notes,
+                  note: recv.schedule.note,
               } as Schedule)
             : dummySchedule,
     };
@@ -105,22 +109,25 @@ export function convertToPubAccountInfoRecv(info: PubAccountInfo): PubAccountInf
                           }) as ScheduleEventRecv,
                   ),
                   matches: [], // Keep the match array empty
-                  notes: info.schedule.notes,
+                  note: info.schedule.note,
               }
             : null,
     };
 }
 
-export function convertToMatchEventRecv(event: MatchEvent): MatchEventRecv {
+export function convertToMatchEventRecv(event: MatchEvent, season: string): MatchEventRecv {
     return {
         start_timestamp: Math.floor(event.startDate.getTime() / 1000),
-        initiator_id: event.initiatorId,
+        challenger_id: event.initiatorId,
         opponent_id: event.opponentId,
         status: event.status,
+        id: null,
+        event_id: null,
+        season: season
     };
 }
 
-async function getMatchEvents(match_ids: string[]): Promise<MatchEventRecv[]> {
+async function getMatchEvents(match_ids: number[]): Promise<MatchEventRecv[]> {
     //console.log('Trying to get match events for the following match ids: ', match_ids);
 
     try {
@@ -144,6 +151,7 @@ async function getMatchEvents(match_ids: string[]): Promise<MatchEventRecv[]> {
 
         if (data.error != null) {
             let errorMessage = data.error; // TODO: Add error handling
+            showErrorModal(errorMessage);
             //console.log('Error message:', errorMessage);
             return [];
         } else {

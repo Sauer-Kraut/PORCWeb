@@ -5,7 +5,7 @@ import DivisionSelectionComponent from './DivisionSelectionComponent.vue';
 
 const props = defineProps<{
     divisions: DivisionModel[];
-    observer_id: string;
+    observer_id: number;
 }>();
 
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
