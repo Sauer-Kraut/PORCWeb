@@ -56,7 +56,7 @@ pub async fn get_availabilities(account_id: String, pool: PgPool) -> Result<Vec<
         availabilities.push(availability);
     }
 
-    println!("{:?}", availabilities);
+    // println!("{:?}", availabilities);
 
     Ok(availabilities)
 }

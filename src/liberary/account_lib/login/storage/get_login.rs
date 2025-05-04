@@ -26,7 +26,7 @@ pub async fn get_login(key: String, pool: PgPool) -> Result<LogIn, Box<dyn std::
         creation_timestamp: row.created_at.timestamp() as u64,
     };
 
-    println!("{:?}", login);
+    // println!("{:?}", login);
 
     Ok(login)
 }

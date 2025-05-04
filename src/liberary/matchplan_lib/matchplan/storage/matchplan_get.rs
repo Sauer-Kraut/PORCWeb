@@ -96,7 +96,7 @@ pub async fn get_matchplan(season_name: String, pool: PgPool) -> Result<MatchPla
         pause_end_timestamp: pause_end_timestamp
     };
 
-    println!("{:?}", matchplan);
+    // println!("{:?}", matchplan);
 
     Ok(matchplan)
 }

@@ -9,7 +9,7 @@ pub async fn store_account(account: Account, pool: PgPool) -> Result<(), Box<dyn
     let query = build_query(query_path, vec![
         ArgumentType::String(account.user_info.id.to_string()),
         ArgumentType::String(account.user_info.username),
-        ArgumentType::Int(account.user_info.discriminator as i64),
+        ArgumentType::Int(account.user_info.discriminator.parse()?),
         match account.user_info.avatar {
             Some(ref avatar) => ArgumentType::String(avatar.clone()),
             None => ArgumentType::Null,
@@ -28,7 +28,7 @@ pub async fn store_account(account: Account, pool: PgPool) -> Result<(), Box<dyn
     .execute(&pool)
     .await?;
 
-    println!("account stored successfully");
+    // println!("account stored successfully");
 
     Ok(())
 }

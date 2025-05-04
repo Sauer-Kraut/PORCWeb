@@ -29,7 +29,7 @@ pub async fn get_schedule(account_id: String, pool: PgPool) -> Result<Schedule, 
         note: note.schedule_note.unwrap_or("".to_string()),
     };
 
-    println!("{:?}", schedule);
+    // println!("{:?}", schedule);
 
     Ok(schedule)
 }

@@ -16,7 +16,7 @@ pub async fn delete_match_event(match_event: MatchEvent, pool: PgPool) -> Result
     .execute(&pool)
     .await?;
 
-    println!("match event deleted successfully");
+    // println!("match event deleted successfully");
 
     Ok(())
 }

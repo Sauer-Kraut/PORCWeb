@@ -17,7 +17,7 @@ pub async fn delete_availability(account_id: String, availability: Availability,
     .execute(&pool)
     .await?;
 
-    println!("availability stored successfully");
+    // println!("availability stored successfully");
 
     Ok(())
 }

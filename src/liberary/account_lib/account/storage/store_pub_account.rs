@@ -23,7 +23,7 @@ pub async fn store_pub_account(account: PubAccountInfo, pool: PgPool) -> Result<
     .execute(&pool)
     .await?;
 
-    println!("account stored successfully");
+    // println!("account stored successfully");
 
     Ok(())
 }

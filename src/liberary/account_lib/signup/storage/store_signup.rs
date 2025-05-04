@@ -15,7 +15,7 @@ pub async fn store_signup(signup: SignUpInfo, pool: PgPool) -> Result<(), Box<dy
     .execute(&pool)
     .await?;
 
-    println!("signup stored successfully");
+    // println!("signup stored successfully");
 
     Ok(())
 }

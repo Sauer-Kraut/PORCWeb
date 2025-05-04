@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct DiscordUser {
     pub id: String,
     pub username: String,
-    pub discriminator: i8,
+    pub discriminator: String,
     pub avatar: Option<String>,
     pub email: Option<String>,
 }

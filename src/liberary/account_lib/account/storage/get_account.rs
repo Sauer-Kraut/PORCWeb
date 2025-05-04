@@ -28,7 +28,7 @@ pub async fn get_account(account_id: String, pool: PgPool) -> Result<Account, Bo
     let discord_user = discord_user::DiscordUser {
         id: row.id.parse()?,
         username: row.username,
-        discriminator: row.discriminator as i8,
+        discriminator: row.discriminator.to_string(),
         avatar: row.avatar,
         email: row.email,
     };
@@ -40,7 +40,7 @@ pub async fn get_account(account_id: String, pool: PgPool) -> Result<Account, Bo
         schedule: Some(schedule),
     };
 
-    println!("{:?}", account);
+    // println!("{:?}", account);
 
     Ok(account)
 }

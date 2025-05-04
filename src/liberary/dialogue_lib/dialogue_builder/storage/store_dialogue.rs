@@ -44,7 +44,7 @@ pub async fn store_dialogue(builder: DialogueBuilder, pool: PgPool) -> Result<()
         },
     }
 
-    println!("dialogue stored successfully");
+    // println!("dialogue stored successfully");
 
     Ok(())
 }

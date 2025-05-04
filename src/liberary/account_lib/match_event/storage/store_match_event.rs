@@ -22,7 +22,7 @@ pub async fn store_match_event(match_event: MatchEvent, pool: PgPool) -> Result<
     .execute(&pool)
     .await?;
 
-    println!("match event stored successfully");
+    // println!("match event stored successfully");
 
     Ok(())
 }

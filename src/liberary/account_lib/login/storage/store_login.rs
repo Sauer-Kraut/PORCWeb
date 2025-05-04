@@ -13,7 +13,7 @@ pub async fn store_login(login: LogIn, pool: PgPool) -> Result<(), Box<dyn std::
     .execute(&pool)
     .await?;
 
-    println!("login stored successfully");
+    // println!("login stored successfully");
 
     Ok(())
 }
