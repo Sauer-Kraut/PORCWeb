@@ -172,7 +172,6 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/signup").to(index))
             .service(web::resource("/rules").to(index))
             .service(web::resource("/faq").to(index))
-            .service(web::resource("/faq").to(index))
             .service(web::resource("/match-planner").to(index))
             .service(web::resource("/api/match-plan")
             .route(web::get().to(get_match_plan_request))

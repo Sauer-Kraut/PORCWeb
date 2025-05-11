@@ -3,6 +3,7 @@ import NotFoundView from '@/views/NotFoundView.vue';
 import FAQView from '@/views/FAQView.vue';
 import RulesView from '@/views/RulesView.vue';
 import MatchPlannerView from '@/views/MatchPlannerView.vue';
+import CallbackCatchView from '@/views/CallbackCatchView.vue';
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [
@@ -33,7 +34,8 @@ const routes: RouteRecordRaw[] = [
     },
     {
         path: '/discord/callback',
-        redirect: '/',
+        name: 'Callback catch',
+        component: CallbackCatchView,
     },
 ];
 

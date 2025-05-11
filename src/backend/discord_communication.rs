@@ -101,15 +101,6 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
         creation_timestamp: 0,
     };
 
-    match store_login(login, appstate.pool.clone()).await {
-        Ok(_) => {},
-        Err(err) => {
-            println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
-            return HttpResponse::InternalServerError().body("")
-        }
-    };
-
-
     match get_account(result.id.clone(), appstate.pool.clone()).await {
         Ok(_) => {},
         Err(_) => {
@@ -128,6 +119,15 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
                     return HttpResponse::InternalServerError().body("")
                 }
             };
+        }
+    };
+
+
+    match store_login(login, appstate.pool.clone()).await {
+        Ok(_) => {},
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
+            return HttpResponse::InternalServerError().body("")
         }
     };
 
