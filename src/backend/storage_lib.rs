@@ -31,7 +31,8 @@ const DIALOGUES_PATH: &str = "userdata/ActiveDialogues.json";
 pub struct Config {
     pub url: String,
     pub domain: String,
-    pub port: String
+    pub port: String,
+    pub dev: bool
 }
 
 pub struct StorageMod {}

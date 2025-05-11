@@ -1,5 +1,6 @@
 {
     "url": "http://localhost:8082",
     "domain": "localhost",
-    "port": "8082"
+    "port": "8082",
+    "dev": true
 }

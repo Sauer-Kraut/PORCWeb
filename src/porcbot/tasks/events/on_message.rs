@@ -26,7 +26,7 @@ pub async fn on_message(me: &BotEventHandler, ctx: Context, msg: Message) {
         //     }
         // },
         "upload_accounts" => {
-            if has_role_from_message(&ctx, &msg, "DEV").await {
+            if has_role_from_message(&ctx, &msg, "DEV").await {  //TODO: more modular role check
                 match crate::porcbot::tasks::commands::upload_accounts::upload_accounts(&me.appstate).await {
                     Ok(_) => {let _ = msg.channel_id.say(get_http(), "Accounts uploaded successfully!").await;},
                     Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}

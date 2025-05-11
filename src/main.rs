@@ -101,6 +101,11 @@ async fn main() -> std::io::Result<()> {
 
     dotenv().ok();
 
+    let pool = match config.dev {
+        true => PgPool::connect(&std::env::var("DEV_DATABASE_URL").unwrap()).await.unwrap(), // dev database
+        false => PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap(), // production database
+    };
+
     let appstate = AppState {
         // matchplan,
         // signups,
@@ -109,7 +114,7 @@ async fn main() -> std::io::Result<()> {
         // matchevents,
         // dialogues,
         config: config.clone(),
-        pool: PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap()
+        pool
     };
 
     let appstate_clone = appstate.clone();
