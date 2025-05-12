@@ -67,7 +67,7 @@
                     </ul>
                 </div>
                 <div class="rule-box">
-                    <h2 class="title">Placement and Promotion</h2>
+                    <h2 class="title">Placement, Ranking and Promotion</h2>
                     <ul>
                         <li> 
                             Your initial placement is determined by your amount of BP as well as your assessed skill.
@@ -76,6 +76,8 @@
                             and put forward your pitch for your placement.
                         </li> <br> <li>
                             After each season, player performance during the season decides promotion and demotion. As a rule of thumb, one can expect the top third of a division to promote and the bottom third to demote.
+                        </li> <br> <li>
+                            The ranking at the end of each season will be decided by total set wins. Ties will be broken by the results of the set between the tied players. Remaining ties get broken by who has the least total Match losses. If somehow after this there is still a tie the placement will be shared
                         </li> <br> <li>
                             Promotions over two divisions may be rewarded upon special performance or improvement.
                         </li>
@@ -168,3 +170,5 @@
         height: 120px;
     }
 </style>
+<script setup>
+</script>
