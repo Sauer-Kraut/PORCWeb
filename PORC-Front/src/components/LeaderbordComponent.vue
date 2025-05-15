@@ -42,7 +42,7 @@ onMounted(async () => {
             <div class="col-2 col-sm-1"></div>
             <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
             <div class="col-1 add-col"></div>
-            <div class="col-3 add-col">{{ player.cumulative_match_difference }} / {{ player.matches }}</div>
+            <div class="col-3 add-col">{{ player.cumulative_match_difference / player.matches }}</div>
         </div>
         <div class="ß-1"></div>
         <div></div>
