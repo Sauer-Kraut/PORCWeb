@@ -32,7 +32,7 @@ onMounted(async () => {
             <div class="col-2 col-sm-1"></div>
             <div class="col-4 col-sm-3">Matches</div>
             <div class="col-1 add-col"></div>
-            <div class="col-3 add-col">Match Point Advantage</div>
+            <div class="col-3 add-col">Advantage</div>
         </div>
         <div class="p-1"></div>
         <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content">
