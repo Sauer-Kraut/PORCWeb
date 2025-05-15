@@ -61,7 +61,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
     let client = Client::new();
     let clinet_info = StorageMod::read_secrets().unwrap();
     
-    let access_token = match exchang_code_for_token(&query.code, clinet_info, appstate.config.url.clone()).await {
+    let access_token = match exchang_code_for_token(&query.code, clinet_info, appstate.config.read().await.url.clone()).await {
         Ok(token) => token,
         Err(err) => {
             println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
@@ -135,7 +135,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
     let expiry = OffsetDateTime::now_utc() + Duration::from_secs(60 * 60 * 24 * 30);
 
     let cookie = Cookie::build("browser_id", &session_id[..])
-        .domain(appstate.config.domain.clone())         // TODO: needs to be updated for deployment
+        .domain(appstate.config.read().await.domain.clone())         // TODO: needs to be updated for deployment
         .path("/")
         .http_only(false)
         .secure(true)               

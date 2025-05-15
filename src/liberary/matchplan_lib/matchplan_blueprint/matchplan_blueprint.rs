@@ -95,6 +95,8 @@ impl MatchPlan {
                     id: player.player.id.clone(),
                 }));
             }
+
+            division_blueprints.push(division_blueprint);
         }
 
         let involoved_players = division_blueprints.iter().flat_map(|division| division.players.clone()).collect::<Vec<_>>();

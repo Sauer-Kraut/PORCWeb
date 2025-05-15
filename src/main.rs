@@ -2,6 +2,7 @@ mod backend;
 mod porcbot;
 pub mod liberary;
 
+use actix::spawn;
 use backend::discord_communication::{discord_callback, put_logged_in};
 use backend::account_lib::*;
 use backend::client_communication::*;
@@ -21,9 +22,10 @@ use liberary::account_lib::match_event::match_event::MatchEvent;
 use liberary::account_lib::signup::signup::SignUpInfo;
 use liberary::dialogue_lib::dialogue_builder::dialogue_builder::DialogueBuilder;
 use liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
-use liberary::matchplan_lib::matchplan::storage::get_seasons::get_seasons;
 use liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use liberary::matchplan_lib::matchplan::storage::start_season::start_season;
+use liberary::matchplan_lib::season::season::Season;
+use liberary::matchplan_lib::season::storage::get_season::get_season;
 use porcbot::config::{BOT_TOKEN, INTENTS};
 use porcbot::tasks::events::bot_event_handler::BotEventHandler;
 use porcbot::tasks::functions::check_dialogues::check_dialogues;
@@ -71,9 +73,18 @@ async fn main() -> std::io::Result<()> {
 
     // let _ = StorageMod::save_matchplan(matchplan, "src/Season3MatchPlan.json")?;
 
-    println!("read 1");
-    let config = Arc::new(StorageMod::read_config()?);
-    let port = config.port.clone();
+    println!("reading config");
+    let config = Arc::new(RwLock::new(StorageMod::read_config().unwrap()));
+    let config_read = config.read().await.clone();
+
+    println!("\n{}\n{} {}\n{} {}\n{} {}\n{} {}\n{} {}", "config was loaded:".to_string(), 
+        "url:".bright_cyan(), config_read.url.cyan(),
+        "domain:".bright_cyan(), config_read.domain.cyan(),
+        "port:".bright_cyan(), config_read.port.cyan(),
+        "season:".bright_cyan(), config_read.season.as_deref().unwrap_or("None").cyan(),
+        "dev:".bright_cyan(), config_read.dev.to_string().cyan(),
+    );
+    let port = config.read().await.port.clone();
 
     // println!("read 1");
     // let read_plan = StorageMod::read_matchplan()?;
@@ -101,10 +112,63 @@ async fn main() -> std::io::Result<()> {
 
     dotenv().ok();
 
-    let pool = match config.dev {
+    let pool = match config.read().await.dev {
         true => PgPool::connect(&std::env::var("DEV_DATABASE_URL").unwrap()).await.unwrap(), // dev database
         false => PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap(), // production database
     };
+
+    let current_season = if let None = config_read.season {
+        None
+    } 
+    else {
+        match get_season(config_read.season.unwrap(), pool.clone()).await {
+            Ok(v) => v,
+            Err(_) => None,
+        }
+    };
+
+    let season = Arc::new(RwLock::new(current_season));
+
+    // spawns a loop to check config and current season
+    tokio::spawn({
+        let config = config.clone();
+        let season = season.clone();
+        let pool = pool.clone();
+        async move {
+            loop {
+                println!("updating config");
+                let current_config = StorageMod::read_config().unwrap();
+
+                // Compare the values inside the lock, not the guards/arcs
+                let config_read = config.read().await;
+                if *config_read != current_config {
+                    drop(config_read); // Release read lock before acquiring write lock
+                    let mut config_lock = config.write().await;
+                    *config_lock = current_config.clone();
+
+                    // Ensure both branches return Result<Option<Season>, ...>
+                    let current_season_result = if let Some(season_name) = current_config.season.clone() {
+                        get_season(season_name, pool.clone()).await
+                    } else {
+                        Ok(None)
+                    };
+
+                    match current_season_result {
+                        Ok(season_opt) => {
+                            let mut season_lock = season.write().await;
+                            *season_lock = season_opt;
+                        },
+                        Err(e) => {
+                            println!("Error getting season: {:?}", e);
+                        }
+                    }
+
+                    println!("config was updated, new config: {current_config:?}");
+                }
+                sleep(Duration::from_secs(120)).await;
+            }
+        }
+    });
 
     let appstate = AppState {
         // matchplan,
@@ -113,6 +177,7 @@ async fn main() -> std::io::Result<()> {
         // accounts,
         // matchevents,
         // dialogues,
+        season: season.clone(),
         config: config.clone(),
         pool
     };
@@ -156,12 +221,15 @@ async fn main() -> std::io::Result<()> {
 
     println!("\n{}", "Server has launched".bright_white());
 
+    let port_clone = port.clone();
+    let url = config.read().await.url.clone();
+
     HttpServer::new(move || {
         App::new()
             .wrap(Cors::default()
-                .allowed_origin(&format!("{}{}", "http://localhost:", config.port.clone())) 
+                .allowed_origin(&format!("{}{}", "http://localhost:", port_clone)) 
                 .allowed_origin("http://localhost:5173") 
-                .allowed_origin(&config.url.clone()) // Update with your frontend's origin
+                .allowed_origin(&url) // Update with your frontend's origin
                 .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
                 .allowed_headers(vec![
                     http::header::AUTHORIZATION,
@@ -176,7 +244,6 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/").to(index))
             .service(web::resource("/signup").to(index))
             .service(web::resource("/rules").to(index))
-            .service(web::resource("/faq").to(index))
             .service(web::resource("/faq").to(index))
             .service(web::resource("/match-planner").to(index))
             .service(web::resource("/api/match-plan")
@@ -221,7 +288,8 @@ pub struct AppState {
     // accounts: Arc<Mutex<HashMap<String, Account>>>,
     // matchevents: Arc<Mutex<HashMap<String, MatchEvent>>>,
     // dialogues: Arc<Mutex<Vec<DialogueBuilder>>>,
-    config: Arc<Config>,
+    season: Arc<RwLock<Option<Season>>>,
+    config: Arc<RwLock<Config>>,
     pool: Pool<Postgres>
 }
 

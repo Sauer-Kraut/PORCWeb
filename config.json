@@ -2,5 +2,6 @@
     "url": "http://localhost:8082",
     "domain": "localhost",
     "port": "8082",
+    "season": "6",
     "dev": true
 }

@@ -27,8 +27,31 @@ pub async fn on_message(me: &BotEventHandler, ctx: Context, msg: Message) {
         // },
         "upload_accounts" => {
             if has_role_from_message(&ctx, &msg, "DEV").await {  //TODO: more modular role check
+
                 match crate::porcbot::tasks::commands::upload_accounts::upload_accounts(&me.appstate).await {
                     Ok(_) => {let _ = msg.channel_id.say(get_http(), "Accounts uploaded successfully!").await;},
+                    Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
+                }
+            } else {
+                let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
+            }
+        },
+        "start_season" => {
+            if has_role_from_message(&ctx, &msg, "DEV").await {  //TODO: more modular role check
+
+                match crate::porcbot::tasks::commands::start_season_command::start_season_command(&me.appstate, &msg).await {
+                    Ok(_) => {let _ = msg.channel_id.say(get_http(), "Season started succesfully!").await;},
+                    Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
+                }
+            } else {
+                let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
+            }
+        },
+        "get_season_blueprint" => {
+            if has_role_from_message(&ctx, &msg, "DEV").await {  //TODO: more modular role check
+
+                match crate::porcbot::tasks::commands::get_season_blueprint::get_season_blueprint(&me.appstate, msg.author.id).await {
+                    Ok(_) => {let _ = msg.channel_id.say(get_http(), "Blueprint succesfully sent in personal messages!").await;},
                     Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
                 }
             } else {

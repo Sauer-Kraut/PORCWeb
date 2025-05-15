@@ -52,7 +52,7 @@ async function postSignUp() {
         username: String(username.value),
         bp: Number(BP.value),
         region: String(region.value),
-        discord_id: user_id.value.toString(),
+        discord_id: String(user_id.value),
         date: String(now),
     };
 
