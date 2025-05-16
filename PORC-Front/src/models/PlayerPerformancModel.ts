@@ -4,5 +4,5 @@ export interface PlayerPerformance {
     player: PlayerModel;
     wins: number;
     matches: number;
-    rounds: number;
+    cumulative_match_difference: number;
 }

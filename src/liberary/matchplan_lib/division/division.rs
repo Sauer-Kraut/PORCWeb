@@ -38,7 +38,7 @@ impl Division {
 
             let mut wins = 0;
             let mut matches = 0;
-            let mut rounds = 0;
+            let mut cumulative_match_difference = 0;
 
             for (_key, battle) in self.matches.iter() {
 
@@ -48,10 +48,11 @@ impl Division {
 
                         matches += 1;
                         if battle.p1 == *player {
-                            rounds += battle.p1score.unwrap();
-                        } else {
-                            rounds += battle.p2score.unwrap();
-                        }
+                            cumulative_match_difference += battle.p1score.unwrap() as isize - battle.p2score.unwrap() as isize;
+                            }
+                        else {
+                            cumulative_match_difference += battle.p2score.unwrap() as isize - battle.p1score.unwrap() as isize;
+                            }
 
                         if battle.p1 == *player && battle.p1score.unwrap() > battle.p2score.unwrap() {
                             wins += 1;
@@ -68,7 +69,7 @@ impl Division {
                 player: player.clone(),
                 wins,
                 matches,
-                rounds
+                cumulative_match_difference,
             });
         }
 

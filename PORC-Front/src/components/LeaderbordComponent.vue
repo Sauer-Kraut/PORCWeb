@@ -20,6 +20,19 @@ watch(
     { immediate: true }, // Ensure the watcher runs immediately on mount
 );
 
+function avgAdvantage(player: PlayerPerformance) {
+    const val = player.cumulative_match_difference;
+    const save_val = isNaN(val) ? 0 : val;
+
+    const out = save_val.toString();
+
+    if (save_val > 0) {
+        return ("+" + out)
+    } else {
+        return out
+    }
+}
+
 onMounted(async () => {
     internalPerformances.value = props.performances;
 });
@@ -32,7 +45,7 @@ onMounted(async () => {
             <div class="col-2 col-sm-1"></div>
             <div class="col-4 col-sm-3">Matches</div>
             <div class="col-1 add-col"></div>
-            <div class="col-3 add-col">Rounds</div>
+            <div class="col-3 add-col">Advantage</div>
         </div>
         <div class="p-1"></div>
         <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content">
@@ -42,7 +55,7 @@ onMounted(async () => {
             <div class="col-2 col-sm-1"></div>
             <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
             <div class="col-1 add-col"></div>
-            <div class="col-3 add-col">{{ player.rounds }}</div>
+            <div class="col-3 add-col" title="This shows the average match score difference over all played sets."> {{ avgAdvantage(player) }}</div>
         </div>
         <div class="ß-1"></div>
         <div></div>
