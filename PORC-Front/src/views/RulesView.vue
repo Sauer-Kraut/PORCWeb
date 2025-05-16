@@ -8,7 +8,7 @@
                     <ul>
                         <li class="rule">
                             The players will play a total of 6 matches on the chosen map (3 as host and 3 as client).
-                            Each match consists of a best of 3 rounds, the players keep track of match wins and total client round wins.
+                            Each match consists of a "best of 3 rounds", the players keep track of match wins and total client round wins.
                             If the match wins are tied (the score is 3-3), the player with the most client round wins will win the set at the end of the 6 matches (the score to report will then be 3-4).
                         </li> <br> <li>
                             The players are allowed to decide which map they want to play on (custom maps are also allowed). Alternatively, they may also choose to go to a random map together.
