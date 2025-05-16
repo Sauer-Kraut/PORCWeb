@@ -63,7 +63,7 @@
                         </li> <br> <li>
                             In case both players won an equal number of matches, the final score is determined by the matches won by both players +1 for the winning party.
                         </li> <br> <li>
-                            If a partie forfeits / fails to appear at an agreed time it counts as an automatic 3-0 win for the opposing player.
+                            If a partie forfeits / fails to appear at an agreed time it counts as an automatic 1-0 win for the opposing player.
                         </li>
                     </ul>
                 </div>
