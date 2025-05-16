@@ -15,7 +15,7 @@ struct QueryStruct {
     bp: i64,
 }
 
-pub async fn get_signups(lower_date_bound: u64, upper_date_bound: Option<u64>, pool: PgPool) -> Result<Vec<SignUpInfo>, Box<dyn std::error::Error>> {
+pub async fn get_signups(lower_date_bound: u64, upper_date_bound: Option<u64>, pool: PgPool) -> Result<Vec<SignUpInfo>, Box<dyn std::error::Error + Send + Sync>> {
     let query_path = "src/liberary/account_lib/signup/storage/queries/get_signups.sql";
     let query = build_query(query_path, vec![
         ArgumentType::Timestamptz(DateTime::from_timestamp(lower_date_bound as i64, 0).unwrap_or(Utc::now())),

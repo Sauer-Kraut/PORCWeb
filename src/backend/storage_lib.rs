@@ -6,6 +6,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, self};
+use std::fmt;
 
 // hardcoded to avoid incorect uses
 const MATCHPLAN_PATH: &str = "userdata/SeasonMatchPlan.json";
@@ -27,11 +28,24 @@ const DIALOGUES_PATH: &str = "userdata/ActiveDialogues.json";
 //     pub season: usize
 // }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Config {
     pub url: String,
     pub domain: String,
-    pub port: String
+    pub port: String,
+    pub season: Option<String>,
+    pub dev: bool
+}
+
+// If you want to implement Display for Config, use the following:
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Config {{ \nurl: {}, \ndomain: {}, \nport: {}, \nseason: {:?}, \ndev: {} \n}}",
+            self.url, self.domain, self.port, self.season, self.dev
+        )
+    }
 }
 
 pub struct StorageMod {}
@@ -126,7 +140,7 @@ impl StorageMod {
     //     Ok(())
     // }
 
-    pub fn read_config() -> Result<Config, io::Error> {
+    pub fn read_config() -> Result<Config, Box<dyn std::error::Error + Send + Sync>> {
         let path = CONFIG_PATH;
         let mut file = File::open(path)?;
         let mut json = "".to_string();

@@ -22,7 +22,7 @@ struct QueryStruct {
     season_pause_end_timestamp: DateTime<Utc>
 }
 
-pub async fn get_matchplan(season_name: String, pool: PgPool) -> Result<MatchPlan, Box<dyn std::error::Error>> {
+pub async fn get_matchplan(season_name: String, pool: PgPool) -> Result<MatchPlan, Box<dyn std::error::Error + Send + Sync>> {
     let query_path = "src/liberary/matchplan_lib/matchplan/storage/queries/get_matchplan.sql";
     let query = build_query(query_path, vec![
         ArgumentType::String(season_name.clone())

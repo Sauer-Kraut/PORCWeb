@@ -6,10 +6,10 @@ use crate::liberary::account_lib::match_event::match_event::MatchEvent;
 use crate::liberary::account_lib::signup::storage::get_signups::get_signups;
 use crate::liberary::dialogue_lib::dialogue_builder::storage::store_dialogue::store_dialogue;
 use crate::liberary::dialogue_lib::dialogue_initiator::dialogue_initiator::DialogueInitator;
-use crate::liberary::matchplan_lib::matchplan::storage::get_seasons::get_seasons;
 use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use crate::liberary::matchplan_lib::matchplan::storage::start_season::start_season;
 use crate::liberary::matchplan_lib::matchplan_blueprint::matchplan_blueprint::PlanBlueprint;
+use crate::liberary::matchplan_lib::season::storage::get_seasons::get_seasons;
 use crate::AppState;
 
 
@@ -50,7 +50,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
     if seasons.len() > 0 {
         
         let current_season = seasons[0].clone();
-        let matchplan = match get_matchplan(current_season.clone(), pool.clone()).await {
+        let matchplan = match get_matchplan(current_season.name.clone(), pool.clone()).await {
             Ok(v) => v,
             Err(err) => {
                 error = Some(format!("There was an error while getting the matchplan: {}", err));
@@ -66,7 +66,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
         if seasons.len() > 1 {
 
             let last_season = seasons[1].clone();
-            let last_matchplan = match get_matchplan(last_season.clone(), pool.clone()).await {
+            let last_matchplan = match get_matchplan(last_season.name.clone(), pool.clone()).await {
                 Ok(v) => v,
                 Err(err) => {
                     error = Some(format!("There was an error while getting the matchplan: {}", err));
