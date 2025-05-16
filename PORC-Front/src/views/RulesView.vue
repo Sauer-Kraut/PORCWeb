@@ -73,7 +73,7 @@
                     moderators and put forward your pitch for your placement.
                 </li>
                 <br />
-                <li>The ranking at the end of each season will be decided by total set wins. Ties will be broken by the results of the set between the tied players. Remaining ties get broken by the advantage score. If somehow after this there is still a tie the placement will be shared
+                <li>The ranking at the end of each season will be decided by total set wins. Ties will be broken by the advantage score. If somehow after this there is still a tie the placement will be shared
                 </li>
                 <br/>
                 <li>
