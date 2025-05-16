@@ -7,8 +7,9 @@
                     <h2 class="title">Set rules</h2>
                     <ul>
                         <li class="rule">
-                            The players will play a total of 6 matches on the chosen map (3 as host and 3 as client). Client round wins do count.
-                            If a player has more client round wins than the other, they will win the game at the end of the 6 matches.
+                            The players will play a total of 6 matches on the chosen map (3 as host and 3 as client).
+                            Each match consists of a best of 3 rounds, the players keep track of match wins and total client round wins.
+                            If the match wins are tied (the score is 3-3), the player with the most client round wins will win the set at the end of the 6 matches (the score to report will then be 3-4).
                         </li> <br> <li>
                             The players are allowed to decide which map they want to play on (custom maps are also allowed). Alternatively, they may also choose to go to a random map together.
                             If both players do not agree on their prefered map, Pit is chosen as default.
@@ -69,15 +70,15 @@
                 <div class="rule-box">
                     <h2 class="title">Placement, Ranking and Promotion</h2>
                     <ul>
-                        <li> 
+                        <li>
                             Your initial placement is determined by your amount of BP as well as your assessed skill.
                         </li> <br> <li>
-                            Before the start of each season, there will be a timeframe to contest your placement after you have been placed in a division. To contest your placement, simply contact one of the moderators  
+                            Before the start of each season, there will be a timeframe to contest your placement after you have been placed in a division. To contest your placement, simply contact one of the moderators
                             and put forward your pitch for your placement.
                         </li> <br> <li>
-                            After each season, player performance during the season decides promotion and demotion. As a rule of thumb, one can expect the top third of a division to promote and the bottom third to demote.
+                            After each season, player performance during the sWeason decides promotion and demotion. As a rule of thumb, one can expect the top third of a division to promote and the bottom third to demote.
                         </li> <br> <li>
-                            The ranking at the end of each season will be decided by total set wins. Ties will be broken by the results of the set between the tied players. Remaining ties get broken by who has the least total Match losses. If somehow after this there is still a tie the placement will be shared
+                            The ranking at the end of each season will be decided by total set wins. Ties will be broken by the results of the set between the tied players. Remaining ties get broken by the advantage score. If somehow after this there is still a tie the placement will be shared
                         </li> <br> <li>
                             Promotions over two divisions may be rewarded upon special performance or improvement.
                         </li>
