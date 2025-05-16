@@ -48,10 +48,10 @@ impl Division {
 
                         matches += 1;
                         if battle.p1 == *player {
-                            cumulative_match_difference += battle.p1score.unwrap() - battle.p2score.unwrap();
+                            cumulative_match_difference += battle.p1score.unwrap() as isize - battle.p2score.unwrap() as isize;
                             }
                         else {
-                            cumulative_match_difference += battle.p2score.unwrap() - battle.p1score.unwrap();
+                            cumulative_match_difference += battle.p2score.unwrap() as isize - battle.p1score.unwrap() as isize;
                             }
 
                         if battle.p1 == *player && battle.p1score.unwrap() > battle.p2score.unwrap() {

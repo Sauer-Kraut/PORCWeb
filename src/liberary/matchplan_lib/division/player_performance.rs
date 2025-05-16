@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{cmp::Ordering, fmt};
 
 use crate::liberary::matchplan_lib::player::player::Player;
 
@@ -8,7 +8,7 @@ pub struct PlayerPerformance {
     pub player: Player,
     pub wins: usize,
     pub matches: usize,
-    pub cumulative_match_difference: usize,
+    pub cumulative_match_difference: isize,
     // TODO: add normalized round win field
 }
 
@@ -28,13 +28,13 @@ impl PartialOrd for PlayerPerformance {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let mut ordering = self.wins.partial_cmp(&other.wins);
 
-        if ordering != None {
+        if ordering.unwrap() != Ordering::Equal {
             return ordering;
         }
 
         ordering = self.matches.partial_cmp(&other.matches);
 
-        if ordering != None {
+        if ordering.unwrap() != Ordering::Equal {
             return ordering;
         }
 
