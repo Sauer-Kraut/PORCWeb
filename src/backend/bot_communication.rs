@@ -37,7 +37,6 @@ pub struct GenerateNewSeasonSendPackage {
 
 
 pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for plan blueprint".bold().cyan());
 
     let mut error = None;
 
@@ -177,7 +176,6 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
 
 
 pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for new season start".bold().magenta());
 
     let mut error = None;
 
@@ -220,6 +218,7 @@ pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, apps
     let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
 
     /// TODO!!!!! THIS ONE IS IMPORTANT!!!!
+    /// is this done? probably by now, I dont think it would work otherwise. But Im going to let this comment stay for now
     let res = store_dialogue(builder, appstate.pool.clone()).await;
     match res {
         Ok(_) => {},

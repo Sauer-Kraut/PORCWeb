@@ -35,8 +35,6 @@ pub struct PutAccountInfoResp {
 
 // Request to get accounts with the given ids
 pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received PUT Request for account infos".bold().cyan());
-
 
     let result: Result<Vec<PubAccountInfo>, String> = 'scope: {
 
@@ -94,8 +92,7 @@ pub struct PostMatchEventRespPackage {
 
 // Request to store a match event
 // if match event is a new request a match request dialgoue will also be started
-pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for a match event".bold().cyan());
+pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appstate: web::Data<AppState>) -> Result<impl Responder, Box<dyn std::error::Error>> {
 
     let state_clone = appstate.clone();
 
@@ -154,17 +151,17 @@ pub async fn post_match_event(info: web::Json<PostMatchEventRecvPackage>, appsta
 
     match result {
         Ok(_) => {
-            return HttpResponse::Ok().json(PostMatchEventRespPackage {
+            return Ok(HttpResponse::Ok().json(PostMatchEventRespPackage {
                 title: "Server Match Event update Respons".to_string(),
                 error: None
-            })
+            }))
         },
         Err(err) => {
             println!("{} {}", "An Error occured:".red().bold(), err.red().bold());
-            return HttpResponse::Ok().json(PostMatchEventRespPackage {
+            return Ok(HttpResponse::Ok().json(PostMatchEventRespPackage {
                 title: "Server Match Event update Respons".to_string(),
                 error: Some(err)
-            })
+            }))
         }
     }
 }
@@ -188,10 +185,9 @@ pub struct PutMatchEventRespPackage {
 
 // Request to get match events from match ids
 pub async fn put_match_event(info: web::Json<PutMatchEventRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received PUT Request for match events".bold().cyan());
 
     let mut error = None;
-    let mut match_events= vec!();
+    let mut match_events = vec!();
 
     // for event in info.match_events.iter() {
     //     let match_event_entry = get_match_event(event.challenger_id, event.opponent_id, event.timestamp, event.season.clone(), appstate.pool.clone()).await;
@@ -245,7 +241,6 @@ pub struct PostAccountInfoRespPackage {
 // Request to store account info
 // This wont alter match events
 pub async fn post_account_info(info: web::Json<PostAccountInfoRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{} {}", "Received POST Request for account info of account:".bold().cyan(), info.account_info.username.bold().italic());
 
     let mut error = None;
 

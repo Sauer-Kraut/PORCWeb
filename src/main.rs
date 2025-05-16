@@ -15,6 +15,7 @@ use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http;
 use actix_files::Files;
 use backend::storage_lib::{Config, StorageMod};
+use backend::backend_api::middleware::ServerMiddleware;
 use colored::Colorize;
 use liberary::account_lib::account::account::Account;
 use liberary::account_lib::account::discord_user::DiscordUser;
@@ -240,6 +241,7 @@ async fn main() -> std::io::Result<()> {
                 .allow_any_header()
                 .supports_credentials()
                 .max_age(3600))
+            .wrap(ServerMiddleware)
             .app_data(web::Data::new(appstate.clone()))
             .service(web::resource("/").to(index))
             .service(web::resource("/signup").to(index))

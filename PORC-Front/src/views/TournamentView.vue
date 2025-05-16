@@ -7,6 +7,7 @@ import TimerComponent from '@/components/TimerComponent.vue';
 import config from '@/config';
 import type { DivisionModel } from '@/models/DivisionModel';
 import { showErrorModal } from '@/services/ErrorModalService';
+import { activeUserStore } from '@/storage/st_user';
 import { onMounted, ref, watch } from 'vue';
 
 const divisions = ref<DivisionModel[]>([]);
@@ -91,6 +92,8 @@ watch(
 
 onMounted(async () => {
     await getMatchPlan();
+    let actUserStore = activeUserStore();
+    await actUserStore.fetch_min();
     setTimeout(async () => {
         await getMatchPlan();
     }, 200);

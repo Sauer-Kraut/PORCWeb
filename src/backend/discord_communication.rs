@@ -180,7 +180,6 @@ async fn exchang_code_for_token(code: &str, info: TokenRequestParam, url: String
 
 // Request to receive the account belonging to the provided account id
 pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received PUT Request for logged in status".bold().cyan());
 
     let result: Result<PubAccountInfo, String> = 'scope: {
 

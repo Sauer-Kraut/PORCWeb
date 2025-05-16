@@ -12,6 +12,7 @@ import type { PlayerModel } from '@/models/PlayerModel';
 import type { PubAccountInfo } from '@/models/PubAccountInfo';
 import { convertToPubAccountInfo, type PubAccountInfoRecv } from '@/models/PubAccountInfoRecv';
 import { showErrorModal } from '@/services/ErrorModalService';
+import { activeUserStore } from '@/storage/st_user';
 import { getDivisionImage } from '@/util/ImageHelper';
 import { onMounted, ref, watch } from 'vue';
 

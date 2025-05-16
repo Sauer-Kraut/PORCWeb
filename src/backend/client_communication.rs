@@ -49,7 +49,6 @@ pub struct PostRequestReturnPackage {
 // Request to retrieve match plan for currrent season
 // TODO: will need to add fetch for other seasons later
 pub async fn get_match_plan_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for match plan".bold().cyan());
 
     let result: Result<MatchPlan, String> = 'scope: {
         let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
@@ -95,7 +94,6 @@ pub async fn get_match_plan_request(appstate: web::Data<AppState>) -> impl Respo
 // Request to retrieve all player performance data for currrent season
 // TODO: will need to add fetch for other seasons later
 pub async fn get_player_ranking_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for match plan".bold().cyan());
 
     let result: Result<Vec<(String, Vec<PlayerPerformance>)>, String> = 'scope: {
 
@@ -149,7 +147,6 @@ pub async fn get_player_ranking_request(appstate: web::Data<AppState>) -> impl R
 
 // Request to retrieve all recent sign ups
 pub async fn get_sign_up_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for sign ups".bold().cyan());
 
     let result: Result<Vec<SignUpInfo>, String> = 'scope: {
         let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
@@ -205,7 +202,6 @@ pub async fn get_sign_up_request(appstate: web::Data<AppState>) -> impl Responde
 
 // Request to update a provided match of the current season
 pub async fn update_match_plan_request(info: web::Json<PostRequestMatchPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for match plan".bold().cyan());
 
     let result: Result<(), String> = 'scope: {
 
@@ -248,7 +244,6 @@ pub async fn update_match_plan_request(info: web::Json<PostRequestMatchPackage>,
 
 // Request do add a sign up
 pub async fn add_sign_up_request(info: web::Json<PostRequestSignUpPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for sign up".bold().cyan());
 
     let result: Result<(), String> = 'scope: {
         match store_signup(info.sing_up_info.clone(), appstate.pool.clone()).await {
