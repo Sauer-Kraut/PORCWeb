@@ -96,7 +96,7 @@
                             This is an early access game, so unexpected things can happen. The standard protocol is to reset the match in case a major bug occurs,
                             although treating the occurrences differently is allowed if both players agree to do so.
                         </li> <br> <li>
-                            We heavily encourage you to get yourself a timezone role on the PORC dicord server and take full advantage of both discords events and unix time stamps to help you and your fellow rumblers plan matches
+                            We heavily encourage you to get yourself a timezone role on the PORC discord server and take full advantage of both discords events and unix time stamps to help you and your fellow rumblers plan matches
                         </li> <br> <li>
                             As is common courtesy in the RUMBLE community, please treat each other with respect and enjoy yourself.
                         </li>
