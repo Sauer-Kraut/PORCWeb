@@ -76,7 +76,7 @@
                             Before the start of each season, there will be a timeframe to contest your placement after you have been placed in a division. To contest your placement, simply contact one of the moderators
                             and put forward your pitch for your placement.
                         </li> <br> <li>
-                            After each season, player performance during the sWeason decides promotion and demotion. As a rule of thumb, one can expect the top third of a division to promote and the bottom third to demote.
+                            After each season, player performance during the season decides promotion and demotion. As a rule of thumb, one can expect the top third of a division to promote and the bottom third to demote.
                         </li> <br> <li>
                             The ranking at the end of each season will be decided by total set wins. Ties will be broken by the results of the set between the tied players. Remaining ties get broken by the advantage score. If somehow after this there is still a tie the placement will be shared
                         </li> <br> <li>
