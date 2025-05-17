@@ -58,9 +58,9 @@
                 <br />
                 <li>If the number of matches won is unequal between the players, the final score is simply the matches won by each player during the game.</li>
                 <br />
-                <li>In case both players won an equal number of matches, the final score is determined by the matches won by both players +1 for the winning party.</li>
+                <li>In case both players won an equal number of matches, the final score is reported as the matches won by both players +1 for the winning party.</li>
                 <br />
-                <li>If a partie forfeits / fails to appear at an agreed time it counts as an automatic 3-0 win for the opposing player.</li>
+                <li>If a player forfeits / fails to appear at an agreed time it counts as an automatic 1-0 win for the opposing player.</li>
             </ul>
         </div>
         <div class="part part-text">
@@ -88,7 +88,7 @@
         <div class="part part-text">
             <h2 class="title mt-0">Additional Notes</h2>
             <ul>
-                <li>Cheaters will be banned from competing, and all their matches will be marked as 3-0 losses to their opponents.</li>
+                <li>Cheaters will be banned from competing, and all their matches will be marked as 0-1 losses.</li>
                 <br />
                 <li>Competitors are encouraged to record their fights in order to allow both sharing and ensure proof in case of the need to check games.</li>
                 <br />
