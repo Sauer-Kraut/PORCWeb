@@ -1,10 +1,13 @@
-import type { ScheduleEvent } from './ScheduleEventModel';
 
-export interface MatchEvent extends ScheduleEvent {
+import type { MatchEventRecv } from "./MatchEventRecv";
+
+export interface MatchEvent {
     startDate: Date;
+    endDate: Date;
     initiatorId: string;
     opponentId: string;
     status: MatchStatus;
+    season: string;
 }
 
 export enum MatchStatus {
@@ -23,3 +26,16 @@ export enum ObservedMatchStatus {
     Unplaned = 'Unplaned',
     IsSelf = 'IsSelf', // calander
 }
+
+export function matchEventToRecv(val: MatchEvent): MatchEventRecv {
+    return {
+        id: null,
+        start_timestamp: val.startDate.getTime() / 1000,
+        challenger_id: val.initiatorId,
+        opponent_id: val.opponentId,
+        event_id: null,
+        status: val.status,
+        season: val.season
+    } as MatchEventRecv
+}
+

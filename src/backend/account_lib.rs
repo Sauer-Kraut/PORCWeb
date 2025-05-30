@@ -7,6 +7,7 @@ use super::bot_communication::make_bot_request_match;
 
 use crate::liberary::account_lib::account::pub_account_info::PubAccountInfo;
 use crate::liberary::account_lib::account::storage::get_account::get_account;
+use crate::liberary::account_lib::account::storage::get_account_full::get_account_full;
 use crate::liberary::account_lib::availability::storage::update_availabilities::update_availabilities;
 use crate::liberary::account_lib::match_event::match_event::MatchEvent;
 use crate::liberary::account_lib::match_event::storage::get_match_event::get_match_event;
@@ -42,7 +43,7 @@ pub async fn put_account_info(info: web::Json<PutAccountInfoRecv>, appstate: web
         
         for user_id in info.ids.clone() {
 
-            match get_account(user_id, appstate.pool.clone()).await {
+            match get_account_full(user_id, appstate.pool.clone()).await {
                 Ok(value) => {account_infos.push(value.get_pub_info())}
                 Err(e) => {} // ignoring error, since finding nothing also returns an error
             }

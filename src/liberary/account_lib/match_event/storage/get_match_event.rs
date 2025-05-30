@@ -16,7 +16,7 @@ struct QueryStruct {
     start_timestamp: DateTime<Utc>,
 }
 
-pub async fn get_match_event(account_id_1: String, account_id_2: String, timestamp: u64, season_name: String, pool: PgPool) -> Result<MatchEvent, Box<dyn std::error::Error>> {
+pub async fn get_match_event(account_id_1: String, account_id_2: String, timestamp: u64, season_name: String, pool: PgPool) -> Result<Option<MatchEvent>, Box<dyn std::error::Error>> {
     let query_path = "src/liberary/account_lib/match_event/storage/queries/get_match_event.sql";
     let query = build_query(query_path, vec![
         ArgumentType::String(account_id_1),
@@ -25,9 +25,18 @@ pub async fn get_match_event(account_id_1: String, account_id_2: String, timesta
         ArgumentType::String(season_name),
     ])?;
 
-    let row = sqlx::query_as::<Postgres, QueryStruct>(&query)
+    let row = match sqlx::query_as::<Postgres, QueryStruct>(&query)
     .fetch_one(&pool)
-    .await?;
+    .await {
+        Ok(v) => v,
+        Err(e) => {
+            if let sqlx::Error::RowNotFound = e {
+                return Ok(None)
+            } else {
+                return Err(e.into())
+            }
+        },
+    };
 
     let match_event = MatchEvent {
         id: Some(row.id as i32),
@@ -39,5 +48,5 @@ pub async fn get_match_event(account_id_1: String, account_id_2: String, timesta
         status: MatchStatus::from_status_code(row.status_code)?,
     };
 
-    Ok(match_event)
+    Ok(Some(match_event))
 }

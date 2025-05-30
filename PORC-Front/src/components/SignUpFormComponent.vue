@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { getLoggedIn } from '@/API/GetLoggedIn';
 import DiscordUserComponent from '@/components/DiscordUserComponent.vue';
-import config from '@/config';
-import type { SignUpInfo } from '@/models/SignUpInfoModel.ts';
+import type { SignUpInfo } from '@/models/SignUpInfo';
 import { showErrorModal } from '@/services/ErrorModalService';
+import { accountsStore } from '@/storage/st_accounts';
+import { signupStore } from '@/storage/st_signups';
 import { defineProps, onMounted, ref } from 'vue';
 
 const props = defineProps<{
@@ -46,6 +46,8 @@ function confirmInput() {
 }
 
 async function postSignUp() {
+    const store = signupStore();
+
     const now = Math.floor(Date.now() / 1000);
 
     const data: SignUpInfo = {
@@ -53,44 +55,20 @@ async function postSignUp() {
         bp: Number(BP.value),
         region: String(region.value),
         discord_id: String(user_id.value),
-        date: String(now),
+        date: Number(now),
     };
 
-    const requestData = JSON.stringify({
-        title: 'Sign Up Request',
-        sing_up_info: data, // misspelled, but so is it in the backend
-    });
-
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestData,
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-
-        if (data.error != null) {
-            showErrorModal(data.error);
-        } else {
-            showSuccess();
-        }
-    } catch (error) {
-        console.error('Sign up Error:', error);
-        showErrorModal('Internal server error');
-    }
+    await store.post_signup(data);
 }
 
 async function getUserId() {
-    let res = await getLoggedIn();
+    let accStore = accountsStore();
+    let res = await accStore.get_login();
 
-    if (typeof res === 'string') {
+    if (typeof res == 'string' || res == null) {
+        if (typeof res == 'string') {
+            showErrorModal(res);
+        }
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
@@ -100,37 +78,19 @@ async function getUserId() {
 }
 
 async function getSignedUp() {
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/sign-up`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+    let store = signupStore();
+    let signups = await store.get_signups(null);
 
-        if (!response.ok) {
-            isLoggedIn.value = false;
-            throw new Error('Network response was not ok');
-        }
+    isSignedUp.value = false;
 
-        const data = await response.json();
-        isSignedUp.value = false;
+    if (signups != null) {
 
-        if (data.error == null) {
-            const signUps = data.data;
-            for (let i = 0; i < signUps.length; i++) {
-                if (signUps[i].discord_id == user_id.value) {
-                    isSignedUp.value = true;
-                }
+        for (let signup of signups) {
+            if (signup.discord_id == user_id.value) {
+                isSignedUp.value = true;
             }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showErrorModal('Server communication error');
-        isLoggedIn.value = false;
     }
-
-    return null;
 }
 
 onMounted(async () => {

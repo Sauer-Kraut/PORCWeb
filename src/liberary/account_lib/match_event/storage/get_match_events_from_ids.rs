@@ -1,3 +1,4 @@
+use futures::future::join_all;
 use sqlx::*;
 use chrono::{DateTime, Utc};
 
@@ -20,14 +21,25 @@ pub async fn get_match_events_from_ids(match_event_ids: Vec<i32>, pool: PgPool) 
     let query_path = "src/liberary/account_lib/match_event/storage/queries/get_match_event_from_id.sql";
 
     let mut match_events = Vec::new();
+    let mut row_handles = vec!();
 
     for match_event_id in match_event_ids {
         let query = build_query(query_path, vec![
             ArgumentType::Int(match_event_id as i64),
         ])?;
-        let row = sqlx::query_as::<Postgres, QueryStruct>(&query)
-            .fetch_one(&pool)
-            .await?;
+        // Move the query String into the async block so it lives long enough
+        row_handles.push(async {
+            let owned_query = query;
+            sqlx::query_as::<Postgres, QueryStruct>(&owned_query)
+                .fetch_one(&pool)
+                .await
+        });
+    }
+    let row_res = join_all(row_handles).await;
+
+    for r in row_res {
+        let row = r?;
+
         let match_event = MatchEvent {
             id: Some(row.id as i32),
             event_id: row.event_id,

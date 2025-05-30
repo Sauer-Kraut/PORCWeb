@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type { DailyRepetitionConfig, ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import { ref, watch } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 import DatePicker from '@vuepic/vue-datepicker';
-import { Repetition } from '@/models/Calendar/ScheduleEventModel';
-import { MatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
 import { filter_str } from '@/util/stringFilter';
+import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
 
 const props = defineProps<{
     title?: string;
@@ -13,13 +11,13 @@ const props = defineProps<{
     opponentUsername: string;
 }>();
 
-const emit = defineEmits(['submitAvailability', 'cancel']);
+const emit = defineEmits(['submitMatch', 'cancel']);
 
 // const avaliability = ref(props.avaliability);
 
 function submit() {
     //console.log("time: ", time.value, " start date: ", startDate.value)
-    emit('submitAvailability', createMatch());
+    emit('submitMatch', createMatch());
 }
 
 const startDate = ref(props.match.startDate);
@@ -35,12 +33,16 @@ function convertTimeToDate(time: { hours: number; minutes: number }): Date {
 }
 
 function createMatch(): MatchEvent {
-    return {
+    let res = {
         startDate: convertTimeToDate(time.value),
+        endDate: new Date((convertTimeToDate(time.value).getTime() / 1000 + 3600) * 1000),
         initiatorId: props.match.initiatorId,
         opponentId: props.match.opponentId,
         status: MatchStatus.Requested,
+        season: props.match.season,
     } as MatchEvent;
+    console.log('Creating match: ', res);
+    return res;
 }
 </script>
 

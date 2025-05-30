@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { getLoggedIn } from '@/API/GetLoggedIn';
+import { getRanking } from '@/API/matchplan/GetRanking';
 import DivisionComponent from '@/components/DivisionComponent.vue';
 import DivisionSelector from '@/components/DivisionSelector.vue';
 import SignUpFormComponent from '@/components/SignUpFormComponent.vue';
 import TimerComponent from '@/components/TimerComponent.vue';
-import config from '@/config';
-import type { DivisionModel } from '@/models/DivisionModel';
+import type { DivisionModel } from '@/models/matchplan/DivisionModel';
 import { showErrorModal } from '@/services/ErrorModalService';
-import { activeUserStore } from '@/storage/st_user';
+import { accountsStore } from '@/storage/st_accounts';
+import { matchplanStore } from '@/storage/st_matchplan';
 import { onMounted, ref, watch } from 'vue';
 
 const divisions = ref<DivisionModel[]>([]);
@@ -16,9 +16,10 @@ selectedDivision.value = divisions.value[0] ?? null;
 
 // Reactive variable for dynamic height
 const selectorRef = ref<HTMLElement | null>(null);
+const selectorHeight = ref(0);
 
 function getSelectorHeight() {
-    return selectorRef.value ? selectorRef.value.clientHeight : 0;
+    selectorHeight.value = selectorRef.value ? selectorRef.value.clientHeight : 0;
 }
 
 let user = ref('0');
@@ -28,57 +29,49 @@ let TimerText = ref('Time remaining until season 4 of PORC');
 const season_name = ref('0');
 
 async function getMatchPlan() {
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+    let planStore = matchplanStore();
+    let plan = await planStore.get_matchplan(null);
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+    if (typeof plan == 'string') {
+        showErrorModal(plan);
+        return;
+    } else {
+        divisions.value = plan.divisions;
+        const now = Math.floor(Date.now() / 1000);
+        const seasonEnd = plan.end_timestamp;
+        const seasonPause = plan.pause_end_timestamp;
+        season_name.value = String(plan.season);
+        selectedDivision.value = divisions.value.find((division) => division.players.some((p) => p.id == user.value)) ?? divisions.value[0];
 
-        let data = await response.json();
-        if (data.error != null) {
-            showErrorModal(data.error);
+        // Sort divisions by order
+        divisions.value.sort((a, b) => a.order - b.order);
+
+        console.log('got matchplan: ', plan);
+
+        if (now > seasonEnd) {
+            globalTimer = seasonPause;
+            TimerText.value = `Time remaining until next season of PORC`;
+            console.log('season ended, timer set to pause end');
         } else {
-            await getUserId();
-            divisions.value = data.data.divisions as DivisionModel[];
-            const now = Math.floor(Date.now() / 1000);
-            const seasonEnd = data.data.end_timestamp;
-            const seasonPause = data.data.pause_end_timestamp;
-            const season = data.data.season;
-            season_name.value = data.data.season.toString();
-            selectedDivision.value = divisions.value.find((division) => division.players.some((p) => p.id == user.value)) ?? divisions.value[0];
-
-            // Sort divisions by order
-            divisions.value.sort((a, b) => a.order - b.order);
-
-            console.log('got matchplan: ', data.data);
-
-            if (now > seasonEnd) {
-                globalTimer = seasonPause;
-                TimerText.value = `Time remaining until next season of PORC`;
-                console.log('season ended, timer set to pause end');
-            } else {
-                globalTimer = seasonEnd;
-                TimerText.value = `Time remaining for season ${season} of PORC`;
-            }
+            globalTimer = seasonEnd;
+            TimerText.value = `Time remaining for season ${season_name.value} of PORC`;
         }
-    } catch (error) {
-        console.error('Match plan error:', error);
-        showErrorModal('Internal server error');
     }
 }
 
 async function getUserId() {
-    let res = await getLoggedIn();
+    let accStore = accountsStore();
+    let res = await accStore.get_login();
 
-    if (typeof res === 'string') {
+    if (typeof res == 'string') {
+        showErrorModal(res);
     } else {
-        user.value = res.id;
+        if (res && res.id) {
+            user.value = res.id;
+        } else if (typeof res == 'string') {
+            showErrorModal(res);
+        }
+        
     }
 }
 
@@ -91,12 +84,9 @@ watch(
 );
 
 onMounted(async () => {
+    await getUserId();
     await getMatchPlan();
-    let actUserStore = activeUserStore();
-    await actUserStore.fetch_min();
-    setTimeout(async () => {
-        await getMatchPlan();
-    }, 200);
+    getSelectorHeight();
 });
 </script>
 
@@ -113,7 +103,7 @@ onMounted(async () => {
                 </div>
             </div>
             <div class="col col-xxl-9 col-xml-8">
-                <DivisionComponent v-if="selectedDivision" :selector-height="getSelectorHeight()" :division="selectedDivision" :UserId="user" class="pl-4rem" />
+                <DivisionComponent v-if="selectedDivision" :selector-height="selectorHeight" :division="selectedDivision" :UserId="user" class="pl-4rem" />
             </div>
         </div>
 

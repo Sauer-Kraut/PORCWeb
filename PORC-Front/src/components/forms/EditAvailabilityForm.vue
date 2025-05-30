@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
+import type { Availability } from '@/models/availability/Availability';
 import DatePicker from '@vuepic/vue-datepicker';
 import { ref } from 'vue';
 
 const props = defineProps<{
     formId: string;
-    availability: ScheduleEvent;
+    availability: Availability;
     formSubmit?: (data: any) => void;
 }>();
 

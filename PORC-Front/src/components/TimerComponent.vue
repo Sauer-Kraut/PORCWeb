@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 
 const props = defineProps<{
     targetTimestamp: number;
@@ -57,6 +57,11 @@ const updateTime = () => {
 
     TimerText.value = props.text;
 };
+
+watch(() => props.targetTimestamp, (newVal) => {
+    target = newVal;
+    updateTime();
+}, { immediate: true });
 
 onMounted(() => {
     setTimeout(() => {

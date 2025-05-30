@@ -51,13 +51,30 @@ where
         let fut = self.service.call(req);
 
         Box::pin(async move {
-            let res = fut.await?;
+            let res = fut.await;
 
             let duration = start.elapsed();
             // there has to be a better way of doing this
-            println!("\n{} {} {} {} {}{}{}{}", "Received".cyan(), method.cyan().bold(), "at".cyan(), path.cyan().bold(), "(", "delta: ", format!("{duration:?}").bold(), ")");
+            println!("{} {} {} {} {}{}{}{}", "Finished".cyan(), method.cyan().bold(), "at".cyan(), path.cyan().bold(), "(", "delta: ", format!("{duration:?}").bold(), ")");
 
-            return Ok(res);
+            match res {
+                Ok(r) => {
+
+                    let status = r.status();
+
+                    if !status.is_success() {
+                        eprintln!("{} {}\n", "finished with status code:".red(), status.as_str().red().bold())
+                    } else {
+                        println!("\n")
+                    }
+                    
+                    return Ok(r)
+                },
+                Err(e) => {
+                    eprintln!("{}{}{}\n{}","Error occured at ".red(), path.red().bold(), ":".red(), e.to_string().red());
+                    return Err(e)
+                },
+            }
         })
     }
 }

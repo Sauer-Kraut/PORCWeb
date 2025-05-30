@@ -113,7 +113,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
 
 
 
-pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
+pub fn check_blueprint(plan: PlanBlueprint) -> Result<(), Box<dyn std::error::Error>> {
     let mut players = Vec::new();
     let mut division_orders = Vec::new();
     
@@ -126,36 +126,36 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
 
     for division in plan.divisions.iter() {
         if !acceptable_division_names.contains(&division.name) {
-            return Some(format!("Division name {} is not acceptable", division.name));
+            return Err(format!("Division name {} is not acceptable", division.name).into());
         }
 
         if used_division_names.contains(&division.name) {
-            return Some(format!("Division name {} occurs multiple times", division.name));
+            return Err(format!("Division name {} occurs multiple times", division.name).into());
         }
 
         used_division_names.push(division.name.clone());
     }
 
     if plan.divisions.len() < 2 {
-        return Some("There are less than 2 divisions".to_string());
+        return Err("There are less than 2 divisions".to_string().into());
     }
 
     for division in plan.divisions.iter() {
 
         if division_orders.contains(&division.order) {
-            return Some(format!("Division order {} occurs multiple times", division.order));
+            return Err(format!("Division order {} occurs multiple times", division.order).into());
         }
 
         division_orders.push(division.order);
 
         if division.players.len() < 2 {
-            return Some(format!("Division {} has less than 2 players", division.name));
+            return Err(format!("Division {} has less than 2 players", division.name).into());
         }
 
         for player in division.players.iter() {
 
             if players.contains(player) {
-                return Some(format!("Player {:?} occurs multiple times", player));
+                return Err(format!("Player {:?} occurs multiple times", player).into());
             }
 
             players.push(player.clone());
@@ -163,14 +163,14 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
     }
 
     if plan.players_to_sort.len() != 0 {
-        return Some("There are still players to sort".to_string());
+        return Err("There are still players to sort".to_string().into());
     }
 
     if plan.pause_end_timestamp == None || plan.end_timestamp == None {
-        return Some("Time stamps not correctly configured".to_string());
+        return Err("Time stamps not correctly configured".to_string().into());
     }
 
-    return None;
+    return Ok(());
 }
 
 
@@ -181,17 +181,7 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
 
     let blueprint = info.plan.clone();
 
-    match check_blueprint(blueprint.clone()) {
-        Some(err) => {
-            error = Some(err);
-            println!("{} {}", "An Error occured:".red().bold(), error.clone().unwrap_or("".to_string()).red().bold());
-            return HttpResponse::Ok().json(GenerateNewSeasonSendPackage {
-                title: "Server New Season start Respons".to_string(),
-                error
-            });
-        },
-        None => {}
-    };
+    check_blueprint(blueprint.clone()).unwrap(); // Not meant for porduction
 
     match start_season(blueprint, appstate.pool.clone()).await {
         Ok(_) => {},
@@ -209,22 +199,4 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
         title: "Server New Season start Respons".to_string(),
         error
     })
-}
-
-
-pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, appstate: &AppState) -> Result<(), String>{
-    let parsed_opponent_id = matchevent.opponent_id.clone();
-
-    let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
-
-    /// TODO!!!!! THIS ONE IS IMPORTANT!!!!
-    /// is this done? probably by now, I dont think it would work otherwise. But Im going to let this comment stay for now
-    let res = store_dialogue(builder, appstate.pool.clone()).await;
-    match res {
-        Ok(_) => {},
-        Err(err) => {
-            return Err(format!("Error while storing dialogue: {:?}", err));
-        }
-    };
-    Ok(())
 }

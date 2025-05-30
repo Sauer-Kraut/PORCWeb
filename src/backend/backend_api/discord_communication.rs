@@ -14,7 +14,6 @@ use crate::liberary::account_lib::account::pub_account_info::PubAccountInfo;
 use crate::liberary::account_lib::account::storage::get_account::get_account;
 use crate::liberary::account_lib::account::storage::store_account::store_account;
 use crate::liberary::account_lib::login::login::LogIn;
-use crate::liberary::account_lib::login::storage::get_login;
 use crate::liberary::account_lib::login::storage::store_login::store_login;
 use crate::liberary::account_lib::schedule::schedule::Schedule;
 use crate::AppState;
@@ -175,52 +174,6 @@ async fn exchang_code_for_token(code: &str, info: TokenRequestParam, url: String
 
     Ok(token_response.access_token)
 }
-
-
-
-// Request to receive the account belonging to the provided account id
-pub async fn put_logged_in(info: web::Json<PutRequestLoggedInRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-
-    let result: Result<PubAccountInfo, String> = 'scope: {
-
-        let login = match get_login::get_login(info.id.clone(), appstate.pool.clone()).await {
-            Ok(login) => login,
-            Err(err) => {
-                break 'scope Err(format!("Error while getting login: {:?}", err));
-            }
-        };
-
-        let account = get_account(login.account_id.clone(), appstate.pool.clone()).await;
-        match account {
-            Ok(account) => {
-                let pub_account_info = account.get_pub_info();
-                break 'scope Ok(pub_account_info);
-            },
-            Err(err) => {
-                break 'scope Err(format!("Error while getting account: {:?}", err));
-            }
-        }
-    };
-
-    match result {
-        Ok(account) => {
-            return HttpResponse::Ok().json(PutRequestLoggedInSendPackage {
-                title: "Account Info response".to_string(),
-                data: Some(account),
-                error: None
-            })
-        },
-        Err(err) => {
-            println!("{} {}", "An Error occured:".red().bold(), err.red().bold()); 
-            return HttpResponse::InternalServerError().json(PutRequestLoggedInSendPackage {
-                title: "Account Info response".to_string(),
-                data: None,
-                error: Some(err)
-            })
-        }
-    }
-}
-
 
 
 async fn generate_session_id() -> String {

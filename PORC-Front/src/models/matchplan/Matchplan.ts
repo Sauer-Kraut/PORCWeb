@@ -1,7 +1,7 @@
 import type { DivisionModel } from "./DivisionModel"
 
 export interface Matchplan {
-    season_name: string,
+    season: string,
     divisions: DivisionModel[],
     start_timestamp: number,
     end_timestamp: number,

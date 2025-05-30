@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 /// <reference types="../../node_modules/.vue-global-types/vue_3.5_0_0_0.d.ts" />
-import type { PubAccountInfo } from '@/models/PubAccountInfo';
 import PlayerSelectionComponent from '@/components/PlayerSelectionComponent.vue';
-import { MatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
-import type { ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
-import type { Schedule } from '@/models/Calendar/ScheduleModel';
+import type { Availability } from '@/models/availability/Availability';
+import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
+import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import type { Schedule } from '@/models/schedule/Schedule';
 import { defineProps, defineModel, ref } from 'vue';
 
 const schedule = ref({
@@ -29,7 +29,7 @@ const schedule = ref({
             startDate: new Date(2025, 1, 28, 10),
             endDate: new Date(2025, 2, 2, 12),
         },
-    ] as ScheduleEvent[],
+    ] as Availability[],
     matches: [
         {
             startDate: new Date(2025, 2, 6, 20),

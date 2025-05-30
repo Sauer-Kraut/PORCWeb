@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import type { DailyRepetitionConfig, ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
 import { onMounted, ref, watch } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 import DatePicker from '@vuepic/vue-datepicker';
-import { Repetition } from '@/models/Calendar/ScheduleEventModel';
+import { Repetition, type Availability, type DailyRepetitionConfig } from '@/models/availability/Availability';
 
 const props = defineProps<{
     title?: string;
-    availability: ScheduleEvent;
+    availability: Availability;
     create: boolean;
 }>();
 
@@ -98,7 +97,7 @@ function convertTimeRangeToDates(timeRange: { hours: number; minutes: number; se
     return [startDate, endDate];
 }
 
-function createAvailability(): ScheduleEvent {
+function createAvailability(): Availability {
     const [startDate, endDate] = convertTimeRangeToDates(time.value);
     const repetitionConfig = convertToRepetition(repetition.value, daysOfWeek.value);
     return {

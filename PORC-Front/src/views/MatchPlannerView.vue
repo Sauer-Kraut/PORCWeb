@@ -1,25 +1,23 @@
 <script lang="ts" setup>
-import { getLoggedIn } from '@/API/GetLoggedIn';
 import CalendarComponent from '@/components/CalendarComponent.vue';
 import MatchScoreComponent from '@/components/MatchScoreComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
-import config from '@/config';
-import type { MatchEvent } from '@/models/Calendar/MatchEventModel';
-import { type ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
-import type { Schedule } from '@/models/Calendar/ScheduleModel';
-import type { DivisionModel } from '@/models/DivisionModel';
-import type { PlayerModel } from '@/models/PlayerModel';
-import type { PubAccountInfo } from '@/models/PubAccountInfo';
-import { convertToPubAccountInfo, type PubAccountInfoRecv } from '@/models/PubAccountInfoRecv';
+import type { Schedule } from '@/models/schedule/Schedule';
 import { showErrorModal } from '@/services/ErrorModalService';
-import { activeUserStore } from '@/storage/st_user';
 import { getDivisionImage } from '@/util/ImageHelper';
 import { onMounted, ref, watch } from 'vue';
+import type { MatchEvent } from '@/models/match_event/MatchEvent';
+import type { Availability } from '@/models/availability/Availability';
+import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import type { DivisionModel } from '@/models/matchplan/DivisionModel';
+import type { PlayerModel } from '@/models/matchplan/PlayerModel';
+import { matchplanStore } from '@/storage/st_matchplan';
+import { accountsStore } from '@/storage/st_accounts';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const schedule = ref({
-    availabilities: [] as ScheduleEvent[],
+    availabilities: [] as Availability[],
     matches: [] as MatchEvent[],
     note: ``,
 } as Schedule);
@@ -27,17 +25,18 @@ const schedule = ref({
 const playerinfos = ref<PubAccountInfo[]>([]);
 
 const isLoggedIn = ref(true);
-const user_id = ref('0');
+const user_id = ref('default');
 
 async function getUserId() {
-    let res = await getLoggedIn();
+    let accStore = accountsStore();
+    let res = await accStore.get_login();
 
-    if (typeof res === 'string') {
-        showErrorModal('Internal server error');
+    if (typeof res == 'string') {
+        showErrorModal(res);
         isLoggedIn.value = false;
     } else {
-        isLoggedIn.value = true;
-        user_id.value = res.id;
+        isLoggedIn.value = (res != null && typeof res != 'undefined');
+        user_id.value = res?.id || 'default';
     }
 }
 
@@ -46,40 +45,20 @@ const season_name = ref('default');
 
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
+    let planStore = matchplanStore();
+    let plan = await planStore.get_matchplan(null);
 
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        let data = await response.json();
-        if (data.error != null) {
-            showErrorModal(data.error);
-        } else {
-            division.value = data.data.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
-            season_name.value = data.data.season.toString();
-
-            //DEBUG
-            //division.value = data.data.divisions.find((d: DivisionModel) => d.name === 'Stone') ?? division.value;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showErrorModal('Internal server error');
+    if (typeof plan == 'string') {
+        showErrorModal(plan);
+        return;
+    } else {
+        division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+        season_name.value = String(plan.season);
+        console.log('matchplan: ', plan);
     }
-
-    //console.log('Divisions:', divisions.value);
 }
 
 const opponents = ref<PlayerModel[]>([]);
-const participants = ref<PlayerModel[]>([]);
-
 function find_opponents(): PlayerModel[] {
     return division.value?.players.filter((player: PlayerModel) => player.id !== user_id.value) ?? [];
 }
@@ -90,15 +69,16 @@ function find_user(): PlayerModel[] {
 
 function getPlayerIds(): string[] {
     let ids = [] as string[];
-    ids.push(user_id.value.toString());
-    for (const player of opponents.value) {
+
+    let players = [...find_opponents(), ...find_user()];
+    for (const player of players) {
         ids.push(player.id.toString());
     }
     return ids;
 }
 
 async function getPubPlayerInfos(ids: string[]) {
-    //console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
+    console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
     if (ids.length == 0 || ids[0] == 'default') {
         playerinfos.value = [];
         return;
@@ -108,42 +88,20 @@ async function getPubPlayerInfos(ids: string[]) {
     console.log(getPlayerIds());
     console.log('Filtered IDs:', filteredIds);
 
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/account/info`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: 'Pub Player Infos Request',
-                ids: filteredIds,
-            }),
-        });
+    console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+    let compStore = accountsStore();
+    let res = await compStore.get_competitors_full(filteredIds);
 
-        let data = await response.json();
-        //console.log('Success:', data);
+    console.log("evaluating result of get_competitors_full: ", res);
 
-        if (data.error != null) {
-            showErrorModal(data.error);
-        } else {
-            let recvPlayerInfos = data.data as PubAccountInfoRecv[];
-            // console.log('Received PlayerInfos: ', recvPlayerInfos);
-            let PlayerInfos = [] as PubAccountInfo[];
-            for (const player of recvPlayerInfos) {
-                PlayerInfos.push(await convertToPubAccountInfo(player));
-            }
-            playerinfos.value = PlayerInfos;
-        }
-    } catch (error) {
-        console.error('Player info Error:', error);
-        showErrorModal('Internal server error');
+    if (typeof res == 'string') {
+        showErrorModal(res);
+    } else {
+        playerinfos.value = res;
     }
 
-    //console.log('PlayerInfos:', playerinfos.value);
+    console.log('Got PubPlayerInfos: ', playerinfos.value);
 }
 
 async function reload() {
@@ -151,9 +109,6 @@ async function reload() {
     await getMatchPlan();
     await getPubPlayerInfos(getPlayerIds());
     opponents.value = find_opponents();
-    participants.value = opponents.value;
-    participants.value.push(...find_user());
-    participants.value = [...new Set(participants.value)]; // Ensure unique participants
     playerinfos.value = [...new Set(playerinfos.value)];
     for (let player of playerinfos.value) {
         if (player.id == selectedPlayerId) {
@@ -183,18 +138,10 @@ function getProgress() {
 onMounted(async () => {
     await getUserId();
     await getMatchPlan();
-    setTimeout(async () => {
-        opponents.value = find_opponents();
-        await getPubPlayerInfos(getPlayerIds());
-        selectSelf();
-        setTimeout(async () => {
-            opponents.value = find_opponents();
-            participants.value = find_opponents();
-            participants.value.push(...find_user());
-            await getPubPlayerInfos(getPlayerIds());
-            selectSelf();
-        }, 500); // Wait for 500 milliseconds
-    }, 120); // Wait for 500 milliseconds
+        
+    opponents.value = find_opponents();
+    await getPubPlayerInfos(getPlayerIds());
+    selectSelf();
 });
 </script>
 
@@ -223,7 +170,7 @@ onMounted(async () => {
                     <CalendarComponent
                         v-if="selectedPlayer?.schedule"
                         :schedule="selectedPlayer?.schedule ?? schedule"
-                        :players="participants"
+                        :players="division?.players || []"
                         :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
                         :ownId="user_id"
                         :season="season_name"

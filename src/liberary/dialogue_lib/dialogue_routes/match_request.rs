@@ -55,7 +55,12 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     let match_id: String = match_info.get_id();
 
                     let mut entry = match get_match_event(match_info.challenger_id.clone(), match_info.opponent_id.clone(), match_info.start_timestamp, match_info.season.clone(), app_state.pool.clone()).await {
-                        Ok(v) => v,
+                        Ok(v) => {
+                            match v {
+                                Some(v) => v,
+                                None => {println!("{}", format!("{}{}", "An error occured while checking dialogue: ".red(), "couldnt find match event entry".red().bold())); return Ok(Some(3))},
+                            }
+                        },
                         Err(err) => {println!("{}", format!("{}{}", "An error occured while checking dialogue: ".red(), err.to_string().bright_red())); return Ok(Some(3))}, // internal error: match couldnt be found in databank
                     };
                     

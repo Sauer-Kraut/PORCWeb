@@ -1,7 +1,6 @@
 use crate::liberary::account_lib::account::account::Account;
 
-use super::discord_communication;
-use discord_communication::TokenRequestParam;
+use super::backend_api::discord_communication::TokenRequestParam;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::fs::File;

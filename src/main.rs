@@ -2,13 +2,23 @@ mod backend;
 mod porcbot;
 pub mod liberary;
 
-use actix::spawn;
-use backend::discord_communication::{discord_callback, put_logged_in};
-use backend::account_lib::*;
-use backend::client_communication::*;
-use backend::bot_communication::*;
+use backend::backend_api::account::get_account_info::get_account_info_request;
+use backend::backend_api::account::get_account_info_full::get_account_info_full_request;
+use backend::backend_api::account::get_login::get_login_request;
+use backend::backend_api::account::post_account_info::post_account_info_request;
+use backend::backend_api::discord_communication::discord_callback;
+use backend::backend_api::match_event::get_match_event::get_match_event_request;
+use backend::backend_api::match_event::post_match_event::post_match_event_request;
+use backend::backend_api::matchplan::get_matchplan::get_matchplan_request;
+use backend::backend_api::matchplan::get_ranking::get_player_ranking_request;
+use backend::backend_api::matchplan::post_match::post_match_request;
+use backend::backend_api::season::get_blueprint::get_seasons_blueprint_request;
+use backend::backend_api::season::get_seasons::get_seasons_request;
+use backend::backend_api::season::post_season::post_new_season_request;
+use backend::backend_api::server_error::ServerError;
+use backend::backend_api::signup::get_signups::get_sign_ups_request;
+use backend::backend_api::signup::post_signup::post_sign_up_request;
 
-use async_std::sync::Mutex;
 use async_std::fs;
 use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
@@ -17,14 +27,6 @@ use actix_files::Files;
 use backend::storage_lib::{Config, StorageMod};
 use backend::backend_api::middleware::ServerMiddleware;
 use colored::Colorize;
-use liberary::account_lib::account::account::Account;
-use liberary::account_lib::account::discord_user::DiscordUser;
-use liberary::account_lib::match_event::match_event::MatchEvent;
-use liberary::account_lib::signup::signup::SignUpInfo;
-use liberary::dialogue_lib::dialogue_builder::dialogue_builder::DialogueBuilder;
-use liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
-use liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
-use liberary::matchplan_lib::matchplan::storage::start_season::start_season;
 use liberary::matchplan_lib::season::season::Season;
 use liberary::matchplan_lib::season::storage::get_season::get_season;
 use porcbot::config::{BOT_TOKEN, INTENTS};
@@ -33,7 +35,6 @@ use porcbot::tasks::functions::check_dialogues::check_dialogues;
 use serenity::Client;
 use sqlx::*;
 use tokio;
-use std::collections::HashMap;
 use std::sync::{Arc};
 use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
@@ -79,11 +80,11 @@ async fn main() -> std::io::Result<()> {
     let config_read = config.read().await.clone();
 
     println!("\n{}\n{} {}\n{} {}\n{} {}\n{} {}\n{} {}", "config was loaded:".to_string(), 
-        "url:".bright_cyan(), config_read.url.cyan(),
-        "domain:".bright_cyan(), config_read.domain.cyan(),
-        "port:".bright_cyan(), config_read.port.cyan(),
-        "season:".bright_cyan(), config_read.season.as_deref().unwrap_or("None").cyan(),
-        "dev:".bright_cyan(), config_read.dev.to_string().cyan(),
+        "url:".cyan().bold(), config_read.url.cyan(),
+        "domain:".cyan().bold(), config_read.domain.cyan(),
+        "port:".cyan().bold(), config_read.port.cyan(),
+        "season:".cyan().bold(), config_read.season.as_deref().unwrap_or("None").cyan(),
+        "dev:".cyan().bold(), config_read.dev.to_string().cyan(),
     );
     let port = config.read().await.port.clone();
 
@@ -248,33 +249,61 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/rules").to(index))
             .service(web::resource("/faq").to(index))
             .service(web::resource("/match-planner").to(index))
-            .service(web::resource("/api/match-plan")
-            .route(web::get().to(get_match_plan_request))
-            .route(web::post().to(update_match_plan_request)))
-            .service(web::resource("/api/sign-up")
-            .route(web::get().to(get_sign_up_request))
-            .route(web::post().to(add_sign_up_request)))
-            // .service(web::resource("/api/sign-up/remove")
-            // .route(web::post().to(remove_sign_up_request)))
-            .service(web::resource("/api/ranking")
-            .route(web::get().to(get_player_ranking_request)))
-            .service(web::resource("/api/plan-blueprint")
-            .route(web::get().to(generate_plan_blueprint_request)))
-            .service(web::resource("/api/season-control")
-            .route(web::post().to(start_new_season)))
-            .service(web::resource("/discord/callback").to(discord_callback))
-            .service(web::resource("/api/discord/logged-in")
-            .route(web::put().to(put_logged_in)))
-            .service(web::resource("/api/account/info")
-            .route(web::put().to(put_account_info)))
-            .service(web::resource("/api/account/setinfo")
-            .route(web::post().to(post_account_info)))
-            .service(web::resource("/api/matches/set")
-            .route(web::post().to(post_match_event)))
-            .service(web::resource("/api/matches/get")
-            .route(web::put().to(put_match_event)))
-            .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
 
+            // /api/account
+
+            .service(web::resource("/api/account/simple")
+            .route(web::get().to(get_account_info_request)))
+
+            .service(web::resource("/api/account/full")
+            .route(web::get().to(get_account_info_full_request)))
+
+            .service(web::resource("/api/account/login")
+            .route(web::get().to(get_login_request)))
+
+            .service(web::resource("/api/account/update")
+            .route(web::post().to(post_account_info_request)))
+
+            // /api/matchplan
+
+            .service(web::resource("/api/matchplan")
+            .route(web::get().to(get_matchplan_request)))
+            
+            .service(web::resource("/api/matchplan/match")
+            .route(web::post().to(post_match_request)))
+
+            .service(web::resource("/api/matchplan/ranking")
+            .route(web::get().to(get_player_ranking_request)))
+
+            // /api/signup
+
+            .service(web::resource("/api/sign-up")
+            .route(web::get().to(get_sign_ups_request))
+            .route(web::post().to(post_sign_up_request)))
+
+            // /api/season
+
+            .service(web::resource("/api/season")
+            .route(web::get().to(get_seasons_request)))
+
+            .service(web::resource("/api/season/controll")
+            .route(web::get().to(get_seasons_blueprint_request))
+            .route(web::post().to(post_new_season_request)))
+
+            // /api/match-event
+
+            .service(web::resource("/api/match-event")
+            .route(web::get().to(get_match_event_request))
+            .route(web::post().to(post_match_event_request)))
+
+            // /api/query-testing
+
+            .service(web::resource("/api/query-testing")
+            .route(web::get().to(get_account_info_request)))
+
+
+            .service(web::resource("/discord/callback").to(discord_callback))
+            .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
     })
     .bind(&format!("{}{}", "[::]:", port))? // Production port: 8081, devolpment sever port: 8082, local port:8082
     .run()
@@ -293,6 +322,17 @@ pub struct AppState {
     season: Arc<RwLock<Option<Season>>>,
     config: Arc<RwLock<Config>>,
     pool: Pool<Postgres>
+}
+
+impl AppState {
+
+    pub async fn get_season(&self) -> Result<Season, ServerError> {
+
+        match self.season.read().await.as_ref() {
+            Some(s) => return Ok(s.clone()),
+            None => return Err(ServerError::Other("current season could not be found".into())),
+        }
+    }
 }
 
 // impl AppState {

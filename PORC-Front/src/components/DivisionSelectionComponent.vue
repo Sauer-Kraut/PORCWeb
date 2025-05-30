@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { DivisionModel } from '@/models/DivisionModel';
+import type { DivisionModel } from '@/models/matchplan/DivisionModel';
 import { getDivisionImage } from '@/util/ImageHelper';
 import { filter_str } from '@/util/stringFilter';
 
