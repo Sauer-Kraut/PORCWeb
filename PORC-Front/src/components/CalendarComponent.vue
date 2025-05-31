@@ -1,21 +1,18 @@
 <script lang="ts" setup>
-import { Repetition, type DailyRepetitionConfig, type ScheduleEvent } from '@/models/Calendar/ScheduleEventModel';
-import type { Schedule } from '@/models/Calendar/ScheduleModel';
-import type { PlayerModel } from '@/models/PlayerModel';
+import type { Schedule } from '@/models/schedule/Schedule';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
-import { MatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
 import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
-import { EditAvailability } from '@/API/PostAvailability.ts';
 import RequestMatchModal from './modals/RequestMatchModal.vue';
-import { RequestMatch } from '@/API/PostMatch';
-import { postMatch } from '@/API/PostMatch';
 import { filter_str } from '@/util/stringFilter';
-import { getLoggedIn } from '@/API/GetLoggedIn';
-import { postUserInfo } from '@/API/PostAccountInfo';
 import lineBreak from '@/util/LineBreakFilter';
 import { showErrorModal } from '@/services/ErrorModalService';
+import { Repetition, type Availability, type DailyRepetitionConfig } from '@/models/availability/Availability';
+import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
+import { accountsStore } from '@/storage/st_accounts';
+import { postMatchEvent } from '@/API/match_event/PostMatchEvent';
+import type { PlayerModel } from '@/models/matchplan/PlayerModel';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -26,7 +23,9 @@ const props = defineProps<{
     season: string;
 }>();
 
+const compStore = accountsStore();
 const emit = defineEmits(['reload']);
+
 
 // Watch for changes in the schedule prop
 watch(
@@ -107,10 +106,10 @@ function getMonday(date: Date): Date {
     return new Date(newDate.setDate(diff));
 }
 
-type ScheduleEventDisplay = { startDate: Date; endDate: Date; event: ScheduleEvent };
+type AvailabilityDisplay = { startDate: Date; endDate: Date; event: Availability };
 
-function splitEvents(events: ScheduleEvent[]): ScheduleEventDisplay[] {
-    const splitEvents: ScheduleEventDisplay[] = [];
+function splitEvents(events: Availability[]): AvailabilityDisplay[] {
+    const splitEvents: AvailabilityDisplay[] = [];
     events.forEach((event) => {
         let start = new Date(event.startDate);
         const end = new Date(event.endDate);
@@ -143,10 +142,10 @@ function splitEvents(events: ScheduleEvent[]): ScheduleEventDisplay[] {
     return splitEvents;
 }
 
-function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] {
+function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
     console.log('spliting event display: ', event);
     const startDate = event.startDate;
-    const splitEvents: ScheduleEventDisplay[] = [];
+    const splitEvents: AvailabilityDisplay[] = [];
     let start = event.startDate.getDate();
     let startMonth = event.startDate.getMonth();
     let end = event.endDate.getDate();
@@ -198,7 +197,7 @@ function splitEventDisplay(event: ScheduleEventDisplay): ScheduleEventDisplay[] 
     return splitEvents;
 }
 
-function getEventOfTheWeek(event: ScheduleEvent, day: number): ScheduleEventDisplay {
+function getEventOfTheWeek(event: Availability, day: number): AvailabilityDisplay {
     const currentWeekEventDate = new Date(currentWeekStart.value);
     currentWeekEventDate.setDate(currentWeekStart.value.getDate() + day);
 
@@ -263,7 +262,7 @@ function getRepetitionDays(repetition: DailyRepetitionConfig): number[] {
     return days;
 }
 
-function getEventStyle(event: ScheduleEventDisplay | MatchEvent): { top: string; height: string } {
+function getEventStyle(event: AvailabilityDisplay | MatchEvent): { top: string; height: string } {
     const start = event.startDate;
     const end = event.endDate;
     const top = ((start.getHours() * 60 + start.getMinutes()) / (24 * 60)) * 100;
@@ -326,18 +325,27 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     endDate: new Date(date.getTime() + 60 * 60 * 1000),
                     repetition: Repetition.Once,
                     repetition_config: { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false } as DailyRepetitionConfig,
-                } as ScheduleEvent,
+                } as Availability,
                 create: true,
                 async onCancel() {
                     close();
                 },
-                async onSubmitAvailability(data: ScheduleEvent) {
+                async onSubmitAvailability(data: Availability) {
                     //console.log('submiting something', data);
-                    let err = await EditAvailability([data], []);
-                    if (err != null) {
-                        console.log('Error adding availability', err);
+                    let set_res = await compStore.self_edit_availabilities_local([data], []);
+                    if (typeof set_res == 'string') {
+                        console.log('Error adding availability', set_res);
+                        showErrorModal(set_res);
                     }
+
                     close();
+
+                    let store_res = await compStore.store_self();
+                    if (typeof store_res == 'string') {
+                        console.log('Error storing account', store_res);
+                        showErrorModal(store_res);
+                    }
+
                     emit('reload');
                 },
             },
@@ -353,18 +361,27 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     initiatorId: props.ownId,
                     opponentId: props.scheduleUserId,
                     status: MatchStatus.Requested,
+                    season: props.season,
                 } as MatchEvent,
                 opponentUsername: getPlayer(props.scheduleUserId).tag,
                 async onCancel() {
                     close();
                 },
-                async onSubmitAvailability(data: MatchEvent) {
+                async onSubmitMatch(data: MatchEvent) {
                     //console.log('submiting something', data);
-                    let err = await RequestMatch(data, props.season);
-                    if (err != null) {
-                        console.log('Error adding availability', err);
+                    let set_res = await compStore.create_match_event_local(data);
+                    if (set_res != null) {
+                        console.log('Error adding availability', set_res);
+                        showErrorModal(set_res);
                     }
+
                     close();
+
+                    let store_res = await compStore.post_match_event(data);
+                    if (store_res != null) {
+                        console.log('Error storing account', store_res);
+                        showErrorModal(store_res);
+                    }
                     emit('reload');
                 },
             },
@@ -373,7 +390,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
     }
 }
 
-function editAvailability(availability: ScheduleEvent) {
+function editAvailability(availability: Availability) {
     if (!props.ownCalendar) return;
     //console.log('editAvaliability', availability);
     const { open, close } = useModal({
@@ -385,22 +402,38 @@ function editAvailability(availability: ScheduleEvent) {
                 close();
             },
             create: false,
-            async onSubmitAvailability(data: ScheduleEvent) {
+            async onSubmitAvailability(data: Availability) {
                 //console.log('submiting something', data);
-                let err = await EditAvailability([data], [availability]);
-                if (err != null) {
-                    console.log('Error adding availability', err);
+                let set_res = await compStore.self_edit_availabilities_local([data], [availability]);
+                if (typeof set_res == 'string') {
+                    console.log('Error adding availability', set_res);
+                    showErrorModal(set_res);
                 }
+
                 close();
+
+                let store_res = await compStore.store_self();
+                if (typeof store_res == 'string') {
+                    console.log('Error storing account', store_res);
+                    showErrorModal(store_res);
+                }
                 emit('reload');
             },
             async onDelete() {
                 //console.log('deleting something');
-                let err = await EditAvailability([], [availability]);
-                if (err != null) {
-                    console.log('Error removing availability', err);
+                let set_res = await compStore.self_edit_availabilities_local([], [availability]);
+                if (typeof set_res == 'string') {
+                    console.log('Error adding availability', set_res);
+                    showErrorModal(set_res);
                 }
+
                 close();
+
+                let store_res = await compStore.store_self();
+                if (typeof store_res == 'string') {
+                    console.log('Error storing account', store_res);
+                    showErrorModal(store_res);
+                }
                 emit('reload');
             },
         },
@@ -408,37 +441,42 @@ function editAvailability(availability: ScheduleEvent) {
     open();
 }
 
-async function deleteAvailability(availability: ScheduleEvent) {
-    let err = await EditAvailability([], [availability]);
-    if (err != null) {
-        console.log('Error removing availability', err);
+async function deleteAvailability(availability: Availability) {
+    let set_res = await compStore.self_edit_availabilities_local([], [availability]);
+    if (typeof set_res == 'string') {
+        console.log('Error adding availability', set_res);
+        showErrorModal(set_res);
+    }
+
+    let store_res = await compStore.store_self();
+    if (typeof store_res == 'string') {
+        console.log('Error storing account', store_res);
+        showErrorModal(store_res);
     }
     emit('reload');
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
     match.status = accept ? MatchStatus.Confirmed : MatchStatus.Declined;
-    let res = await postMatch(match, props.season);
-    if (res != null) {
-        showErrorModal(res);
+    let set_res = await compStore.create_match_event_local(match);
+    if (typeof set_res == 'string') {
+        console.log('Error adding availability', set_res);
+        showErrorModal(set_res);
     }
+
+    let store_res = await compStore.post_match_event(match);
+    if (typeof store_res == 'string') {
+        console.log('Error storing account', store_res);
+        showErrorModal(store_res);
+    }
+    emit('reload');
 }
 
 async function submitNote() {
-    let res = await getLoggedIn();
+    let res = await compStore.self_update_schedule_note(props.schedule.note);
 
-    if (typeof res === 'string') {
-        console.log('User not logged in');
-    } else {
-        if (res.schedule == null) {
-            res.schedule = {
-                availabilities: [],
-                matches: [],
-                note: '',
-            };
-        }
-        res.schedule.note = props.schedule.note;
-        await postUserInfo(res);
+    if (res != null) {
+        showErrorModal(res);
     }
 }
 </script>

@@ -6,10 +6,10 @@ use crate::liberary::account_lib::match_event::match_event::MatchEvent;
 use crate::liberary::account_lib::signup::storage::get_signups::get_signups;
 use crate::liberary::dialogue_lib::dialogue_builder::storage::store_dialogue::store_dialogue;
 use crate::liberary::dialogue_lib::dialogue_initiator::dialogue_initiator::DialogueInitator;
-use crate::liberary::matchplan_lib::matchplan::storage::get_seasons::get_seasons;
 use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use crate::liberary::matchplan_lib::matchplan::storage::start_season::start_season;
 use crate::liberary::matchplan_lib::matchplan_blueprint::matchplan_blueprint::PlanBlueprint;
+use crate::liberary::matchplan_lib::season::storage::get_seasons::get_seasons;
 use crate::AppState;
 
 
@@ -37,7 +37,6 @@ pub struct GenerateNewSeasonSendPackage {
 
 
 pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for plan blueprint".bold().cyan());
 
     let mut error = None;
 
@@ -50,7 +49,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
     if seasons.len() > 0 {
         
         let current_season = seasons[0].clone();
-        let matchplan = match get_matchplan(current_season.clone(), pool.clone()).await {
+        let matchplan = match get_matchplan(current_season.name.clone(), pool.clone()).await {
             Ok(v) => v,
             Err(err) => {
                 error = Some(format!("There was an error while getting the matchplan: {}", err));
@@ -66,7 +65,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
         if seasons.len() > 1 {
 
             let last_season = seasons[1].clone();
-            let last_matchplan = match get_matchplan(last_season.clone(), pool.clone()).await {
+            let last_matchplan = match get_matchplan(last_season.name.clone(), pool.clone()).await {
                 Ok(v) => v,
                 Err(err) => {
                     error = Some(format!("There was an error while getting the matchplan: {}", err));
@@ -114,7 +113,7 @@ pub async fn generate_plan_blueprint_request(appstate: web::Data<AppState>) -> i
 
 
 
-pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
+pub fn check_blueprint(plan: PlanBlueprint) -> Result<(), Box<dyn std::error::Error>> {
     let mut players = Vec::new();
     let mut division_orders = Vec::new();
     
@@ -127,36 +126,36 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
 
     for division in plan.divisions.iter() {
         if !acceptable_division_names.contains(&division.name) {
-            return Some(format!("Division name {} is not acceptable", division.name));
+            return Err(format!("Division name {} is not acceptable", division.name).into());
         }
 
         if used_division_names.contains(&division.name) {
-            return Some(format!("Division name {} occurs multiple times", division.name));
+            return Err(format!("Division name {} occurs multiple times", division.name).into());
         }
 
         used_division_names.push(division.name.clone());
     }
 
     if plan.divisions.len() < 2 {
-        return Some("There are less than 2 divisions".to_string());
+        return Err("There are less than 2 divisions".to_string().into());
     }
 
     for division in plan.divisions.iter() {
 
         if division_orders.contains(&division.order) {
-            return Some(format!("Division order {} occurs multiple times", division.order));
+            return Err(format!("Division order {} occurs multiple times", division.order).into());
         }
 
         division_orders.push(division.order);
 
         if division.players.len() < 2 {
-            return Some(format!("Division {} has less than 2 players", division.name));
+            return Err(format!("Division {} has less than 2 players", division.name).into());
         }
 
         for player in division.players.iter() {
 
             if players.contains(player) {
-                return Some(format!("Player {:?} occurs multiple times", player));
+                return Err(format!("Player {:?} occurs multiple times", player).into());
             }
 
             players.push(player.clone());
@@ -164,36 +163,25 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Option<String> {
     }
 
     if plan.players_to_sort.len() != 0 {
-        return Some("There are still players to sort".to_string());
+        return Err("There are still players to sort".to_string().into());
     }
 
     if plan.pause_end_timestamp == None || plan.end_timestamp == None {
-        return Some("Time stamps not correctly configured".to_string());
+        return Err("Time stamps not correctly configured".to_string().into());
     }
 
-    return None;
+    return Ok(());
 }
 
 
 
 pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for new season start".bold().magenta());
 
     let mut error = None;
 
     let blueprint = info.plan.clone();
 
-    match check_blueprint(blueprint.clone()) {
-        Some(err) => {
-            error = Some(err);
-            println!("{} {}", "An Error occured:".red().bold(), error.clone().unwrap_or("".to_string()).red().bold());
-            return HttpResponse::Ok().json(GenerateNewSeasonSendPackage {
-                title: "Server New Season start Respons".to_string(),
-                error
-            });
-        },
-        None => {}
-    };
+    check_blueprint(blueprint.clone()).unwrap(); // Not meant for porduction
 
     match start_season(blueprint, appstate.pool.clone()).await {
         Ok(_) => {},
@@ -211,21 +199,4 @@ pub async fn start_new_season(info: web::Json<GenerateNewSeasonRecvPackage>, app
         title: "Server New Season start Respons".to_string(),
         error
     })
-}
-
-
-pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, appstate: &AppState) -> Result<(), String>{
-    let parsed_opponent_id = matchevent.opponent_id.clone();
-
-    let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
-
-    /// TODO!!!!! THIS ONE IS IMPORTANT!!!!
-    let res = store_dialogue(builder, appstate.pool.clone()).await;
-    match res {
-        Ok(_) => {},
-        Err(err) => {
-            return Err(format!("Error while storing dialogue: {:?}", err));
-        }
-    };
-    Ok(())
 }

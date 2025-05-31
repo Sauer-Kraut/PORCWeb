@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { MatchStatus, ObservedMatchStatus, type MatchEvent } from '@/models/Calendar/MatchEventModel';
+import { MatchStatus, type MatchEvent, ObservedMatchStatus} from '@/models/match_event/MatchEvent';
 import { computed } from 'vue';
 
 const props = defineProps<{

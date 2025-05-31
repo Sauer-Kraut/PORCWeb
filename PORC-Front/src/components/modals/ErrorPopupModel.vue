@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { defineProps } from 'vue';
-import { useModal, VueFinalModal } from 'vue-final-modal';
+import { VueFinalModal } from 'vue-final-modal';
 
 defineProps<{
     errorMessage: string;

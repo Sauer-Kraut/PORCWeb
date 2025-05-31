@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { getLoggedIn } from '@/API/GetLoggedIn';
 import config from '@/config';
+import { showErrorModal } from '@/services/ErrorModalService';
+import { accountsStore } from '@/storage/st_accounts';
 import { onMounted, ref } from 'vue';
 
 let url = 'default';
@@ -11,11 +12,13 @@ const discordAuthURL = `${config.getDiscordUrl()}`;
 let errorMessage: string = 'This is an error message';
 
 async function getUserId() {
-    let res = await getLoggedIn();
+    let accStore = accountsStore();
+    let res = await accStore.get_login();
 
-    if (typeof res === 'string') {
-        errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
+    if (typeof res == 'string' || res == null) {
+        if (typeof res == 'string') {
+            showErrorModal(res);
+        }
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;

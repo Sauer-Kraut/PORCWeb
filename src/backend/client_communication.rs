@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use colored::Colorize;
 
-use crate::{liberary::{account_lib::signup::{signup::SignUpInfo, storage::{get_signups::get_signups, store_signup::store_signup}}, matchplan_lib::{division::player_performance::PlayerPerformance, matchplan::{matchplan::MatchPlan, storage::{get_seasons, matchplan_get::get_matchplan}}, matchplan_match::{matchplan_match::Match, storage::match_store::update_match}}}, AppState};
+use crate::{liberary::{account_lib::signup::{signup::SignUpInfo, storage::{get_signups::get_signups, store_signup::store_signup}}, matchplan_lib::{division::player_performance::PlayerPerformance, matchplan::{matchplan::MatchPlan, storage::matchplan_get::get_matchplan}, matchplan_match::{matchplan_match::Match, storage::match_store::update_match}, season::storage::get_seasons}}, AppState};
 use actix_web::{web, Responder, HttpResponse};
 
 
@@ -49,7 +49,6 @@ pub struct PostRequestReturnPackage {
 // Request to retrieve match plan for currrent season
 // TODO: will need to add fetch for other seasons later
 pub async fn get_match_plan_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for match plan".bold().cyan());
 
     let result: Result<MatchPlan, String> = 'scope: {
         let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
@@ -60,7 +59,7 @@ pub async fn get_match_plan_request(appstate: web::Data<AppState>) -> impl Respo
         else {
 
             let current_season = seasons[0].clone();
-            let matchplan = match get_matchplan(current_season.clone(), appstate.pool.clone()).await {
+            let matchplan = match get_matchplan(current_season.name.clone(), appstate.pool.clone()).await {
                 Ok(v) => v,
                 Err(err) => {
                     break 'scope Err(format!("Couldnt get matchplan: {}", err));
@@ -95,7 +94,6 @@ pub async fn get_match_plan_request(appstate: web::Data<AppState>) -> impl Respo
 // Request to retrieve all player performance data for currrent season
 // TODO: will need to add fetch for other seasons later
 pub async fn get_player_ranking_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for match plan".bold().cyan());
 
     let result: Result<Vec<(String, Vec<PlayerPerformance>)>, String> = 'scope: {
 
@@ -107,7 +105,7 @@ pub async fn get_player_ranking_request(appstate: web::Data<AppState>) -> impl R
         else {
 
             let current_season = seasons[0].clone();
-            let matchplan = match get_matchplan(current_season.clone(), appstate.pool.clone()).await {
+            let matchplan = match get_matchplan(current_season.name.clone(), appstate.pool.clone()).await {
                 Ok(v) => v,
                 Err(err) => {
                     break 'scope Err(format!("There was an error while getting the matchplan: {}", err));
@@ -149,7 +147,6 @@ pub async fn get_player_ranking_request(appstate: web::Data<AppState>) -> impl R
 
 // Request to retrieve all recent sign ups
 pub async fn get_sign_up_request(appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received GET Request for sign ups".bold().cyan());
 
     let result: Result<Vec<SignUpInfo>, String> = 'scope: {
         let seasons = get_seasons::get_seasons(appstate.pool.clone()).await.unwrap_or(vec!());
@@ -163,7 +160,7 @@ pub async fn get_sign_up_request(appstate: web::Data<AppState>) -> impl Responde
 
             if seasons.len() > 1 {
                 let last_season = seasons[1].clone();
-                let matchplan = match get_matchplan(last_season.clone(), appstate.pool.clone()).await {
+                let matchplan = match get_matchplan(last_season.name.clone(), appstate.pool.clone()).await {
                     Ok(v) => v,
                     Err(err) => {
                         break 'scope Err(format!("There was an error while getting the matchplan: {}", err));
@@ -205,7 +202,6 @@ pub async fn get_sign_up_request(appstate: web::Data<AppState>) -> impl Responde
 
 // Request to update a provided match of the current season
 pub async fn update_match_plan_request(info: web::Json<PostRequestMatchPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for match plan".bold().cyan());
 
     let result: Result<(), String> = 'scope: {
 
@@ -217,7 +213,7 @@ pub async fn update_match_plan_request(info: web::Json<PostRequestMatchPackage>,
         else {
             let current_season = seasons[0].clone();
             
-            match update_match(info.match_info.clone(), current_season, appstate.pool.clone()).await {
+            match update_match(info.match_info.clone(), current_season.name, appstate.pool.clone()).await {
                 Ok(_) => {
                     break 'scope Ok(());
                 },
@@ -248,7 +244,6 @@ pub async fn update_match_plan_request(info: web::Json<PostRequestMatchPackage>,
 
 // Request do add a sign up
 pub async fn add_sign_up_request(info: web::Json<PostRequestSignUpPackage>, appstate: web::Data<AppState>) -> impl Responder {
-    println!("\n{}", "Received POST Request for sign up".bold().cyan());
 
     let result: Result<(), String> = 'scope: {
         match store_signup(info.sing_up_info.clone(), appstate.pool.clone()).await {

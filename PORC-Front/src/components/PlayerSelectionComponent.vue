@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
-import type { PubAccountInfo } from '@/models/PubAccountInfo';
+import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { filter_str } from '@/util/stringFilter';
 import { ref } from 'vue';
 

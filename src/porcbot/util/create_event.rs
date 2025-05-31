@@ -4,7 +4,7 @@ use rand::Rng;
 use crate::{liberary::account_lib::match_event::match_event::MatchEvent, porcbot::config::*};
 
 pub async fn create_discord_event(match_event: MatchEvent, league: String) -> Result<ScheduledEvent, String>{
-    let guild_id = GuildId::new(SERVER_ID);
+    let guild_id = GuildId::new(**SERVER_ID);
     let initiator_username = match UserId::new(match_event.challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?).to_user(get_http()).await {
         Ok(user) => user.name,
         Err(_) => "Challenger".to_string(),

@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import config from '@/config';
-import type { MatchModel } from '@/models/MatchModel';
-import { showErrorModal } from '@/services/ErrorModalService';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
 import EditMatchComponent from './modals/EditMatchComponent.vue';
+import type { MatchModel } from '@/models/matchplan/MatchModel';
+import { matchplanStore } from '@/storage/st_matchplan';
 
 const props = withDefaults(
     defineProps<{
@@ -16,6 +15,9 @@ const props = withDefaults(
         editMode: true, // Default value for editMode
     },
 );
+
+const emit = defineEmits(['reload']);
+
 const allowedEdit = ref(props.editMode && (props.match.p1.id === props.user_id || props.user_id === props.match.p2.id));
 
 const p1User = ref(props.match.p1.id == props.user_id);
@@ -23,14 +25,15 @@ const p2User = ref(props.match.p2.id == props.user_id);
 
 var isScored = ref(props.match.p1score != null && props.match.p2score != null);
 
-function editMatch() {
+async function editMatch() {
     const { open, close } = useModal({
         component: EditMatchComponent,
         attrs: {
             match: props.match,
-            onSave: (updateInfo: any) => {
-                updateMatchInfo(updateInfo);
+            onSave: async (updateInfo: any) => {
                 close();
+                await updateMatchInfo(updateInfo);
+                emit('reload');
             },
             onClose: () => {
                 close();
@@ -41,48 +44,20 @@ function editMatch() {
 }
 
 async function updateMatchInfo(updateInfo: MatchModel) {
-    if (!(typeof updateInfo === 'object' && updateInfo !== null)) {
-        console.error('updateInfo is not an object or is null');
-    }
+    // if (!(typeof updateInfo === 'object' && updateInfo !== null)) {
+    //     console.error('updateInfo is not an object or is null');
+    // }
+
+    const store = matchplanStore();
+
     const Match: MatchModel = {
         p1: updateInfo.p1,
         p2: updateInfo.p2,
         p1score: updateInfo.p1score,
         p2score: updateInfo.p2score,
     };
-    const requestData = JSON.stringify({
-        title: 'updateMatch',
-        match_info: Match,
-    });
 
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/match-plan`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestData,
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        // console.log('Success:', data);
-        if (data.error != null) {
-            showErrorModal(data.error);
-            props.match.p1score = null;
-            props.match.p2score = null;
-        } else {
-            isScored.value = props.match.p1score != null && props.match.p2score != null;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showErrorModal('Internal server error');
-        props.match.p1score = null;
-        props.match.p2score = null;
-    }
+    await store.storeMatch(Match);
 }
 
 function p1Win(match: MatchModel): boolean {
@@ -95,6 +70,15 @@ function p2Win(match: MatchModel): boolean {
 
 const shortendP1tag = ref(props.match.p1.tag.length > 10 ? props.match.p1.tag.slice(0, 10) + '..' : props.match.p1.tag);
 const shortendP2tag = ref(props.match.p2.tag.length > 10 ? props.match.p2.tag.slice(0, 10) + '..' : props.match.p2.tag);
+
+watch(() => props.match.p1score, (newScore: null | number) => {
+    isScored.value = newScore != null && props.match.p2score != null;
+});
+
+watch(() => props.match.p2score, (newScore: null | number) => {
+    isScored.value = newScore != null && props.match.p1score != null;
+});
+
 </script>
 
 <template>

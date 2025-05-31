@@ -1,8 +1,13 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 import { ModalsContainer } from 'vue-final-modal';
-import { getLoggedIn } from './API/GetLoggedIn';
 import DiscordUserComponent from './components/DiscordUserComponent.vue';
+import { showErrorModal } from './services/ErrorModalService';
+import { matchplanStore } from './storage/st_matchplan';
+import type { DivisionModel } from './models/matchplan/DivisionModel';
+import type { PlayerModel } from './models/matchplan/PlayerModel';
+import type { PubAccountInfo } from './models/pub_account_info/PubAccountInfo';
+import { accountsStore } from './storage/st_accounts';
 
 const isMenuOpen = ref(false);
 function toggleMenu() {
@@ -14,23 +19,107 @@ function closeMenu() {
 }
 
 const isLoggedIn = ref(false);
-const user_id = ref(0);
-let errorMessage: string = 'This is an error message';
-async function getUserId() {
-    let res = await getLoggedIn();
+const user_id = ref('0');
 
-    if (typeof res === 'string') {
-        errorMessage = 'internal server error';
-        //console.log('Error message:', errorMessage);
+async function getUserId() {
+    let accStore = accountsStore();
+    let res = await accStore.get_login();
+
+    if (typeof res == 'string') {
+        showErrorModal(res);
         isLoggedIn.value = false;
     } else {
-        isLoggedIn.value = true;
-        user_id.value = res.id;
+        isLoggedIn.value = (res != null && typeof res != 'undefined');
+        if (res && res.id) {
+            user_id.value = res.id;
+        } else if (typeof res == 'string') {
+            showErrorModal(res);
+            console.error(res);
+        }
     }
 }
 
-onMounted(() => {
-    getUserId();
+
+
+const playerinfos = ref<PubAccountInfo[]>([]);
+
+const division = ref<DivisionModel>();
+const season_name = ref('default');
+
+async function getMatchPlan() {
+    //console.log('Trying to get match plan');
+    let planStore = matchplanStore();
+    let plan = await planStore.get_matchplan(null);
+
+    if (typeof plan == 'string') {
+        showErrorModal(plan);
+        return;
+    } else {
+        division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+        season_name.value = String(plan.season);
+        console.log('matchplan: ', plan);
+    }
+}
+
+const opponents = ref<PlayerModel[]>([]);
+const participants = ref<PlayerModel[]>([]);
+
+function find_opponents(): PlayerModel[] {
+    return division.value?.players.filter((player: PlayerModel) => player.id !== user_id.value) ?? [];
+}
+
+function find_user(): PlayerModel[] {
+    return division.value?.players.filter((player: PlayerModel) => player.id === user_id.value) ?? [];
+}
+
+function getPlayerIds(): string[] {
+    let ids = [] as string[];
+
+    let players = [...find_opponents(), ...find_user()];
+    for (const player of players) {
+        ids.push(player.id.toString());
+    }
+    return ids;
+}
+
+async function getPubPlayerInfos(ids: string[]) {
+    console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
+    if (ids.length == 0 || ids[0] == 'default') {
+        playerinfos.value = [];
+        return;
+    }
+
+    let filteredIds = [...new Set(ids)];
+    console.log(getPlayerIds());
+    console.log('Filtered IDs:', filteredIds);
+
+    console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
+
+    let compStore = accountsStore();
+    let res = await compStore.get_competitors_full(filteredIds);
+
+    console.log("evaluating result of get_competitors_full: ", res);
+
+    if (typeof res == 'string') {
+        showErrorModal(res);
+    } else {
+        playerinfos.value = res;
+    }
+
+    console.log('Got PubPlayerInfos: ', playerinfos.value);
+}
+
+
+
+
+
+
+
+
+onMounted(async () => {
+    await getUserId();
+    await getMatchPlan();
+    await getPubPlayerInfos(getPlayerIds());
 });
 </script>
 

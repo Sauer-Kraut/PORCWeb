@@ -55,7 +55,12 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                     let match_id: String = match_info.get_id();
 
                     let mut entry = match get_match_event(match_info.challenger_id.clone(), match_info.opponent_id.clone(), match_info.start_timestamp, match_info.season.clone(), app_state.pool.clone()).await {
-                        Ok(v) => v,
+                        Ok(v) => {
+                            match v {
+                                Some(v) => v,
+                                None => {println!("{}", format!("{}{}", "An error occured while checking dialogue: ".red(), "couldnt find match event entry".red().bold())); return Ok(Some(3))},
+                            }
+                        },
                         Err(err) => {println!("{}", format!("{}{}", "An error occured while checking dialogue: ".red(), err.to_string().bright_red())); return Ok(Some(3))}, // internal error: match couldnt be found in databank
                     };
                     
@@ -71,7 +76,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                                     };
 
-                                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, planed_event.id.get());
+                                    let event_link = format!("https://discord.com/events/{}/{}", **SERVER_ID, planed_event.id.get());
                                     let _ = send_dm(match_info.challenger_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?, format!("Your requested match with {opponent_tag} has been accepted:
 {event_link}")).await;
                                     info.event_id = Some(planed_event.id.get());
@@ -123,7 +128,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                         Ok(v) => v.name,
                         Err(err) => return Err(format!("user id couldnt be converted to user in dialogue route with err: {err}"))
                     };
-                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, info.event_id.unwrap_or_else(|| 0));
+                    let event_link = format!("https://discord.com/events/{}/{}", **SERVER_ID, info.event_id.unwrap_or_else(|| 0));
                     Ok(format!("Your match against {challenger_tag} has been registered successfully. An event has been created on the PORC discord server: 
 {event_link}"))
                 })))), 
@@ -143,7 +148,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                         Some(id) => id,
                         None => return Err(format!("couldnt find event id for event that should be configured"))
                     };
-                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
+                    let event_link = format!("https://discord.com/events/{}/{}", **SERVER_ID, event_id);
                     let timestamp = &info.match_info.start_timestamp;
                     let _ = send_dm(parsed_challenger_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been accepted:
 {event_link}")).await;
@@ -219,7 +224,7 @@ You can accept his proposal via reacting with {ACCEPT_EMOJI} or decline with {DE
                         Some(id) => id,
                         None => return Err(format!("couldnt find event id for event that should be configured"))
                     };
-                    let event_link = format!("https://discord.com/events/{}/{}", SERVER_ID, event_id);
+                    let event_link = format!("https://discord.com/events/{}/{}", **SERVER_ID, event_id);
                     let timestamp = &info.match_info.start_timestamp;
                     let _ = send_dm(parsed_challenger_id, format!("Your requested match with {opponent_tag} at <t:{timestamp}:F> has been accepted:
 {event_link}")).await;

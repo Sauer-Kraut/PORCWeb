@@ -11,9 +11,11 @@ import './assets/scss/tooltip/match-tooltip.scss';
 import './assets/scss/styles.scss';
 import './assets/scss/pages.scss';
 import './assets/scss/global.scss';
+import { createPinia } from 'pinia';
 
 const app = createApp(App);
 
+app.use(createPinia());
 app.use(FloatingVue, {
     themes: {
         'match-tooltip': {
@@ -38,3 +40,4 @@ app.use(FloatingVue, {
 app.use(router);
 app.use(createVfm());
 app.mount('#app');
+

@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import config from '@/config';
-import type { DivisionModel } from '@/models/DivisionModel';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { onMounted, ref, watch } from 'vue';
 import LeaderbordComponent from './LeaderbordComponent.vue';
 import MatchScoreComponent from './MatchScoreComponent.vue';
+import type { DivisionModel } from '@/models/matchplan/DivisionModel';
+import { matchplanStore } from '@/storage/st_matchplan';
+import type { DivisionRanking, PlayerPerformance } from '@/models/matchplan/PlayerPerformancModel';
 
 const props = defineProps<{
     division: DivisionModel;
@@ -86,54 +88,70 @@ function containsUser(): boolean {
     return false;
 }
 
-const performances = ref([]);
+const performances = ref([] as PlayerPerformance[]);
 
 async function getPlayerRanking() {
-    try {
-        const response = await fetch(`${config.getBackendUrl()}/api/ranking`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+    console.log("Getting player ranking");
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+    const store = matchplanStore();
+    let rankings = await store.get_ranking(null);
 
-        const data = await response.json();
-
-        if (data.error != null) {
-            showErrorModal(data.error);
-        } else {
-            let playerPerformances = performances.value;
-
-            for (let i = 0; i < data.data.length; i++) {
-                const division = data.data[i][0];
-
-                if (division == props.division?.name) {
-                    playerPerformances = data.data[i][1];
-                    break;
-                }
-            }
-
-            if (playerPerformances == performances.value) {
-                console.log('Division not found for ranking:', props.division?.name);
-                showErrorModal('Divsion could not be found for ranking');
-            } else {
-                performances.value = playerPerformances;
-            }
-        }
-    } catch (error) {
-        console.error('Player ranking error:', error);
-        showErrorModal('Internal server error');
+    if (typeof rankings === 'string') {
+        showErrorModal(rankings);
     }
+    else {
+
+        for (let division_r of rankings) {
+            let division_name = division_r[0];
+
+            if (division_name == props.division?.name) {
+                performances.value = division_r[1];
+                break;
+            }
+        }
+    }
+
+    AllowEdit.value = containsUser();
+}
+
+async function reload() {
+    console.log("Reloading ranking");
+
+    const store = matchplanStore();
+    let res = await store.reset_ranking(null);
+    if (typeof res === 'string') {
+        showErrorModal(res);
+    } else {
+        console.log("Ranking reset successfully, new ranking: ", res);
+    }
+
+    await getPlayerRanking();
 }
 
 watch(
     () => props.UserId,
     (newId) => {
+        console.log("user id changed to: ", newId);
         AllowEdit.value = containsUser();
+    },
+    { deep: true },
+);
+
+watch(
+    () => props.selectorHeight,
+    (newHeight) => {
+        setDivisionHeight();
+    },
+    { deep: true },
+);
+
+watch(
+    () => props.division?.matches,
+    (newMatches) => {
+        setPlaceholder();
+        setDivisionHeight(); // Call the function to recalculate height
+
+        
     },
     { deep: true },
 );
@@ -170,7 +188,7 @@ onMounted(async () => {
                 <div class="scroll-container flex-grow-1">
                     <div class="transition-width matches">
                         <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="w-auto">
-                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="true" />
+                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="true" v-on:reload="reload"/>
                         </div>
                     </div>
                 </div>

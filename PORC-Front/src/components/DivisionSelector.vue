@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import type { DivisionModel } from '@/models/DivisionModel';
 import { defineModel, defineProps, onMounted, ref, watch } from 'vue';
 import DivisionSelectionComponent from './DivisionSelectionComponent.vue';
+import type { DivisionModel } from '@/models/matchplan/DivisionModel';
 
 const props = defineProps<{
     divisions: DivisionModel[];

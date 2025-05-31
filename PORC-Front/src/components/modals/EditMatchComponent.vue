@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref, defineEmits } from 'vue';
-import type { MatchModel } from '@/models/MatchModel';
 import { VueFinalModal } from 'vue-final-modal';
 import { NULL } from 'sass';
+import type { MatchModel } from '@/models/matchplan/MatchModel';
 
 const props = defineProps<{
     match: MatchModel;

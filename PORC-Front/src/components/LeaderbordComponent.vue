@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { PlayerPerformance } from '@/models/PlayerPerformancModel';
+import type { PlayerPerformance } from '@/models/matchplan/PlayerPerformancModel';
 import { filter_str } from '@/util/stringFilter';
 import { defineProps, onMounted, ref, watch } from 'vue';
 

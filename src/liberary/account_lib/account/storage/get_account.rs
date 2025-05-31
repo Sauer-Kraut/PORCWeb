@@ -33,11 +33,9 @@ pub async fn get_account(account_id: String, pool: PgPool) -> Result<Account, Bo
         email: row.email,
     };
 
-    let schedule = get_schedule(account_id, pool.clone()).await?;
-
     let account = Account {
         user_info: discord_user,
-        schedule: Some(schedule),
+        schedule: None,
     };
 
     // println!("{:?}", account);
