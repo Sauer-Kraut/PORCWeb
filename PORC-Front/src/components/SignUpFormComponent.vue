@@ -58,7 +58,14 @@ async function postSignUp() {
         date: Number(now),
     };
 
-    await store.post_signup(data);
+    let res = await store.post_signup(data);
+    if (typeof res == 'string') {
+        showErrorModal(res);
+        return;
+    } else {
+        isSignedUp.value = true;
+    }
+    isSignedUp.value = true;
 }
 
 async function getUserId() {
@@ -112,12 +119,12 @@ onMounted(async () => {
             <div class="form-container row">
                 <form class="col-12">
                     <fieldset :disabled="!isLoggedIn || isSignedUp || user_id == '0'">
-                        <legend>Season {{ season_name }}</legend>
+                        <legend>Post Season: {{ season_name }}</legend>
                         <div class="p-1" v-if="invalidFillOut || !isLoggedIn || success"></div>
                         <label class="warning" v-if="invalidFillOut">Sign up is not valid</label>
                         <label class="warning" v-if="!isLoggedIn">Please Sign in with discord</label>
                         <label class="success" v-if="success">Sign up successfull!</label>
-                        <label class="success" v-if="!success && isSignedUp && user_id != '0'">You're signed up for season {{ season_name }}!</label>
+                        <label class="success" v-if="!success && isSignedUp && user_id != '0'">You're signed up for next season!</label>
                         <div class="p-2"></div>
                         <div class="mb-3">
                             <label for="disabledTextInput" class="form-label">Discord username</label>

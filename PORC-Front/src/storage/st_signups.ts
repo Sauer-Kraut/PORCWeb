@@ -53,13 +53,17 @@ export const signupStore = defineStore('signups', {
         },
 
         async post_signup(signup: SignUpInfo) {
-            await postSignup(signup);
-            let c_season = this.current_season_signups;
+            let res = await postSignup(signup);
+            if (typeof res != 'string') {
+                let c_season = this.current_season_signups;
 
-            if (typeof c_season != null) {
-                c_season?.push(signup);
-                this.current_season_signups = c_season;
+                if (typeof c_season != null) {
+                    c_season?.push(signup);
+                    this.current_season_signups = c_season;
+                }
             }
+
+            return res;
         }
     }
 })
