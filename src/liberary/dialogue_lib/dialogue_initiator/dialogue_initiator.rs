@@ -1,4 +1,4 @@
-use crate::{liberary::{account_lib::match_event::match_event::MatchEvent, dialogue_lib::{dialogue_builder::dialogue_builder::DialogueBuilder, dialogue_plan::{dialogue_data::{CaseData, DialogueData}, dialogue_step::StepCondition}, dialogue_routes::match_request::MatchRequestData}}, porcbot::util::{dm_send::send_dm, prompt_message_send::send_prompt_dm}};
+use crate::{liberary::{account_lib::match_event::match_event::MatchEvent, dialogue_lib::{bot_error::BotError, dialogue_builder::dialogue_builder::DialogueBuilder, dialogue_plan::{dialogue_data::{CaseData, DialogueData}, dialogue_step::StepCondition}, dialogue_routes::match_request::MatchRequestData}}, porcbot::util::{dm_send::send_dm, prompt_message_send::send_prompt_dm}};
 
 
 #[derive(Copy, Clone)]
@@ -6,7 +6,7 @@ pub struct DialogueInitator {}
 
 impl DialogueInitator {
 
-    pub async fn initiate_match_request<'a>(user_id: String, division_name: String, match_info: MatchEvent) -> Result<DialogueBuilder, String> {
+    pub async fn initiate_match_request<'a>(user_id: String, division_name: String, match_info: MatchEvent) -> Result<DialogueBuilder, BotError> {
 
         let builder = DialogueBuilder {
             dialogue_id: None,
@@ -26,7 +26,7 @@ impl DialogueInitator {
 
         let first_step = match plan.steps.first() {
             Some(v) => v,
-            None => return Err("plan does not have steps".to_string()),
+            None => return Err("plan does not have steps".to_string().into()),
         };
 
         match first_step.condition {

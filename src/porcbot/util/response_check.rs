@@ -1,6 +1,8 @@
+use crate::liberary::dialogue_lib::bot_error::BotError;
+
 use super::dms_get::get_dms;
 
-pub async fn check_response(user_id: u64, prompt: String) -> Result<Option<String>, String> {
+pub async fn check_response(user_id: u64, prompt: String) -> Result<Option<String>, BotError> {
     let messages = get_dms(user_id).await?;
     for (index, message) in messages.iter().enumerate() {
         if message.content == prompt && message.author.id.get() != user_id {

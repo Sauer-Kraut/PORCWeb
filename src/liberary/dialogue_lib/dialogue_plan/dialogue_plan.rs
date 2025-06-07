@@ -2,7 +2,7 @@ use std::mem;
 
 use colored::Colorize;
 
-use crate::{liberary::dialogue_lib::dialogue_builder::dialogue_builder::DialogueBuilder, porcbot::util::{dm_send::send_dm, prompt_message_send::send_prompt_dm}, AppState};
+use crate::{liberary::dialogue_lib::{bot_error::BotError, dialogue_builder::dialogue_builder::DialogueBuilder}, porcbot::util::{dm_send::send_dm, prompt_message_send::send_prompt_dm}, AppState};
 
 use super::{dialogue_data::DialogueData, dialogue_step::{DialogueStep, StepCondition}};
 
@@ -18,10 +18,10 @@ pub struct DialoguePlan<'a> {
 
 impl <'a, 'b> DialoguePlan<'a> {
 
-    pub async fn check(&mut self, app_state: &AppState) -> Result<bool, String> {
+    pub async fn check(&mut self, app_state: &AppState) -> Result<bool, BotError> {
         let current_step = match self.steps.get(self.index as usize) {
             Some(val) => val,
-            None => return Err("current step could not be found".to_string()),
+            None => return Err("current step could not be found".to_string().into()),
         };
 
         // Scope the mutable borrow to the block
@@ -30,8 +30,8 @@ impl <'a, 'b> DialoguePlan<'a> {
         let next_index = match res_next_index {
             Ok(i) => i,
             Err(err) => {
-                println!("{}\n{}", "An error occured while checking a dialogue:".red(), err.bright_red());
-                self.dialogue_data.error = Some(err);
+                println!("{}\n{}", "An error occured while checking a dialogue:".red(), err.to_string().bright_red());
+                self.dialogue_data.error = Some(err.to_string());
                 Some(400)
             },
         };
@@ -47,7 +47,7 @@ impl <'a, 'b> DialoguePlan<'a> {
         }
     }
 
-    async fn next(&mut self, target_index: u64) -> Result<(), String> {
+    async fn next(&mut self, target_index: u64) -> Result<(), BotError> {
         if target_index == 600 {
             println!("A dialogue has reached its end");
             Ok(())
@@ -69,7 +69,7 @@ impl <'a, 'b> DialoguePlan<'a> {
                 self.index = target_index; // No mutable borrow of `self.dialogue_data` here
                 Ok(())
             } else {
-                Err("couldn't find next step".to_string())
+                Err("couldn't find next step".to_string().into())
             }
         }
     }
