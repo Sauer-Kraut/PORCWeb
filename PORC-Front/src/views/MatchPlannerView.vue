@@ -5,7 +5,7 @@ import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
 import type { Schedule } from '@/models/schedule/Schedule';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { getDivisionImage } from '@/util/ImageHelper';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import type { MatchEvent } from '@/models/match_event/MatchEvent';
 import type { Availability } from '@/models/availability/Availability';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
@@ -13,6 +13,7 @@ import type { DivisionModel } from '@/models/matchplan/DivisionModel';
 import type { PlayerModel } from '@/models/matchplan/PlayerModel';
 import { matchplanStore } from '@/storage/st_matchplan';
 import { accountsStore } from '@/storage/st_accounts';
+import type { Season } from '@/models/matchplan/Season';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -41,7 +42,13 @@ async function getUserId() {
 }
 
 const division = ref<DivisionModel>();
-const season_name = ref('default');
+const season = ref<Season | null>(null)
+const seasonEdit = computed(
+    () => {
+        var today = new Date();
+        return season.value !== null && new Date(season.value.start_timestamp) <= today && new Date(season.value.end_timestamp) > today;
+    },
+);
 
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
@@ -53,8 +60,16 @@ async function getMatchPlan() {
         return;
     } else {
         division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
-        season_name.value = String(plan.season);
-        console.log('matchplan: ', plan);
+
+        await planStore.fetch_all_seasons();
+        // Extract seasons from the store's matchplans map
+        const seasonList: Season[] = [];
+        for (const [key, value] of planStore.matchplans) {
+            if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
+                seasonList.push(value[1] as Season);
+            }
+        }
+        season.value = seasonList.find((s: Season) => s.name === String(plan.season)) ?? null;
     }
 }
 
@@ -138,7 +153,7 @@ function getProgress() {
 onMounted(async () => {
     await getUserId();
     await getMatchPlan();
-        
+
     opponents.value = find_opponents();
     await getPubPlayerInfos(getPlayerIds());
     selectSelf();
@@ -173,7 +188,7 @@ onMounted(async () => {
                         :players="division?.players || []"
                         :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
                         :ownId="user_id"
-                        :season="season_name"
+                        :season="season?.name ?? 'default'"
                         :scheduleUserId="selectedPlayer?.id ?? 'default'"
                         v-on:reload="reload"
                         class="calendar-component"
@@ -198,7 +213,7 @@ onMounted(async () => {
                             class="match-score rounded"
                             :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
                         >
-                            <MatchScoreComponent :match="match" :user_id="user_id" :editMode="true" />
+                            <MatchScoreComponent :match="match" :user_id="user_id" :editMode="seasonEdit" />
                         </div>
                     </div>
                 </div>

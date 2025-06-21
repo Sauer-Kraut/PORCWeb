@@ -1,14 +1,32 @@
 <script lang="ts" setup>
-import { getRanking } from '@/API/matchplan/GetRanking';
 import DivisionComponent from '@/components/DivisionComponent.vue';
 import DivisionSelector from '@/components/DivisionSelector.vue';
 import SignUpFormComponent from '@/components/SignUpFormComponent.vue';
 import TimerComponent from '@/components/TimerComponent.vue';
 import type { DivisionModel } from '@/models/matchplan/DivisionModel';
+import type { Season } from '@/models/matchplan/Season';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
 import { matchplanStore } from '@/storage/st_matchplan';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+
+const seasons = ref<Season[]>([]);
+const selectedSeason = ref<Season | null>(null);
+
+// Computed property for the selected season name (for v-model)
+const selectedSeasonName = computed({
+    get: () => selectedSeason.value?.name || '',
+    set: (seasonName: string) => {
+        const season = seasons.value.find(s => s.name === seasonName);
+        selectedSeason.value = season || null;
+    }
+});
+const selectedSeasonEdit = computed(
+    () => {
+        var today = new Date();
+        return selectedSeason.value !== null && new Date(selectedSeason.value.start_timestamp) <= today && new Date(selectedSeason.value.end_timestamp) > today;
+    },
+);
 
 const divisions = ref<DivisionModel[]>([]);
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
@@ -18,8 +36,25 @@ selectedDivision.value = divisions.value[0] ?? null;
 const selectorRef = ref<HTMLElement | null>(null);
 const selectorHeight = ref(0);
 
+const planStore = matchplanStore();
+
 function getSelectorHeight() {
     selectorHeight.value = selectorRef.value ? selectorRef.value.clientHeight : 0;
+}
+
+function getSeasonDisplayName(season: Season): string {
+    if (seasons.value.indexOf(season) == 0) {
+        var today = new Date();
+        if (new Date(season.start_timestamp) <= today && new Date(season.end_timestamp) > today) {
+            return "Current Season";
+        } else if (new Date(season.end_timestamp) < today) {
+            return "Last Season";
+        } else {
+            return "Next Season";
+        }
+    } else {
+        return `Season ${season.name}`;
+    }
 }
 
 let user = ref('0');
@@ -28,9 +63,38 @@ let TimerText = ref('Time remaining until season 4 of PORC');
 
 const season_name = ref('0');
 
+async function loadSeasons() {
+    await planStore.fetch_all_seasons();
+
+    // Extract seasons from the store's matchplans map
+    const seasonList: Season[] = [];
+    for (const [key, value] of planStore.matchplans) {
+        if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
+            seasonList.push(value[1] as Season);
+        }
+    }
+
+    // Add debug season "5" for testing purposes
+    const debugSeason: Season = {
+        name: "5",
+        start_timestamp: 1704067200, // December 31, 2024
+        end_timestamp: 1735689600,   // January 1, 2025
+        pause_end_timestamp: 1735689600,   // January 1, 2025
+    };
+    seasonList.push(debugSeason);
+
+    // Sort seasons by start date, most recent first
+    seasons.value = seasonList.sort((a, b) => {
+        return b.start_timestamp - a.start_timestamp; // Most recent first
+    });
+
+    selectedSeason.value = seasons.value[0];
+    season_name.value = String(seasons.value[0].name);
+    await getMatchPlan();
+}
+
 async function getMatchPlan() {
-    let planStore = matchplanStore();
-    let plan = await planStore.get_matchplan(null);
+    let plan = await planStore.get_matchplan(selectedSeason.value?.name ?? null);
 
     if (typeof plan == 'string') {
         showErrorModal(plan);
@@ -40,7 +104,6 @@ async function getMatchPlan() {
         const now = Math.floor(Date.now() / 1000);
         const seasonEnd = plan.end_timestamp;
         const seasonPause = plan.pause_end_timestamp;
-        season_name.value = String(plan.season);
         selectedDivision.value = divisions.value.find((division) => division.players.some((p) => p.id == user.value)) ?? divisions.value[0];
 
         // Sort divisions by order
@@ -71,9 +134,16 @@ async function getUserId() {
         } else if (typeof res == 'string') {
             showErrorModal(res);
         }
-        
+
     }
 }
+
+watch(
+    () => selectedSeason.value,
+    async () => {
+        await getMatchPlan();
+    },
+);
 
 watch(
     () => selectedDivision.value,
@@ -85,7 +155,7 @@ watch(
 
 onMounted(async () => {
     await getUserId();
-    await getMatchPlan();
+    await loadSeasons();
     getSelectorHeight();
 });
 </script>
@@ -97,13 +167,18 @@ onMounted(async () => {
         </div>
 
         <div class="part row justify-content-start justify-content-sm-center pt-5 pb-5 w-100" :class="`division-${selectedDivision?.name?.toLowerCase() || 'iron'}`">
-            <div class="col-auto">
-                <div ref="selectorRef" class="selector-container">
+            <div class="col-auto" ref="selectorRef">
+                <select v-model="selectedSeasonName" class="form-select mb-3" v-if="seasons?.length">
+                    <option v-for="season in seasons" :key="season.name" :value="season.name">
+                        {{ getSeasonDisplayName(season) }}
+                    </option>
+                </select>
+                <div class="selector-container">
                     <DivisionSelector :divisions="divisions" :observer_id="user" v-model:selectedDivision="selectedDivision" class="" :style="{ 'max-width': '100%' }" />
                 </div>
             </div>
             <div class="col col-xxl-9 col-xml-8">
-                <DivisionComponent v-if="selectedDivision" :selector-height="selectorHeight" :division="selectedDivision" :UserId="user" class="pl-4rem" />
+                <DivisionComponent v-if="selectedDivision" :selector-height="selectorHeight" :season="selectedSeasonName" :division="selectedDivision" :UserId="user" :allowEditSeason="selectedSeasonEdit" class="pl-4rem" />
             </div>
         </div>
 

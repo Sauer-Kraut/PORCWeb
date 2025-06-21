@@ -9,14 +9,12 @@ import { matchplanStore } from '@/storage/st_matchplan';
 import type { DivisionRanking, PlayerPerformance } from '@/models/matchplan/PlayerPerformancModel';
 
 const props = defineProps<{
+    season: string;
     division: DivisionModel;
     UserId: string;
     selectorHeight: number;
+    allowEditSeason: boolean;
 }>();
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let AllowEdit = ref(false);
-let load = ref(false);
 
 const placeholders = [
     "Shh... The scores are still taking their beauty sleep. If you keep being this loud you'll wake them up! (✧ω✧)",
@@ -70,31 +68,13 @@ function toggleMatchesExtended() {
     matchesExtended.value = !matchesExtended.value; // Toggle the state
 }
 
-function containsUser(): boolean {
-    let found = false;
-    if (!props.division) return false;
-    for (let i = 0; i < props.division.players.length; i++) {
-        if (props.division.players[i].id == props.UserId) {
-            AllowEdit.value = true;
-            found = true;
-            return true;
-        }
-    }
-
-    if (!found) {
-        AllowEdit.value = !true;
-    }
-
-    return false;
-}
-
 const performances = ref([] as PlayerPerformance[]);
 
 async function getPlayerRanking() {
     console.log("Getting player ranking");
 
     const store = matchplanStore();
-    let rankings = await store.get_ranking(null);
+    let rankings = await store.get_ranking(props.season);
 
     if (typeof rankings === 'string') {
         showErrorModal(rankings);
@@ -111,14 +91,13 @@ async function getPlayerRanking() {
         }
     }
 
-    AllowEdit.value = containsUser();
 }
 
 async function reload() {
     console.log("Reloading ranking");
 
     const store = matchplanStore();
-    let res = await store.reset_ranking(null);
+    let res = await store.reset_ranking(props.season);
     if (typeof res === 'string') {
         showErrorModal(res);
     } else {
@@ -127,15 +106,6 @@ async function reload() {
 
     await getPlayerRanking();
 }
-
-watch(
-    () => props.UserId,
-    (newId) => {
-        console.log("user id changed to: ", newId);
-        AllowEdit.value = containsUser();
-    },
-    { deep: true },
-);
 
 watch(
     () => props.selectorHeight,
@@ -151,7 +121,6 @@ watch(
         setPlaceholder();
         setDivisionHeight(); // Call the function to recalculate height
 
-        
     },
     { deep: true },
 );
@@ -170,8 +139,6 @@ onMounted(async () => {
     setDivisionHeight();
 
     setTimeout(async () => {
-        AllowEdit.value = containsUser();
-        load.value = true;
         setDivisionHeight();
         // setTimeout(() => {
         //     setDivisionHeight();
@@ -188,7 +155,7 @@ onMounted(async () => {
                 <div class="scroll-container flex-grow-1">
                     <div class="transition-width matches">
                         <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="w-auto">
-                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="true" v-on:reload="reload"/>
+                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="allowEditSeason" v-on:reload="reload"/>
                         </div>
                     </div>
                 </div>
