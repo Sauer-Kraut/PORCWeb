@@ -138,7 +138,7 @@ async fn main() -> std::io::Result<()> {
         let pool = pool.clone();
         async move {
             loop {
-                println!("updating config");
+                // println!("updating config");
                 let current_config = StorageMod::read_config().unwrap();
 
                 // Compare the values inside the lock, not the guards/arcs
@@ -194,13 +194,13 @@ async fn main() -> std::io::Result<()> {
         let _dialogue_task = tokio::task::spawn(async move {
             println!("\n{}", "Bot dialogue check loop has launched");
             loop {
-                println!("checking active dialogues");
+                // println!("checking active dialogues");
                 match check_dialogues(&appstate_clone).await {
                     Ok(_) => (),
                     Err(err) => println!("{}", format!("An error has occured while checking active dialogues: {err}").red()),
                 }
-                println!("finished checking active dialogues");
-                sleep(Duration::from_secs(30)).await; // waits 6 minutes between each loop
+                // println!("finished checking active dialogues");
+                sleep(Duration::from_secs(30)).await; // waits 30 seconds between each loop
             }
         });
 

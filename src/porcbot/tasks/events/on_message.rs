@@ -58,6 +58,17 @@ pub async fn on_message(me: &BotEventHandler, ctx: Context, msg: Message) {
                 let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
             }
         },
+        "init_season_invite" => {
+            if has_role_from_message(&ctx, &msg, "DEV").await {  //TODO: more modular role check
+
+                match crate::porcbot::tasks::commands::init_season_invites::init_season_invites_command(&me.appstate, &msg).await {
+                    Ok(_) => {let _ = msg.channel_id.say(get_http(), "invites succesfully sent!").await;},
+                    Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
+                }
+            } else {
+                let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
+            }
+        },
         _ => ()
     }
 }

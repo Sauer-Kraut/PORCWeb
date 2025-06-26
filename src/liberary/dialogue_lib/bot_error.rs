@@ -11,7 +11,10 @@ pub enum BotError {
     APIError(#[from] SerenityError),
 
     #[error("error: {0}")]
-    LogicError(#[from] Box<dyn std::error::Error + Send + Sync>)
+    LogicError(#[from] Box<dyn std::error::Error + Send + Sync>),
+
+    #[error("DB error: {0}")]
+    DBError(#[from] sqlx::Error),
 }
 
 impl From<String> for BotError

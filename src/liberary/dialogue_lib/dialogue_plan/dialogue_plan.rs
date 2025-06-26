@@ -51,6 +51,7 @@ impl <'a, 'b> DialoguePlan<'a> {
                 if let Some(prev_err) = &self.dialogue_data.error {
                     if *prev_err == error {
                         println!("{}\n{}", "Stoping Dialgogue because of recouring error:".red(), prev_err.bright_red());
+                        let _ = send_dm(self.dialogue_data.user_id.clone(), "A critical error has occured in our dialogue. Feel free to contact the PORC mods about this issue. \nError: ".to_string() + &error).await;
                         self.dialogue_data.error = Some(err.to_string());
                         res = Some(400);
                     } 
