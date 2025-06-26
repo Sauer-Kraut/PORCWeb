@@ -2,6 +2,8 @@ use actix_web::{HttpResponse, ResponseError};
 use colored::Colorize;
 use thiserror::Error;
 
+use crate::liberary::dialogue_lib::bot_error::BotError;
+
 
 
 
@@ -18,6 +20,9 @@ pub enum ServerError {
     #[error("Unauthorized request")]
     Unauthorized,
 
+    #[error("Discord bot error: {0}")]
+    BotError(#[from] BotError),
+
     #[error("error: {0}")]
     Other(#[from] Box<dyn std::error::Error>)
 }
@@ -32,6 +37,7 @@ impl ResponseError for ServerError {
             ServerError::DBError(error) => HttpResponse::InternalServerError().body(error.to_string()),
             ServerError::BadInput(error) => HttpResponse::BadRequest().body(error.to_string()),
             ServerError::Unauthorized => HttpResponse::Unauthorized().finish(),
+            ServerError::BotError(error) => HttpResponse::InternalServerError().body(error.to_string()),
             ServerError::Other(error) => HttpResponse::InternalServerError().body(error.to_string()),
         }
     }

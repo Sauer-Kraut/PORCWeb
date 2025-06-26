@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use actix_web::{web, HttpResponse, Responder};
 use futures::join;
 use serde::{Deserialize, Serialize};
@@ -9,6 +11,7 @@ use crate::liberary::account_lib::match_event::storage::get_match_event::get_mat
 use crate::liberary::account_lib::match_event::storage::store_match_event::store_match_event;
 use crate::liberary::dialogue_lib::dialogue_builder::storage::store_dialogue::store_dialogue;
 use crate::liberary::dialogue_lib::dialogue_initiator::dialogue_initiator::DialogueInitator;
+use crate::liberary::matchplan_lib::division::division::Division;
 use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use crate::AppState;
 
@@ -66,38 +69,17 @@ pub async fn post_match_event_request(info: web::Json<RecvPackage>, appstate: we
             store_res?;
             let matchplan = matchplan_res?;
 
-            let mut league = "".to_string();
-            for division in matchplan.divisions.iter() {
-                for player in division.players.iter() {
-                    if (player.id == info.match_event.challenger_id ||
-                        player.id == info.match_event.opponent_id) {
-                        league = division.name.clone();
-                    }
-                }
-            }
+            let league = matchplan.divisions.iter().find(|d| d.players.iter().any(|p| p.id == info.match_event.challenger_id || p.id == info.match_event.opponent_id))
+                .unwrap_or(&Division {
+                    name: "Unknown".to_string(),
+                    order: 0,
+                    matches: HashMap::new(),
+                    players: vec![],
+                }).name.clone();
                         
-            let _ =  make_bot_request_match(info.match_event.clone(), league, &state_clone).await?;
+            let _ = DialogueInitator::initiate_match_request(&appstate, info.match_event.opponent_id.clone(), league, info.match_event.clone()).await?;
         }
     }
 
     Ok(HttpResponse::Ok())
-}
-
-
-
-pub async fn make_bot_request_match(matchevent: MatchEvent, league: String, appstate: &AppState) -> Result<(), String>{
-    let parsed_opponent_id = matchevent.opponent_id.clone();
-
-    let builder = DialogueInitator::initiate_match_request(parsed_opponent_id, league, matchevent).await?;
-
-    // TODO!!!!! THIS ONE IS IMPORTANT!!!!
-    // is this done? probably by now, I dont think it would work otherwise. But Im going to let this comment stay for now
-    let res = store_dialogue(builder, appstate.pool.clone()).await;
-    match res {
-        Ok(_) => {},
-        Err(err) => {
-            return Err(format!("Error while storing dialogue: {:?}", err));
-        }
-    };
-    Ok(())
 }

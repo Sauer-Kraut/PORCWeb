@@ -11,15 +11,7 @@ pub enum BotError {
     APIError(#[from] SerenityError),
 
     #[error("error: {0}")]
-    LogicError(#[from] Box<dyn std::error::Error>)
-}
-
-
-impl From<Box<dyn std::error::Error + Send + Sync>> for BotError
-{
-    fn from(value: Box<dyn std::error::Error + Send + Sync>) -> Self {
-        Self::LogicError(value)
-    }
+    LogicError(#[from] Box<dyn std::error::Error + Send + Sync>)
 }
 
 impl From<String> for BotError

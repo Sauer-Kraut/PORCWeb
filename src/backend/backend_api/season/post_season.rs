@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::backend::backend_api::server_error::ServerError;
 use crate::liberary::matchplan_lib::matchplan::storage::start_season::start_season;
 use crate::liberary::matchplan_lib::matchplan_blueprint::matchplan_blueprint::PlanBlueprint;
+use crate::porcbot::config::RANKS;
 use crate::AppState;
 
 
@@ -32,11 +33,7 @@ pub fn check_blueprint(plan: PlanBlueprint) -> Result<(), Box<dyn std::error::Er
     let mut division_orders = Vec::new();
     
     let mut used_division_names = Vec::new();
-    let acceptable_division_names = vec![
-        "Meteorite", "Malachite", "Adamantium", "Mithril", "Platinum", 
-        "Diamond", "Gold", "Silver", "Bronze", "Steel", "Copper", 
-        "Iron", "Stone"
-    ].iter().map(|f| f.to_string()).collect::<Vec<String>>();
+    let acceptable_division_names = RANKS.iter().map(|f| f.to_string()).collect::<Vec<String>>();
 
     for division in plan.divisions.iter() {
         if !acceptable_division_names.contains(&division.name) {

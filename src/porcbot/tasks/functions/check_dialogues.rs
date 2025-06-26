@@ -2,16 +2,17 @@ use colored::Colorize;
 
 use crate::{liberary::dialogue_lib::{bot_error::BotError, dialogue_builder::storage::{get_dialogues::get_dialogues, store_dialogue::store_dialogue}}, AppState};
 
+// extremly inefficient (TODO for the love of god, please fix this)
 pub async fn check_dialogues(appstate: &AppState) -> Result<(), BotError> {
     
-    let dialogues = match get_dialogues(10000, 300, appstate.pool.clone()).await {
+    let dialogues = match get_dialogues(10000, 120, appstate.pool.clone()).await {
         Ok(dialogues) => dialogues,
         Err(e) => return Err(format!("Error getting dialogues: {}", e).into())
     };
 
     for _i in 0..(dialogues.len()) {
 
-        let mut plan = match get_dialogues(1, 300, appstate.pool.clone()).await {
+        let mut plan = match get_dialogues(1, 120, appstate.pool.clone()).await {
             Ok(dialogues) => {
                 if let Some(d) = dialogues.first() {
                     d.clone().build().await?

@@ -19,20 +19,45 @@ pub struct DialoguePlan<'a> {
 impl <'a, 'b> DialoguePlan<'a> {
 
     pub async fn check(&mut self, app_state: &AppState) -> Result<bool, BotError> {
-        let current_step = match self.steps.get(self.index as usize) {
-            Some(val) => val,
-            None => return Err("current step could not be found".to_string().into()),
-        };
 
         // Scope the mutable borrow to the block
-        let res_next_index = current_step.check_completion(&mut self.dialogue_data, app_state).await;
+        let res_next_index = match self.index {
+            100 => {
+                Ok(Some(0 as u64))
+            }
+            _ => {
+                let current_step = match self.steps.get(self.index as usize) {
+                    Some(val) => val,
+                    None => return Err("current step could not be found".to_string().into()),
+                };
+                current_step.check_completion(&mut self.dialogue_data, app_state).await
+            }
+        };
 
         let next_index = match res_next_index {
             Ok(i) => i,
             Err(err) => {
                 println!("{}\n{}", "An error occured while checking a dialogue:".red(), err.to_string().bright_red());
+
+                let error = err.to_string();
+
+                // !!!!!!!!!!!!!!!!!!
+                // TODO: report to DB
+                // !!!!!!!!!!!!!!!!!!
+
+                // Return None so that step may be repeated in the future
+                let mut res = None;
+
+                if let Some(prev_err) = &self.dialogue_data.error {
+                    if *prev_err == error {
+                        println!("{}\n{}", "Stoping Dialgogue because of recouring error:".red(), prev_err.bright_red());
+                        self.dialogue_data.error = Some(err.to_string());
+                        res = Some(400);
+                    } 
+                }
+
                 self.dialogue_data.error = Some(err.to_string());
-                Some(400)
+                res
             },
         };
 
@@ -48,28 +73,31 @@ impl <'a, 'b> DialoguePlan<'a> {
     }
 
     async fn next(&mut self, target_index: u64) -> Result<(), BotError> {
-        if target_index == 600 {
-            println!("A dialogue has reached its end");
-            Ok(())
-        } 
-        else if target_index == 400 {
-            let error_step = DialogueStep::default_error();
-            let _ = send_dm(self.dialogue_data.user_id.clone(), error_step.get_message(&self.dialogue_data).await?).await?;
-            return Ok(())
-        } else {
-            if let Some(step) = self.steps.get(target_index as usize) {
-                match step.condition {
-                    StepCondition::React(_) => {
-                        let _ = send_prompt_dm(self.dialogue_data.user_id.clone(), step.get_message(&self.dialogue_data).await?).await?;
-                    },
-                    _ => {
-                        let _ = send_dm(self.dialogue_data.user_id.clone(), step.get_message(&self.dialogue_data).await?).await?;
-                    },
+        match target_index {
+            600 => {
+                println!("A dialogue has reached its end");
+                return Ok(())
+            }
+            400 => {
+                let error_step = DialogueStep::default_error();
+                let _ = send_dm(self.dialogue_data.user_id.clone(), error_step.get_message(&self.dialogue_data).await?).await?;
+                return Ok(())
+            }
+            _ => {
+                if let Some(step) = self.steps.get(target_index as usize) {
+                    match step.condition {
+                        StepCondition::React(_) => {
+                            let _ = send_prompt_dm(self.dialogue_data.user_id.clone(), step.get_message(&self.dialogue_data).await?).await?;
+                        },
+                        _ => {
+                            let _ = send_dm(self.dialogue_data.user_id.clone(), step.get_message(&self.dialogue_data).await?).await?;
+                        },
+                    }
+                    self.index = target_index; // No mutable borrow of `self.dialogue_data` here
+                    Ok(())
+                } else {
+                    Err("couldn't find next step".to_string().into())
                 }
-                self.index = target_index; // No mutable borrow of `self.dialogue_data` here
-                Ok(())
-            } else {
-                Err("couldn't find next step".to_string().into())
             }
         }
     }
