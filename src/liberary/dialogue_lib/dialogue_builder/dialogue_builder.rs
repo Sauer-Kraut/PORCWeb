@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::liberary::dialogue_lib::{dialogue_plan::{dialogue_data::{CaseData, DialogueData}, dialogue_plan::DialoguePlan}, dialogue_routes::match_request::construct_match_request_plan};
+use crate::liberary::dialogue_lib::{bot_error::BotError, dialogue_plan::{dialogue_data::{CaseData, DialogueData}, dialogue_plan::DialoguePlan}, dialogue_routes::{info::construct_info_plan, match_request::construct_match_request_plan}};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DialogueBuilder {
@@ -11,10 +11,11 @@ pub struct DialogueBuilder {
 
 impl DialogueBuilder {
 
-    pub async fn build<'a>(self) -> Result<DialoguePlan<'static>, String> {
+    pub async fn build<'a>(self) -> Result<DialoguePlan<'static>, BotError> {
 
         match &self.dialogue_data.data {
-            CaseData::MatchRequest(match_request_data) => construct_match_request_plan(self.dialogue_data, self.index, self.dialogue_id),
+            CaseData::MatchRequest(_) => construct_match_request_plan(self.dialogue_data, self.index, self.dialogue_id),
+            CaseData::Info(_) => construct_info_plan(self.dialogue_data, self.index, self.dialogue_id),
         }
     }
 }

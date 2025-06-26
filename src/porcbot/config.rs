@@ -43,6 +43,7 @@ pub const SERVER_ID: Lazy<Arc<u64>> = Lazy::new( || {
         false => Arc::new(1264474928095297536), // main server id
     }
 });
+
 pub const STAGE_IDS: Lazy<Arc<(u64, u64, u64)>> = Lazy::new( || {
     match StorageMod::read_config().unwrap().dev {
         true => Arc::new((1369657942256914482, 1369658004391071854, 1369658082312851587)), // dev server stage id
@@ -53,3 +54,10 @@ pub const STAGE_IDS: Lazy<Arc<(u64, u64, u64)>> = Lazy::new( || {
 pub fn get_http() -> Arc<Http> {
     HTTP.clone()
 }
+
+// Server roles have to have exactly the same names as the ranks in the matchplan
+pub const RANKS: [&'static str; 13] = [
+    "Meteorite", "Malachite", "Adamantium", "Mithril", "Platinum", 
+    "Diamond", "Gold", "Silver", "Bronze", "Steel", "Copper", 
+    "Iron", "Stone"
+];

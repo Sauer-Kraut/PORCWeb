@@ -13,14 +13,11 @@ use crate::AppState;
 
 // Command to go through all match events to see if they have accoring dialogues and creates any missing ones
 // TODO: unfinished and needs fixing, but isnt required for now and eats up my time
-pub async fn match_request_catch_up(appstate: &AppState) -> Result<(), String> {
+pub async fn match_request_catch_up(appstate: &AppState) -> Result<(), BotError> {
 
     println!("{}", "Received command to catch up with match requests".magenta());
 
-    let dialogues = match get_dialogues(100000, appstate.pool.clone()).await {
-        Ok(dialogues) => dialogues,
-        Err(e) => return Err(format!("Error getting dialogues: {}", e))
-    };
+    let dialogues = get_dialogues(100000, appstate.pool.clone()).await?;
 
     let planed_matchevents: Vec<String> = dialogues.iter().filter_map(|dialogue| {
         match dialogue.dialogue_data.data.clone() {

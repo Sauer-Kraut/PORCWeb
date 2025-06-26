@@ -4,26 +4,26 @@ use std::future::Future;
 use std::pin::Pin;
 
 use super::dialogue_data::DialogueData;
-use crate::{porcbot::util::{reaction_check::*, response_check::*}, AppState};
+use crate::{liberary::dialogue_lib::bot_error::BotError, porcbot::util::{reaction_check::*, response_check::*}, AppState};
 
 #[derive(Clone)]
 pub struct DialogueStep<'a> {
-    pub message: Arc<Mutex<Box<dyn for<'c> Fn(&'c DialogueData) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send + 'c>> + Send + 'a>>>,
+    pub message: Arc<Mutex<Box<dyn for<'c> Fn(&'c DialogueData) -> Pin<Box<dyn Future<Output = Result<String, BotError>> + Send + 'c>> + Send + 'a>>>,
     pub condition: StepCondition<'a>,
 }
 
 impl<'a, 'b> DialogueStep<'a> {
-    pub async fn check_completion(&self, dialogue_data: &mut DialogueData, app_state: &AppState) -> Result<Option<u64>, String> {
+    pub async fn check_completion(&self, dialogue_data: &mut DialogueData, app_state: &AppState) -> Result<Option<u64>, BotError> {
         match self.condition.clone() {
             StepCondition::Info(script) => {
                 return script.lock().await(dialogue_data, app_state).await;
             },
             StepCondition::React(script) => {
-                let check = check_reaction(dialogue_data.user_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?, self.get_message(&dialogue_data).await?).await?;
+                let check = check_reaction(dialogue_data.user_id.parse().map_err(|err| format!("couldnt parse userId {err:?}"))?, self.get_message(&dialogue_data).await?).await?;
                 return script.lock().await(check, dialogue_data, app_state).await
             },
             StepCondition::Response(script) => {
-                let check = check_response(dialogue_data.user_id.parse().map_err(|err| format!("couldnt parse eventId {err:?}"))?, self.get_message(&dialogue_data).await?).await?;
+                let check = check_response(dialogue_data.user_id.parse().map_err(|err| format!("couldnt parse usertId {err:?}"))?, self.get_message(&dialogue_data).await?).await?;
                 return script.lock().await(check, dialogue_data, app_state).await
             },
             StepCondition::Custom(check, script) => {
@@ -33,7 +33,7 @@ impl<'a, 'b> DialogueStep<'a> {
         }
     }
 
-    pub async fn get_message(&self, dialogue_data: &DialogueData) -> Result<String, String> {
+    pub async fn get_message(&self, dialogue_data: &DialogueData) -> Result<String, BotError> {
         (self.message.lock().await)(dialogue_data).await
     }
 
@@ -46,8 +46,7 @@ impl<'a, 'b> DialogueStep<'a> {
                     },
                     Some(err) => err
                 };
-                Ok(format!("Oh no, an error occurred while processing one of our conversations! Sory for that, here is the error:
-{error}"))
+                Ok(format!("Oh no, an error occurred while processing one of our conversations! Sory for that, here is the error: \n{error}"))
             })))), 
             condition: StepCondition::Info(Arc::new(Mutex::new(Box::new(|_dialogue_data: &mut DialogueData, _app_state: &AppState| Box::pin(async move {
                 Ok(Some(600))
@@ -58,11 +57,11 @@ impl<'a, 'b> DialogueStep<'a> {
 
 #[derive(Clone)]
 pub enum StepCondition<'a> {
-    Info(Arc<Mutex<Box<dyn for<'c> Fn(&'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, String>> + Send + 'c>> + Send + 'a>>>),
-    React(Arc<Mutex<Box<dyn for<'c> Fn(Option<bool>, &'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, String>> + Send + 'c>> + Send + 'a>>>),
-    Response(Arc<Mutex<Box<dyn for<'c> Fn(Option<String>, &'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, String>> + Send + 'c>> + Send + 'a>>>),
+    Info(Arc<Mutex<Box<dyn for<'c> Fn(&'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, BotError>> + Send + 'c>> + Send + 'a>>>),
+    React(Arc<Mutex<Box<dyn for<'c> Fn(Option<bool>, &'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, BotError>> + Send + 'c>> + Send + 'a>>>),
+    Response(Arc<Mutex<Box<dyn for<'c> Fn(Option<String>, &'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, BotError>> + Send + 'c>> + Send + 'a>>>),
     Custom(
-        Arc<Mutex<Box<dyn for<'c> Fn(&'c DialogueData) -> Pin<Box<dyn Future<Output = Result<Option<bool>, String>> + Send + 'c>> + Send + 'a>>>,
-        Arc<Mutex<Box<dyn for<'c> Fn(Option<bool>, &'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, String>> + Send + 'c>> + Send + 'a>>>
+        Arc<Mutex<Box<dyn for<'c> Fn(&'c DialogueData) -> Pin<Box<dyn Future<Output = Result<Option<bool>, BotError>> + Send + 'c>> + Send + 'a>>>,
+        Arc<Mutex<Box<dyn for<'c> Fn(Option<bool>, &'c mut DialogueData, &'c AppState) -> Pin<Box<dyn Future<Output = Result<Option<u64>, BotError>> + Send + 'c>> + Send + 'a>>>
     )
 }

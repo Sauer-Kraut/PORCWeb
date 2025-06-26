@@ -1,8 +1,8 @@
 use serenity::all::Message;
 use reqwest::Client;
-use serde_json;
+use crate::liberary::dialogue_lib::bot_error::BotError;
 
-pub async fn get_message_attachment(msg: &Message, attachment_name_end: &str) -> Result<Vec<Vec<u8>>, String> {
+pub async fn get_message_attachment(msg: &Message, attachment_name_end: &str) -> Result<Vec<Vec<u8>>, BotError> {
     
     let mut attachments = vec!();
 
@@ -13,10 +13,7 @@ pub async fn get_message_attachment(msg: &Message, attachment_name_end: &str) ->
         }
 
         let url = &attachment.url;
-        let bytes = match download_file(url).await {
-            Ok(v) => v,
-            Err(e) => return Err(e.to_string()),
-        };
+        let bytes = download_file(url).await?;
 
         attachments.push(bytes);
     }

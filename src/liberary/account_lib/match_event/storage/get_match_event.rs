@@ -16,7 +16,7 @@ struct QueryStruct {
     start_timestamp: DateTime<Utc>,
 }
 
-pub async fn get_match_event(account_id_1: String, account_id_2: String, timestamp: u64, season_name: String, pool: PgPool) -> Result<Option<MatchEvent>, Box<dyn std::error::Error>> {
+pub async fn get_match_event(account_id_1: String, account_id_2: String, timestamp: u64, season_name: String, pool: PgPool) -> Result<Option<MatchEvent>, Box<dyn std::error::Error + Send + Sync>> {
     let query_path = "src/liberary/account_lib/match_event/storage/queries/get_match_event.sql";
     let query = build_query(query_path, vec![
         ArgumentType::String(account_id_1),

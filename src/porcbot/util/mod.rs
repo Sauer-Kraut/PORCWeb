@@ -7,3 +7,4 @@ pub mod response_check;
 pub mod create_event;
 pub mod dm_send_with_attachment;
 pub mod get_message_attachment;
+pub mod get_user_tag;
