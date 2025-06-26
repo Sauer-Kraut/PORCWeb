@@ -14,6 +14,7 @@ const props = defineProps<{
     UserId: string;
     selectorHeight: number;
     allowEditSeason: boolean;
+    placeholder?: boolean; // Optional prop to control placeholder visibility
 }>();
 
 const placeholders = [
@@ -150,7 +151,7 @@ onMounted(async () => {
 
 <template>
     <div class="division h-100 w-100">
-        <div class="row info-container w-100" v-if="division?.players.length" :style="{ height: divisionHeight }">
+        <div class="row info-container w-100" v-if="division?.players.length && !props.placeholder" :style="{ height: divisionHeight }">
             <div class="col-8 col-xl-8 col-xml-11 item-container d-flex flex-column align-items-center" :style="{ transform: matchesTransform, height: divisionHeight }">
                 <div class="scroll-container flex-grow-1">
                     <div class="transition-width matches">
@@ -168,7 +169,7 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
-        <div v-else class="placekeeper rounded">
+        <div v-else class="placeholder rounded">
             <h2>{{ placeholder }}</h2>
         </div>
     </div>
@@ -297,7 +298,7 @@ onMounted(async () => {
     }
 }
 
-.placekeeper {
+.placeholder {
     width: 100%;
     height: 100%;
     background-color: $dark-bg;
@@ -308,6 +309,7 @@ onMounted(async () => {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 3rem;
+    opacity: 1;
 }
 
 // at 1949px matches and leaderbord start to stack on top of each other

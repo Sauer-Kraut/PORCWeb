@@ -41,7 +41,7 @@ export const matchplanStore = defineStore('matchplan', {
         // fetches season with provided name or default current season
         // also sets current season name if current season is fetched
         async fetch_season(season: string | null) {
-            console.log(this.matchplans);
+            // console.log(this.matchplans);
 
             let res = this.matchplans.get(season || '0');
 

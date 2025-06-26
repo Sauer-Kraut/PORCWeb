@@ -32,6 +32,11 @@ pub async fn get_matchplan(season_name: String, pool: PgPool) -> Result<MatchPla
     .fetch_all(&pool)
     .await?;
 
+    if rows.is_empty() {
+        // there are better solutions but who cares
+        return Err(sqlx::error::Error::RowNotFound.into());
+    }
+
     let mut players = Vec::new();
     let mut divisions: HashMap<String, Division> = HashMap::new();
 

@@ -13,6 +13,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 const seasons = ref<Season[]>([]);
 const selectedSeason = ref<Season | null>(null);
 
+let placeholderDisplay = ref(false);
+
 // Computed property for the selected season name (for v-model)
 const selectedSeasonName = computed({
     get: () => selectedSeason.value?.name || '',
@@ -45,12 +47,12 @@ function getSelectorHeight() {
 function getSeasonDisplayName(season: Season): string {
     if (seasons.value.indexOf(season) == 0) {
         var today = new Date();
-        if (new Date(season.start_timestamp) <= today && new Date(season.end_timestamp) > today) {
+        if (new Date(season.start_timestamp * 1000) <= today && new Date(season.end_timestamp * 1000) > today) {
             return "Current Season";
-        } else if (new Date(season.end_timestamp) < today) {
-            return "Last Season";
+        } else if (new Date(season.end_timestamp * 1000) < today) {
+            return "Latest Season";
         } else {
-            return "Next Season";
+            return "Upcoming Season";
         }
     } else {
         return `Season ${season.name}`;
@@ -88,9 +90,33 @@ async function loadSeasons() {
         return b.start_timestamp - a.start_timestamp; // Most recent first
     });
 
+    if (seasons.value[0] && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
+        // Season in the far future -> on top of list
+        const dummySeason: Season = {
+            name: seasons.value[0].name,
+            start_timestamp: 7258118400, // January 1, 2200
+            end_timestamp: 7260796800,   // Feburary 1, 2200
+            pause_end_timestamp: 7263216000,   // March 1, 2200
+        };
+        seasonList.push(dummySeason);
+    }
+
+    // Sort seasons by start date, most recent first
+    seasons.value = seasonList.sort((a, b) => {
+        return b.start_timestamp - a.start_timestamp; // Most recent first
+    });
+
+    console.log('Seasons loaded:', seasons.value);
+
     selectedSeason.value = seasons.value[0];
     season_name.value = String(seasons.value[0].name);
     await getMatchPlan();
+    setPlaceholderDisplay();
+}
+
+function setPlaceholderDisplay() {
+    placeholderDisplay.value = (selectedSeason.value == null || new Date(selectedSeason.value.start_timestamp * 1000) > new Date());
+    // console.log("placeholderDisplay set to: ", placeholderDisplay.value, new Date((selectedSeason.value?.end_timestamp ?? 0) * 1000));
 }
 
 async function getMatchPlan() {
@@ -141,7 +167,9 @@ async function getUserId() {
 watch(
     () => selectedSeason.value,
     async () => {
+        console.log('Selected Season updated:', selectedSeason.value);
         await getMatchPlan();
+        setPlaceholderDisplay();
     },
 );
 
@@ -168,8 +196,8 @@ onMounted(async () => {
 
         <div class="part row justify-content-start justify-content-sm-center pt-5 pb-5 w-100" :class="`division-${selectedDivision?.name?.toLowerCase() || 'iron'}`">
             <div class="col-auto" ref="selectorRef">
-                <select v-model="selectedSeasonName" class="form-select mb-3" v-if="seasons?.length">
-                    <option v-for="season in seasons" :key="season.name" :value="season.name">
+                <select v-model="selectedSeason" class="form-select mb-3" v-if="seasons?.length">
+                    <option v-for="season in seasons" :key="season.name" :value="season">
                         {{ getSeasonDisplayName(season) }}
                     </option>
                 </select>
@@ -178,7 +206,7 @@ onMounted(async () => {
                 </div>
             </div>
             <div class="col col-xxl-9 col-xml-8">
-                <DivisionComponent v-if="selectedDivision" :selector-height="selectorHeight" :season="selectedSeasonName" :division="selectedDivision" :UserId="user" :allowEditSeason="selectedSeasonEdit" class="pl-4rem" />
+                <DivisionComponent v-if="selectedDivision" :selector-height="selectorHeight" :placeholder="placeholderDisplay" :season="selectedSeasonName" :division="selectedDivision" :UserId="user" :allowEditSeason="selectedSeasonEdit" class="pl-4rem" />
             </div>
         </div>
 
