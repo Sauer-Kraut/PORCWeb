@@ -6,6 +6,7 @@ import { filter_str } from '@/util/stringFilter';
 const props = defineProps<{
     division: DivisionModel;
     observer_id: string;
+    hide_progress?: boolean;
 }>();
 
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
@@ -22,7 +23,11 @@ function getProgress() {
     const matches = Object.entries(props.division.matches).map(([_, match]) => ({
         done: match.p1score != null && match.p2score != null,
     }));
-    return matches.length ? (matches.filter((match) => match.done).length / matches.length) * 100 : 0;
+    if (props.hide_progress) {
+        return 0
+    } else {
+        return matches.length ? (matches.filter((match) => match.done).length / matches.length) * 100 : 0;
+    }
 }
 </script>
 

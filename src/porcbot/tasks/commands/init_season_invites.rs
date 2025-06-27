@@ -87,20 +87,35 @@ pub async fn init_season_invites_command(appstate: &AppState, msg: &Message) -> 
         });
     }
 
-    let mut results = futures::future::join_all(leap_tasks).await;
-    let mut invite_results = futures::future::join_all(invite_tasks).await;
+    // let mut results = futures::future::join_all(leap_tasks).await;
+    // let mut invite_results = futures::future::join_all(invite_tasks).await;
 
-    results.append(&mut invite_results);
+    // IMPORTANT!
+    // execution is handled syncronously to avoid to many open connections to DB (We are on the peassant plan, at some point I might set up a local DB that comes with its own fun set of issues)
 
-    // report all errors, nothing to do about them
-    for res in results {
+    for task in leap_tasks {
+        let res = task.await;
+
         match res {
             Ok(_) => {},
             Err(err) => {
                 println!("{}\n{}", "Failed to initiate dialogue: ".red(), err.to_string().bright_red());
             }
         }
-    }
+    };
+
+    for task in invite_tasks {
+        let res = task.await;
+
+        match res {
+            Ok(_) => {},
+            Err(err) => {
+                println!("{}\n{}", "Failed to initiate dialogue: ".red(), err.to_string().bright_red());
+            }
+        }
+    };
+
+
 
     println!("command completed succesfully! \n");
 
