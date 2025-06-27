@@ -1,4 +1,4 @@
-use crate::{liberary::{account_lib::match_event::match_event::MatchEvent, dialogue_lib::{bot_error::BotError, dialogue_builder::{dialogue_builder::DialogueBuilder, storage::store_dialogue}, dialogue_plan::{dialogue_data::{CaseData, DialogueData}, dialogue_step::StepCondition}, dialogue_routes::{info::InfoData, match_request::MatchRequestData}}}, porcbot::util::{dm_send::send_dm, prompt_message_send::send_prompt_dm}, AppState};
+use crate::{liberary::{account_lib::match_event::match_event::MatchEvent, dialogue_lib::{bot_error::BotError, dialogue_builder::{dialogue_builder::DialogueBuilder, storage::store_dialogue}, dialogue_plan::{dialogue_data::{CaseData, DialogueData}, dialogue_step::StepCondition}, dialogue_routes::{info::InfoData, match_request::MatchRequestData, season_invite_prompt::SeasonInviteData, season_leap_prompt::SeasonLeapData}}, matchplan_lib::season::season::Season}, porcbot::util::{dm_send::send_dm, prompt_message_send::send_prompt_dm}, AppState};
 
 
 #[derive(Copy, Clone)]
@@ -47,6 +47,27 @@ impl DialogueInitator {
 
         let data = CaseData::Info(InfoData {
             message
+        });
+
+        Self::initiate_dialogue(appstate, user_id, data).await
+    }
+
+
+    pub async fn initiate_season_leap<'a>(appstate: &AppState, user_id: String, new_season: Season) -> Result<DialogueBuilder, BotError> {
+
+        let data = CaseData::SeasonLeap(SeasonLeapData {
+            new_season
+        });
+
+        Self::initiate_dialogue(appstate, user_id, data).await
+    }
+
+
+    pub async fn initiate_season_invite<'a>(appstate: &AppState, user_id: String, new_season: Season) -> Result<DialogueBuilder, BotError> {
+
+        let data = CaseData::SeasonInvite(SeasonInviteData {
+            new_season,
+            bp: None
         });
 
         Self::initiate_dialogue(appstate, user_id, data).await

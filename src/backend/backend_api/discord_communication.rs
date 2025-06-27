@@ -11,6 +11,7 @@ use crate::backend::storage_lib::StorageMod;
 use crate::liberary::account_lib::account::account::Account;
 use crate::liberary::account_lib::account::discord_user::DiscordUser;
 use crate::liberary::account_lib::account::pub_account_info::PubAccountInfo;
+use crate::liberary::account_lib::account::storage::create_account::create_account;
 use crate::liberary::account_lib::account::storage::get_account::get_account;
 use crate::liberary::account_lib::account::storage::store_account::store_account;
 use crate::liberary::account_lib::login::login::LogIn;
@@ -100,24 +101,20 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
         creation_timestamp: 0,
     };
 
-    match get_account(result.id.clone(), appstate.pool.clone()).await {
+    let new_account = Account {
+        user_info: result.clone(),
+        schedule: Some(Schedule {
+            availabilities: vec!(),
+            matches: vec!(),
+            note: "".to_string(),
+        })
+    };
+
+    match create_account(new_account, appstate.pool.clone()).await {
         Ok(_) => {},
-        Err(_) => {
-            let new_account = Account {
-                user_info: result.clone(),
-                schedule: Some(Schedule {
-                    availabilities: vec!(),
-                    matches: vec!(),
-                    note: "".to_string(),
-                })
-            };
-            match store_account(new_account, appstate.pool.clone()).await {
-                Ok(_) => {},
-                Err(err) => {
-                    println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
-                    return HttpResponse::InternalServerError().body("")
-                }
-            };
+        Err(err) => {
+            println!("{} {}", "An Error occured:".red().bold(), err.to_string().red().bold()); 
+            return HttpResponse::InternalServerError().body("")
         }
     };
 

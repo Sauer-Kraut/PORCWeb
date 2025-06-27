@@ -6,6 +6,7 @@ import type { DivisionModel } from '@/models/matchplan/DivisionModel';
 const props = defineProps<{
     divisions: DivisionModel[];
     observer_id: string;
+    hide_progress?: boolean;
 }>();
 
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
@@ -18,6 +19,7 @@ const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
             v-bind:division="division"
             v-model:selectedDivision="selectedDivision"
             v-bind:observer_id="observer_id"
+            v-bind:hide_progress="hide_progress"
         ></DivisionSelectionComponent>
     </div>
 </template>

@@ -1,6 +1,7 @@
 use crate::porcbot::config::{get_http, COMMAND_PREFIX};
 // use crate::porcbot::tasks::commands::match_requests_catch_up::match_request_catch_up;
 use crate::porcbot::tasks::functions::has_role::{has_role, has_role_from_message};
+use crate::porcbot::tasks::functions::profile_competitors;
 
 pub use super::bot_event_handler::BotEventHandler;
 pub use serenity::all::Message;
@@ -52,6 +53,17 @@ pub async fn on_message(me: &BotEventHandler, ctx: Context, msg: Message) {
 
                 match crate::porcbot::tasks::commands::get_season_blueprint::get_season_blueprint(&me.appstate, msg.author.id).await {
                     Ok(_) => {let _ = msg.channel_id.say(get_http(), "Blueprint succesfully sent in personal messages!").await;},
+                    Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
+                }
+            } else {
+                let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
+            }
+        },
+        "init_season_invite" => {
+            if has_role_from_message(&ctx, &msg, "DEV").await {  //TODO: more modular role check
+
+                match crate::porcbot::tasks::commands::init_season_invites::init_season_invites_command(&me.appstate, &msg).await {
+                    Ok(_) => {let _ = msg.channel_id.say(get_http(), "invites succesfully sent!").await;},
                     Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
                 }
             } else {

@@ -301,7 +301,8 @@ onMounted(async () => {
 .placeholder {
     width: 100%;
     height: 100%;
-    background-color: $dark-bg;
+    // background-color: $dark-bg;
+    background-color: transparent;
     border: 1px solid $dark-border;
     display: flex;
     justify-content: center;
@@ -310,6 +311,7 @@ onMounted(async () => {
     text-overflow: ellipsis;
     padding: 3rem;
     opacity: 1;
+    cursor: default;
 }
 
 // at 1949px matches and leaderbord start to stack on top of each other

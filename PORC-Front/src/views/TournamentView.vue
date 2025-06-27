@@ -77,13 +77,13 @@ async function loadSeasons() {
     }
 
     // Add debug season "5" for testing purposes
-    const debugSeason: Season = {
-        name: "5",
-        start_timestamp: 1704067200, // December 31, 2024
-        end_timestamp: 1735689600,   // January 1, 2025
-        pause_end_timestamp: 1735689600,   // January 1, 2025
-    };
-    seasonList.push(debugSeason);
+    // const debugSeason: Season = {
+    //     name: "5",
+    //     start_timestamp: 1704067200, // December 31, 2024
+    //     end_timestamp: 1735689600,   // January 1, 2025
+    //     pause_end_timestamp: 1735689600,   // January 1, 2025
+    // };
+    // seasonList.push(debugSeason);
 
     // Sort seasons by start date, most recent first
     seasons.value = seasonList.sort((a, b) => {
@@ -202,7 +202,7 @@ onMounted(async () => {
                     </option>
                 </select>
                 <div class="selector-container">
-                    <DivisionSelector :divisions="divisions" :observer_id="user" v-model:selectedDivision="selectedDivision" class="" :style="{ 'max-width': '100%' }" />
+                    <DivisionSelector :hide_progress="placeholderDisplay" :divisions="divisions" :observer_id="user" v-model:selectedDivision="selectedDivision" class="" :style="{ 'max-width': '100%' }" />
                 </div>
             </div>
             <div class="col col-xxl-9 col-xml-8">
