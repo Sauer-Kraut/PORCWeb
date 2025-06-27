@@ -1,6 +1,7 @@
 use crate::porcbot::config::{get_http, COMMAND_PREFIX};
 // use crate::porcbot::tasks::commands::match_requests_catch_up::match_request_catch_up;
 use crate::porcbot::tasks::functions::has_role::{has_role, has_role_from_message};
+use crate::porcbot::tasks::functions::profile_competitors;
 
 pub use super::bot_event_handler::BotEventHandler;
 pub use serenity::all::Message;

@@ -3,7 +3,8 @@ use colored::Colorize;
 use serenity::all::{GuildId, Message};
 use serde_json;
 
-use crate::{liberary::{account_lib::signup::storage::get_signups::get_signups, dialogue_lib::{bot_error::BotError, dialogue_initiator::dialogue_initiator::DialogueInitator}, matchplan_lib::{matchplan::storage::{matchplan_get::get_matchplan, start_season::start_season}, matchplan_blueprint::matchplan_blueprint::PlanBlueprint, season::season::Season}}, porcbot::{config::{get_http, SERVER_ID}, util::get_message_attachment::get_message_attachment}, AppState};
+use crate::{liberary::{account_lib::signup::storage::get_signups::get_signups, dialogue_lib::{bot_error::BotError, dialogue_initiator::dialogue_initiator::DialogueInitator}, matchplan_lib::{matchplan::storage::{matchplan_get::get_matchplan, start_season::start_season}, matchplan_blueprint::matchplan_blueprint::PlanBlueprint, season::season::Season}}, porcbot::{config::{get_http, SERVER_ID}, tasks::functions::profile_competitors, util::get_message_attachment::get_message_attachment}, AppState};
+use crate::porcbot::tasks::functions::profile_competitors::profile_competitors;
 
 
 
@@ -18,6 +19,8 @@ pub async fn init_season_invites_command(appstate: &AppState, msg: &Message) -> 
         .map_err(|e| format!("failed to deserialize season: {e}"))?;
 
     println!("{}{}{}{}", "Received command to initiate season invites for season ".magenta(), new_season.name.magenta().bold(), " starting ".magenta(), new_season.start_timestamp.to_string().magenta().bold());
+
+    let _res = profile_competitors(appstate).await?;
     
 
     let season_opt = appstate.season.read().await.clone();
