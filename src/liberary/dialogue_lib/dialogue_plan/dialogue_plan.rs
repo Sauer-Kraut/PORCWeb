@@ -66,6 +66,7 @@ impl <'a, 'b> DialoguePlan<'a> {
         match next_index {
             Some(index) => {
                 self.index = index; // No need to borrow mutably here anymore
+                // TODO: better error handling pls, see how issue is dealt with above for inspiration
                 self.next(index).await?; // `next()` doesn't borrow `self.dialogue_data` mutably
                 Ok(true)
             },
