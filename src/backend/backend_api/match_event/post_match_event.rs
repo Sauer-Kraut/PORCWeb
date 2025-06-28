@@ -36,7 +36,7 @@ pub async fn post_match_event_request(info: web::Json<RecvPackage>, appstate: we
 
     match login_res {
         Ok(v) => {
-            if v.account_id != info.match_event.challenger_id {
+            if v.account_id != info.match_event.challenger_id || v.account_id != info.match_event.opponent_id {
                 return Err(ServerError::Unauthorized)
             }
         },
