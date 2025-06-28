@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
+import type { Season } from '@/models/matchplan/Season';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { filter_str } from '@/util/stringFilter';
 import { ref } from 'vue';
@@ -7,6 +8,7 @@ import { ref } from 'vue';
 const props = defineProps<{
     player: PubAccountInfo;
     observer_id: string;
+    season?: Season;
 }>();
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
@@ -24,7 +26,7 @@ async function select() {
             <div class="contents">
                 {{ filter_str(props.player.username, 14) }}
                 <!-- <div class="icon icon-checkmark"></div> -->
-                <MatchStatusComponent :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []"></MatchStatusComponent>
+                <MatchStatusComponent :season="season" :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []"></MatchStatusComponent>
             </div>
         </div>
     </div>

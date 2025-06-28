@@ -3,6 +3,7 @@
 import PlayerSelectionComponent from '@/components/PlayerSelectionComponent.vue';
 import type { Availability } from '@/models/availability/Availability';
 import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
+import type { Season } from '@/models/matchplan/Season';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { Schedule } from '@/models/schedule/Schedule';
 import { defineProps, defineModel, ref } from 'vue';
@@ -57,6 +58,7 @@ const player = ref({
 const props = defineProps<{
     players: PubAccountInfo[];
     observer_id: string;
+    season?: Season;
 }>();
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
@@ -72,6 +74,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
                 v-bind:player="player"
                 v-model:selected-player="selectedPlayer"
                 v-bind:observer_id="observer_id"
+                v-bind:season="season"
             ></PlayerSelectionComponent>
         </div>
     </div>

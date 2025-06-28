@@ -4,6 +4,7 @@ import DivisionSelector from '@/components/DivisionSelector.vue';
 import SignUpFormComponent from '@/components/SignUpFormComponent.vue';
 import TimerComponent from '@/components/TimerComponent.vue';
 import type { DivisionModel } from '@/models/matchplan/DivisionModel';
+import type { Matchplan } from '@/models/matchplan/Matchplan';
 import type { Season } from '@/models/matchplan/Season';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
@@ -30,6 +31,8 @@ const selectedSeasonEdit = computed(
     },
 );
 
+const current_season = ref<Season | null>(null);
+
 const divisions = ref<DivisionModel[]>([]);
 const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
 selectedDivision.value = divisions.value[0] ?? null;
@@ -45,14 +48,17 @@ function getSelectorHeight() {
 }
 
 function getSeasonDisplayName(season: Season): string {
-    if (seasons.value.indexOf(season) == 0) {
+    if (current_season.value != null && new Date(current_season.value.end_timestamp * 1000) < new Date(season.start_timestamp * 1000)) {
+        return `Season ${season.name} [Upcoming]`;
+    } 
+    else if (seasons.value.indexOf(season) == 0) {
         var today = new Date();
         if (new Date(season.start_timestamp * 1000) <= today && new Date(season.end_timestamp * 1000) > today) {
-            return "Current Season";
+            return `Season ${season.name} [Current]`;
         } else if (new Date(season.end_timestamp * 1000) < today) {
-            return "Latest Season";
+            return `Season ${season.name} [Latest]`;
         } else {
-            return "Upcoming Season";
+            return `Season ${season.name} [Upcoming]`;
         }
     } else {
         return `Season ${season.name}`;
@@ -90,6 +96,39 @@ async function loadSeasons() {
         return b.start_timestamp - a.start_timestamp; // Most recent first
     });
 
+
+    const current_season_res = await planStore.get_matchplan(null);
+    if (typeof current_season_res == 'string') {
+        showErrorModal(current_season_res);
+        TimerText.value = `Time until next season of PORC unknown`;
+        globalTimer = 0;
+    } else {
+        current_season.value = seasons.value.find((s: Season) => s.name == (current_season_res.season ?? "")) ?? null;  
+        
+        if (current_season.value != null) {
+            const seasonEnd = current_season.value.end_timestamp ?? 0;
+            const seasonPause = current_season.value.pause_end_timestamp ?? 0;
+            const now = Math.floor(Date.now() / 1000);
+
+            if (now > seasonPause) {
+                globalTimer = seasonPause;
+                TimerText.value = `Time until next season of PORC unknown`;
+            } else if (now > seasonEnd) {
+                globalTimer = seasonPause;
+                TimerText.value = `Time remaining until next season of PORC`;
+            } else {
+                globalTimer = seasonEnd;
+                TimerText.value = `Time remaining for season ${current_season.value.name} of PORC`;
+            }
+        } else {
+            showErrorModal("Couldnt find info for the current season");
+            TimerText.value = `Time until next season of PORC unknown`;
+            globalTimer = 0;
+        }
+    }
+
+    
+
     if (seasons.value[0] && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
         // Season in the far future -> on top of list
         const dummySeason: Season = {
@@ -108,14 +147,21 @@ async function loadSeasons() {
 
     console.log('Seasons loaded:', seasons.value);
 
-    selectedSeason.value = seasons.value[0];
+    if (current_season.value != null && new Date(current_season.value.end_timestamp * 1000) > new Date()) {
+        selectedSeason.value = current_season.value;
+    } else {
+        selectedSeason.value = seasons.value[0];
+    }
+    
     season_name.value = String(seasons.value[0].name);
     await getMatchPlan();
     setPlaceholderDisplay();
 }
 
 function setPlaceholderDisplay() {
-    placeholderDisplay.value = (selectedSeason.value == null || new Date(selectedSeason.value.start_timestamp * 1000) > new Date());
+    placeholderDisplay.value = (selectedSeason.value == null || 
+        new Date(selectedSeason.value.start_timestamp * 1000) > new Date() || 
+        new Date(selectedSeason.value.end_timestamp * 1000) > new Date((current_season.value?.end_timestamp ?? 10000000000) * 1000));
     // console.log("placeholderDisplay set to: ", placeholderDisplay.value, new Date((selectedSeason.value?.end_timestamp ?? 0) * 1000));
 }
 
@@ -136,15 +182,6 @@ async function getMatchPlan() {
         divisions.value.sort((a, b) => a.order - b.order);
 
         console.log('got matchplan: ', plan);
-
-        if (now > seasonEnd) {
-            globalTimer = seasonPause;
-            TimerText.value = `Time remaining until next season of PORC`;
-            console.log('season ended, timer set to pause end');
-        } else {
-            globalTimer = seasonEnd;
-            TimerText.value = `Time remaining for season ${season_name.value} of PORC`;
-        }
     }
 }
 

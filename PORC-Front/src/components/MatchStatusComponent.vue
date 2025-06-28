@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { MatchStatus, type MatchEvent, ObservedMatchStatus} from '@/models/match_event/MatchEvent';
+import type { Season } from '@/models/matchplan/Season';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -7,6 +8,7 @@ const props = defineProps<{
     matches: MatchEvent[];
     player_id?: string;
     observer_id: string;
+    season?: Season;
 }>();
 
 const status = computed(() => {
@@ -14,7 +16,7 @@ const status = computed(() => {
         return ObservedMatchStatus.IsSelf;
     }
 
-    const involvedMatches = props.matches.filter((match) => match.initiatorId === props.observer_id || match.opponentId === props.observer_id);
+    const involvedMatches = props.matches.filter((match) => (match.initiatorId === props.observer_id || match.opponentId === props.observer_id) && match.endDate > new Date((props.season?.start_timestamp ?? 10000000000000) * 1000));
     if (involvedMatches.length === 0) {
         return ObservedMatchStatus.Unplaned;
     } else {

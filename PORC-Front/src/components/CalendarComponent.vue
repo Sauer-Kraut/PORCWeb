@@ -13,6 +13,7 @@ import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
 import { accountsStore } from '@/storage/st_accounts';
 import { postMatchEvent } from '@/API/match_event/PostMatchEvent';
 import type { PlayerModel } from '@/models/matchplan/PlayerModel';
+import type { Season } from '@/models/matchplan/Season';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -21,6 +22,7 @@ const props = defineProps<{
     ownId: string;
     scheduleUserId: string;
     season: string;
+    season_info?: Season;
 }>();
 
 const compStore = accountsStore();
@@ -547,7 +549,7 @@ async function submitNote() {
                         :theme="matchTooltipTheme(match)"
                     >
                         <div class="w-100 h-100 p-2 d-flex justify-content-end">
-                            <div class="match-status pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent></div>
+                            <div class="match-status pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]" :season="season_info ?? undefined"></MatchStatusComponent></div>
                         </div>
                         <template #popper>
                             <div class="container p-3">

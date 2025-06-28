@@ -71,11 +71,19 @@ async function getMatchPlan() {
         }
         season.value = seasonList.find((s: Season) => s.name === String(plan.season)) ?? null;
     }
+
+    check_season_running();
 }
 
 const opponents = ref<PlayerModel[]>([]);
 function find_opponents(): PlayerModel[] {
-    return division.value?.players.filter((player: PlayerModel) => player.id !== user_id.value) ?? [];
+    const now = new Date();
+
+    if (now > new Date((season.value?.start_timestamp ?? 0) * 1000) && now < new Date((season.value?.end_timestamp ?? 0) * 1000)) {
+        return division.value?.players.filter((player: PlayerModel) => player.id !== user_id.value) ?? [];
+    } else {
+        return [];
+    }
 }
 
 function find_user(): PlayerModel[] {
@@ -130,6 +138,7 @@ async function reload() {
             selectedPlayer.value = player;
         }
     }
+    check_season_running();
 }
 
 function selectSelf() {
@@ -150,6 +159,12 @@ function getProgress() {
     return matches.length ? (matches.filter((match) => match.done).length / matches.length) * 100 : 0;
 }
 
+const season_running = ref(false);
+
+function check_season_running() {
+    season_running.value = (new Date() > new Date((season.value?.start_timestamp ?? 0) * 1000) && new Date() < new Date((season.value?.end_timestamp ?? 0) * 1000))
+}
+
 onMounted(async () => {
     await getUserId();
     await getMatchPlan();
@@ -157,6 +172,7 @@ onMounted(async () => {
     opponents.value = find_opponents();
     await getPubPlayerInfos(getPlayerIds());
     selectSelf();
+    check_season_running();
 });
 </script>
 
@@ -181,7 +197,7 @@ onMounted(async () => {
             </div> -->
             <div class="calendar row flex-column-reverse flex-xl-row justify-content-center">
                 <div class="col-12 calendar-container" :class="{ 'col-xl-7': division, 'col-lg-9 col-xxl-7 mx-auto': !division }">
-                    <PlayerSelector :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="mb-3"></PlayerSelector>
+                    <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="mb-3"></PlayerSelector>
                     <CalendarComponent
                         v-if="selectedPlayer?.schedule"
                         :schedule="selectedPlayer?.schedule ?? schedule"
@@ -193,12 +209,13 @@ onMounted(async () => {
                         v-on:reload="reload"
                         class="calendar-component"
                         :class="`division-${division?.name.toLowerCase() || 'iron'}`"
+                        :season_info="season ?? undefined"
                     >
                     </CalendarComponent>
                 </div>
                 <div class="col-12 col-xl-5 ps-auto ps-xl-5 mb-5 mb-xl-auto" v-if="division">
                     <div class="mb-3 d-flex justify-content-center justify-content-xl-start">
-                        <div class="division-title">
+                        <div v-if="season_running" class="division-title">
                             <h2 class="mb-0 d-flex align-items-center me-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
                             <div class="progress" role="progressbar">
                                 <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
@@ -206,7 +223,7 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <div class="matches-container">
+                    <div v-if="season_running" class="matches-container">
                         <div
                             v-for="[key, match] in Object.entries(division?.matches || {})"
                             :key="key"

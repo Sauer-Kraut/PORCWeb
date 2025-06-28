@@ -102,7 +102,7 @@ impl MatchPlan {
         let involoved_players = division_blueprints.iter().flat_map(|division| division.players.clone()).collect::<Vec<_>>();
 
         let new_signups = signups.iter().filter(|signup| {
-            involoved_players.iter().any(|player| player.id == signup.discord_id)
+            !involoved_players.iter().any(|player| player.id == signup.discord_id)
         }).map(|signup| PlayerBlueprint{
             tag: signup.username.clone(),
             id: signup.discord_id.clone(),

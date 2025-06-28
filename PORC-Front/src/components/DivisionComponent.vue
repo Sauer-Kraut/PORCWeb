@@ -25,9 +25,9 @@ const placeholders = [
     "It's quiet here... too quiet... (・_・ヾ",
     "'Failiure is success in progress' - Shoeless 2024",
     "ᓚᘏᗢ - Looks like you're not the only one waiting for the tournament to start",
-    'Due to technical difficulties, this scorebord has been determined incapable of displaying all of Juicepars achievements specifically',
+    'Due to technical difficulties, this scoreboard has been determined incapable of displaying all of Juicepars achievements specifically',
     'bibin',
-    '2 rock win against 1 rock - Tamrell 2025',
+    "'2 rock win against 1 rock' - Tamrell 2025",
 ];
 
 // Reactive variable to hold the selected placeholder

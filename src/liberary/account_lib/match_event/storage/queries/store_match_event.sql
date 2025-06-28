@@ -35,7 +35,10 @@ VALUES (($1), ($2), ((
             ))
         LIMIT 1
     )
-    ),($3), (SELECT p.id FROM participants p WHERE p.account_id = ($4)))
+    ),($3), (SELECT p.id FROM participants p WHERE p.account_id = ($4) AND p.division_id IN (
+                        SELECT id FROM divisions WHERE
+                            season_name = ($6)
+                    )))
 ON conflict (match_id, date) DO update
 SET
     event_id = EXCLUDED.event_id,
