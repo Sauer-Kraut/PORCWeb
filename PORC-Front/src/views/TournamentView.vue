@@ -49,7 +49,12 @@ function getSelectorHeight() {
 
 function getSeasonDisplayName(season: Season): string {
     if (current_season.value != null && new Date(current_season.value.end_timestamp * 1000) < new Date(season.start_timestamp * 1000)) {
-        return `Season ${season.name} [Upcoming]`;
+        // if check only possible for dummy season
+        if (season.name == current_season.value.name) {
+            return "Upcoming Season"
+        } else {
+            return `Season ${season.name} [Upcoming]`;
+        }
     } 
     else if (seasons.value.indexOf(season) == 0) {
         var today = new Date();
@@ -129,7 +134,7 @@ async function loadSeasons() {
 
     
 
-    if (seasons.value[0] && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
+    if (seasons.value[0] && seasons.value[0] == current_season.value && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
         // Season in the far future -> on top of list
         const dummySeason: Season = {
             name: seasons.value[0].name,
