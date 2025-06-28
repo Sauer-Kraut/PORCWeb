@@ -27,7 +27,7 @@ const selectedSeasonName = computed({
 const selectedSeasonEdit = computed(
     () => {
         var today = new Date();
-        return selectedSeason.value !== null && new Date(selectedSeason.value.start_timestamp) <= today && new Date(selectedSeason.value.end_timestamp) > today;
+        return selectedSeason.value !== null && new Date(selectedSeason.value.start_timestamp * 1000) <= today && new Date(selectedSeason.value.end_timestamp * 1000) > today;
     },
 );
 
