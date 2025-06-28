@@ -55,7 +55,7 @@ function getSeasonDisplayName(season: Season): string {
         } else {
             return `Season ${season.name} [Upcoming]`;
         }
-    } 
+    }
     else if (seasons.value.indexOf(season) == 0) {
         var today = new Date();
         if (new Date(season.start_timestamp * 1000) <= today && new Date(season.end_timestamp * 1000) > today) {
@@ -108,8 +108,8 @@ async function loadSeasons() {
         TimerText.value = `Time until next season of PORC unknown`;
         globalTimer = 0;
     } else {
-        current_season.value = seasons.value.find((s: Season) => s.name == (current_season_res.season ?? "")) ?? null;  
-        
+        current_season.value = seasons.value.find((s: Season) => s.name == (current_season_res.season ?? "")) ?? null;
+
         if (current_season.value != null) {
             const seasonEnd = current_season.value.end_timestamp ?? 0;
             const seasonPause = current_season.value.pause_end_timestamp ?? 0;
@@ -132,7 +132,7 @@ async function loadSeasons() {
         }
     }
 
-    
+
 
     if (seasons.value[0] && seasons.value[0] == current_season.value && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
         // Season in the far future -> on top of list
@@ -157,15 +157,15 @@ async function loadSeasons() {
     } else {
         selectedSeason.value = seasons.value[0];
     }
-    
+
     season_name.value = String(seasons.value[0].name);
     await getMatchPlan();
     setPlaceholderDisplay();
 }
 
 function setPlaceholderDisplay() {
-    placeholderDisplay.value = (selectedSeason.value == null || 
-        new Date(selectedSeason.value.start_timestamp * 1000) > new Date() || 
+    placeholderDisplay.value = (selectedSeason.value == null ||
+        new Date(selectedSeason.value.start_timestamp * 1000) > new Date() ||
         new Date(selectedSeason.value.end_timestamp * 1000) > new Date((current_season.value?.end_timestamp ?? 10000000000) * 1000));
     // console.log("placeholderDisplay set to: ", placeholderDisplay.value, new Date((selectedSeason.value?.end_timestamp ?? 0) * 1000));
 }

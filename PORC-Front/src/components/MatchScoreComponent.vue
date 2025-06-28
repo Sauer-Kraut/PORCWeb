@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useModal } from 'vue-final-modal';
 import EditMatchComponent from './modals/EditMatchComponent.vue';
 import type { MatchModel } from '@/models/matchplan/MatchModel';
@@ -18,10 +18,10 @@ const props = withDefaults(
 
 const emit = defineEmits(['reload']);
 
-const allowedEdit = ref(props.editMode && (props.match.p1.id === props.user_id || props.user_id === props.match.p2.id));
+const allowedEdit = computed(() => props.editMode && (props.match.p1.id === props.user_id || props.user_id === props.match.p2.id));
 
-const p1User = ref(props.match.p1.id == props.user_id);
-const p2User = ref(props.match.p2.id == props.user_id);
+const p1User = computed(() => props.match.p1.id == props.user_id);
+const p2User = computed(() => props.match.p2.id == props.user_id);
 
 var isScored = ref(props.match.p1score != null && props.match.p2score != null);
 
