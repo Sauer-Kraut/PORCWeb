@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'icomoon';
-  src:  url('fonts/icomoon.eot?vspm3a');
-  src:  url('fonts/icomoon.eot?vspm3a#iefix') format('embedded-opentype'),
-    url('fonts/icomoon.ttf?vspm3a') format('truetype'),
-    url('fonts/icomoon.woff?vspm3a') format('woff'),
-    url('fonts/icomoon.svg?vspm3a#icomoon') format('svg');
+  src:  url('fonts/icomoon.eot?4thpwq');
+  src:  url('fonts/icomoon.eot?4thpwq#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?4thpwq') format('truetype'),
+    url('fonts/icomoon.woff?4thpwq') format('woff'),
+    url('fonts/icomoon.svg?4thpwq#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -25,6 +25,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-award:before {
+  content: "\e912";
+}
 .icon-calender:before {
   content: "\e906";
 }
@@ -58,6 +61,21 @@
 .icon-edit-pencil:before {
   content: "\e904";
 }
+.icon-calender_busy:before {
+  content: "\e90a";
+}
+.icon-calender_note:before {
+  content: "\e90b";
+}
+.icon-hourglass_bottom:before {
+  content: "\e90c";
+}
+.icon-hourglass_full:before {
+  content: "\e90d";
+}
+.icon-hourglass_empty:before {
+  content: "\e90e";
+}
 .icon-chevron-right:before {
   content: "\e900";
 }
@@ -75,4 +93,10 @@
 }
 .icon-bell:before {
   content: "\e910";
+}
+.icon-trophy:before {
+  content: "\e99e";
+}
+.icon-globe:before {
+  content: "\e9ca";
 }

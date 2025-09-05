@@ -86,6 +86,8 @@ export const matchplanStore = defineStore('matchplan', {
 
         async fetch_ranking(season: string | null) {
 
+            console.log("fetching ranking for season " + (season || '0'));
+
             let res = this.matchplans.get(season || '0');
 
             if (!res || res == null) {

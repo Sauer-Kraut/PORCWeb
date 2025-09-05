@@ -27,27 +27,48 @@ function save() {
 function close() {
     emit('close');
 }
+
+const shortendP1tag = ref(props.match.p1.tag.length > 10 ? props.match.p1.tag.slice(0, 10) + '..' : props.match.p1.tag);
+const shortendP2tag = ref(props.match.p2.tag.length > 10 ? props.match.p2.tag.slice(0, 10) + '..' : props.match.p2.tag);
+
 </script>
 
 <template>
     <VueFinalModal class="confirm-modal" content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
-        <div class="porc-modal-content col-xl-4 col-lg-6 col-11 p-4 rounded">
-            <h3 class="title">Edit Match Scores</h3>
-            <div class="justify-content-center d-flex p-1">
-                <label for="p1score" class="col-9">{{ match.p1.tag }} score:</label>
-                <input id="p1score" v-model="p1score" type="number" class="col-2 input" />
+        <div class="porc-modal-content p-4 rounded d-flex flex-column">
+            <h3 class="modal-title align-self-center justify-contents-center">Edit Match Scores</h3>
+            <h4 class="content-subtitle align-self-center justify-contents-center mb-4">Enter your match result</h4>
+
+            <div class="d-flex flex-row mt-4 justify-content-between">
+
+                <div class="justify-content-center d-flex p-1 col-5 flex-column" :class="{ 'winner' : (p1score ?? 0) > (p2score ?? 0) }">
+                    <h4 for="p1score" class="align-self-center justify-contents-center player-tag mb-3">{{ shortendP1tag }}</h4>
+                    <input id="p1score" v-model="p1score" type="number" class="col-6 form-input align-self-center score-input" />
+                </div>
+
+                <div class="col-2 d-flex justify-content-center align-items-center">
+                    <h4 class="align-self-center content-subtitle mt-4">- Vs. -</h4>
+                </div>
+
+                <div class="justify-content-center d-flex p-1 col-5 flex-column" :class="{ 'winner' : (p1score ?? 0) < (p2score ?? 0) }">
+                    <h4 for="p2score" class="align-self-center justify-contents-center player-tag mb-3">{{ shortendP2tag }}</h4>
+                    <input id="p2score" v-model="p2score" type="number" class="col-6 form-input align-self-center score-input" />
+                </div>
+
             </div>
-            <div class="justify-content-center d-flex p-1">
-                <label for="p2score" class="col-9">{{ match.p2.tag }} score:</label>
-                <input id="p2score" v-model="p2score" type="number" class="col-2 input" />
+
+            <div class="winner-bar ms-3 me-3 mb-5">
+                <div class="bar-slide middle" :class="{ 'left' : (p1score ?? 0) > (p2score ?? 0), 'right' : (p1score ?? 0) < (p2score ?? 0) }"></div>
             </div>
-            <div class="spacer"></div>
-            <div class="spacer"></div>
+
             <div class="row justify-content-center mt-3">
                 <div class="col-md-4 col-xl-6">
                     <button @click="close" class="btn btn-outline-primary w-100">Cancel</button>
                 </div>
-                <div class="col-md-4 col-xl-6 mt-2 mt-md-0">
+                <div class="col-md-4 col-xl-6">
+                    <button @click="close" class="btn btn-outline-danger w-100">Forfeit</button>
+                </div>
+                <div class="col-md-4 col-xl-12 mt-3">
                     <button @click="save" class="btn btn-primary w-100">Save</button>
                 </div>
             </div>
@@ -56,11 +77,20 @@ function close() {
 </template>
 
 <style lang="scss" scoped>
+@import '@/assets/scss/styles.scss';
+@import '@/assets/scss/global.scss';
+
 .porc-modal-content {
-    background: linear-gradient(135deg, #8d7b78, #3b435b);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 23rem !important;
+    background: color-mix(in srgb, $background-color 95%, white 5%);
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.508);
+    border: 1px solid #515458;
     color: #ffffff;
     transition: 0.5s;
+
+    * {
+        transition: 0.4s ease-in-out;
+    }
 }
 
 .title {
@@ -89,6 +119,50 @@ function close() {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     color: #ffffff;
+}
+
+.player-tag {
+    font-weight: 600;
+    font-size: 1.4rem;
+}
+
+.winner-bar {
+    display: flex;
+    width: auto;
+    height: 3px;
+    background-color: #2c2c2c;
+    border-radius: 0.25rem;
+    position: relative;
+
+    .bar-slide {
+        position: absolute;
+        width: 40%;
+        height: 100%;
+        background-color: var(--primary);
+        transition: all 0.5s ease-in-out;
+
+        &.left {
+            left: 0 !important; 
+            transform: translateX(0%) !important;
+        }
+
+        &.right {
+            left: 60% !important; 
+            transform: translateX(0%) !important;
+        }
+
+        &.middle {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    }
+}
+
+.score-input {
+    text-align: center;
+    font-weight: 600;
+    height: 2rem !important;
+    // font-size: 1.1rem;
 }
 
 .modal-content h3 {
@@ -127,5 +201,9 @@ function close() {
 
 .spacer {
     margin-top: 0rem;
+}
+
+.form-input {
+    color: #ffffff !important;
 }
 </style>

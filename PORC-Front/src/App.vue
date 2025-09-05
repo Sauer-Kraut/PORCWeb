@@ -8,6 +8,8 @@ import type { DivisionModel } from './models/matchplan/DivisionModel';
 import type { PlayerModel } from './models/matchplan/PlayerModel';
 import type { PubAccountInfo } from './models/pub_account_info/PubAccountInfo';
 import { accountsStore } from './storage/st_accounts';
+import Logo from './components/svgs/logo.vue';
+import { appReady } from './appReady';
 
 const isMenuOpen = ref(false);
 function toggleMenu() {
@@ -50,6 +52,7 @@ async function getMatchPlan() {
     //console.log('Trying to get match plan');
     let planStore = matchplanStore();
     let plan = await planStore.get_matchplan(null);
+    await planStore.fetch_all_seasons();
 
     if (typeof plan == 'string') {
         showErrorModal(plan);
@@ -119,6 +122,7 @@ async function getPubPlayerInfos(ids: string[]) {
 onMounted(async () => {
     await getUserId();
     await getMatchPlan();
+    appReady.value = true; // calls early as quirky optimization that wont stab me in the back later fr fr on god
     await getPubPlayerInfos(getPlayerIds());
 });
 </script>
@@ -129,24 +133,29 @@ onMounted(async () => {
 
         <!-- Navigation -->
         <div class="row h-header">
-            <div class="col-4 col-md-auto h-header d-flex align-items-center d-md-none" @click="toggleMenu">
+            <div class="col-4 col-md-auto d-flex align-items-center d-md-none" @click="toggleMenu">
                 <div class="burger-icon p-3">
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                 </div>
             </div>
-            <div class="logo col col-md-auto h-header d-flex align-items-center justify-content-center">
-                <img src="@/assets/images/porc-logo.svg" class="mx-0 mx-md-3 mx-lg-5" />
+            <div class="logo col col-md-auto d-flex align-items-center justify-content-center">
+                <div class="mx-2 mx-md-3 mx-lg-5"> 
+                    <Logo />
+                </div>
             </div>
-            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center h-header">
-                <router-link to="/" class="router-link col-12 col-md-3 px-0 h-header" @click="closeMenu">Tournament</router-link>
-                <router-link to="/match-planner" class="router-link col-12 col-md-3 px-0 h-header" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
-                <router-link to="/rules" class="router-link col-12 col-md-3 px-0 h-header" @click="closeMenu">Rules</router-link>
-                <router-link to="/faq" class="router-link col-12 col-md-3 px-0 h-header" @click="closeMenu">FAQ</router-link>
+            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center">
+                <div class="routes-container">
+                    <router-link to="/" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Tournament</router-link>
+                    <router-link to="/match-planner" class="router-link col-12 col-md-2 px-0" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
+                    <router-link to="/rules" class="router-link col-12 col-md-2 px-0" @click="closeMenu">Rules</router-link>
+                    <router-link to="/faq" class="router-link col-12 col-md-2  px-0" @click="closeMenu">FAQ</router-link>
+                    <div v-if="isMenuOpen" class="col-12 m-1 d-md-none" />
+                </div>
             </nav>
-            <div class="col-4 col-md-auto h-header d-flex align-items-center">
-                <DiscordUserComponent class="mx-0 mx-md-3 me-3"></DiscordUserComponent>
+            <div class="col-4 col-md-auto d-flex align-items-center">
+                <DiscordUserComponent class="mx-2 mx-md-3 mx-lg-5"></DiscordUserComponent>
             </div>
         </div>
 
@@ -164,11 +173,19 @@ onMounted(async () => {
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 
-$header-color: rgb(241, 241, 241);
+$header-color: rgb(26, 23, 23);
 
 header {
     background-color: $header-color;
+    border-bottom: outset 1px rgb(134, 123, 123);
+    min-height: 4rem;
+
+    display: flex;
+    justify-content: center;
+
     z-index: 1000; // Ensure the header is above other content
+
+
     @include media-breakpoint-down(md) {
         position: fixed; // Make the header fixed
         top: 0; // Stick to the top of the viewport
@@ -178,7 +195,8 @@ header {
 }
 
 .h-header {
-    min-height: 6rem;
+    min-height: 4rem;
+    width: 83.3%;
 }
 
 @include media-breakpoint-down(md) {
@@ -194,8 +212,10 @@ header {
 main {
     min-height: 100%;
 
-    background: #313131;
-    background-image: url('assets/images/background/stacked-peaks-darker-spikier.svg');
+    //background: #201f27;
+    background: $background-color;
+    // background-image: url('assets/images/background/stacked-peaks-darker-spikier.svg');
+
     background-size: cover; /* Scale the image to cover the entire container */
 
     overflow-x: hidden;
@@ -211,17 +231,28 @@ nav {
 
     .router-link {
         align-content: center;
-        color: rgb(0, 0, 0);
+        color: rgb(255, 255, 255);
         text-decoration: none;
         font-size: large;
 
+        // height: 2rem;
+        // width: 10rem;
+        margin: 0.5rem !important;
+
+        border-radius: 15px;
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+
+        // margin-left: 3rem !important;
+        // margin-right: 3rem !important;
+
         &.router-link-active {
-            background-color: darken($header-color, 4%);
+            // background-color: color-mix(in srgb, $header-color 92%, white 8%);
             font-weight: bolder;
         }
 
         &:hover {
-            background-color: darken($header-color, 5%);
+            // background-color: color-mix(in srgb, $header-color 92%, white 7%);
             font-weight: bolder;
         }
     }
@@ -231,10 +262,20 @@ nav {
     }
 }
 
+.routes-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    min-height: 100%;
+    max-width: 55rem;
+    width: 100%;
+}
+
 .logo {
     width: fit-content;
-    img {
-        height: 3.5rem;
+    position: relative;
+    svg {
+        height: 2.6rem;
 
         @include media-breakpoint-down(md) {
             height: 35px;
@@ -270,7 +311,7 @@ nav {
     width: 25px;
     height: 3px;
     margin: 5px 0;
-    background-color: #333;
+    background-color: #f3f3f3;
     transition: 0.3s;
 }
 

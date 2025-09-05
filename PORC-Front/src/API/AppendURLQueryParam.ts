@@ -21,7 +21,13 @@ export function appendURLQueryParam(url: string, param_name: string, param: stri
         formated_param = param.join(',');
     }
 
-    let res = base + param_name + '=' + formated_param;
-    return res;
+    if (formated_param.length > 0) {
+        let res = base + param_name + '=' + formated_param;
+        return res;
+    }
+    else {
+        return base;
+    }
+    
 
 }

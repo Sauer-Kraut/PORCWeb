@@ -3,6 +3,7 @@ import config from '@/config';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
 import { onMounted, ref } from 'vue';
+import AccountRoutesSelectorComponent from '@/components/AccountRoutesSelectorComponent.vue';
 
 let url = 'default';
 const isLoggedIn = ref(false);
@@ -36,7 +37,8 @@ onMounted(() => {
 <template>
     <div class="container">
         <img class="profile" v-if="isLoggedIn" :src="url" alt="Discord User Image" />
-        <a class="LogInLink" v-if="!isLoggedIn" :href="discordAuthURL" target="_self">Log in</a>
+        <!-- <a class="LogInLink" v-if="!isLoggedIn" :href="discordAuthURL" target="_self">Log in</a> -->
+        <a class="btn btn-secondary" v-if="!isLoggedIn" :href="discordAuthURL">Log in</a>
     </div>
 </template>
 
@@ -50,22 +52,20 @@ onMounted(() => {
 }
 
 .profile {
-    height: 3.3rem;
+    height: 2.8rem;
     object-fit: cover; /* Makes the image cover the entire div */
     border-radius: 50px;
-    border-style: solid;
+    /* border-style: solid; */
     border-width: 3px;
     border-color: rgb(73, 73, 73);
 }
 
 @media (max-width: 768px) {
     .profile {
-        height: 2.3rem;
+        height: 2.5rem;
         object-fit: cover; /* Makes the image cover the entire div */
-        border-radius: 50px;
-        border-style: solid;
-        border-width: 3px;
-        border-color: rgb(73, 73, 73);
+        margin-left: 0rem;
+        margin-right: 0rem;
     }
 }
 /* Add your styles here */

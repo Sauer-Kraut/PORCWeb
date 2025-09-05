@@ -39,13 +39,13 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="leaderboard row justify-content-center d-flex">
+    <div class="leaderboard-cont row justify-content-center d-flex">
         <div class="row collum-title justify-content-center d-flex leaderboard-row">
-            <div class="col-4 col-sm-3">Player</div>
+            <div class="col-4 col-sm-3 collum-description">Player</div>
             <div class="col-2 col-sm-1"></div>
-            <div class="col-4 col-sm-3">Matches</div>
+            <div class="col-4 col-sm-3 collum-description">Matches</div>
             <div class="col-1 add-col"></div>
-            <div class="col-3 add-col">Advantage</div>
+            <div class="col-3 add-col collum-description" title="This shows the average match score difference over all played sets.">Advantage</div>
         </div>
         <div class="p-1"></div>
         <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content">
@@ -71,18 +71,25 @@ onMounted(async () => {
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 
-.leaderboard {
+.leaderboard-cont {
     width: 100%;
+    min-width: 12rem;
+    height: fit-content;
+
+    padding: 1rem !important;
+    padding-inline: 2rem !important;
+
     text-align: center;
+    flex-wrap: none;
+
     border-radius: 11.5px;
     border-width: 1px;
-    border-color: $dark-border;
     border-style: solid;
-    flex-wrap: none;
-    min-width: 12rem;
-    background-color: $dark-bg;
-    height: fit-content;
-    transition: all 0.6s ease;
+
+    // background-color: $dark-bg;
+    border-color: #51565a;
+
+    transition: all 0.6s ease !important;
 }
 
 .leaderboard-row {
@@ -90,9 +97,9 @@ onMounted(async () => {
     margin-bottom: 0rem !important;
     padding-bottom: 0.5rem !important;
     padding-top: 0.5rem !important;
-    padding-left: 0;
-    padding-right: 0;
-    height: 2.5rem;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    height: 3rem;
     overflow: hidden;
     align-items: center;
     justify-content: center;
@@ -112,6 +119,10 @@ onMounted(async () => {
     text-align: center;
     margin-bottom: 0.5rem;
     border: 0px !important;
+}
+
+.collum-description {
+    padding: 0px !important;
 }
 
 .titel {
@@ -151,7 +162,7 @@ onMounted(async () => {
 }
 
 .first-place {
-    background-color: rgb(219, 179, 0);
+    background-color: $trophy-color-gold;
     font-weight: bold;
     border-radius: 8px;
     width: fit-content;
@@ -160,7 +171,7 @@ onMounted(async () => {
 }
 
 .second-place {
-    background-color: rgb(192, 192, 192);
+    background-color: $trophy-color-silver;
     font-weight: bold;
     border-radius: 8px;
     padding-left: 0.5rem;
@@ -168,7 +179,7 @@ onMounted(async () => {
 }
 
 .third-place {
-    background-color: rgb(205, 127, 50);
+    background-color: $trophy-color-bronze;
     font-weight: bold;
     border-radius: 8px;
     padding-left: 0.5rem;

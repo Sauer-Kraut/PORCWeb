@@ -86,12 +86,12 @@ watch(() => props.match.p2score, (newScore: null | number) => {
         <!-- Some bootstrap shit i didnt find -->
         <div class="rounded-custom match row" :class="{ 'hover-edit': isScored && allowedEdit }">
             <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
-                <div class="d-flex justify-content-between" :class="{ winner: p1Win(match) }">
+                <div class="d-flex justify-content-between card-half" :class="{ winner: p1Win(match) }">
                     <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>
                     <span class="player-score">{{ match.p1score }}</span>
                 </div>
                 <div class="divider"></div>
-                <div class="d-flex justify-content-between" :class="{ winner: p2Win(match) }">
+                <div class="d-flex justify-content-between card-half" :class="{ winner: p2Win(match) }">
                     <span class="player-tag">{{ shortendP2tag }} <label v-if="p2User" class="user">(you)</label></span>
                     <span class="player-score">{{ match.p2score }}</span>
                 </div>
@@ -107,7 +107,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 @import '@/assets/scss/styles.scss';
 
 .match {
-    background-color: $dark-bg;
+    // background-color: $dark-bg;
     // max-height: 45px;
     height: 3.2rem;
     text-align: center;
@@ -116,6 +116,8 @@ watch(() => props.match.p2score, (newScore: null | number) => {
     padding: 0;
     align-self: center;
     margin: 0 !important;
+
+    overflow: hidden;
 
     &.hover-edit {
         .match-score {
@@ -142,6 +144,10 @@ watch(() => props.match.p2score, (newScore: null | number) => {
     }
 }
 
+.card-half {
+    flex-grow: 1;
+}
+
 .match-text {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
@@ -162,6 +168,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 .player-score {
     font-weight: 400;
     font-size: 0.85rem;
+    padding: 0.1rem;
     padding-right: 0.5rem;
 }
 
@@ -205,12 +212,14 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 .winner {
     .player-score {
         font-weight: bolder;
-        color: #fe9b8a;
+        color: #000000;
     }
 
     .player-tag {
-        color: #fe9b8a;
+        color: #000000;
     }
+
+    background-color: #c57fff;
 }
 
 .user {
@@ -220,6 +229,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 .match-score {
     transition: width 0.35s ease-in-out;
     padding: 0 !important;
+    overflow: hidden;
 }
 
 @media (max-width: 600px) {

@@ -14,6 +14,7 @@ import type { PlayerModel } from '@/models/matchplan/PlayerModel';
 import { matchplanStore } from '@/storage/st_matchplan';
 import { accountsStore } from '@/storage/st_accounts';
 import type { Season } from '@/models/matchplan/Season';
+import { waitForAppReady } from '@/appReady';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -61,7 +62,7 @@ async function getMatchPlan() {
     } else {
         division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
 
-        await planStore.fetch_all_seasons();
+        // await planStore.fetch_all_seasons();
         // Extract seasons from the store's matchplans map
         const seasonList: Season[] = [];
         for (const [key, value] of planStore.matchplans) {
@@ -166,6 +167,7 @@ function check_season_running() {
 }
 
 onMounted(async () => {
+    await waitForAppReady();
     await getUserId();
     await getMatchPlan();
 
@@ -180,7 +182,7 @@ onMounted(async () => {
     <div class="container-fill justify-content-center match-planner">
         <div :class="`division-${division?.name.toLowerCase() || 'iron'}`">
             <div class="page-header img p-3">
-                <h1>Match planner</h1>
+                <h1 class="header-text">Match planner</h1>
             </div>
             <!-- <div class="part part-text">
                 <div class="desptiption">
@@ -252,6 +254,10 @@ $match-border-width: 4px;
 
     .page-header {
         background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
+    }
+
+    .header-text {
+        font-weight: 550 !important;
     }
 
     .calendar {

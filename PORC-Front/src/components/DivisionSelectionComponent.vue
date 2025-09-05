@@ -32,24 +32,33 @@ function getProgress() {
 </script>
 
 <template>
-    <div class="list-group-item list-group-item-action" :class="{ active: active(), [`division-${division?.name?.toLowerCase() || 'iron'}`]: true }" @click="select">
+    <div class="list-group-item list-group-item-action body-div" :class="{ active: active(), [`division-${division?.name?.toLowerCase() || 'iron'}`]: true }" @click="select">
         <div class="d-flex align-items-center">
             <img :src="getDivisionImage(props.division.name)" class="division-icon" />
-            <h5 class="d-none d-md-flex m-0 ms-2">{{ filter_str(props.division.name, 14) }}</h5>
+            <div class="division-info">
+                <h5 class="d-none d-md-flex m-0 ms-2">{{ filter_str(props.division.name, 14) }}</h5>
+                <div class="progress" role="progressbar">
+                    <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
+                </div>
+            </div>
         </div>
-        <div class="progress" role="progressbar">
-            <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
-        </div>
+        
     </div>
 </template>
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 
+// this should be a global variable, but its 2am so Ill pass
+$background-color: rgba(27, 29, 30, 0);
+
 .list-group-item {
+    background-color: $background-color;
+    transition: all 0.1s ease !important;
+
     &.active {
-        background-color: lighten($dark-bg, 10%) !important;
-        border-color: $dark-border !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        // border-color: $dark-border !important;
     }
 
     @include media-breakpoint-down(sm) {
@@ -67,12 +76,14 @@ function getProgress() {
     }
 
     .progress {
-        position: absolute; // Position the progress bar absolutely
         bottom: 0; // Stick it to the bottom of the parent
         left: 0;
         right: 0;
-        height: 0.2rem; // Set the height of the progress bar
+        height: 0.2rem !important; // Set the height of the progress bar
         border-radius: 0;
+        margin-inline: 0.5rem;
+        // margin-bottom: 0.5rem;
+        width: 100%;
     }
 
     @each $division, $color in $division-colors {
@@ -86,27 +97,43 @@ function getProgress() {
     cursor: pointer;
 }
 
-.body {
-    width: calc(50% - 1rem); /* Ensures 1 items per row */
-    min-width: 8rem;
-    min-height: 2rem;
-    max-height: 6rem;
+.body-div {
+    // width: calc(50% - 1rem); /* Ensures 1 items per row */
+    // min-width: 8rem;
+    height: 4rem !important;
+    padding: 0.5rem !important;
+    // max-height: 6rem;
 
-    background: rgb(50, 50, 50);
+    border: 0px !important;
+
+    background: $background-color !important;
     margin: 0%;
     box-sizing: border-box;
-    border-radius: 2px;
-    height: 3rem;
+    // border-radius: 2px;
     cursor: pointer;
 
     align-items: center !important;
     align-content: center !important;
     text-align: center !important;
 
+    transition: all 0.05 !important;
+
     &:hover {
-        background: lighten(rgb(50, 50, 50), 10%);
+        background-color: rgba(255, 255, 255, 0.1) !important;
         // height: 5rem;
     }
+}
+
+.division-info {
+    display: flex;
+    flex-wrap: wrap;
+
+    height: 3rem;
+    width: max-content;
+    flex-grow: 1;
+
+    justify-content: space-between;
+    align-items: center;
 }
 
 .contents {

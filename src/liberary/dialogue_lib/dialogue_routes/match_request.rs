@@ -88,7 +88,7 @@ pub fn construct_match_request_plan(dialogue_data: DialogueData, index: u64, dia
 
                                     info.event_id = Some(planed_event.id.get());
 
-                                    return Ok(Some(12)) // confirmation was registered
+                                    return Ok(Some(1)) // confirmation was registered
                                 }, 
                                 MatchStatus::Finished => return Ok(Some(3)), // match is already finished. status has been updated
                                 MatchStatus::Declined => return Ok(Some(2)), // decline was registered

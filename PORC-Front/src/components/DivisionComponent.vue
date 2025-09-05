@@ -151,8 +151,8 @@ onMounted(async () => {
 
 <template>
     <div class="division h-100 w-100">
-        <div class="row info-container w-100" v-if="division?.players.length && !props.placeholder" :style="{ height: divisionHeight }">
-            <div class="col-8 col-xl-8 col-xml-11 item-container d-flex flex-column align-items-center" :style="{ transform: matchesTransform, height: divisionHeight }">
+        <div class="info-container w-100" v-if="division?.players.length && !props.placeholder">
+            <div class="col-8 col-xxl-7 col-xml-11 item-container d-flex flex-column align-items-center match-container" :style="{ transform: matchesTransform}">
                 <div class="scroll-container flex-grow-1">
                     <div class="transition-width matches">
                         <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="w-auto">
@@ -162,7 +162,7 @@ onMounted(async () => {
                 </div>
                 <div class="toggle-arrow mt-2" @click="toggleMatchesExtended"><i class="icon-chevron-down"></i></div>
             </div>
-            <div class="col-xxl-4 col-xml-11 col-10 justify-content-center transition-width item-container d-flex h-100" :style="{ transform: matchesTransform }">
+            <div class="col-4 col-xxl-4 col-xml-11 col-10 justify-content-center transition-width item-container d-flex h-100 leaderboard-container" :style="{ transform: matchesTransform }">
                 <div class="leaderboard-ref d-flex flex-column align-items-center" ref="leaderboardRef">
                     <div class="toggle-arrow mb-2" @click="toggleMatchesExtended"><i class="icon-chevron-up"></i></div>
                     <LeaderbordComponent class="leaderbord" :performances="performances" :divisionName="division?.name || 'Unnamed Division'" />
@@ -187,12 +187,12 @@ onMounted(async () => {
     align-items: flex-start;
 
     padding-top: 0;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    // padding-left: 1rem;
+    // padding-right: 1rem;
     padding-bottom: 0rem;
 
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
     scrollbar-width: none;
 
     transition: all 0.7s ease-in-out;
@@ -208,18 +208,49 @@ onMounted(async () => {
 
 // holds all the content in case division is active
 .info-container {
-    height: 10rem; // will imediatly be changed to the height of the leaderbord, avoids weird loading transition on page load though
-    overflow-y: auto;
+    height: 100%; // will imediatly be changed to the height of the leaderbord, avoids weird loading transition on page load though
+    width: 100%;
+    overflow-y: hidden;
     overflow-x: hidden;
     scrollbar-width: none; /* For Firefox */
-    align-items: flex-start; /* Align items tightly to the top */
+    justify-content: space-around;
 
     display: flex;
     flex-direction: row; /* Align items in a row */
+    flex-wrap: wrap;
 
     @media (max-width: $leaderboard-breakpoint) {
         overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
     }
+}
+
+// holds the matches
+.match-container {
+    max-height: calc(100% - 5rem); /* I know that this sucks ass but Im sooo tierd */
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+    padding-inline: 1.5rem;
+    padding-top: 1.5rem;
+
+    transition: all 0.6s ease-in-out;
+
+    // background: #313439;
+    border: solid 1px #51565a;
+    box-shadow: inset 0px 0px 6px rgba(145, 64, 170, 0.15);
+    // TODO: meant to highlight important part, but looks pretty ass as of now
+    // maybe have it be the division color?
+
+    border-radius: 12px;
+}
+
+// holds the leaderboard
+.leaderboard-container {
+    height: fit-content !important;
+    transition: all 0.65s ease-in-out !important;
+
+    min-width: 22rem;
+    margin: 2.5rem;
+    margin-inline: 0rem;
 }
 
 .item-container {
@@ -233,17 +264,14 @@ onMounted(async () => {
         transform: none !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
     }
 }
-.leaderbord-container {
-    height: fit-content;
-    transition: all 0.65s ease-in-out !important;
-}
 
 // container of limited height to hold match container as scrollable
 .scroll-container {
-    overflow-y: auto;
+    overflow-y: scroll !important;
     overflow-x: hidden;
     scrollbar-width: none; /* For Firefox */
     max-height: 100%;
+    height: fit-content;
     width: 100%;
 
     @include media-breakpoint-down(sm) {

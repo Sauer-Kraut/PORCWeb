@@ -46,7 +46,7 @@ pub async fn get_account_info_request(query: web::Query<RecvPackage>, appstate: 
     }
 
     if account_infos.is_empty() {
-        Err(ServerError::DBError(sqlx::Error::RowNotFound))
+        Err(sqlx::Error::RowNotFound.into())
     } else {
         Ok(HttpResponse::Ok().json(RespPackage {
             accounts: account_infos,

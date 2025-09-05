@@ -1,6 +1,7 @@
 //Bootstrap
-$primary: #e1a398;
-$danger: #b31446;
+$primary: #c57fff;
+$danger: #e22d67;
+$background-color: rgb(26, 23, 23);
 // $body-bg: #1e252b;
 // $body-color: #ffffff;
 $border-radius: 1rem;
@@ -10,6 +11,7 @@ $border-radius-sm: 1rem;
 
 $dark-bg: #212529; //Bootstrap hardcoded
 $dark-border: #495057; //Bootstrap hardcoded
+$border-color: #515458;
 $background-header: linear-gradient(135deg, #7a6464, #5b77e8);
 $leaderboard-breakpoint: 1600px;
 
@@ -32,5 +34,10 @@ $availability-color: rgb(57, 65, 141);
 $match-color: rgb(244, 93, 116);
 $match-request-color: rgb(231, 146, 34);
 $match-declined-color: rgb(105, 120, 141);
+
+
+$trophy-color-gold: rgb(219, 179, 0);
+$trophy-color-silver: rgb(192, 192, 192);
+$trophy-color-bronze: rgb(205, 127, 50);
 
 @import 'bootstrap/scss/bootstrap';

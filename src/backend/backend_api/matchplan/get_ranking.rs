@@ -25,6 +25,8 @@ pub struct RespPackage {
 // GET Request to retrieve all player performance data for currrent season
 pub async fn get_player_ranking_request(query: web::Query<RecvPackage>, appstate: web::Data<AppState>) -> Result<impl Responder, ServerError> {
 
+    println!("Received request to get player ranking for season: {:?}", query.season);
+
     let season = match &query.season {
         Some(v) => v.clone(),
         None => {

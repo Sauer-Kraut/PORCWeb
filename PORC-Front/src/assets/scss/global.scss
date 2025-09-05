@@ -1,3 +1,9 @@
+@import '@/assets/scss/styles.scss';
+
+:root {
+    --primary: #c57fff; // or any color you want
+}
+
 body {
     min-height: 100vh;
     background-color: #1e252b !important;
@@ -11,5 +17,142 @@ body {
 }
 
 .btn-primary {
+    border: 1px solid $primary !important;
+    background-color: lighten($primary, 3%) !important;
+    border: lighten($primary, 3%) !important;
+}
+
+.btn-secondary {
+    border: 1px solid white !important;
+    background-color: transparentize($color: white, $amount: 1) !important;
+}
+
+.btn {
     border-radius: 10px !important;
+    font-weight: 600 !important;
+}
+
+.secondary {
+    color: white !important;
+}
+
+
+// formating
+
+.decor-title {
+    font-size: 3.5rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0 !important;
+
+    color: white !important;
+}
+
+.content-title {
+    font-size: 2.5rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0 !important;
+
+    color: white !important;
+}
+
+.content-subtitle {
+    font-size: 1.15rem !important;
+    font-weight: 500 !important;
+
+    color: #979797 !important;
+}
+
+.detail-title {
+    margin-top: auto !important;
+    margin-bottom: 0rem !important;
+    font-size: 0.8rem !important;
+    color: #979797 !important;
+}
+
+.text-highlight {
+    color: #f6f6f6;
+    text-decoration: underline;
+    text-decoration-color: var(--primary);
+    text-underline-offset: 0.5rem;
+    text-decoration-thickness: 0.2rem;
+}
+
+
+.modal-title {
+    font-size: 2rem !important;
+    font-weight: 600 !important;
+    color: white !important;
+}
+
+
+.seperator-h {
+    width: auto;
+    flex-grow: 1;
+    align-self: center;
+    height: 0.7px;
+    background-color: rgb(118, 116, 116);
+}
+
+.seperator-v {
+    width: auto;
+    flex-grow: 1;
+    align-self: center;
+    width: 1px;
+    background-color: rgb(118, 116, 116);
+}
+
+
+
+
+// form styles
+
+.form-label {
+    width: 100% !important;
+
+}
+
+.form-input {
+    max-width: 100% !important;
+    height: 2.5rem !important;
+    background-color: #2c3339 !important;
+    color: white !important;
+
+
+    border-radius: 10px !important;
+    border: 1px solid #3b4248 !important;
+
+    padding: 0.5rem !important;
+    margin-bottom: 1rem !important;
+
+    &:focus {
+        border-color: var(--primary) !important;      /* highlight border */
+        box-shadow: 0 0 0 2px rgba(255,131,6,0.2); /* subtle glow */
+        background-color: #232323 !important;   /* optional: change background */
+        color: #fff !important;                 /* optional: change text color */
+        outline: none !important;               /* remove default outline */
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+}
+
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background-color: #444 !important;   /* darker background */
+    color: #aaa !important;              /* lighter text */
+    border-color: #666 !important;       /* muted border */
+    opacity: 1 !important;               /* prevent default opacity */
+    cursor: not-allowed !important;      /* show disabled cursor */
+}
+
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+input[type=number] {
+    -moz-appearance:textfield; // mozilla specific fix because of the ugliest design decision I have ever seen (hides the spinner buttons)
 }
