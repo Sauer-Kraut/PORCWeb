@@ -39,6 +39,14 @@ body {
 
 // formating
 
+.XL-text {
+    font-size: 4.75rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0 !important;
+
+    color: white !important;
+}
+
 .decor-title {
     font-size: 3.5rem !important;
     font-weight: 700 !important;
@@ -155,4 +163,24 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input[type=number] {
     -moz-appearance:textfield; // mozilla specific fix because of the ugliest design decision I have ever seen (hides the spinner buttons)
+}
+
+
+
+// utility
+
+.align-text-center {
+    text-align: center;
+}
+
+@media (max-width: 1920px) {
+    .d-xl-column {
+        flex-direction: column !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .d-sm-column {
+        flex-direction: column !important;
+    }
 }

@@ -211,6 +211,8 @@ header {
 
 main {
     min-height: 100%;
+    width: 100vw !important;
+    overflow-x: hidden !important;
 
     //background: #201f27;
     background: $background-color;

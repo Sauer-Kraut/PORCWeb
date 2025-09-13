@@ -79,7 +79,7 @@
 </script>
 
 <template>
-    <div class="col col-10 justify-content-center d-flex season-component-container">
+    <div class="col col-xxl-10 col-sm-11 justify-content-center d-flex season-component-container">
 
         <div class="season-header row">
             <Logo  class="header-img" :primaryColor="'rgb(26, 23, 23)'"></Logo>

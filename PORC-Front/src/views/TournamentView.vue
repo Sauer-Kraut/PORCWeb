@@ -214,12 +214,12 @@ onMounted(async () => {
 
 <template>
     <div class="container-fill row justify-content-center">
-        <div class="page-header timer col-10">
+        <div class="page-header timer col-xxl-10 col-sm-11">
             <!-- <TimerComponent :targetTimestamp="globalTimer" :season="season_name" :text="TimerText" class="timer-text"></TimerComponent> -->
         </div>
 
 
-        <div class="col-4 routing-buttons">
+        <div class="col-xxl-4 col-xl-8 col-lg-8 routing-buttons">
             <!-- <div class="m-1"></div> -->
             <h2 class="col-12 title-text">Rumbles biggest High Level Competition</h2>
             <div class="p-3"></div>
@@ -302,7 +302,7 @@ onMounted(async () => {
 
 
 
-        <div class="col col-8 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
+        <div class="col col-xxl-8 col-sm-11 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
             <div class="row justify-content-center">
                 <div class="col d-flex ms-3">
                     <div class="signup-info d-flex flex-column w-100">
@@ -345,6 +345,27 @@ onMounted(async () => {
         </div>
 
         <div class="p-5 col-10"></div>
+
+
+        <div class="d-flex porc-stats justify-content-center col-xxl-7 col-xl-11">
+
+            <div class="d-flex flex-column justify-content-center m-5">
+                <h1 class="XL-text align-text-center mb-0 mt-5">57</h1>
+                <h5 class="align-text-center">Total Divisions</h5>
+            </div>
+
+            <div class="d-flex flex-column justify-content-center m-5">
+                <h1 class="XL-text align-text-center mb-0 mt-5">1.2k+</h1>
+                <h5 class="align-text-center">Total Matches</h5>
+            </div>
+
+            <div class="d-flex flex-column justify-content-center m-5">
+                <h1 class="XL-text align-text-center mb-0 mt-5">407+</h1>
+                <h5 class="align-text-center">Total Signups</h5>
+            </div>
+            <div class="highlight"></div>
+        </div>
+        <div class="p-5 col-10"></div>
     </div>
     <div class="extender"></div>
 </template>
@@ -356,6 +377,8 @@ $hero-height: 32rem;
 
 .container-fill {
     min-height: 100vh;
+    width: 100vw !important;
+    overflow-x: hidden !important;
 }
 
 .page-header {
@@ -574,6 +597,16 @@ $bad-color: rgb(255, 32, 0);
 
     opacity: 0.07;
     z-index: 0;
+
+    &.long {
+        width: 100vw !important;
+        background: linear-gradient(
+            to bottom,
+            transparent 10%,
+            color-mix(in srgb, var(--primary) 70%, transparent) 50%,
+            transparent 90%
+        ) !important;
+    }
 }
 
 
@@ -634,6 +667,14 @@ $bad-color: rgb(255, 32, 0);
 
     .col-xxxl-5 {
         width: 42%;
+    }
+}
+
+.porc-stats {
+    flex-direction: row;
+
+    @media (max-width: 800px) {
+        flex-direction: column !important;
     }
 }
 </style>
