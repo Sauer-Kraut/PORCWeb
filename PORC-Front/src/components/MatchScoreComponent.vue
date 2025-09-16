@@ -219,7 +219,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
         color: #000000;
     }
 
-    background-color: #c57fff;
+    background-color: var(--primary);
 }
 
 .user {

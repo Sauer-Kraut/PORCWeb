@@ -17,9 +17,9 @@ body {
 }
 
 .btn-primary {
-    border: 1px solid $primary !important;
-    background-color: lighten($primary, 3%) !important;
-    border: lighten($primary, 3%) !important;
+    border: 1px solid var(--primary) !important;
+    background-color: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
+    border: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
 }
 
 .btn-secondary {
