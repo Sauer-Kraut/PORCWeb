@@ -485,7 +485,7 @@ async function submitNote() {
 
 <template>
     <div class="calendar-container">
-        <div class="calendar-header rounded">
+        <div class="calendar-header m-0 ps-0 pe-0">
             <div class="calendar-header-top row align-items-center mb-3">
                 <div class="col-auto day-arrows">
                     <i @click="prevPeriod" class="icon-chevron-left px-2"></i>
@@ -503,16 +503,12 @@ async function submitNote() {
                 </div>
             </div>
             <div class="calendar-header-days">
-                <div class="calendar-header-day"></div>
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
                     {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}
                 </div>
             </div>
         </div>
         <div class="calendar-body">
-            <div class="calendar-hours">
-                <div v-for="hour in hours" :key="hour.name" class="calendar-hour">{{ hour.name }}</div>
-            </div>
             <div class="calendar-days">
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
                     <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)"></div>
@@ -583,9 +579,21 @@ async function submitNote() {
                     </VDropdown>
                 </div>
             </div>
+            <!--
+                        #    O    #
+                        \__     __/
+
+                    Absolute Programming
+             -->
+            <div class="calendar-hours">
+                <div v-for="hour in hours" :key="hour.name" class="calendar-hour" :class="{hide: hour.name == '12 AM'}">{{ hour.name }}</div>
+            </div>
+            <div class="calendar-hours">
+                <div v-for="hour in hours" :key="hour.name" class="calendar-hour-txt" :class="{hide: hour.name == '12 AM'}">{{ hour.name }}</div>
+            </div>
         </div>
     </div>
-    <div class="container mt-3 mb-5 px-auto px-md-5 notes-container">
+    <!-- <div class="container mt-3 mb-5 px-auto px-md-5 notes-container">
         <form @submit.prevent="submitNote" v-if="ownCalendar">
             <div class="row">
                 <div class="col-12">
@@ -603,14 +611,14 @@ async function submitNote() {
             <div class="mb-3 fw-bold">Your opponent notes :</div>
             <div v-html="lineBreak(schedule.note)"></div>
         </div>
-    </div>
+    </div> -->
 </template>
 
 <style scoped lang="scss">
 @import '@/assets/scss/styles.scss';
 
-$hour-height: 2rem;
-$hours-col: 4rem;
+$hour-height: 2.5rem;
+$hours-col: 3rem;
 $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
 @each $division, $color in $division-colors {
@@ -619,8 +627,22 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
     }
 }
 
+.calendar-header {
+    background: rgba(0, 0, 0, 0.1) !important;
+
+    border-bottom: 1px solid $border-color;
+    border-radius: 0px !important;
+}
+
 .calendar-container {
-    width: 100%;
+    padding: 0rem !important;
+
+    border: 1px solid $border-color;
+    border-radius: 16px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-left: none;
+
     .calendar-header {
         margin: 0.25rem;
         padding: 1rem ($hours-col / 2) 0;
@@ -631,11 +653,6 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 text-align: center;
                 padding-bottom: 1rem;
                 box-sizing: border-box;
-
-                &:first-child {
-                    width: $hours-col / 2;
-                    flex: none;
-                }
             }
         }
 
@@ -654,9 +671,10 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .calendar-body {
+        overflow: hidden !important;
         display: flex;
-        padding: ($hour-height / 2) 0;
-        padding-right: $hours-col / 2;
+        // padding: ($hour-height / 2) 0;
+        // padding-right: $hours-col / 2;
 
         .calendar-days {
             flex: 1;
@@ -665,24 +683,17 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
             .calendar-day {
                 flex: 1;
-                border-top: $border-style;
-                border-left: $border-style;
-                border-bottom: $border-style;
+                // border-top: $border-style;
+                border-right: $border-style;
+                // border-bottom: $border-style;
                 box-sizing: border-box;
                 position: relative;
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
 
-                &:first-child {
-                    border-top-left-radius: $border-radius;
-                    border-bottom-left-radius: $border-radius;
-                }
-
                 &:last-child {
-                    border-right: $border-style;
-                    border-top-right-radius: $border-radius;
-                    border-bottom-right-radius: $border-radius;
+                    border-right: 0;
                 }
 
                 .calendar-hour-day {
@@ -695,8 +706,17 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                     }
 
                     &:hover {
-                        background-color: rgba(255, 255, 255, 0.1);
                         cursor: pointer;
+
+                        &::after {
+                            content: "";
+                            position: absolute;
+                            inset: 0;
+                            border-radius: inherit;
+                            background-color: rgba(255, 255, 255, 0.1);
+                            z-index: 2;
+                            pointer-events: none;
+                        }
                     }
                 }
             }
@@ -704,6 +724,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             $event-radius: 0.5rem;
             .event {
                 position: absolute;
+                z-index: 2;
                 left: 2px;
                 right: 2px;
                 overflow: hidden;
@@ -777,19 +798,59 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .calendar-hours {
+            position: absolute;
             width: $hours-col;
             flex: none;
             display: grid;
             grid-template-rows: repeat(24, 1fr);
 
+
             .calendar-hour {
+                display: flex;
+                text-align: center;
+                justify-content: center;
+
+                border-radius: 12px;
+                margin-left: 0.5rem;
+
                 font-size: 0.6rem;
                 height: $hour-height;
                 line-height: $hour-height;
-                top: -$hour-height / 2;
+                // top: -$hour-height / 2;
                 position: relative;
                 text-align: right;
-                padding-right: 0.5rem;
+                // padding-right: 0.5rem;
+
+                color: rgba(255, 255, 255, 0);
+                transform: translate(-00%, -50%);
+
+                background: $background-color;
+            }
+
+            .calendar-hour-txt {
+                display: flex;
+                text-align: center;
+                justify-content: center;
+
+                border-radius: 12px;
+                margin-left: 0.5rem;
+
+                font-size: 0.6rem;
+                height: $hour-height;
+                line-height: $hour-height;
+                // top: -$hour-height / 2;
+                position: relative;
+                text-align: right;
+                // padding-right: 0.5rem;
+
+                color: rgba(255, 255, 255, 0.386);
+                transform: translate(-00%, -50%);
+
+                z-index: 5;
+
+                &.hide {
+                    z-index: -2;
+                }
             }
         }
     }
@@ -822,5 +883,9 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
     min-height: 150px !important;
     background-color: transparent;
     color: white;
+}
+
+.hide {
+    z-index: -1;
 }
 </style>

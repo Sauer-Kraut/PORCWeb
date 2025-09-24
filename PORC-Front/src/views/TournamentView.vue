@@ -394,6 +394,7 @@ import type { EventCard } from '@/models/EventCard';
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
+@import '@/assets/scss/global.scss';
 
 $hero-height: 32rem;
 
@@ -580,15 +581,6 @@ $bad-color: rgb(255, 32, 0);
 
 
 // formating
-
-
-.title-text {
-    font-size: 4rem;
-    font-weight: 700;
-    text-align: center;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-}
 
 .content-title {
     font-size: 3rem !important;

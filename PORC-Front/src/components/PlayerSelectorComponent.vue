@@ -65,11 +65,11 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 </script>
 
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid m-0 p-0">
         <!-- css nonsence of row not working  -->
-        <div class="row flex-wrap-reverse">
+        <div class="d-flex flex-column flex-wrap-reverse">
             <PlayerSelectionComponent
-                class="col-12 col-md-6 col-lg-6 col-xl-4 col-xxl-3 p-0"
+                class=""
                 v-for="player in props.players"
                 v-bind:player="player"
                 v-model:selected-player="selectedPlayer"

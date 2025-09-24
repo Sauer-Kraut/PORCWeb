@@ -22,7 +22,7 @@ async function select() {
 
 <template>
     <div>
-        <div class="body rounded" :class="{ selected: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
+        <div class="body rounded" :class="{ active: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
             <div class="contents">
                 {{ filter_str(props.player.username, 14) }}
                 <!-- <div class="icon icon-checkmark"></div> -->
@@ -36,19 +36,21 @@ async function select() {
 @import '@/assets/scss/styles.scss';
 
 .body {
-    background: $dark-bg;
     box-sizing: border-box;
     height: 4rem;
-    margin: 0.25rem;
+    padding: 0rem !important;
+    
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.2s;
 
     align-items: center !important;
     align-content: center !important;
     text-align: center !important;
 
-    &:hover {
-        background: lighten($dark-bg, 10%);
+    border-radius: 0px !important;
+
+    &.active, &:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
     }
 }
 
@@ -96,10 +98,5 @@ async function select() {
 .icon-bell-o {
     color: lighten($match-request-color, 10%);
     font-size: larger;
-}
-
-.selected {
-    background: lighten($dark-bg, 20%);
-    transition: 0.2s;
 }
 </style>

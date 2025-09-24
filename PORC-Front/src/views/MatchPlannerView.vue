@@ -180,10 +180,7 @@ onMounted(async () => {
 
 <template>
     <div class="container-fill justify-content-center match-planner">
-        <div :class="`division-${division?.name.toLowerCase() || 'iron'}`">
-            <div class="page-header img p-3">
-                <h1 class="header-text">Match planner</h1>
-            </div>
+        <div class="d-flex flex-row justify-content-center" :class="`division-${division?.name.toLowerCase() || 'iron'}`">
             <!-- <div class="part part-text">
                 <div class="desptiption">
                     <label class="description">
@@ -197,9 +194,9 @@ onMounted(async () => {
                     </label>
                 </div>
             </div> -->
-            <div class="calendar row flex-column-reverse flex-xl-row justify-content-center">
-                <div class="col-12 calendar-container" :class="{ 'col-xl-7': division, 'col-lg-9 col-xxl-7 mx-auto': !division }">
-                    <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="mb-3"></PlayerSelector>
+            <div class="calendar row flex-column-reverse flex-xl-row justify-content-center col-6 me-5">
+                <div class="d-flex flex-row col-12 calender-container">
+                    <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="col-3 selector-container"></PlayerSelector>
                     <CalendarComponent
                         v-if="selectedPlayer?.schedule"
                         :schedule="selectedPlayer?.schedule ?? schedule"
@@ -209,13 +206,21 @@ onMounted(async () => {
                         :season="season?.name ?? 'default'"
                         :scheduleUserId="selectedPlayer?.id ?? 'default'"
                         v-on:reload="reload"
-                        class="calendar-component"
+                        class="calendar-component col-9"
                         :class="`division-${division?.name.toLowerCase() || 'iron'}`"
                         :season_info="season ?? undefined"
                     >
                     </CalendarComponent>
                 </div>
-                <div class="col-12 col-xl-5 ps-auto ps-xl-5 mb-5 mb-xl-auto" v-if="division">
+            </div>
+
+            <div class="d-flex flex-column col-4">
+                    
+                <div class="page-header img mb-5 mt-5">
+                    <h1 class="decor-title">Match planner</h1>
+                </div>
+
+                <div class="col-12" v-if="division">
                     <div class="mb-3 d-flex justify-content-center justify-content-xl-start">
                         <div v-if="season_running" class="division-title">
                             <h2 class="mb-0 d-flex align-items-center me-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
@@ -236,6 +241,7 @@ onMounted(async () => {
                         </div>
                     </div>
                 </div>
+                    
             </div>
         </div>
     </div>
@@ -243,6 +249,7 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
+@import '@/assets/scss/global.scss';
 
 $match-border-width: 4px;
 
@@ -253,6 +260,7 @@ $match-border-width: 4px;
     }
 
     .page-header {
+        height: 30rem !important;
         background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
     }
 
@@ -261,7 +269,7 @@ $match-border-width: 4px;
     }
 
     .calendar {
-        padding: 3rem 10rem;
+        padding: 3rem 0rem;
 
         @include media-breakpoint-down(xl) {
             padding: 3rem 5rem;
@@ -334,6 +342,57 @@ $match-border-width: 4px;
         }
     }
 }
+
+
+
+
+
+.page-header {
+
+    border-radius: 60px;
+
+    margin-top: 2rem !important;
+
+    // mask-image: linear-gradient(to bottom, rgb(255, 255, 255) 10%, rgba(255, 255, 255, 0.696) 80%, transparent 100%);
+
+    @media (max-width: $leaderboard-breakpoint) {
+        height: 30rem;
+    }
+
+    @media (max-width: 600px) {
+        height: 20rem;
+    }
+}
+
+
+.calender-container {
+    padding: 0rem !important;
+
+    border-radius: 16px;
+
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
+}
+
+.selector-container {
+    padding: 0rem !important;
+
+    border: 1px solid $border-color;
+    border-radius: 16px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+
+    overflow: hidden;
+
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+
+
+
+
+
+
+
 .titel {
     justify-content: center;
     text-align: center;
