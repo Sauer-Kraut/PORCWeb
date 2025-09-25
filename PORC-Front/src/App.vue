@@ -173,7 +173,7 @@ onMounted(async () => {
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 
-$header-color: rgb(26, 23, 23);
+$header-color: rgb(17, 16, 16);
 
 header {
     background-color: $header-color;

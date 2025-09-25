@@ -7,6 +7,8 @@ import type { Season } from '@/models/matchplan/Season';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { Schedule } from '@/models/schedule/Schedule';
 import { defineProps, defineModel, ref } from 'vue';
+import DiscordAvatarComponent from './DiscordAvatarComponent.vue';
+import Logo from './svgs/logo.vue';
 
 const schedule = ref({
     availabilities: [
@@ -61,11 +63,17 @@ const props = defineProps<{
     season?: Season;
 }>();
 
-const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
+const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { default: null });
 </script>
 
 <template>
-    <div class="container-fluid m-0 p-0">
+    <div class="d-flex flex-column container-fluid m-0 p-0 pt-2">
+        <div class="d-flex flex-row m-3 ms-4">
+            <Logo class="logo ms-1" />
+            <h3 class="ms-4 bold">
+                Players
+            </h3>
+        </div>
         <!-- css nonsence of row not working  -->
         <div class="d-flex flex-column flex-wrap-reverse">
             <PlayerSelectionComponent
@@ -82,4 +90,19 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
+@import '@/assets/scss/global.scss';
+
+.avatar {
+    width: 60%;
+    bottom: 4rem;
+}
+
+.logo {
+    height: 2.5rem !important;
+}
+
+.bold {
+    font-weight: 700;
+    margin-top: 0.1rem;
+}
 </style>

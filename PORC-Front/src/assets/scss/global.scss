@@ -1,7 +1,7 @@
 @import '@/assets/scss/styles.scss';
 
 :root {
-    --primary: #c57fff; // or any color you want
+    --primary: #b25ef7; // or any color you want
 }
 
 body {
@@ -191,4 +191,16 @@ input[type=number] {
     .d-sm-column {
         flex-direction: column !important;
     }
+}
+
+.w-fit {
+    width: fit-content !important;
+}
+
+.w-max {
+    width: max-content !important;
+}
+
+.f-grow {
+    flex-grow: 1;
 }

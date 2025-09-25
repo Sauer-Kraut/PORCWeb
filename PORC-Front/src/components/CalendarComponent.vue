@@ -484,9 +484,9 @@ async function submitNote() {
 </script>
 
 <template>
-    <div class="calendar-container">
+    <div class="calendar-container m-0">
         <div class="calendar-header m-0 ps-0 pe-0">
-            <div class="calendar-header-top row align-items-center mb-3">
+            <div class="calendar-header-top row align-items-center mb-3 ps-5 pe-5">
                 <div class="col-auto day-arrows">
                     <i @click="prevPeriod" class="icon-chevron-left px-2"></i>
                     <i @click="nextPeriod" class="icon-chevron-right px-2"></i>
@@ -495,10 +495,10 @@ async function submitNote() {
                 <div class="col-auto">
                     <div class="btn-group" role="group">
                         <input type="radio" class="btn-check" name="viewMode" id="weekView" autocomplete="off" v-model="viewMode" value="week" />
-                        <label class="btn btn-outline-light btn-sm" for="weekView">Week</label>
+                        <label class="btn btn-outline-light btn-sm border-flat-r" for="weekView">Week</label>
 
                         <input type="radio" class="btn-check" name="viewMode" id="dayView" autocomplete="off" v-model="viewMode" value="day" />
-                        <label class="btn btn-outline-light btn-sm" for="dayView">Day</label>
+                        <label class="btn btn-outline-light btn-sm border-flat-l" for="dayView">Day</label>
                     </div>
                 </div>
             </div>
@@ -511,7 +511,12 @@ async function submitNote() {
         <div class="calendar-body">
             <div class="calendar-days">
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
-                    <div v-for="hour in hours" :key="hour.name" class="calendar-hour-day" @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)"></div>
+                    <div v-for="(hour, index) in hours" 
+                        :key="hour.name" 
+                        class="calendar-hour-day"
+                        :id="`hour-${index}`"
+                        @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)">
+                    </div>
                     <div
                         class="event availability"
                         :class="{ own: ownCalendar }"
@@ -586,7 +591,7 @@ async function submitNote() {
                     Absolute Programming
              -->
             <div class="calendar-hours">
-                <div v-for="hour in hours" :key="hour.name" class="calendar-hour" :class="{hide: hour.name == '12 AM'}">{{ hour.name }}</div>
+                <div v-for="hour in hours" :key="hour.name" class="calendar-hour" :class="{hide: hour.name == '12 AM', 'current-day-bg': displayedDays[0].toDateString() == new Date().toDateString()}">{{ hour.name }}</div>
             </div>
             <div class="calendar-hours">
                 <div v-for="hour in hours" :key="hour.name" class="calendar-hour-txt" :class="{hide: hour.name == '12 AM'}">{{ hour.name }}</div>
@@ -623,24 +628,22 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
 @each $division, $color in $division-colors {
     .division-#{$division} .calendar-header {
-        background: linear-gradient(90deg, $dark-bg, 80%, darken($color, 10%));
+        background: linear-gradient(120deg, rgba(0, 0, 0, 0.4), 20%, color-mix(in srgb, rgba(0, 0, 0, 0.6) 90%, $color));
     }
 }
 
 .calendar-header {
-    background: rgba(0, 0, 0, 0.1) !important;
+    // background: rgba(0, 0, 0, 0.25) !important;
 
-    border-bottom: 1px solid $border-color;
     border-radius: 0px !important;
 }
 
 .calendar-container {
     padding: 0rem !important;
+    overflow: hidden;
 
-    border: 1px solid $border-color;
+    // border: 1px solid $border-color;
     border-radius: 16px;
-    border-top-left-radius: 0px;
-    border-bottom-left-radius: 0px;
     border-left: none;
 
     .calendar-header {
@@ -700,10 +703,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                     box-sizing: border-box;
                     position: relative;
                     height: $hour-height;
-
-                    &:not(:last-child) {
-                        border-bottom: $border-style;
-                    }
+                        border-top: $border-style;
 
                     &:hover {
                         cursor: pointer;
@@ -713,7 +713,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                             position: absolute;
                             inset: 0;
                             border-radius: inherit;
-                            background-color: rgba(255, 255, 255, 0.1);
+                            background: rgba(255, 255, 255, 0.094) !important;;
                             z-index: 2;
                             pointer-events: none;
                         }
@@ -725,10 +725,13 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             .event {
                 position: absolute;
                 z-index: 2;
-                left: 2px;
-                right: 2px;
+                left: 0px;
+                right: 0px;
                 overflow: hidden;
                 border-radius: $event-radius;
+                margin: 3px;
+                margin-top: 0.5rem;
+                margin-bottom: 0.5rem;
 
                 &.availability {
                     background-color: $availability-color;
@@ -824,7 +827,11 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 color: rgba(255, 255, 255, 0);
                 transform: translate(-00%, -50%);
 
-                background: $background-color;
+                background-color: rgb(15, 15, 15) !important;
+
+                &.current-day-bg {
+                    background: #1b1b1b !important;
+                }
             }
 
             .calendar-hour-txt {
@@ -864,13 +871,13 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 position: relative;
                 width: 100%;
                 top: 1rem - 0.3rem;
-                border-bottom: 0.3rem solid rgb(162, 196, 212);
+                border-bottom: 0.3rem solid white;
                 margin-bottom: -0.3rem;
             }
         }
 
         &.calendar-day {
-            background-color: rgba(162, 196, 212, 0.05);
+            background-color: color-mix(in srgb, white 5%, transparent 95%);
         }
     }
 }
@@ -887,5 +894,15 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
 .hide {
     z-index: -1;
+}
+
+.border-flat-r {
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+}
+
+.border-flat-l {
+    border-top-left-radius: 0px !important;
+    border-bottom-left-radius: 0px !important;
 }
 </style>

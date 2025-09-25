@@ -1,7 +1,7 @@
 //Bootstrap
 $primary: #c57fff;
 $danger: #e22d67;
-$background-color: rgb(26, 23, 23);
+$background-color: rgb(21, 21, 21);
 // $body-bg: #1e252b;
 // $body-color: #ffffff;
 $border-radius: 1rem;
@@ -30,7 +30,8 @@ $division-colors: (
 );
 
 //Match planner events
-$availability-color: rgb(57, 65, 141);
+// $availability-color: rgb(57, 65, 141);
+$availability-color: #842dcb;
 $match-color: rgb(244, 93, 116);
 $match-request-color: rgb(231, 146, 34);
 $match-declined-color: rgb(105, 120, 141);

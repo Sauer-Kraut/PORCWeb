@@ -15,6 +15,7 @@ import { matchplanStore } from '@/storage/st_matchplan';
 import { accountsStore } from '@/storage/st_accounts';
 import type { Season } from '@/models/matchplan/Season';
 import { waitForAppReady } from '@/appReady';
+import lineBreak from '@/util/LineBreakFilter';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -176,6 +177,19 @@ onMounted(async () => {
     selectSelf();
     check_season_running();
 });
+
+const compStore = accountsStore();
+
+async function submitNote() {
+
+    if (selectedPlayer.value?.schedule != null) {
+        let res = await compStore.self_update_schedule_note(selectedPlayer.value?.schedule.note);
+
+        if (res != null) {
+            showErrorModal(res);
+        }
+    }
+}
 </script>
 
 <template>
@@ -194,55 +208,85 @@ onMounted(async () => {
                     </label>
                 </div>
             </div> -->
-            <div class="calendar row flex-column-reverse flex-xl-row justify-content-center col-6 me-5">
-                <div class="d-flex flex-row col-12 calender-container">
-                    <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class="col-3 selector-container"></PlayerSelector>
-                    <CalendarComponent
-                        v-if="selectedPlayer?.schedule"
-                        :schedule="selectedPlayer?.schedule ?? schedule"
-                        :players="division?.players || []"
-                        :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
-                        :ownId="user_id"
-                        :season="season?.name ?? 'default'"
-                        :scheduleUserId="selectedPlayer?.id ?? 'default'"
-                        v-on:reload="reload"
-                        class="calendar-component col-9"
-                        :class="`division-${division?.name.toLowerCase() || 'iron'}`"
-                        :season_info="season ?? undefined"
-                    >
-                    </CalendarComponent>
-                </div>
-            </div>
+            <div class="d-flex flex-row justify-content-center col-11 me-5 pt-5 mt-4">
 
-            <div class="d-flex flex-column col-4">
-                    
-                <div class="page-header img mb-5 mt-5">
-                    <h1 class="decor-title">Match planner</h1>
-                </div>
+                <div class="d-flex flex-row col-7">
 
-                <div class="col-12" v-if="division">
-                    <div class="mb-3 d-flex justify-content-center justify-content-xl-start">
-                        <div v-if="season_running" class="division-title">
-                            <h2 class="mb-0 d-flex align-items-center me-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
-                            <div class="progress" role="progressbar">
-                                <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
+                    <div class="d-flex flex-column selector-container col-4 p-0 me-4">
+                        <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class=""></PlayerSelector>
+
+                        <div class="note-box mt-auto mb-0">
+                            <div class="container mb-4 notes-container">
+                                <form @submit.prevent="submitNote" v-if="(selectedPlayer?.id ?? user_id) === user_id">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label for="noteTextArea" class="form-label fw-bold">Notes</label>
+                                            <textarea v-model="schedule.note" class="form-control notes-area mb-4" id="noteTextArea"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="w-100 col-md-3">
+                                            <button type="submit" class="btn btn-primary w-100">Save</button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div v-else>
+                                    <div class="mb-2 fw-bold">Your opponent notes :</div>
+                                    <div class="note-field">{{selectedPlayer?.schedule?.note || ""}}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div v-if="season_running" class="matches-container">
-                        <div
-                            v-for="[key, match] in Object.entries(division?.matches || {})"
-                            :key="key"
-                            class="match-score rounded"
-                            :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
+                    <div class="d-flex flex-row calender-container p-0 f-grow">
+                        <CalendarComponent
+                            v-if="selectedPlayer?.schedule"
+                            :schedule="selectedPlayer?.schedule ?? schedule"
+                            :players="division?.players || []"
+                            :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
+                            :ownId="user_id"
+                            :season="season?.name ?? 'default'"
+                            :scheduleUserId="selectedPlayer?.id ?? 'default'"
+                            v-on:reload="reload"
+                            class="calendar-component col-12"
+                            :class="`division-${division?.name.toLowerCase() || 'iron'}`"
+                            :season_info="season ?? undefined"
                         >
-                            <MatchScoreComponent :match="match" :user_id="user_id" :editMode="seasonEdit" />
+                        </CalendarComponent>
+                    </div>
+                
+                </div>
+
+                <div class="ms-5 col-3">     
+
+                    <!-- // <div class="page-header"></div> -->
+
+                    <div class="d-flex flex-column calender-container p-5 pt-3 " v-if="division">
+                        <div class="mb-3 d-flex justify-content-center justify-content-xl-start w-fit">
+                            <div v-if="season_running" class="division-title">
+                                <h2 class="mb-0 d-flex align-items-center me-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
+                                <div class="progress" role="progressbar">
+                                    <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="season_running" class="matches-container">
+                            <div
+                                v-for="[key, match] in Object.entries(division?.matches || {})"
+                                :key="key"
+                                class="match-score rounded"
+                                :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
+                            >
+                                <MatchScoreComponent :match="match" :user_id="user_id" :editMode="seasonEdit" />
+                            </div>
                         </div>
                     </div>
+                        
                 </div>
-                    
+
             </div>
+            
         </div>
     </div>
 </template>
@@ -251,7 +295,8 @@ onMounted(async () => {
 @import '@/assets/scss/styles.scss';
 @import '@/assets/scss/global.scss';
 
-$match-border-width: 4px;
+$match-border-width: 2px;
+$tile-bg: rgb(15, 15, 15) !important;
 
 .match-planner {
     .part {
@@ -260,7 +305,7 @@ $match-border-width: 4px;
     }
 
     .page-header {
-        height: 30rem !important;
+        height: 20rem !important;
         background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
     }
 
@@ -269,8 +314,7 @@ $match-border-width: 4px;
     }
 
     .calendar {
-        padding: 3rem 0rem;
-
+        
         @include media-breakpoint-down(xl) {
             padding: 3rem 5rem;
         }
@@ -303,7 +347,13 @@ $match-border-width: 4px;
             }
 
             .match-score.selected {
-                border-color: $color;
+                border-color: var(--primary);
+                background: rgba(255, 255, 255, 0.082) !important;
+
+                * {
+                    transition: border 0.4s;
+                    border: none;
+                }
             }
 
             .matches {
@@ -320,6 +370,7 @@ $match-border-width: 4px;
         display: grid;
         grid-template-columns: repeat(auto-fill, 200px + $match-border-width * 2);
         grid-gap: 1rem;
+        max-width: 450px;
         justify-content: start;
         max-height: 60rem;
         overflow-y: auto;
@@ -328,7 +379,8 @@ $match-border-width: 4px;
         .match-score {
             width: fit-content;
             border: $match-border-width solid transparent;
-            transition: border-color 0.6s ease-in-out;
+            transition: all 0.4s ease-in-out;
+            margin: 2px;
         }
 
         @include media-breakpoint-down(xl) {
@@ -349,9 +401,7 @@ $match-border-width: 4px;
 
 .page-header {
 
-    border-radius: 60px;
-
-    margin-top: 2rem !important;
+    border-radius: 32px;
 
     // mask-image: linear-gradient(to bottom, rgb(255, 255, 255) 10%, rgba(255, 255, 255, 0.696) 80%, transparent 100%);
 
@@ -366,27 +416,28 @@ $match-border-width: 4px;
 
 
 .calender-container {
-    padding: 0rem !important;
-
     border-radius: 16px;
 
-    box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
+    background-color: $tile-bg;
+    border: 1px solid $border-color !important;
 }
 
 .selector-container {
-    padding: 0rem !important;
-
-    border: 1px solid $border-color;
+    max-width: 20rem;
     border-radius: 16px;
-    border-top-right-radius: 0px;
-    border-bottom-right-radius: 0px;
 
     overflow: hidden;
 
-    background: rgba(0, 0, 0, 0.1) !important;
+    background-color: $tile-bg;
+    border: 1px solid $border-color !important;
 }
 
 
+.note-field {
+    border: 1px solid $border-color !important;
+    border-radius: 12px;
+    padding: 1rem;
+}
 
 
 

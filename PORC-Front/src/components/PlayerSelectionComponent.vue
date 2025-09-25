@@ -4,6 +4,7 @@ import type { Season } from '@/models/matchplan/Season';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { filter_str } from '@/util/stringFilter';
 import { ref } from 'vue';
+import DiscordAvatarComponent from './DiscordAvatarComponent.vue';
 
 const props = defineProps<{
     player: PubAccountInfo;
@@ -22,11 +23,18 @@ async function select() {
 
 <template>
     <div>
-        <div class="body rounded" :class="{ active: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
-            <div class="contents">
+        <div class="body rounded d-flex justify-content-rigth m-3 mt-2 mb-2" :class="{ active: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
+            <DiscordAvatarComponent
+                :account="player"
+                class="avatar mt-auto mb-auto"
+            ></DiscordAvatarComponent>
+            <div class="mt-auto mb-auto player">
                 {{ filter_str(props.player.username, 14) }}
                 <!-- <div class="icon icon-checkmark"></div> -->
-                <MatchStatusComponent :season="season" :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []"></MatchStatusComponent>
+                <div class="d-flex flex-row">
+                    <MatchStatusComponent :season="season" :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []" class="m-0 mt-1 status-icon mb-1 me-1"></MatchStatusComponent>
+                    <span class="detail-title m-0">unplanned</span>
+                </div>
             </div>
         </div>
     </div>
@@ -38,41 +46,36 @@ async function select() {
 .body {
     box-sizing: border-box;
     height: 4rem;
-    padding: 0rem !important;
     
     cursor: pointer;
     transition: 0.2s;
 
-    align-items: center !important;
-    align-content: center !important;
-    text-align: center !important;
-
-    border-radius: 0px !important;
+    border-radius: 16px !important;
 
     &.active, &:hover {
-        background-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255, 255, 255, 0.07) !important;
     }
 }
 
-.contents {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    height: fit-content;
-    width: fit-content !important;
-    padding: 0;
-    margin: auto !important;
-    border: 0;
-    transition: 0.3s;
-    font-weight: 500;
+.player {
+    font-size: 1rem;
+    font-weight: 700;
 }
 
-.icon {
-    padding: 0;
-    border: 0;
-    transition: 0.3s;
-    margin-left: 0.5rem;
+.status-icon {
+    font-size: 1.1rem !important;
+    height: 1.2rem !important;
+    width: 1.2rem !important;
+
+    * {
+        height: 1.2rem !important;
+        width: 1.2rem !important;
+    }
+}
+
+.detail-title {
+    font-weight: 500 !important;
+    margin-top: 0.11rem !important;
 }
 
 .calander {
@@ -98,5 +101,10 @@ async function select() {
 .icon-bell-o {
     color: lighten($match-request-color, 10%);
     font-size: larger;
+}
+
+.avatar {
+    height: 2.5rem;
+    margin-inline: 1rem;
 }
 </style>

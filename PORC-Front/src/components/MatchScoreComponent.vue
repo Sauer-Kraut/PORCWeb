@@ -82,7 +82,6 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 </script>
 
 <template>
-    <div>
         <!-- Some bootstrap shit i didnt find -->
         <div class="rounded-custom match row" :class="{ 'hover-edit': isScored && allowedEdit }">
             <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
@@ -100,7 +99,6 @@ watch(() => props.match.p2score, (newScore: null | number) => {
                 <button class="edit-button" @click="editMatch()" @click.stop><i class="icon-edit-pencil"></i></button>
             </div>
         </div>
-    </div>
 </template>
 
 <style lang="scss" scoped>
@@ -173,7 +171,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 }
 
 .divider {
-    border-top: 1.5px dotted rgb(129, 129, 129);
+    border-top: 1.5px dotted rgb(129, 129, 129) !important;
     border-color: $dark-border;
 }
 
@@ -216,6 +214,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
     }
 
     .player-tag {
+        font-weight: 600;
         color: #000000;
     }
 
@@ -230,6 +229,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
     transition: width 0.35s ease-in-out;
     padding: 0 !important;
     overflow: hidden;
+    height: 100%;
 }
 
 @media (max-width: 600px) {
