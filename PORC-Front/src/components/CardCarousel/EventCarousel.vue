@@ -59,7 +59,7 @@
 
 <template>
     <div class="carousel-container justify-content-center">
-        <button class="arrow left" @click="prev">&#8592;</button>
+        <button class="arrow left me-2 me-md-3 me-lg-5" @click="prev"><i class="icon-chevron-left"></i></button>
         <div class="overflow-hidden-x">
             <div class="carousel-track">
                 <EventCardComponent
@@ -72,12 +72,14 @@
                 </EventCardComponent>
             </div>
         </div>
-        <button class="arrow right" @click="next">&#8594;</button>
+        <button class="arrow right ms-2 ms-md-3 ms-lg-5" @click="next"><i class="icon-chevron-right"></i></button>
     </div>
 </template>
 
 
 <style scoped lang="scss">
+    @import '@/assets/scss/styles.scss';
+
     .carousel-container {
         display: flex;
         flex-direction: row;
@@ -91,15 +93,19 @@
     .arrow {
         background: none;
         border: none;
-        font-size: 2rem;
+        font-size: 1.3rem;
         cursor: pointer;
-        width: 100px;
         height: 200px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #333;
+        color: rgba(255, 255, 255, 0.2);
         transition: color 0.2s;
+
+
+        &:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
     }
 
     .arrow:disabled {

@@ -8,7 +8,7 @@ import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { Schedule } from '@/models/schedule/Schedule';
 import { defineProps, defineModel, ref } from 'vue';
 import DiscordAvatarComponent from './DiscordAvatarComponent.vue';
-import Logo from './svgs/logo.vue';
+import Logo from './svgs/Logo.vue';
 
 const schedule = ref({
     availabilities: [

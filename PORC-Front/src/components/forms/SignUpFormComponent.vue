@@ -116,7 +116,7 @@ onMounted(async () => {
     <div class="justify-content-center">
         <div class="inner-container">
             <div class="col-10 d-flex flex-column">
-                <h1 class="content-title">Sign Up</h1>
+                <h1 class="decor-title mb-2">Sign Up</h1>
                 <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">Oct. 8th</span></h3>
                 <!-- <h3 v-if="isSignedUp && user_id != '0'" class="conformation icon-checkmark"></h3> -->
             </div>

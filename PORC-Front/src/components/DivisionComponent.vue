@@ -151,7 +151,7 @@ onMounted(async () => {
 
 <template>
     <div class="division h-100 w-100">
-        <div class="info-container w-100" v-if="division?.players.length && !props.placeholder">
+        <div class="info-container w-100 py-3" v-if="division?.players.length && !props.placeholder">
             <div class="col-8 col-xxl-7 col-xml-11 item-container d-flex flex-column align-items-center match-container" :style="{ transform: matchesTransform}">
                 <div class="scroll-container flex-grow-1">
                     <div class="transition-width matches">
@@ -169,7 +169,7 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
-        <div v-else class="placeholder rounded">
+        <div v-else class="placeholder">
             <h2>{{ placeholder }}</h2>
         </div>
     </div>
@@ -222,6 +222,14 @@ onMounted(async () => {
     @media (max-width: $leaderboard-breakpoint) {
         overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
     }
+
+
+    @include media-breakpoint-down(md) {
+        padding: 0 1rem;
+        > * {
+            width: 100% !important;
+        }
+    }
 }
 
 // holds the matches
@@ -229,18 +237,8 @@ onMounted(async () => {
     max-height: calc(100% - 5rem); /* I know that this sucks ass but Im sooo tierd */
     margin-top: 2.5rem;
     margin-bottom: 2.5rem;
-    padding-inline: 1.5rem;
-    padding-top: 1.5rem;
 
     transition: all 0.6s ease-in-out;
-
-    // background: #313439;
-    border: solid 1px #51565a;
-    box-shadow: inset 0px 0px 6px rgba(145, 64, 170, 0.15);
-    // TODO: meant to highlight important part, but looks pretty ass as of now
-    // maybe have it be the division color?
-
-    border-radius: 12px;
 }
 
 // holds the leaderboard
@@ -248,7 +246,7 @@ onMounted(async () => {
     height: fit-content !important;
     transition: all 0.65s ease-in-out !important;
 
-    min-width: 22rem;
+    //min-width: 22rem;
     margin: 2.5rem;
     margin-inline: 0rem;
 }
@@ -273,6 +271,14 @@ onMounted(async () => {
     max-height: 100%;
     height: fit-content;
     width: 100%;
+
+    padding: 1.5rem;
+
+    border-radius: 12px;
+    border: solid 1px #51565a;
+    box-shadow: inset 0px 0px 6px rgba(145, 64, 170, 0.15);
+    // TODO: meant to highlight important part, but looks pretty ass as of now
+    // maybe have it be the division color?
 
     @include media-breakpoint-down(sm) {
         width: fit-content;
@@ -315,10 +321,8 @@ onMounted(async () => {
     justify-content: center;
     align-self: center;
     cursor: pointer;
-
-    background-color: #495057;
     &:hover {
-        background-color: darken(#495057, 10%);
+        background-color: rgba(255, 255, 255, 0.2);
     }
 
     @media (min-width: $leaderboard-breakpoint) {
@@ -331,7 +335,6 @@ onMounted(async () => {
     height: 100%;
     // background-color: $dark-bg;
     background-color: transparent;
-    border: 1px solid $dark-border;
     display: flex;
     justify-content: center;
     align-items: center;

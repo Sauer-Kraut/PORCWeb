@@ -8,7 +8,7 @@ import type { DivisionModel } from './models/matchplan/DivisionModel';
 import type { PlayerModel } from './models/matchplan/PlayerModel';
 import type { PubAccountInfo } from './models/pub_account_info/PubAccountInfo';
 import { accountsStore } from './storage/st_accounts';
-import Logo from './components/svgs/logo.vue';
+import Logo from './components/svgs/Logo.vue';
 import { appReady } from './appReady';
 
 const isMenuOpen = ref(false);
@@ -129,11 +129,10 @@ onMounted(async () => {
 
 <template>
     <header>
-        <!-- Burger Icon -->
-
         <!-- Navigation -->
         <div class="row h-header">
-            <div class="col-4 col-md-auto d-flex align-items-center d-md-none" @click="toggleMenu">
+            <!-- Burger Icon -->
+            <div class="col-auto d-flex align-items-center d-md-none" @click="toggleMenu">
                 <div class="burger-icon p-3">
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
@@ -154,7 +153,7 @@ onMounted(async () => {
                     <div v-if="isMenuOpen" class="col-12 m-1 d-md-none" />
                 </div>
             </nav>
-            <div class="col-4 col-md-auto d-flex align-items-center">
+            <div class="col-auto d-flex align-items-center">
                 <DiscordUserComponent class="mx-2 mx-md-3 mx-lg-5"></DiscordUserComponent>
             </div>
         </div>
@@ -196,7 +195,10 @@ header {
 
 .h-header {
     min-height: 4rem;
-    width: 83.3%;
+    width: 100%;
+    @include media-breakpoint-up(md) {
+        width: 83.3%;     
+    }
 }
 
 @include media-breakpoint-down(md) {

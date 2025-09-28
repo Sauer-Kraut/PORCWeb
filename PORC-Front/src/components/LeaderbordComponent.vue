@@ -40,17 +40,22 @@ onMounted(async () => {
 
 <template>
     <div class="leaderboard-cont row justify-content-center d-flex">
-        <div class="row collum-title justify-content-center d-flex leaderboard-row">
-            <div class="col-4 col-sm-3 collum-description">Player</div>
-            <div class="col-2 col-sm-1"></div>
-            <div class="col-4 col-sm-3 collum-description">Matches</div>
-            <div class="col-1 add-col"></div>
-            <div class="col-3 add-col collum-description" title="This shows the average match score difference over all played sets.">Advantage</div>
+        <div class="leaderboard-head">
+            <div class="row collum-title justify-content-center d-flex leaderboard-row">
+                <div class="col-4 col-sm-3 collum-description">Player</div>
+                <div class="col-2 col-sm-1"></div>
+                <div class="col-4 col-sm-3 collum-description">Matches</div>
+                <div class="col-1 add-col"></div>
+                <div class="col-3 add-col collum-description" title="This shows the average match score difference over all played sets.">Advantage</div>
+            </div>
+            <div class="p-1"></div>
         </div>
-        <div class="p-1"></div>
         <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content">
             <div class="col-4 col-sm-3 d-flex justify-content-center">
-                <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
+                <div class="d-flex flex-column">
+                    <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
+                    <div class="score-sm">{{ player.wins }}-{{ player.matches - player.wins }}</div>
+                </div>
             </div>
             <div class="col-2 col-sm-1"></div>
             <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
@@ -73,7 +78,6 @@ onMounted(async () => {
 
 .leaderboard-cont {
     width: 100%;
-    min-width: 12rem;
     height: fit-content;
 
     padding: 1rem !important;
@@ -95,11 +99,11 @@ onMounted(async () => {
 .leaderboard-row {
     margin-top: 0rem !important;
     margin-bottom: 0rem !important;
-    padding-bottom: 0.5rem !important;
-    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    height: 3rem;
+    min-height: 3rem;
     overflow: hidden;
     align-items: center;
     justify-content: center;
@@ -109,6 +113,40 @@ onMounted(async () => {
     * {
         text-align: center;
         height: 1.5rem;
+        .score-sm {
+            display: none;
+        }
+    }
+}
+
+@media (max-width: 400px) {
+    .leaderboard-head {
+        display: none;
+    }
+
+    .leaderboard-row {
+        border-top: none;
+        &:not(:nth-child(2)) { 
+            border-top: $dark-border solid 1px;
+        }
+
+        padding-top: 0 !important;
+        > * {
+            display: none;
+
+            .score-sm {
+                display: block;
+                font-size: 0.7rem;
+                line-height: 0.8rem;
+            }
+
+            &:first-child {
+                display: flex;
+                > * {
+                    height: fit-content;
+                }
+            }
+        }
     }
 }
 

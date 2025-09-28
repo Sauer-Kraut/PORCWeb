@@ -31,7 +31,7 @@
 
         box-shadow: outset 0px 0px 20px rgba(0, 0, 0, 0.331);
 
-        background: rgba(0, 0, 0, 0.342);
+        background: rgb(11, 11, 9);
 
         overflow: hidden;
 

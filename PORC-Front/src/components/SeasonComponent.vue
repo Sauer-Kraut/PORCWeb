@@ -2,7 +2,7 @@
     import { ref, computed, watch, onMounted } from 'vue';
     import DivisionComponent from './DivisionComponent.vue';
     import DivisionSelector from './DivisionSelector.vue';
-    import Logo from './svgs/logo.vue';
+    import Logo from './svgs/Logo.vue';
     import type { DivisionModel } from '@/models/matchplan/DivisionModel';
     import type { Season } from '@/models/matchplan/Season';
 
@@ -21,27 +21,27 @@
 
 
     function getSeasonDisplayName(season: Season): string {
-    if (props.current_season != null && new Date(props.current_season.end_timestamp * 1000) < new Date(season.start_timestamp * 1000)) {
-        // if check only possible for dummy season
-        if (season.name == props.current_season.name) {
-            return "Upcoming Season"
+        if (props.current_season != null && new Date(props.current_season.end_timestamp * 1000) < new Date(season.start_timestamp * 1000)) {
+            // if check only possible for dummy season
+            if (season.name == props.current_season.name) {
+                return "Upcoming Season"
+            } else {
+                return `Season ${season.name} [Upcoming]`;
+            }
+        }
+        else if (props.seasons.indexOf(season) == 0) {
+            var today = new Date();
+            if (new Date(season.start_timestamp * 1000) <= today && new Date(season.end_timestamp * 1000) > today) {
+                return `Season ${season.name} [Current]`;
+            } else if (new Date(season.end_timestamp * 1000) < today) {
+                return `Season ${season.name} [Latest]`;
+            } else {
+                return `Season ${season.name} [Upcoming]`;
+            }
         } else {
-            return `Season ${season.name} [Upcoming]`;
+            return `Season ${season.name}`;
         }
     }
-    else if (props.seasons.indexOf(season) == 0) {
-        var today = new Date();
-        if (new Date(season.start_timestamp * 1000) <= today && new Date(season.end_timestamp * 1000) > today) {
-            return `Season ${season.name} [Current]`;
-        } else if (new Date(season.end_timestamp * 1000) < today) {
-            return `Season ${season.name} [Latest]`;
-        } else {
-            return `Season ${season.name} [Upcoming]`;
-        }
-    } else {
-        return `Season ${season.name}`;
-    }
-}
 
 
 
@@ -79,35 +79,30 @@
 </script>
 
 <template>
-    <div class="col col-xxl-10 col-sm-11 justify-content-center d-flex season-component-container">
-
+    <div class="season-component-container">
         <div class="season-header row">
-            <Logo  class="header-img" :primaryColor="'rgb(26, 23, 23)'"></Logo>
+            <Logo class="header-img col-auto" :primaryColor="'rgb(26, 23, 23)'"></Logo>
 
-            <div class="col header-title-container align-content-center">
+            <div class="col header-title-container align-content-center d-none d-sm-block">
                 <h2 class="header-title">Seasons & Divisions</h2>
                 <span class="header-subtitle">RUMBLE VR - Round Robin Tournament</span>
             </div>
 
-            <select v-model="selectedSeason" class="form-select mb-3 season-options" v-if="seasons?.length">
+            <select v-model="selectedSeason" class="form-select mb-3 season-options col-auto" v-if="seasons?.length">
                 <option v-for="season in seasons" :key="season.name" :value="season">
                     {{ getSeasonDisplayName(season) }}
                 </option>
             </select>
 
-            <div class="season-timer">
+            <div class="season-timer col-auto d-none d-md-block">
                 <span class="detail-title" v-if="true">Time until season end</span>
                 <span class="detail-title" v-else-if="false">Season will start at</span>
                 <span class="detail-title" v-else>Season happend during</span>
 
                 <div class="timer-content">3d   14h   59m   2s</div>
             </div>
-
         </div>
-
-
         <div class="season-container">
-
             <div class="col-ms-12 selector-container">
 
                 <div class=""></div>
@@ -119,7 +114,6 @@
                         class="selector" :style="{ 'max-width': '100%', 'opacity': opacity}" 
                         />
             </div>
-
             <div class="col col-ms-12 division-container">
                 <DivisionComponent v-if="selectedDivision" 
                     :selector-height="selectorHeight" 
@@ -131,9 +125,7 @@
                     class="division" 
                     :style="{ maxHeight: selectorHeight + 'px'}"/>
             </div>
-        
         </div>
-
     </div>
 </template>
 
@@ -143,7 +135,6 @@
     $background-color: rgba(40, 41, 47, 0);
     $border-color: #515458;
 
-    $selector-width: 14rem;
     $header-height: 5rem;
     $body-height: 30rem;
 
@@ -157,11 +148,8 @@
 
         box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
 
-        transform: scale(1.03); // I know, but its the most convinient way to handle this and doesnt really hurt that much as there isnt a lot of other text within the same page
+        //transform: scale(1.03); // I know, but its the most convinient way to handle this and doesnt really hurt that much as there isnt a lot of other text within the same page
     }
-
-
-
 
     // Header scss
 
@@ -201,6 +189,9 @@
 
     .header-title-container {
         width: fit-content;
+        overflow: hidden;
+        white-space: nowrap;
+        margin-right: 0.5rem;
     }
 
     .header-title {
@@ -211,6 +202,10 @@
         align-self: center;
 
         margin: 0;
+
+        @include media-breakpoint-down(md) {
+            font-size: 1.25rem;
+        }
     }
 
     .header-subtitle {
@@ -219,8 +214,11 @@
         align-self: center;
 
         margin: 0;
-    }
 
+        @include media-breakpoint-down(sm) {
+            font-size: 0.875rem;
+        }
+    }
 
     .season-options {
         margin: 1rem !important;
@@ -246,7 +244,6 @@
 
     }
 
-
     .season-timer {
         display: flex;
         flex-direction: column;
@@ -269,40 +266,20 @@
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Content scss
-
     .season-container {
         display: flex;
         width: 100%;
         height: calc($body-height) !important;
     }
 
-
-
     .selector-container {
         display: flex;
         flex-direction: column;
-
         box-sizing: border-box;
         height: 100%;
-        padding-top: 2rem !important;
         overflow-y: hidden;
         scrollbar-width: none; /* For Firefox */
-
-        width: $selector-width !important;
 
         border-right: 1px solid $border-color;
 
@@ -311,8 +288,11 @@
         border-bottom-left-radius: 16px;
 
         // background-color: rgb(27, 29, 30);
-
         transition: all 0.6s ease !important;
+
+        @include media-breakpoint-up(md) {
+            width: 14rem;
+        }
 
         * {
             transition: all 0.6s ease;
@@ -322,17 +302,11 @@
     .division-container {
         height: 100%;
         overflow: hidden;
-        width: calc(100% - $selector-width) !important; // I know this sucks, but flex grow never works for me and Im tierd of trying to figure it out
-
         background-color: $background-color;
-
         border: 1px solid $border-color;
         border-left: 0px;
-
         border-bottom-right-radius: 16px;
     }
-
-
 
     .selector {
         height: 100%;
@@ -340,7 +314,6 @@
 
         overflow-y: scroll; // Enable vertical scrolling
 
-        width: $selector-width !important;
         max-width: 6rem;
 
         // border: 1px solid $border-color;
