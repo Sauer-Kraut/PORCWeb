@@ -193,8 +193,8 @@ async function submitNote() {
 </script>
 
 <template>
-    <div class="container-fill justify-content-center match-planner">
-        <div class="d-flex flex-row justify-content-center" :class="`division-${division?.name.toLowerCase() || 'iron'}`">
+    <div class="container-fill justify-content-center match-planner mb-5">
+        <div class="d-flex flex-row justify-content-center mt-5" :class="`division-${division?.name.toLowerCase() || 'iron'}`">
             <!-- <div class="part part-text">
                 <div class="desptiption">
                     <label class="description">
@@ -208,14 +208,14 @@ async function submitNote() {
                     </label>
                 </div>
             </div> -->
-            <div class="d-flex flex-row justify-content-center col-11 me-5 pt-5 mt-4">
+            <div class="row justify-content-center col-12 col-md-11 col-xl-10">
 
-                <div class="d-flex flex-row col-7">
+                <div class="col row">
 
-                    <div class="d-flex flex-column selector-container col-4 p-0 me-4">
+                    <div class="d-flex flex-column selector-container col-12 col-md-4 col-lg-3 p-0 py-2 me-4">
                         <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class=""></PlayerSelector>
 
-                        <div class="note-box mt-auto mb-0">
+                        <div class="note-box mt-auto mb-0 d-none d-md-block">
                             <div class="container mb-4 notes-container">
                                 <form @submit.prevent="submitNote" v-if="(selectedPlayer?.id ?? user_id) === user_id">
                                     <div class="row">
@@ -238,7 +238,7 @@ async function submitNote() {
                         </div>
                     </div>
 
-                    <div class="d-flex flex-row calender-container p-0 f-grow">
+                    <div class="col d-flex flex-row calender-container px-0 mt-3 mt-md-0">
                         <CalendarComponent
                             v-if="selectedPlayer?.schedule"
                             :schedule="selectedPlayer?.schedule ?? schedule"
@@ -257,11 +257,11 @@ async function submitNote() {
                 
                 </div>
 
-                <div class="ms-5 col-3">     
+                <div class="col-12 col-lg-3 mt-4 mt-lg-0 ps-lg-4"  v-if="division && season_running">     
 
                     <!-- // <div class="page-header"></div> -->
 
-                    <div class="d-flex flex-column calender-container p-5 pt-3 " v-if="division">
+                    <div class="d-flex flex-column calender-container p-5 pt-3">
                         <div class="mb-3 d-flex justify-content-center justify-content-xl-start w-fit">
                             <div v-if="season_running" class="division-title">
                                 <h2 class="mb-0 d-flex align-items-center me-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
@@ -423,7 +423,7 @@ $tile-bg: rgb(15, 15, 15) !important;
 }
 
 .selector-container {
-    max-width: 20rem;
+    //max-width: 20rem;
     border-radius: 16px;
 
     overflow: hidden;
