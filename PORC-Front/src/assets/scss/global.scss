@@ -45,6 +45,17 @@ body {
     }
 }
 
+.btn-outline-primary {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+
+    &:hover {
+        background-color: var(--primary) !important;
+        color: #000000 !important;
+        border-color: var(--primary) !important;
+    }
+}
+
 .btn {
     border-radius: 10px !important;
     font-weight: 600 !important;
@@ -157,6 +168,19 @@ body {
     align-self: center;
     width: 1px;
     background-color: rgb(118, 116, 116);
+}
+
+
+.porc-modal-content {
+    background: rgb(23, 23, 23);
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.408);
+    border: 1px solid #343434;
+    color: #ffffff;
+    transition: 0.5s;
+
+    * {
+        transition: 0.4s ease-in-out;
+    }
 }
 
 

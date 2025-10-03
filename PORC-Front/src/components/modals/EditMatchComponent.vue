@@ -82,15 +82,6 @@ const shortendP2tag = ref(props.match.p2.tag.length > 10 ? props.match.p2.tag.sl
 
 .porc-modal-content {
     width: 23rem !important;
-    background: rgb(23, 23, 23);
-    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.408);
-    border: 1px solid #343434;
-    color: #ffffff;
-    transition: 0.5s;
-
-    * {
-        transition: 0.4s ease-in-out;
-    }
 }
 
 .title {

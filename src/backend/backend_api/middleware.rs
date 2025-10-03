@@ -75,7 +75,7 @@ where
                             actix_web::error::ErrorInternalServerError("Error converting response body to bytes")
                         })?;
 
-                    println!("{}", String::from_utf8(body_bytes.to_vec()).unwrap_or("".to_string()).yellow().bold());
+                    // println!("{}", String::from_utf8(body_bytes.to_vec()).unwrap_or("".to_string()).yellow().bold());
 
                     if !status.is_success() {
                         eprintln!("{} {}\n", "finished with status code:".red(), status.as_str().red().bold());
