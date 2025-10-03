@@ -17,6 +17,7 @@ import type { Season } from '@/models/matchplan/Season';
 import { waitForAppReady } from '@/appReady';
 import lineBreak from '@/util/LineBreakFilter';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
+import Logo from '@/components/svgs/Logo.vue';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -215,7 +216,15 @@ async function submitNote() {
                 <div class="col row">
 
                     <div class="d-flex flex-column selector-container col-12 col-md-4 col-lg-3 p-0 py-2 me-4">
-                        <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class=""></PlayerSelector>
+                        <div class="d-flex flex-row m-3 ms-4">
+                            <Logo class="logo ms-1" />
+                            <h3 class="ms-4 bold">
+                                Players
+                            </h3>
+                        </div>
+                        <div style="max-height: 800px; overflow-y: auto;">
+                            <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class=""></PlayerSelector>
+                        </div>
 
                         <div class="note-box mt-auto mb-0 d-none d-md-block">
                             <div class="container mb-4 notes-container">
@@ -259,7 +268,7 @@ async function submitNote() {
                 
                 </div>
 
-                <div class="col-12 col-lg-3 mt-4 mt-lg-0 ps-lg-4"  v-if="division && season_running">     
+                <div class="col-12 col-xxl-3 mt-4 mt-xxl-0 ps-xxl-4"  v-if="division && season_running">     
 
                     <!-- // <div class="page-header"></div> -->
 
@@ -418,6 +427,7 @@ $tile-bg: rgb(15, 15, 15) !important;
 
 
 .calender-container {
+    overflow: hidden;
     border-radius: 16px;
 
     background-color: $tile-bg;
@@ -464,5 +474,16 @@ $tile-bg: rgb(15, 15, 15) !important;
 
 .highlight-text {
     font-weight: 750;
+}
+
+
+.logo {
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+}
+
+.bold {
+    font-weight: 700;
+    margin-top: 0.1rem;
 }
 </style>

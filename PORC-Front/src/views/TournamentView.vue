@@ -218,8 +218,10 @@ import type { EventCard } from '@/models/EventCard';
     <div class="container-fill row justify-content-center">
         <div class="page-header timer col-xxl-10 col-sm-11">
             <!-- <TimerComponent :targetTimestamp="globalTimer" :season="season_name" :text="TimerText" class="timer-text"></TimerComponent> -->
+        </div>
 
-            <div class="routing-buttons">
+        <div class="hero-container col-xxl-10 col-sm-11">
+             <div class="routing-buttons">
                 <!-- <div class="m-1"></div> -->
                 <h2 class="col-12 col-md-8 title-text mb-2 mb-sm-5">Pro Online <span class="primary">Rumble</span> Competition</h2>
                 <div class="col-12 justify-content-center row">
@@ -393,9 +395,11 @@ import type { EventCard } from '@/models/EventCard';
     overflow-x: hidden !important;
 }
 
+$hero-height: 32rem;
+
 .page-header {
-    //position: absolute;
-    height: 32rem;
+    position: absolute;
+    height: $hero-height;
 
     border-radius: 60px;
     border-bottom-left-radius: 0px;
@@ -420,6 +424,18 @@ import type { EventCard } from '@/models/EventCard';
     width: 100% !important;
     margin-top: 2rem !important;
     margin: 2rem;
+
+    justify-content: center;
+    display: flex;
+    align-items: center;
+
+    @media (max-width: $leaderboard-breakpoint) {
+        height: 30rem;
+    }
+
+    @media (max-width: 600px) {
+        height: 20rem;
+    }
 }
 
 

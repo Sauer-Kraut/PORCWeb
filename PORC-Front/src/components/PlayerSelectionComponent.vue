@@ -5,6 +5,7 @@ import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { filter_str } from '@/util/stringFilter';
 import { ref } from 'vue';
 import DiscordAvatarComponent from './DiscordAvatarComponent.vue';
+import MatchStatusComponentText from './MatchStatusComponentText.vue';
 
 const props = defineProps<{
     player: PubAccountInfo;
@@ -33,7 +34,7 @@ async function select() {
                 <!-- <div class="icon icon-checkmark"></div> -->
                 <div class="d-flex flex-row">
                     <MatchStatusComponent :season="season" :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []" class="m-0 mt-1 status-icon mb-1 me-1"></MatchStatusComponent>
-                    <span class="detail-title m-0">unplanned</span>
+                    <MatchStatusComponentText :season="season" :status="status" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []" class="m-0 detail-title mt-2"></MatchStatusComponentText>
                 </div>
             </div>
         </div>
@@ -75,7 +76,7 @@ async function select() {
 
 .detail-title {
     font-weight: 500 !important;
-    margin-top: 0.11rem !important;
+    margin-top: 0.17rem !important;
 }
 
 .calander {

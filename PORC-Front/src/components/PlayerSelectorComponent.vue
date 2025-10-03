@@ -68,12 +68,6 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
 
 <template>
     <div class="d-flex flex-column container-fluid m-0 p-0">
-        <div class="d-flex flex-row m-3 ms-4">
-            <Logo class="logo ms-1" />
-            <h3 class="ms-4 bold">
-                Players
-            </h3>
-        </div>
         <!-- css nonsence of row not working  -->
         <div class="d-flex flex-row flex-md-column overflow-scroll overflow-md-auto">
             <PlayerSelectionComponent
@@ -97,13 +91,8 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
     bottom: 4rem;
 }
 
-.logo {
-    height: 2.5rem !important;
-    min-width: 2.5rem !important;
-}
-
-.bold {
-    font-weight: 700;
-    margin-top: 0.1rem;
+.overflow-scroll {
+    overflow-x: scroll !important;
+    overflow-y: hidden !important;
 }
 </style>

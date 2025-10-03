@@ -49,13 +49,13 @@ const status = computed(() => {
 </script>
 
 <template>
-    <div v-if="status == 'HasRequested'" class="icon hour-glas icon-hourglass_bottom"></div>
-    <div v-else-if="status == 'Finished'" class="icon checkmark icon-checkmark"></div>
-    <div v-else-if="status == 'Declined'" class="icon calander icon-calender_busy"></div>
-    <div v-else-if="status == 'HasBeenRequested'" class="icon bell icon-bell-o"></div>
-    <div v-else-if="status == 'Confirmed'" class="icon calander icon-calander_check"></div>
-    <div v-else-if="status == 'IsSelf'" class="icon calander icon-calender"></div>
-    <div v-else-if="status == 'Unplaned'" class="icon calander icon-calender detail-title"></div>
+    <div v-if="status == 'HasRequested'" class="">Requested</div>
+    <div v-else-if="status == 'Finished'" class="">Finished</div>
+    <div v-else-if="status == 'Declined'" class="">Declined</div>
+    <div v-else-if="status == 'HasBeenRequested'" class="">Inbound Request</div>
+    <div v-else-if="status == 'Confirmed'" class="">Confirmed</div>
+    <div v-else-if="status == 'IsSelf'" class="">Self</div>
+    <div v-else-if="status == 'Unplaned'" class="">Unplanned</div>
 </template>
 
 <style lang="scss" scoped>

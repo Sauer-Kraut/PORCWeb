@@ -20,7 +20,12 @@
 </script>
 
 <template>
-    <img class="avatar" :src="avatarUrl" alt="Discord User Image" />
+    <img
+        class="avatar"
+        :src="avatarUrl"
+        alt="Discord User Image"
+        @error="avatarUrl = 'https://cdn.discordapp.com/embed/avatars/0.png'"
+    />
 </template>
 
 <style lang="scss" scoped>

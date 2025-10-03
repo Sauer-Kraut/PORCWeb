@@ -1,179 +1,456 @@
+<script setup lang="ts">
+    import { computed, onMounted, ref, watch } from 'vue';
+
+
+    const sections = ref<HTMLElement[]>([] as HTMLElement[]);
+
+    const sectionMarkers = ref([] as { name: string; offsetPercent: number }[]);
+
+    function getElementPosY(el: HTMLElement): number {
+        let y = el.getBoundingClientRect().top + window.pageYOffset ;
+        return y;
+    }
+
+    function calcOffsets(): { name: string; offsetPercent: number }[] {
+        const offsets: { name: string; offsetPercent: number }[] = [];
+        const viewportHeight = window.outerHeight;
+
+        sections.value.forEach((section) => {
+            const posY = getElementPosY(section);
+            const offsetPercent = (posY / viewportHeight) * 40;
+            offsets.push({ name: section.id, offsetPercent });
+        });
+
+        return offsets;
+    }
+
+    const scrollPercent = ref(0)
+
+    function getScrollPercent(): number {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        return (scrollTop / docHeight) * 100;
+    }
+
+    onMounted(() => {
+        sections.value = Array.from(document.querySelectorAll<HTMLElement>(".rule-section"));
+        sectionMarkers.value = calcOffsets();
+        window.addEventListener('resize', () => {
+            sectionMarkers.value = calcOffsets();
+        });
+        window.addEventListener('scroll', () => {
+            scrollPercent.value = getScrollPercent();
+            console.log(scrollPercent.value);
+        });
+        console.log("Section Markers:" + sectionMarkers.value);
+    });
+
+
+    function scrollToY(targetY: number, duration = 400) {
+        const startY = window.scrollY;
+        const diff = targetY - (window.innerHeight / 2.5) - startY;
+        const startTime = performance.now();
+
+        function step(time: number) {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // easeInOutCubic easing
+            const eased = progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            window.scrollTo(0, startY + diff * eased);
+
+            if (progress < 1) {
+            requestAnimationFrame(step);
+            }
+        }
+
+        requestAnimationFrame(step);
+    }
+
+
+    function handleSectionMarkerClick(sectionName: string) {
+        const el = document.getElementById(sectionName);
+        if (el) {
+            scrollToY(getElementPosY(el));
+        }
+    }
+
+    function placeScrollMarker(): number {
+        let distance = 1000000;
+        let spot = 0;
+        for (const section of sectionMarkers.value) {
+            const diff = Math.abs(section.offsetPercent - scrollPercent.value);
+            if (diff < distance) {
+                distance = diff;
+                spot = section.offsetPercent;
+            }
+        }
+
+        return spot;
+    }
+</script>
+
+
 <template>
-    <div class="page-header p-3">
-        <h1>PORC Rules</h1>
-    </div>
-    <div class="container-fill justify-content-center">
-        <div class="part part-text">
-            <h2 class="title mt-0">Set rules</h2>
-            <ul>
-                <li class="rule">
+    <div class="container-fluid d-flex flex-row mt-6 hidescroll">
 
-                    The players will play a total of 6 matches on the chosen map (3 as host and 3 as client).
-                    Each match consists of a "best of 3 rounds", the players keep track of match wins and total client round wins.
-                    If the match wins are tied (the score is 3-3), the player with the most client round wins will win the set at the end of the 6 matches (the score to report will then be 3-4).
-                </li>
-                <br />
-                <li>
-                    The players are allowed to decide which map they want to play on (custom maps are also allowed). Alternatively, they may also choose to go to a random map together. If both players
-                    do not agree on their preferred map, Pit is chosen as default.
-                </li>
-                <br />
-                <li>After each match, if any client rounds were won, <span class="highlight">the host may decide to switch to the other map.</span></li>
-                <br />
-                <li>If both players are deadlocked, extended tiebreaker rules may be applied with the agreement of both parties.</li>
-                <br />
-                <li>No cheating of any kind. If a player cheats, they are banned immediately from the tournament.</li>
-                <br />
-                <li>Mods that affect any gameplay are not allowed and will be considered as cheating.</li>
-            </ul>
-            <div class="p-3"></div>
-            <div class="under-rules">
-                <h4 class="lesser-title">Tiebreaker rules</h4>
-                <ul>
-                    <li>First to win a client round will set the bar.</li>
-                    <br />
-                    <li>The opponent will have the right of reply. If they equal the client round, the tiebreaker resets.</li>
-                    <br />
-                    <li>If they fail to equal, the first client round winner wins. If they win the match, they will win.</li>
-                </ul>
+        <div class="sidebar col-2 m-4 ms-5 d-flex">
+
+            <div
+                class="section-marker"
+                v-for="section in sectionMarkers"
+                :key="section.name"
+                :style="{ top: section.offsetPercent + '%' }"
+                @click="handleSectionMarkerClick(section.name)"
+            >
+                <label class="marker-label">{{ section.name }}</label>
             </div>
-            <div class="p-3"></div>
-            <div class="under-rules">
-                <h4 class="lesser-title">Extended tiebreaker rules</h4>
-                <ol>
-                    <li>Host goes to one shift stone.</li>
-                    <br />
-                    <li>Host goes to zero shift stones.</li>
-                    <br />
-                    <li>The players switch to ring if on Pit.</li>
-                    <br />
-                    <li>The host starts with less HP.</li>
-                </ol>
-            </div>
-        </div>
-        <div class="part part-text">
-            <h2 class="title mt-0">Scoring</h2>
-            <ul>
-                <li>A match is defined as a best of 3 rounds with one player as host and the other as client. At the end of a game, scoring is decided as follows:</li>
-                <br />
-                <li>If the number of matches won is unequal between the players, the final score is simply the matches won by each player during the game.</li>
-                <br />
-                <li>In case both players won an equal number of matches, the final score is reported as the matches won by both players +1 for the winning party.</li>
-                <br />
-                <li>If a player forfeits / fails to appear at an agreed time it counts as an automatic 1-0 win for the opposing player.</li>
-            </ul>
-        </div>
-        <div class="part part-text">
-            <h2 class="title mt-0">Placement, Ranking and Promotion</h2>
-            <ul>
-                <li>Your initial placement is determined by your amount of BP as well as your assessed skill.</li>
-                <br />
-                <li>
-                    Before the start of each season, there will be a timeframe to contest your placement after you have been placed in a division. To contest your placement, simply contact one of the
-                    moderators and put forward your pitch for your placement.
-                </li>
-                <br />
-                <li>The ranking at the end of each season will be decided by total set wins. Ties will be broken by the advantage score. If somehow after this there is still a tie the placement will be shared
-                </li>
-                <br/>
-                <li>
-                    After each season, player performance during the season decides promotion and demotion. As a rule of thumb, one can expect the top third of a division to promote and the bottom
-                    third to demote.
-                </li>
-                <br />
-                <li>Promotions over two divisions may be rewarded upon special performance or improvement.</li>
-            </ul>
+            <div
+                class="section-marker-bg"
+                v-for="section in sectionMarkers"
+                :key="section.name"
+                :style="{ top: section.offsetPercent + '%' }"
+            ></div>
+
+            <div class="sidebar-limit" :style="{ top: '0%' }"></div>
+            <div class="sidebar-limit" :style="{ top: '100%' }"></div>
+            
+
+            <div class="scroll-marker" :style="{top: placeScrollMarker() + '%'}"></div>
         </div>
 
-        <div class="part part-text">
-            <h2 class="title mt-0">Additional Notes</h2>
-            <ul>
-                <li>Cheaters will be banned from competing, and all their matches will be marked as 0-1 losses.</li>
-                <br />
-                <li>Competitors are encouraged to record their fights in order to allow both sharing and ensure proof in case of the need to check games.</li>
-                <br />
-                <li>
-                    This is an early access game, so unexpected things can happen. The standard protocol is to reset the match in case a major bug occurs, although treating the occurrences differently
-                    is allowed if both players agree to do so.
-                </li>
-                <br />
-                <li>
-                    We heavily encourage you to get yourself a timezone role on the PORC dicord server and take full advantage of both discords events and unix time stamps to help you and your fellow
-                    rumblers plan matches
-                </li>
-                <br />
-                <li>As is common courtesy in the RUMBLE community, please treat each other with respect and enjoy yourself.</li>
-            </ul>
+        <div class="col-2"></div>
+
+
+
+        <div class="d-flex flex-column col-10 col-xl-8">
+
+            <div class="d-flex flex-column col-10 col-xl-7 ms-auto me-auto">
+            
+
+                <!-- Header -->
+                <header class="mb-4 text-center">
+                    <h1 class="decor-title primary">PORC Rules</h1>
+                    <p class="content-subtitle">Official guidelines for fair play & competition</p>
+                </header>
+
+                <!-- Rules Content -->
+
+                <!-- Section -->
+                <div id="set-rules" class="rule-section">
+                    <h1>Set Rules</h1>
+                    <div class="seperator-h"></div>
+                    <h2>1. Match Format</h2>
+                    <ol class="rules">
+                        <li>The players will play a total of 6 matches on the chosen map (3 as host and 3 as client).</li>
+                        <li>Each match consists of a "best of 3 rounds". Players must keep track of match wins and total client round wins.</li>
+                        <li>If the match wins are tied (3-3), the player with the most client round wins will win the set (the score to report will then be 3-4).</li>
+                    </ol>
+
+                    <h2>2. Map Selection</h2>
+                    <ol class="rules">
+                        <li>The players are allowed to decide which map they want to play on (custom maps are also allowed).</li>
+                        <li>They may also choose to go to a random map together.</li>
+                        <li>If both players cannot agree, Pit is chosen as the default map.</li>
+                        <li>After each match, <span class="text-highlight">if any client rounds were won, the host may decide to switch to another map</span>.</li>
+                    </ol>
+
+                    <h2>3. Tiebreakers</h2>
+                    <ol class="rules">
+                        <li>If both players are deadlocked, extended tiebreaker rules may be applied with the agreement of both parties.</li>
+                    </ol>
+
+                    <h2>4. Fair Play</h2>
+                    <ol class="rules">
+                        <li>No cheating of any kind. Cheating results in <span class="text-highlight">immediate tournament disqualification</span>.</li>
+                        <li>Mods that affect gameplay are not allowed and will be considered cheating.</li>
+                    </ol>
+                </div>
+
+                <div id="tiebreaker-rules" class="rule-section">
+                    <h1>Tiebreaker Rules</h1>
+                    <div class="seperator-h"></div>
+                    <h2>1. Procedure</h2>
+                    <ol class="rules">
+                        <li>First to win a client round sets the bar.</li>
+                        <li>The opponent has the right of reply:
+                            <ul class="sub-rules">
+                                <li>If they equal the client round, the tiebreaker resets.</li>
+                                <li>If they fail, the first client round winner wins.</li>
+                            </ul>
+                        </li>
+                        <li>If the tiebreaker winner wins the match, they win the set.</li>
+                    </ol>
+                </div>
+
+                <div id="extended-tiebreaker" class="rule-section">
+                    <h1>Extended Tiebreaker Rules</h1>
+                    <div class="seperator-h"></div>
+                    <h2>1. Adjustments</h2>
+                    <ol class="rules">
+                        <li>Host goes to one shift stone.</li>
+                        <li>Host goes to zero shift stones.</li>
+                        <li>If on Pit, players switch to Ring.</li>
+                        <li>The host starts with less HP.</li>
+                    </ol>
+                </div>
+
+                <div id="scoring" class="rule-section">
+                    <h1>Scoring</h1>
+                    <div class="seperator-h"></div>
+                    <h2>1. Match Definition</h2>
+                    <ol class="rules">
+                        <li>A match is defined as a best of 3 rounds with one player as host and the other as client.</li>
+                    </ol>
+
+                    <h2>2. Scoring Outcomes</h2>
+                    <ol class="rules">
+                        <li>If the number of matches won is unequal, the final score is simply the matches won by each player.</li>
+                        <li>If both players win an equal number of matches, the final score is reported as matches won by both players +1 for the winner.</li>
+                        <li>If a player forfeits or fails to appear at an agreed time, it counts as an automatic 3-0 win for the opposing player.</li>
+                    </ol>
+                </div>
+
+                <div id="placement-ranking" class="rule-section">
+                    <h1>Placement, Ranking and Promotion</h1>
+                    <div class="seperator-h"></div>
+                    <h2>1. Placement</h2>
+                    <ol class="rules">
+                        <li>Your initial placement is determined by <span class="text-highlight">your BP amount and assessed skill</span>.</li>
+                        <li>Before each season starts, you may contest your placement by contacting a moderator with your pitch.</li>
+                    </ol>
+
+                    <h2>2. Ranking</h2>
+                    <ol class="rules">
+                        <li>Ranking at the end of each season is decided by total set wins.</li>
+                        <li>Ties are broken by advantage score. (Advantage = total round wins - total round losses)</li>
+                        <li>If still tied, placement will be shared.</li>
+                    </ol>
+
+                    <h2>3. Promotion and Demotion</h2>
+                    <ol class="rules">
+                        <li>Player performance determines promotion and demotion.</li>
+                        <li>As a rule of thumb:
+                            <ul class="sub-rules">
+                                <li>Top third of a division promotes.</li>
+                                <li>Bottom third of a division demotes.</li>
+                            </ul>
+                        </li>
+                        <li>Exceptional performance may result in promotion over two divisions.</li>
+                    </ol>
+                </div>
+
+                <div id="additional-notes" class="rule-section">
+                    <h1>Additional Notes</h1>
+                    <div class="seperator-h"></div>
+                    <h2>1. Enforcement</h2>
+                    <ol class="rules">
+                        <li>Cheaters are banned from competing, and all their matches are marked as 0-3 losses.</li>
+                    </ol>
+
+                    <h2>2. Match Proof</h2>
+                    <ol class="rules">
+                        <li>Competitors are encouraged to record their fights for both sharing and proof in case verification is needed.</li>
+                    </ol>
+
+                    <h2>3. Game Stability</h2>
+                    <ol class="rules">
+                        <li>This is an early access game, so unexpected issues may occur.</li>
+                        <li>The standard protocol is to reset the match in case of a major bug, unless both players agree on a different solution.</li>
+                    </ol>
+
+                    <h2>4. Scheduling</h2>
+                    <ol class="rules">
+                        <li>You can use <span class="text-highlight">the Match Planner accessible on the webiste</span> in order to see your opponents availabilities and suggest times.</li>
+                        <li>PORC Bot will automatically contact you over discord if someone requested a match with you. You can accept match request both via discord and the Match Planner</li>
+                    </ol>
+
+                    <h2>5. Community Conduct</h2>
+                    <ol class="rules">
+                        <li>Treat each other with respect and enjoy yourself, as is customary in the RUMBLE community.</li>
+                    </ol>
+                </div>
+
+                <div class="mt-5 mb-5 pb-3 pt-3 ms-auto me-auto detail-title">Just be nice, you'll figure it out ^^</div>
+
+            </div>
         </div>
-        <div class="spacer"></div>
     </div>
 </template>
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
-
-.container-fill {
-    min-height: 93vh;
+@import '@/assets/scss/global.scss';
+h2, h4 {
+  font-weight: 600;
+}
+ul, ol {
+  margin-top: 1rem;
+}
+.card {
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
-.part:nth-of-type(n) {
-    margin-top: 0 !important;
-    background: none !important;
+
+
+
+
+.sidebar {
+    position: fixed;
+    width: 1px;
+    height: 90vh;
+
+
+    border-left: 3px dashed rgb(195, 195, 195);
+
+
+    $marker-size: 1rem;
+
+    .section-marker {
+        position: absolute;
+        transform: translate(calc(-50% - 1.5px), -50%);
+
+        height: $marker-size;
+        width: $marker-size;
+
+        border-radius: 50%;
+        border: 3px solid rgb(195, 195, 195);
+
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        z-index: 4;
+
+        cursor: pointer;
+
+        .marker-label {
+            cursor: pointer;
+
+            padding: 0.2rem 0.5rem;
+
+            margin-bottom: 0.1rem;
+            margin-left: 1.5rem;
+
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            text-transform: capitalize;
+            border: 1px solid rgba(255,255,255,0.05);
+
+            font-weight: 600;
+        }
+    }
+
+    .section-marker-bg {
+        position: absolute;
+        transform: translate(calc(-50% - 1.5px), -50%);
+
+        height: $marker-size;
+        width: $marker-size;
+
+        border-radius: 50%;
+        background-color: $background-color;
+
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        z-index: 1;
+
+        cursor: pointer;
+    }
+
+    .scroll-marker {
+        transition: all 0.3s ease-in-out;
+
+        position: absolute;
+        transform: translate(calc(-50% - 1.5px), -50%);
+
+        height: calc($marker-size * 3);
+        width: calc($marker-size * 0.8);
+
+        border-radius: 50%;
+        border-radius: calc($marker-size / 2);
+        border: 3px solid var(--primary);
+        background-color: var(--primary);
+
+        z-index: 2;
+    }
+
+    .sidebar-limit {
+        position: absolute;
+        transform: translate(calc(-50% - 1.5px), -50%);
+        
+        width: 1rem;
+        height: 3px;
+        background-color: rgb(195, 195, 195);
+    }
+}
+
+.mt-6 {
+    margin-top: 5rem !important;
+
+    @media (max-width: 768px) {
+        margin-top: 2rem !important;
+    }
+}
+
+.hidescroll {
+    scrollbar-width: none !important; /* For Firefox */
+    -ms-overflow-style: none !important;  /* For Internet Explorer and Edge */
+    &::-webkit-scrollbar {
+        display: none !important; /* For Chrome, Safari, and Opera */
+    }
 }
 
 
 
-.part:nth-of-type(2n) {
-    background: none !important;
+.rule-section {
+    margin-bottom: 7rem !important;
+
+
+    h1 {
+        color: var(--primary);
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+    }
+
+    h2 {
+        font-size: 1.75rem !important;
+        font-weight: 600 !important;
+        margin-top: 1.5rem !important;
+        margin-bottom: 1rem !important;
+
+        text-decoration: underline;
+        text-decoration-thickness: 0.5px;
+        text-decoration-color: color-mix(in srgb, rgb(118, 116, 116), var(--primary) 20%);;
+        text-underline-offset: 0.3rem;
+    }
+
+    .rules {
+        font-size: 1rem !important;
+        font-weight: 400 !important;
+        line-height: 1.5 !important;
+
+        * {
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+    }
+
+    .text-highlight {
+        text-decoration: underline;
+        text-decoration-color: var(--primary);
+        text-underline-offset: 0.3rem;
+        text-decoration-thickness: 0.15rem;
+    }
 }
 
-.page-header {
-    //background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
-}
-
-.title {
-    justify-content: center;
-    text-align: center;
-    margin: 3rem;
-    font-style: bold;
-    height: fit-content;
-}
-
-.lesser-title {
-    justify-content: left;
-    text-align: left;
-    font-style: bold;
-    height: fit-content;
-    padding-left: 1.6rem;
-    margin-bottom: 2rem;
-}
-
-.under-rules {
-    padding-top: 2rem;
-    align-items: first baseline;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-}
-
-.highlight {
-    text-decoration: underline;
-}
-
-.form-container {
-    top: 0;
-}
-
-.warning {
-    font-style: italic;
-    color: rgb(255, 53, 39);
-}
-
-.success {
-    font-style: italic;
-    color: rgb(19, 244, 98);
-}
-
-.spacer {
-    height: 120px;
+.seperator-h {
+    background-color: color-mix(in srgb, rgb(118, 116, 116), var(--primary) 30%);
 }
 </style>

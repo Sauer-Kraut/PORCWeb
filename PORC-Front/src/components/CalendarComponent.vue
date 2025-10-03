@@ -354,41 +354,44 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
         });
         open();
     } else {
-        const { open, close } = useModal({
-            component: RequestMatchModal,
-            attrs: {
-                title: 'Request Match',
-                match: {
-                    startDate: date,
-                    initiatorId: props.ownId,
-                    opponentId: props.scheduleUserId,
-                    status: MatchStatus.Requested,
-                    season: props.season,
-                } as MatchEvent,
-                opponentUsername: getPlayer(props.scheduleUserId).tag,
-                async onCancel() {
-                    close();
-                },
-                async onSubmitMatch(data: MatchEvent) {
-                    //console.log('submiting something', data);
-                    let set_res = await compStore.create_match_event_local(data);
-                    if (set_res != null) {
-                        console.log('Error adding availability', set_res);
-                        showErrorModal(set_res);
-                    }
+        if (!(day < new Date() && !(day.toDateString() === new Date().toDateString()))) {
+            const { open, close } = useModal({
+                component: RequestMatchModal,
+                attrs: {
+                    title: 'Request Match',
+                    match: {
+                        startDate: date,
+                        initiatorId: props.ownId,
+                        opponentId: props.scheduleUserId,
+                        status: MatchStatus.Requested,
+                        season: props.season,
+                    } as MatchEvent,
+                    opponentUsername: getPlayer(props.scheduleUserId).tag,
+                    async onCancel() {
+                        close();
+                    },
+                    async onSubmitMatch(data: MatchEvent) {
+                        //console.log('submiting something', data);
+                        let set_res = await compStore.create_match_event_local(data);
+                        if (set_res != null) {
+                            console.log('Error adding availability', set_res);
+                            showErrorModal(set_res);
+                        }
 
-                    close();
+                        close();
 
-                    let store_res = await compStore.post_match_event(data);
-                    if (store_res != null) {
-                        console.log('Error storing account', store_res);
-                        showErrorModal(store_res);
-                    }
-                    emit('reload');
+                        let store_res = await compStore.post_match_event(data);
+                        if (store_res != null) {
+                            console.log('Error storing account', store_res);
+                            showErrorModal(store_res);
+                        }
+                        emit('reload');
+                    },
                 },
-            },
-        });
-        open();
+            });
+            open();
+        }
+            
     }
 }
 
@@ -556,7 +559,7 @@ async function submitNote() {
                             <div class="container p-3">
                                 <div class="row align-items-center">
                                     <h4 class="col-auto">
-                                        <MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]"></MatchStatusComponent>
+                                        <div class="icon calander icon-calender"></div>
                                     </h4>
                                     <h6 class="col">{{ match.startDate.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}</h6>
                                     <h6 class="col-auto">
@@ -622,9 +625,20 @@ async function submitNote() {
 <style scoped lang="scss">
 @import '@/assets/scss/styles.scss';
 
-$hour-height: 2.5rem;
+$hour-height: 2.65rem;
 $hours-col: 3rem;
 $border-style: 1px solid rgba(255, 255, 255, 0.2);
+
+@media (max-height: 1000px) {
+    // SCSS variables cannot be reassigned inside media queries.
+    // Instead, override the CSS property directly.
+    .calendar-hour,
+    .calendar-hour-day,
+    .calendar-hour-txt {
+        height: 2rem !important;
+        line-height: 2rem !important;
+    }
+}
 
 @each $division, $color in $division-colors {
     .division-#{$division} .calendar-header {
@@ -734,7 +748,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 margin-bottom: 0.5rem;
 
                 &.availability {
-                    background-color: $availability-color;
+                    background-color: var(--primary);
                     color: white;
 
                     .cross {
@@ -745,7 +759,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                     }
 
                     &.own:hover {
-                        background-color: lighten($availability-color, 10%);
+                        background-color: color-mix(in srgb, var(--primary), white 10%);
                         cursor: pointer;
                         .cross {
                             display: block;
@@ -754,21 +768,21 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 }
 
                 &.match {
-                    background-color: $match-color;
+                    background-color: color-mix(in srgb, $match-color, var(--primary) 5%);
                     color: white;
 
                     &.request {
-                        background-color: $match-request-color;
+                        background-color: color-mix(in srgb, $match-request-color, var(--primary) 5%);
 
                         &.blink {
                             animation: wave 5s linear infinite;
-                            background: linear-gradient(90deg, $match-color, darken($match-request-color, 10%), $match-request-color);
+                            background: linear-gradient(90deg, color-mix(in srgb, $match-color, var(--primary) 5%), darken($match-request-color, 10%), $match-request-color);
                             background-size: 300% 100%;
                         }
                     }
 
                     &.declined {
-                        background-color: $match-declined-color;
+                        background-color: color-mix(in srgb, $match-declined-color, var(--primary) 5%);
                     }
 
                     .match-status {
@@ -814,7 +828,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 text-align: center;
                 justify-content: center;
 
-                border-radius: 12px;
+                // border-radius: 12px;
                 margin-left: 0.5rem;
 
                 font-size: 0.6rem;

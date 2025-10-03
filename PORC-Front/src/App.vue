@@ -128,7 +128,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <header>
+    <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq' }">
         <!-- Navigation -->
         <div class="row h-header">
             <!-- Burger Icon -->
@@ -330,5 +330,10 @@ nav {
 
 .burger-icon .bar.open:nth-child(3) {
     transform: rotate(-45deg) translate(5px, -5px);
+}
+
+.fixed {
+    position: fixed;
+    width: 100%;
 }
 </style>
