@@ -218,19 +218,14 @@ import type { EventCard } from '@/models/EventCard';
     <div class="container-fill row justify-content-center">
         <div class="page-header timer col-xxl-10 col-sm-11">
             <!-- <TimerComponent :targetTimestamp="globalTimer" :season="season_name" :text="TimerText" class="timer-text"></TimerComponent> -->
-        </div>
 
-        <div class="hero-container row justify-content-center">
-            <div class="col-xxl-4 col-xl-8 col-lg-8 routing-buttons">
+            <div class="routing-buttons">
                 <!-- <div class="m-1"></div> -->
-                <h2 class="col-12 title-text">Pro Online <span class="primary">Rumble</span> Competition</h2>
-                <div class="p-3"></div>
-                <div class="col-12 justify-content-center d-flex">
-                    <button class="btn btn-primary mb-3 col-3" @click="loadSeasons">Match Planner -></button>
-                    <div class="p-3"></div>
-                    <button class="btn btn-secondary mb-3 col-3" @click="loadSeasons">See The Rules</button>
+                <h2 class="col-12 col-md-8 title-text mb-2 mb-sm-5">Pro Online <span class="primary">Rumble</span> Competition</h2>
+                <div class="col-12 justify-content-center row">
+                    <button class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-primary" @click="loadSeasons">Match Planner</button>
+                    <button class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-secondary" @click="loadSeasons">See the rules</button>
                 </div>
-                <div class="m-3"></div>
             </div>
         </div>
 
@@ -240,45 +235,31 @@ import type { EventCard } from '@/models/EventCard';
         </div> -->
         <!-- <div class="col-10 text-1 text-normal"><span>Unleash your full </span><span class="text-highlight">potential</span><span>!</span></div> -->
 
-        <div class="d-flex flex-column justify-content-center align-items-center mt-5">
-        <!-- <h2 class="decor-title  col-10">Meet our <span class="text-highlight">Champions</span></h2> -->
-        <SeasonComponent
+        <div class="col-12 col-xxl-10 col-sm-11 p-0 justify-content-center mt-3 mt-md-5">
+            <SeasonComponent
 
-            class="mt-3"
+                class="mt-3"
 
-            :hide_progress="placeholderDisplay"
-            :divisions="divisions"
-            :observer_id="user"
+                :hide_progress="placeholderDisplay"
+                :divisions="divisions"
+                :observer_id="user"
 
-            v-model:selectedDivision="selectedDivision"
-            v-model:selectedSeason="selectedSeason"
+                v-model:selectedDivision="selectedDivision"
+                v-model:selectedSeason="selectedSeason"
 
-            :selectorHeight="selectorHeight"
-            :allowEditSeason="selectedSeasonEdit"
-            :seasons="seasons"
-            :current_season="current_season" />
+                :selectorHeight="selectorHeight"
+                :allowEditSeason="selectedSeasonEdit"
+                :seasons="seasons"
+                :current_season="current_season" />
         </div>
 
-        <div class="row p-5"></div>
-
-
+        <div class="row p-5 d-none d-lg-block"></div>
 
         <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
-            <h2 class="decor-title justify-content-center w-auto mt-5">Meet our <span class="text-highlight">Champions</span></h2>
+            <h2 class="decor-title text-center justify-content-center w-auto mt-5">Meet our <span class="text-highlight">Champions</span></h2>
             <h3 class="content-subtitle justify-content-center w-auto mt-2">The best of the best</h3>
         </div>
-        <div class="col-12 d-flex justify-content-center align-items-center mt-1">
-            <PedestalComponent
-                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4"
-                :account="{
-                    id: '178905571682942976',
-                    username: '2Guib',
-                    avatar: 'ca2b8d0d1d8e5aede55b95e882a5a09d',
-                    schedule: null
-                } as PubAccountInfo"
-                :rank="2"
-            />
-
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1">
             <PedestalComponent
                 class="pedestal-component col-2 mt-0 first z-2 me-4 ms-4"
                 :account="{
@@ -289,9 +270,18 @@ import type { EventCard } from '@/models/EventCard';
                 } as PubAccountInfo"
                 :rank="1"
             />
-
             <PedestalComponent
-                class="pedestal-component col-2 mt-0 third pb-0 z-2 ms-4"
+                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4"
+                :account="{
+                    id: '178905571682942976',
+                    username: '2Guib',
+                    avatar: 'ca2b8d0d1d8e5aede55b95e882a5a09d',
+                    schedule: null
+                } as PubAccountInfo"
+                :rank="2"
+            />
+            <PedestalComponent
+                class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4"
                 :account="{
                     id: '701549482340384828',
                     username: 'kajo',
@@ -305,35 +295,34 @@ import type { EventCard } from '@/models/EventCard';
 
 
 
-        <div class="col col-xxl-8 col-sm-11 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
+        <div class="col-12 col-xxl-8 col-sm-11 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
             <div class="row justify-content-center">
-                <div class="col d-flex ms-3">
+                <div class="col-12 col-md d-flex ms-3">
                     <div class="signup-info d-flex flex-column w-100">
                         <h1 class="decor-title m-0 p-0 mt-3">Registration</h1>
                         <h2 class="content-subtitle mt-2">Sign up for the next season of PORC</h2>
 
 
                         <div class="singup-conditions mt-2 mb-2 w-100">
-                            <div class="m-3 mt-5 row text-b">
-                                <div class="icon-cross p-0 pt-1 me-3"></div>
-                                Configured your schedule in the match planner
-                            </div>
-                            <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 row text-b">
+                            <div class="m-3 mt-5 row text-b align-items-center">
                                 <div class="icon-cross p-0 pt-1 me-3"></div>
                                 On the PORC Discord server
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 row text-b">
+                            <div class="m-3 row text-b align-items-center">
                                 <div class="icon-cross p-0 pt-1 me-3"></div>
                                 Logged in
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 mb-5 row text-b">
+                            <div class="m-3 row text-b align-items-center">
                                 <div class="icon-cross p-0 pt-1 me-3"></div>
                                 All fields filled out
                             </div>
-                            <!-- <div class="m-4"></div> -->
+                            <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
+                            <div class="m-3 mb-5 row text-b align-items-center">
+                                <div class="icon-cross p-0 pt-1 me-3"></div>
+                                Configured your schedule
+                            </div>
                         </div>
 
 
@@ -341,46 +330,47 @@ import type { EventCard } from '@/models/EventCard';
                 </div>
 
 
-                <div class="col align-items-center justify-content-center d-flex me-4">
+                <div class="col-12 col-md align-items-center justify-content-center d-flex me-0 me-md-4">
                     <SignUpFormComponent :season_name="season_name" class="signup-form mt-4 pt-1 mb-4 ms-auto" />
                 </div>
             </div>
         </div>
 
-        <div class="p-5 col-10 mt-5"></div>
+        <div class="p-5 col-10 mt-5 d-none d-md-block"></div>
 
         <div class="d-flex flex-column justify-content-center align-items-center col-12 m-5 pt-4">
             <h2 class="decor-title justify-content-center w-auto mt-5">Other <span class="text-highlight">Rumble Events</span></h2>
             <h3 class="content-subtitle justify-content-center w-auto mt-2">Take a look at the rest of rumble</h3>
         </div>
 
-        <EventCarousel
-            class="mt-5"
-            :cards="[
-            { title: 'BoV', img_scr: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSL6UcR992iJn-N5ie_AQkRYy8ZtkMY1eUZgQ&s', description: 'something happens here', link: '' } as EventCard,
-            { title: 'PORC Cup', img_scr: 'https://preview.redd.it/suisei-is-on-the-front-cover-of-forbes-japan-30-under-30-v0-68k00oamz7lf1.jpeg?width=1080&crop=smart&auto=webp&s=5226a771c968c0288c02d3554cafd4657248e970', description: 'The annual PORC Cup event.', link: 'https://porc.com/cup' } as EventCard,
-            { title: 'Rumble Royale', img_scr: 'https://upload-os-bbs.hoyolab.com/upload/2024/07/07/61417959/af8f2b802a4e7b6b1b9ecb1201f7f11c_6535124317885581596.png?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70', description: 'Battle it out in the Rumble Royale!', link: 'https://porc.com/royale' } as EventCard,
-            { title: 'Summer Slam', img_scr: 'https://pbs.twimg.com/profile_images/1245322751239426048/Ikuo3JY7_400x400.jpg', description: 'Summer tournament for all players.', link: 'https://porc.com/summer' } as EventCard,
-            { title: 'Winter Clash', img_scr: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg', description: 'Compete in the chilly Winter Clash.', link: 'https://porc.com/winter' } as EventCard
-            ]"
-        ></EventCarousel>
+        <div class="col-12 d-flex justify-content-center mt-5 p-0">
+            <EventCarousel
+                :cards="[
+                    { title: 'BoV', img_scr: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSL6UcR992iJn-N5ie_AQkRYy8ZtkMY1eUZgQ&s', description: 'something happens here', link: '' } as EventCard,
+                    { title: 'PORC Cup', img_scr: 'https://preview.redd.it/suisei-is-on-the-front-cover-of-forbes-japan-30-under-30-v0-68k00oamz7lf1.jpeg?width=1080&crop=smart&auto=webp&s=5226a771c968c0288c02d3554cafd4657248e970', description: 'The annual PORC Cup event.', link: 'https://porc.com/cup' } as EventCard,
+                    { title: 'Rumble Royale', img_scr: 'https://upload-os-bbs.hoyolab.com/upload/2024/07/07/61417959/af8f2b802a4e7b6b1b9ecb1201f7f11c_6535124317885581596.png?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70', description: 'Battle it out in the Rumble Royale!', link: 'https://porc.com/royale' } as EventCard,
+                    { title: 'Summer Slam', img_scr: 'https://pbs.twimg.com/profile_images/1245322751239426048/Ikuo3JY7_400x400.jpg', description: 'Summer tournament for all players.', link: 'https://porc.com/summer' } as EventCard,
+                    { title: 'Winter Clash', img_scr: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg', description: 'Compete in the chilly Winter Clash.', link: 'https://porc.com/winter' } as EventCard
+                ]"
+            ></EventCarousel>
+        </div>
 
-        <div class="p-5 col-10 mt-5"></div>
+        <div class="p-5 col-10 mt-5 d-none d-md-block"></div>
 
 
         <div class="d-flex porc-stats justify-content-center col-xxl-7 col-xl-11 mt-5">
 
-            <div class="d-flex flex-column justify-content-center m-5 stat">
+            <div class="d-flex flex-column justify-content-center my-5 mx-0 mx-md-5 stat">
                 <h1 class="XL-text align-text-center mb-0 mt-5">57</h1>
                 <h5 class="align-text-center">Total Divisions</h5>
             </div>
 
-            <div class="d-flex flex-column justify-content-center m-5 stat">
+            <div class="d-flex flex-column justify-content-center my-5 mx-0 mx-md-5 stat">
                 <h1 class="XL-text align-text-center mb-0 mt-5">1.2k+</h1>
                 <h5 class="align-text-center">Total Matches</h5>
             </div>
 
-            <div class="d-flex flex-column justify-content-center m-5 stat">
+            <div class="d-flex flex-column justify-content-center my-5 mx-0 mx-md-5 stat">
                 <h1 class="XL-text align-text-center mb-0 mt-5">407+</h1>
                 <h5 class="align-text-center">Total Signups</h5>
             </div>
@@ -397,8 +387,6 @@ import type { EventCard } from '@/models/EventCard';
 @import '@/assets/scss/styles.scss';
 @import '@/assets/scss/global.scss';
 
-$hero-height: 32rem;
-
 .container-fill {
     min-height: 100vh;
     width: 100vw !important;
@@ -406,8 +394,8 @@ $hero-height: 32rem;
 }
 
 .page-header {
-    position: absolute;
-    height: $hero-height;
+    //position: absolute;
+    height: 32rem;
 
     border-radius: 60px;
     border-bottom-left-radius: 0px;
@@ -437,6 +425,9 @@ $hero-height: 32rem;
 
 .routing-buttons {
     z-index: 3;
+    margin-top: 1.5rem !important;
+    margin: 2rem;
+    height: 100%;
 
     padding: 0.5rem !important;
     margin-inline: auto !important;
@@ -454,6 +445,10 @@ $hero-height: 32rem;
     justify-content: center;
     // box-shadow: 0 0 100px rgba(0, 0, 0, 0.475);
     // background-color: rgb(26, 23, 23);
+
+    .btn {
+        max-width: 60vw;
+    }
 }
 
 
@@ -527,6 +522,11 @@ $hero-height: 32rem;
     overflow: hidden;
     margin-top: 10rem;
 
+
+    @include media-breakpoint-down(md) {
+        margin-top: 0;
+    }
+
     align-self: center;
 
     border: 1px solid $border-color;
@@ -561,8 +561,14 @@ $hero-height: 32rem;
 }
 
 .signup-form {
-    max-width: 30rem !important;
+    max-width: 30rem;
     transform: scale(1.05);
+    
+    @include media-breakpoint-down(md) {
+        width: 100%;
+        max-width: 100%;
+        margin: 0rem 1.5rem 1.5rem 1.5rem !important;
+    }
 }
 
 .singup-conditions {
@@ -607,11 +613,16 @@ $bad-color: rgb(255, 32, 0);
 
 .text-b {
     font-size: 1.4rem;
+    
+    @include media-breakpoint-down(md) {
+        font-size: 1.2rem;
+    }
 }
 
 .highlight {
     position: absolute;
     display: block;
+    align-self: center;
     width: 80%;
     height: 400px;
 
@@ -642,15 +653,29 @@ $bad-color: rgb(255, 32, 0);
 .pedestal-component {
 
     &.first {
-        transform: scale(1.2) translate(0, 0.5rem) !important;
+        order: 1;
+        transform: scale(1.2);
+        @include media-breakpoint-up(md) {
+            order: 2;
+            transform: scale(1.2) translate(0, 0.5rem);
+        }
     }
 
     &.second {
-        transform: translate(0, -2rem);
+        order: 2;
+        @include media-breakpoint-up(md) {
+            order: 1;
+            transform: translate(0, -2rem);
+        }
     }
 
     &.third {
-        transform: scale(0.9) translate(0, -3.5rem) !important;
+        order: 3;
+        transform: scale(0.9);
+        @include media-breakpoint-up(md) {
+            order: 3;
+            transform: scale(0.9) translate(0, -3.5rem);
+        }
     }
 }
 

@@ -70,11 +70,19 @@ body {
 }
 
 .decor-title {
-    font-size: 3.5rem !important;
-    font-weight: 700 !important;
-    margin-bottom: 0 !important;
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
 
-    color: white !important;
+    color: white;
+
+    @include media-breakpoint-down(md) {
+        font-size: 2.5rem;
+    }
+
+    @include media-breakpoint-down(sm) {
+        font-size: 2rem;
+    }
 }
 
 .title-text {
@@ -83,6 +91,14 @@ body {
     text-align: center;
     margin-top: 2rem;
     margin-bottom: 1rem;
+
+    @include media-breakpoint-down(md) {
+        font-size: 3rem;
+    }
+
+    @include media-breakpoint-down(sm) {
+        font-size: 2.3rem;
+    }
 }
 
 .content-title {

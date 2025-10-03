@@ -2,7 +2,7 @@
     import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
     import DivisionComponent from './DivisionComponent.vue';
     import DivisionSelector from './DivisionSelector.vue';
-    import Logo from './svgs/logo.vue';
+    import Logo from './svgs/Logo.vue';
     import type { DivisionModel } from '@/models/matchplan/DivisionModel';
     import type { Season } from '@/models/matchplan/Season';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
@@ -131,22 +131,21 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 </script>
 
 <template>
-    <div class="col col-xxl-10 col-sm-11 justify-content-center d-flex season-component-container">
-
+    <div class="season-component-container">
         <div class="season-header row">
-            <Logo  class="header-img" :primaryColor="'rgb(26, 23, 23)'"></Logo>
+            <Logo class="header-img col-auto" :primaryColor="'rgb(26, 23, 23)'"></Logo>
 
-            <div class="col header-title-container align-content-center">
+            <div class="col header-title-container align-content-center d-none d-sm-block">
                 <h2 class="header-title">Seasons & Divisions</h2>
                 <span class="header-subtitle">RUMBLE VR - Round Robin Tournament</span>
             </div>
 
-            <select v-model="selectedSeason" class="form-select mb-3 season-options" v-if="seasons?.length">
+            <select v-model="selectedSeason" class="form-select mb-3 season-options col-auto" v-if="seasons?.length">
                 <option v-for="season in seasons" :key="season.name" :value="season">
                     {{ getSeasonDisplayName(season) }}
                 </option>
             </select>
-            <div class="season-timer"> <!-- Thank you ChatGPT, litteraly didnt write any of this code | nvm, I had to fix something -->
+            <div class="season-timer col-auto d-none d-md-block"> <!-- Thank you ChatGPT, litteraly didnt write any of this code | nvm, I had to fix something -->
                 <span class="detail-title" v-if="selectedSeason && new Date(selectedSeason.start_timestamp * 1000) > new Date()">Season will start in</span>
                 <span class="detail-title" v-else-if="selectedSeason && new Date(selectedSeason.end_timestamp * 1000) > new Date()">Time until Season end</span>
                 <span class="detail-title" v-else-if="selectedSeason">Season happened during</span>
@@ -165,12 +164,8 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
                     </template>
                 </div>
             </div>
-
         </div>
-
-
         <div class="season-container">
-
             <div class="col-ms-12 selector-container">
 
                 <div class=""></div>
@@ -182,7 +177,6 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
                         class="selector" :style="{ 'max-width': '100%', 'opacity': opacity}" 
                         />
             </div>
-
             <div class="col col-ms-12 division-container">
                 <DivisionComponent v-if="selectedDivision" 
                     :selector-height="selectorHeight" 
@@ -194,9 +188,7 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
                     class="division" 
                     :style="{ maxHeight: selectorHeight + 'px'}"/>
             </div>
-        
         </div>
-
     </div>
 </template>
 
@@ -206,7 +198,6 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
     $background-color: rgba(40, 41, 47, 0);
     $border-color: #515458;
 
-    $selector-width: 14rem;
     $header-height: 5rem;
     $body-height: 30rem;
 
@@ -220,11 +211,8 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 
         box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
 
-        transform: scale(1.03); // I know, but its the most convinient way to handle this and doesnt really hurt that much as there isnt a lot of other text within the same page
+        //transform: scale(1.03); // I know, but its the most convinient way to handle this and doesnt really hurt that much as there isnt a lot of other text within the same page
     }
-
-
-
 
     // Header scss
 
@@ -264,6 +252,9 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 
     .header-title-container {
         width: fit-content;
+        overflow: hidden;
+        white-space: nowrap;
+        margin-right: 0.5rem;
     }
 
     .header-title {
@@ -274,6 +265,10 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
         align-self: center;
 
         margin: 0;
+
+        @include media-breakpoint-down(md) {
+            font-size: 1.25rem;
+        }
     }
 
     .header-subtitle {
@@ -282,8 +277,11 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
         align-self: center;
 
         margin: 0;
-    }
 
+        @include media-breakpoint-down(sm) {
+            font-size: 0.875rem;
+        }
+    }
 
     .season-options {
         margin: 1rem !important;
@@ -309,7 +307,6 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 
     }
 
-
     .season-timer {
         display: flex;
         flex-direction: column;
@@ -333,40 +330,20 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Content scss
-
     .season-container {
         display: flex;
         width: 100%;
         height: calc($body-height) !important;
     }
 
-
-
     .selector-container {
         display: flex;
         flex-direction: column;
-
         box-sizing: border-box;
         height: 100%;
-        padding-top: 2rem !important;
         overflow-y: hidden;
         scrollbar-width: none; /* For Firefox */
-
-        width: $selector-width !important;
 
         border-right: 1px solid $border-color;
 
@@ -375,8 +352,11 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
         border-bottom-left-radius: 16px;
 
         // background-color: rgb(27, 29, 30);
-
         transition: all 0.6s ease !important;
+
+        @include media-breakpoint-up(md) {
+            width: 14rem;
+        }
 
         * {
             transition: all 0.6s ease;
@@ -386,17 +366,11 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
     .division-container {
         height: 100%;
         overflow: hidden;
-        width: calc(100% - $selector-width) !important; // I know this sucks, but flex grow never works for me and Im tierd of trying to figure it out
-
         background-color: $background-color;
-
         border: 1px solid $border-color;
         border-left: 0px;
-
         border-bottom-right-radius: 16px;
     }
-
-
 
     .selector {
         height: 100%;
@@ -404,7 +378,6 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 
         overflow-y: scroll; // Enable vertical scrolling
 
-        width: $selector-width !important;
         max-width: 6rem;
 
         // border: 1px solid $border-color;

@@ -484,7 +484,7 @@ async function submitNote() {
 </script>
 
 <template>
-    <div class="calendar-container m-0">
+    <div class="calendar-container m-0 px-0">
         <div class="calendar-header m-0 ps-0 pe-0">
             <div class="calendar-header-top row align-items-center mb-3 ps-5 pe-5">
                 <div class="col-auto day-arrows">
@@ -806,6 +806,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             flex: none;
             display: grid;
             grid-template-rows: repeat(24, 1fr);
+            pointer-events: none;
 
 
             .calendar-hour {

@@ -8,7 +8,7 @@ import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { Schedule } from '@/models/schedule/Schedule';
 import { defineProps, defineModel, ref } from 'vue';
 import DiscordAvatarComponent from './DiscordAvatarComponent.vue';
-import Logo from './svgs/logo.vue';
+import Logo from './svgs/Logo.vue';
 
 const schedule = ref({
     availabilities: [
@@ -67,7 +67,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
 </script>
 
 <template>
-    <div class="d-flex flex-column container-fluid m-0 p-0 pt-2">
+    <div class="d-flex flex-column container-fluid m-0 p-0">
         <div class="d-flex flex-row m-3 ms-4">
             <Logo class="logo ms-1" />
             <h3 class="ms-4 bold">
@@ -75,7 +75,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
             </h3>
         </div>
         <!-- css nonsence of row not working  -->
-        <div class="d-flex flex-column flex-wrap-reverse">
+        <div class="d-flex flex-row flex-md-column overflow-scroll overflow-md-auto">
             <PlayerSelectionComponent
                 class=""
                 v-for="player in props.players"
@@ -99,6 +99,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
 
 .logo {
     height: 2.5rem !important;
+    min-width: 2.5rem !important;
 }
 
 .bold {

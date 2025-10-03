@@ -33,11 +33,11 @@ function getProgress() {
 
 <template>
     <div class="list-group-item list-group-item-action body-div" :class="{ active: active(), [`division-${division?.name?.toLowerCase() || 'iron'}`]: true }" @click="select">
-        <div class="d-flex align-items-center">
+        <div class="d-flex flex-column flex-md-row align-items-center">
             <img :src="getDivisionImage(props.division.name)" class="division-icon" />
-            <div class="division-info">
+            <div class="division-info w-100 d-block d-md-flex">
                 <h5 class="d-none d-md-flex m-0 ms-2">{{ filter_str(props.division.name, 14) }}</h5>
-                <div class="progress" role="progressbar">
+                <div class="progress m-0 mx-md-2" role="progressbar">
                     <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
                 </div>
             </div>
@@ -102,7 +102,6 @@ $background-color: rgb(20, 20, 20);
         right: 0;
         height: 0.2rem !important; // Set the height of the progress bar
         border-radius: 0;
-        margin-inline: 0.5rem;
         // margin-bottom: 0.5rem;
         width: 100%;
     }
@@ -146,7 +145,6 @@ $background-color: rgb(20, 20, 20);
 }
 
 .division-info {
-    display: flex;
     flex-wrap: wrap;
 
     height: 3rem;

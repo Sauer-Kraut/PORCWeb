@@ -23,7 +23,7 @@ async function select() {
 
 <template>
     <div>
-        <div class="body rounded d-flex justify-content-rigth m-3 mt-2 mb-2" :class="{ active: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
+        <div class="body rounded d-flex justify-content-rigth m-3 mt-2 mb-2 pe-3" :class="{ active: selectedPlayer && selectedPlayer.id === props.player.id }" @click="select">
             <DiscordAvatarComponent
                 :account="player"
                 class="avatar mt-auto mb-auto"
