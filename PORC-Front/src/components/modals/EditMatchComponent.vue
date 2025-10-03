@@ -6,6 +6,7 @@ import type { MatchModel } from '@/models/matchplan/MatchModel';
 
 const props = defineProps<{
     match: MatchModel;
+    forfeitP1: boolean;
 }>();
 
 var p1score = ref(props.match.p1score ?? null);
@@ -21,6 +22,12 @@ const match = ref(props.match);
 function save() {
     match.value.p1score = p1score.value;
     match.value.p2score = p2score.value;
+    emit('save', match.value);
+}
+
+function forfeit() {
+    match.value.p1score = props.forfeitP1 ? 0 : 3;
+    match.value.p2score = props.forfeitP1 ? 3 : 0;
     emit('save', match.value);
 }
 
@@ -66,7 +73,7 @@ const shortendP2tag = ref(props.match.p2.tag.length > 10 ? props.match.p2.tag.sl
                     <button @click="close" class="btn btn-outline-primary w-100">Cancel</button>
                 </div>
                 <div class="col-md-4 col-xl-6">
-                    <button @click="close" class="btn btn-outline-danger w-100">Forfeit</button>
+                    <button @click="forfeit" class="btn btn-outline-danger w-100">Forfeit</button>
                 </div>
                 <div class="col-md-4 col-xl-12 mt-3">
                     <button @click="save" class="btn btn-primary w-100">Save</button>

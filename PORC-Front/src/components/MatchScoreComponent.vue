@@ -30,6 +30,7 @@ async function editMatch() {
         component: EditMatchComponent,
         attrs: {
             match: props.match,
+            forfeitP1: props.match.p1.id == props.user_id,
             onSave: async (updateInfo: any) => {
                 close();
                 await updateMatchInfo(updateInfo);
