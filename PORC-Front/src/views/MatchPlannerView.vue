@@ -16,6 +16,7 @@ import { accountsStore } from '@/storage/st_accounts';
 import type { Season } from '@/models/matchplan/Season';
 import { waitForAppReady } from '@/appReady';
 import lineBreak from '@/util/LineBreakFilter';
+import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -175,6 +176,7 @@ onMounted(async () => {
     opponents.value = find_opponents();
     await getPubPlayerInfos(getPlayerIds());
     selectSelf();
+    updatePrimaryColor(division.value?.name?.toLowerCase() || 'meteorite');
     check_season_running();
 });
 
@@ -257,7 +259,7 @@ async function submitNote() {
                 
                 </div>
 
-                <div class="ms-5 col-3">     
+                <div class="ms-5 col-3" v-if="season_running">     
 
                     <!-- // <div class="page-header"></div> -->
 
@@ -278,7 +280,7 @@ async function submitNote() {
                                 class="match-score rounded"
                                 :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
                             >
-                                <MatchScoreComponent :match="match" :user_id="user_id" :editMode="seasonEdit" />
+                                <MatchScoreComponent :match="match" :user_id="user_id" :editMode="true" />
                             </div>
                         </div>
                     </div>
@@ -351,7 +353,7 @@ $tile-bg: rgb(15, 15, 15) !important;
                 background: rgba(255, 255, 255, 0.082) !important;
 
                 * {
-                    transition: border 0.4s;
+                    transition: all 0.4s;
                     border: none;
                 }
             }

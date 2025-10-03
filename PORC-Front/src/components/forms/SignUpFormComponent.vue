@@ -24,7 +24,7 @@ const isOnDiscord = ref(false);
 const isLoggedIn = ref(true);
 let user_id = ref('0');
 
-const isSignedUp = ref(false);
+const signup = ref<SignUpInfo | null>(null);
 
 function showWarning() {
     invalidFillOut.value = true;
@@ -66,9 +66,8 @@ async function postSignUp() {
         showErrorModal(res);
         return;
     } else {
-        isSignedUp.value = true;
+        signup.value = res;
     }
-    isSignedUp.value = true;
 }
 
 async function getUserId() {
@@ -91,13 +90,13 @@ async function getSignedUp() {
     let store = signupStore();
     let signups = await store.get_signups(null);
 
-    isSignedUp.value = false;
+    signup.value = null;
 
     if (signups != null) {
 
-        for (let signup of signups) {
-            if (signup.discord_id == user_id.value) {
-                isSignedUp.value = true;
+        for (let signup_in of signups) {
+            if (signup_in.discord_id == user_id.value) {
+                signup.value = signup_in;
             }
         }
     }
@@ -118,13 +117,12 @@ onMounted(async () => {
             <div class="col-10 d-flex flex-column">
                 <h1 class="content-title">Sign Up</h1>
                 <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">Oct. 8th</span></h3>
-                <!-- <h3 v-if="isSignedUp && user_id != '0'" class="conformation icon-checkmark"></h3> -->
             </div>
             <div class="form-container row">
-                <form class="col-12">
-                    <fieldset :disabled="!(!isLoggedIn || isSignedUp || user_id == '0')">
-                        
-                        <div class="p-1" v-if="invalidFillOut || !isLoggedIn || success"></div>
+                <form class="col-12" v-if="!signup">
+
+                    <fieldset :disabled="!(!isLoggedIn || signup != null || user_id == '0')">
+
                         <div class="p-2"></div>
 
                         <div c-lass="col-12">
@@ -132,19 +130,13 @@ onMounted(async () => {
                                 <h5 class="content-subtitle bold m-0">User Info</h5>
                                 <div class="seperator-h ms-2 me-4"></div>
                             </div>
-                            
-
                             <label for="disabledTextInput" class="form-label">Discord username</label>
                             <input type="text" id="disabledTextInput" class="form-input" placeholder="username" v-model="username" />
-
-
                             <div class="row d-flex justify-content-space-between">
-
                                 <div class="col-5">
                                     <label for="disabledTextInput" class="form-label">BP</label>
                                     <input type="number" step="1000" min="0" id="disabledTextInput" class="form-input" placeholder="00000" v-model="BP" />
                                 </div>
-
                                 <div class="col-6">
                                     <label for="disabledSelect" class="form-label">Region</label>
                                     <select id="disabledSelect" class="form-select form-input" v-model="region" placeholder="Select a region">
@@ -156,27 +148,56 @@ onMounted(async () => {
                                     </select>
                                 </div>
                             </div>
-
-
-
                             <div class="mb-3 mt-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck" v-model="isOnDiscord" />
                                     <label class="form-label" for="disabledFieldsetCheck"> I am on the PORC discord server </label>
                                 </div>
                             </div>
-
-                            
                             <div class="p-2"></div>
                             <div class="d-flex flex-row justify-content-between align-items-center">
                                 <button type="button" class="btn btn-primary col-auto button" @click="confirmInput">Submit</button>
                                 <a v-if="!isLoggedIn" class="col-auto btn btn-secondary me-2" :href="discordAuthURL">Log in</a>
                             </div>
-
                         </div>
-                        
                     </fieldset>
                 </form>
+                <!-- Alternative card for existing signup -->
+                <div v-else class="col-12">
+
+                    <fieldset>
+
+                        <div class="p-2"></div>
+
+                        <div c-lass="col-12">
+                            <div class="row d-flex mb-3">
+                                <h5 class="content-subtitle bold m-0">Submitted Info</h5>
+                                <div class="seperator-h ms-2 me-4"></div>
+                            </div>
+                            
+                            <label for="disabledTextInput" class="form-label">Discord username</label>
+                            <div class="submitted-field col-7">{{ signup.username }}</div>
+
+                            <div class="row d-flex justify-content-space-between">
+                                <div class="col-5">
+                                    <label for="disabledTextInput" class="form-label">BP</label>
+                                    <div class="submitted-field col-12">{{ signup.bp }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="disabledTextInput" class="form-label">Region</label>
+                                    <div class="submitted-field col-12">{{ signup.region }}</div>
+                                </div>
+                            </div>
+                            <div class="mb-3 mt-2 pt-1 ps-1">
+                                Signed up at {{ new Date(signup.date * 1000).toLocaleString() }}
+                            </div>
+                            <div class="p-2"></div>
+                            <div class="d-flex flex-row justify-content-between align-items-center ps-1 pe-1">
+                                <button type="button" class="btn btn-danger-sec col-auto button" @click="confirmInput">Delete</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
             </div>
         </div>
     </div>
@@ -185,6 +206,10 @@ onMounted(async () => {
 <style scoped lang="scss">
 @import '@/assets/scss/styles.scss';
 @import '@/assets/scss/global.scss';
+
+.form-container {
+    width: 350px !important;
+}
 
 .inner-container {
     border: 1px solid $border-color;
@@ -252,4 +277,21 @@ fieldset:disabled a {
   opacity: 1;            /* prevent it from looking disabled */
 }
 
+.height-4 {
+    height: 1.5rem !important;
+}
+
+.submitted-field {
+    padding: 0.25rem !important;
+    padding-left: 0.5rem !important;
+    margin-bottom: 1rem !important;
+    height: 2.25rem !important;
+
+    font-size: 1.1rem;
+    font-weight: 500;
+    
+    color: #ffffff;
+    background-color: #ffffff14;
+    border-radius: 8px;
+}
 </style>

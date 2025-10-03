@@ -28,6 +28,7 @@ const placeholders = [
     'Due to technical difficulties, this scoreboard has been determined incapable of displaying all of Juicepars achievements specifically',
     'bibin',
     "'2 rock win against 1 rock' - Tamrell 2025",
+    "'How, then, can they call on the one they have not believed in? And how can they believe in the one of whom they have not heard? And how can they hear without someone preaching to them?' - Romans 10:14 (Shoeless)",
 ];
 
 // Reactive variable to hold the selected placeholder
@@ -170,7 +171,7 @@ onMounted(async () => {
             </div>
         </div>
         <div v-else class="placeholder rounded">
-            <h2>{{ placeholder }}</h2>
+            <h2 class="text-highlight transition-0">{{ placeholder }}</h2>
         </div>
     </div>
 </template>
@@ -414,5 +415,8 @@ onMounted(async () => {
 .displayed {
     transition: width 0.5s ease !important; /* Smooth opacity transition */
     overflow: hidden;
+}
+.transition-0 {
+    transition: 0.1s !important;
 }
 </style>

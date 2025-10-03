@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-    import { ref, computed, watch, onMounted } from 'vue';
+    import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
     import DivisionComponent from './DivisionComponent.vue';
     import DivisionSelector from './DivisionSelector.vue';
     import Logo from './svgs/logo.vue';
     import type { DivisionModel } from '@/models/matchplan/DivisionModel';
     import type { Season } from '@/models/matchplan/Season';
+import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 
     const props = defineProps<{
         hide_progress: boolean;
@@ -21,27 +22,27 @@
 
 
     function getSeasonDisplayName(season: Season): string {
-    if (props.current_season != null && new Date(props.current_season.end_timestamp * 1000) < new Date(season.start_timestamp * 1000)) {
-        // if check only possible for dummy season
-        if (season.name == props.current_season.name) {
-            return "Upcoming Season"
+        if (props.current_season != null && new Date(props.current_season.end_timestamp * 1000) < new Date(season.start_timestamp * 1000)) {
+            // if check only possible for dummy season
+            if (season.name == props.current_season.name) {
+                return "Upcoming Season"
+            } else {
+                return `Season ${season.name} [Upcoming]`;
+            }
+        }
+        else if (props.seasons.indexOf(season) == 0) {
+            var today = new Date();
+            if (new Date(season.start_timestamp * 1000) <= today && new Date(season.end_timestamp * 1000) > today) {
+                return `Season ${season.name} [Current]`;
+            } else if (new Date(season.end_timestamp * 1000) < today) {
+                return `Season ${season.name} [Latest]`;
+            } else {
+                return `Season ${season.name} [Upcoming]`;
+            }
         } else {
-            return `Season ${season.name} [Upcoming]`;
+            return `Season ${season.name}`;
         }
     }
-    else if (props.seasons.indexOf(season) == 0) {
-        var today = new Date();
-        if (new Date(season.start_timestamp * 1000) <= today && new Date(season.end_timestamp * 1000) > today) {
-            return `Season ${season.name} [Current]`;
-        } else if (new Date(season.end_timestamp * 1000) < today) {
-            return `Season ${season.name} [Latest]`;
-        } else {
-            return `Season ${season.name} [Upcoming]`;
-        }
-    } else {
-        return `Season ${season.name}`;
-    }
-}
 
 
 
@@ -57,24 +58,75 @@
     }
 
     watch(() => selectedDivision.value, (newValue) => {
-        if (newValue) {
-            // getSelectorHeight();
-            // if (opacity.value < 1) {
-            //     opacity.value = 1;
-            // } else {
-            //     opacity.value = 0;
-            // }
-        }
+        updatePrimaryColor(selectedDivision.value?.name?.toLowerCase() || 'meteorite');
     });
 
     watch(() => props.divisions, (newValue) => {
-        
-        // getSelectorHeight();
-        
+        updatePrimaryColor(selectedDivision.value?.name?.toLowerCase() || 'meteorite');
     });
 
     onMounted(async () => {
         // getSelectorHeight();
+    });
+
+    function formatTimeDiff(ms: number): string {
+        // Calculate days, hours, minutes, seconds
+        const totalSeconds = Math.floor(ms / 1000);
+        const days = Math.floor(totalSeconds / (3600 * 24));
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        let result = '';
+        if (days > 0) result += `${days}d `;
+        if (hours > 0 || days > 0) result += `${hours}h `;
+        if (minutes > 0 || hours > 0 || days > 0) result += `${minutes}m `;
+        result += `${seconds}s`;
+        return result.trim();
+    }
+
+    function formatDate(timestamp: number): string {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function formatDateLong(timestamp: number): string {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    // keep a live "now" so the computed value updates every second
+    const now = ref(new Date());
+    let _timerId: number | undefined;
+    onMounted(() => {
+        _timerId = window.setInterval(() => { now.value = new Date(); }, 1000);
+    });
+    onUnmounted(() => {
+        if (_timerId !== undefined) window.clearInterval(_timerId);
+    });
+
+    // Add timerText computed property (reads `now` so it updates)
+    const timerText = computed(() => {
+        if (!selectedSeason.value) return '';
+        const current = now.value;
+        const start = new Date(selectedSeason.value.start_timestamp * 1000);
+        const end = new Date(selectedSeason.value.end_timestamp * 1000);
+        if (start > current) {
+            // Time until season start
+            return formatTimeDiff(start.getTime() - current.getTime());
+        } else if (end > current) {
+            // Time until season end
+            return formatTimeDiff(end.getTime() - current.getTime());
+        } else {
+            // Season ended
+            return '';
+        }
     });
 </script>
 
@@ -94,13 +146,24 @@
                     {{ getSeasonDisplayName(season) }}
                 </option>
             </select>
+            <div class="season-timer"> <!-- Thank you ChatGPT, litteraly didnt write any of this code | nvm, I had to fix something -->
+                <span class="detail-title" v-if="selectedSeason && new Date(selectedSeason.start_timestamp * 1000) > new Date()">Season will start in</span>
+                <span class="detail-title" v-else-if="selectedSeason && new Date(selectedSeason.end_timestamp * 1000) > new Date()">Time until Season end</span>
+                <span class="detail-title" v-else-if="selectedSeason">Season happened during</span>
 
-            <div class="season-timer">
-                <span class="detail-title" v-if="true">Time until season end</span>
-                <span class="detail-title" v-else-if="false">Season will start at</span>
-                <span class="detail-title" v-else>Season happend during</span>
-
-                <div class="timer-content">3d   14h   59m   2s</div>
+                <div class="timer-content">
+                    <template v-if="selectedSeason">
+                        <span v-if="selectedSeason && new Date(selectedSeason.start_timestamp * 1000) > new Date()">
+                            <span>{{ timerText }}</span>
+                        </span>
+                        <span v-else-if="selectedSeason && new Date(selectedSeason.end_timestamp * 1000) > new Date()">
+                            <span>{{ timerText }}</span>
+                        </span>
+                        <span v-else>
+                            {{ formatDate(selectedSeason.start_timestamp * 1000) }} - {{ formatDate(selectedSeason.end_timestamp * 1000) }}
+                        </span>
+                    </template>
+                </div>
             </div>
 
         </div>
@@ -266,6 +329,7 @@
             width: 100%;
             font-weight: 600;
             margin-bottom: auto !important;
+            text-wrap: nowrap;
         }
     }
 

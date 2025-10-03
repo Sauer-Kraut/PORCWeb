@@ -2,6 +2,10 @@
 
 :root {
     --primary: #b25ef7; // or any color you want
+
+    @each $name, $color in $division-colors {
+        --#{$name}: #{$color};
+    }
 }
 
 body {
@@ -25,11 +29,29 @@ body {
 .btn-secondary {
     border: 1px solid white !important;
     background-color: transparentize($color: white, $amount: 1) !important;
+
+    &:hover {
+        background-color: transparentize($color: white, $amount: 0.8) !important;
+    }
+}
+
+.btn-danger-sec {
+    border: 1px solid $danger !important;
+    color: $danger !important;
+    background-color: transparentize($color: $danger, $amount: 1) !important;
+
+    &:hover {
+        background-color: transparentize($color: $danger, $amount: 0.8) !important;
+    }
 }
 
 .btn {
     border-radius: 10px !important;
     font-weight: 600 !important;
+}
+
+.primary {
+    color: var(--primary) !important;
 }
 
 .secondary {

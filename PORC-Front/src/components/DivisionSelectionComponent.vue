@@ -50,15 +50,36 @@ function getProgress() {
 @import '@/assets/scss/styles.scss';
 
 // this should be a global variable, but its 2am so Ill pass
-$background-color: rgba(27, 29, 30, 0);
+$background-color: rgb(20, 20, 20);
 
 .list-group-item {
     background-color: $background-color;
     transition: all 0.1s ease !important;
 
     &.active {
-        background-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255, 255, 255, 0.035)  !important;
         // border-color: $dark-border !important;
+    }
+
+    &:not(.active):not(:hover) {
+        position: relative; /* make pseudo positioned relative to the item */
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0; /* top:0; right:0; bottom:0; left:0; */
+            background: color-mix(in srgb, $background-color 20%, transparent) !important; /* adjust opacity to taste */
+            transition: all 0.1s ease-in-out;
+            border-radius: inherit;
+            pointer-events: none; /* allow clicks through the overlay */
+            z-index: 1;
+        }
+
+        /* ensure content renders above the overlay if needed */
+        > * {
+            position: relative;
+            z-index: 0;
+        }
     }
 
     @include media-breakpoint-down(sm) {
@@ -119,7 +140,7 @@ $background-color: rgba(27, 29, 30, 0);
     transition: all 0.05 !important;
 
     &:hover {
-        background-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255, 255, 255, 0.035) !important;
         // height: 5rem;
     }
 }

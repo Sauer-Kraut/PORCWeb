@@ -121,7 +121,7 @@ import type { EventCard } from '@/models/EventCard';
             // Season in the far future -> on top of list
             const dummySeason: Season = {
                 name: seasons.value[0].name,
-                start_timestamp: 7258118400, // January 1, 2200
+                start_timestamp: seasons.value[0].pause_end_timestamp,
                 end_timestamp: 7260796800,   // Feburary 1, 2200
                 pause_end_timestamp: 7263216000,   // March 1, 2200
             };
@@ -220,17 +220,18 @@ import type { EventCard } from '@/models/EventCard';
             <!-- <TimerComponent :targetTimestamp="globalTimer" :season="season_name" :text="TimerText" class="timer-text"></TimerComponent> -->
         </div>
 
-
-        <div class="col-xxl-4 col-xl-8 col-lg-8 routing-buttons">
-            <!-- <div class="m-1"></div> -->
-            <h2 class="col-12 title-text">Rumbles biggest High Level Competition</h2>
-            <div class="p-3"></div>
-            <div class="col-12 justify-content-center d-flex">
-                <button class="btn btn-primary mb-3 col-3" @click="loadSeasons">Match Planner -></button>
+        <div class="hero-container row justify-content-center">
+            <div class="col-xxl-4 col-xl-8 col-lg-8 routing-buttons">
+                <!-- <div class="m-1"></div> -->
+                <h2 class="col-12 title-text">Pro Online <span class="primary">Rumble</span> Competition</h2>
                 <div class="p-3"></div>
-                <button class="btn btn-secondary mb-3 col-3" @click="loadSeasons">To Leaderboard</button>
+                <div class="col-12 justify-content-center d-flex">
+                    <button class="btn btn-primary mb-3 col-3" @click="loadSeasons">Match Planner -></button>
+                    <div class="p-3"></div>
+                    <button class="btn btn-secondary mb-3 col-3" @click="loadSeasons">See The Rules</button>
+                </div>
+                <div class="m-3"></div>
             </div>
-            <div class="m-3"></div>
         </div>
 
         <!-- <div class="p-4 row timer-container">
@@ -349,7 +350,7 @@ import type { EventCard } from '@/models/EventCard';
         <div class="p-5 col-10 mt-5"></div>
 
         <div class="d-flex flex-column justify-content-center align-items-center col-12 m-5 pt-4">
-            <h2 class="decor-title justify-content-center w-auto mt-5">Other Rumble Events</h2>
+            <h2 class="decor-title justify-content-center w-auto mt-5">Other <span class="text-highlight">Rumble Events</span></h2>
             <h3 class="content-subtitle justify-content-center w-auto mt-2">Take a look at the rest of rumble</h3>
         </div>
 
@@ -426,12 +427,26 @@ $hero-height: 32rem;
     }
 }
 
+.hero-container {
+    height: $hero-height;
+    width: 100% !important;
+    margin-top: 2rem !important;
+    margin: 2rem;
+}
+
 
 .routing-buttons {
     z-index: 3;
-    margin-top: 1.5rem !important;
-    margin: 2rem;
-    height: $hero-height;
+
+    padding: 0.5rem !important;
+    margin-inline: auto !important;
+    height: fit-content;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+
+    border-radius: 4px;
+
+    background: #000000af;
 
     align-items: center;
     display: flex;

@@ -1,7 +1,7 @@
 //Bootstrap
 $primary: #c57fff;
 $danger: #e22d67;
-$background-color: rgb(21, 21, 21);
+$background-color: rgb(20, 20, 20);
 // $body-bg: #1e252b;
 // $body-color: #ffffff;
 $border-radius: 1rem;
@@ -17,16 +17,16 @@ $leaderboard-breakpoint: 1600px;
 
 //Division colors
 $division-colors: (
-    meteorite: #9175b3,
-    diamond: #78bfe6,
-    mithril: #5b78ba,
-    adamantium: #5cba96,
-    platinum: #9ed5dd,
-    gold: #cea52e,
-    silver: #9ba0b7,
-    bronze: #ac5739,
-    iron: #74798c,
-    stone: #837572,
+    meteorite: #b25ef7,
+    diamond: #5eb5f7,
+    mithril: #5e68f7,
+    adamantium: #51c95f,
+    platinum: #aeffed,
+    gold: #f7ab5e,
+    silver: #e2f4ce,
+    bronze: #f7755e,
+    iron: #b1bed7,
+    stone: #dc7248,
 );
 
 //Match planner events
@@ -37,8 +37,8 @@ $match-request-color: rgb(231, 146, 34);
 $match-declined-color: rgb(105, 120, 141);
 
 
-$trophy-color-gold: rgb(219, 179, 0);
-$trophy-color-silver: rgb(192, 192, 192);
-$trophy-color-bronze: rgb(205, 127, 50);
+$trophy-color-gold: color-mix(in srgb, var(--primary) 100%, #fffbf300 0%);
+$trophy-color-silver: color-mix(in srgb, var(--primary) 70%, #fffbf300 0%);
+$trophy-color-bronze: color-mix(in srgb, var(--primary) 40%, #fffbf300 0%);
 
 @import 'bootstrap/scss/bootstrap';

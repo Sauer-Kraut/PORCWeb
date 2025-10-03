@@ -503,14 +503,14 @@ async function submitNote() {
                 </div>
             </div>
             <div class="calendar-header-days">
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString(), 'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()) }">
                     {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}
                 </div>
             </div>
         </div>
         <div class="calendar-body">
             <div class="calendar-days">
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString() }">
+                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString(), 'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()) }">
                     <div v-for="(hour, index) in hours" 
                         :key="hour.name" 
                         class="calendar-hour-day"
@@ -703,7 +703,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                     box-sizing: border-box;
                     position: relative;
                     height: $hour-height;
-                        border-top: $border-style;
+                    border-top: $border-style;
 
                     &:hover {
                         cursor: pointer;
@@ -724,7 +724,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             $event-radius: 0.5rem;
             .event {
                 position: absolute;
-                z-index: 2;
+                z-index: 8;
                 left: 0px;
                 right: 0px;
                 overflow: hidden;
@@ -830,7 +830,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 background-color: rgb(15, 15, 15) !important;
 
                 &.current-day-bg {
-                    background: #1b1b1b !important;
+                    background: #1f1f1f !important;
                 }
             }
 
@@ -873,11 +873,36 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 top: 1rem - 0.3rem;
                 border-bottom: 0.3rem solid white;
                 margin-bottom: -0.3rem;
+
+                z-index: 10;
             }
         }
 
         &.calendar-day {
-            background-color: color-mix(in srgb, white 5%, transparent 95%);
+            background-color: color-mix(in srgb, white 7%, transparent);
+        }
+    }
+
+    .past-day {
+        &.calendar-header-day {
+            font-weight: bolder;
+            &::after {
+                content: '';
+                display: block;
+                position: relative;
+                width: 100%;
+                top: 1rem - 0.2rem;
+                border-bottom: 0.2rem solid rgb(72, 72, 72);
+                margin-bottom: -0.2rem;
+            }
+        }
+
+        &.calendar-day {
+            // background-color: color-mix(in srgb, rgb(255, 255, 255) 3%, transparent);
+            * {
+                filter: grayscale(50%);
+            }
+            
         }
     }
 }
