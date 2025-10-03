@@ -140,9 +140,9 @@ onMounted(async () => {
                 </div>
             </div>
             <div class="logo col col-md-auto d-flex align-items-center justify-content-center">
-                <div class="mx-2 mx-md-3 mx-lg-5"> 
+                <router-link to="/" class="mx-2 mx-md-3 mx-lg-5"> 
                     <Logo />
-                </div>
+                </router-link>
             </div>
             <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center">
                 <div class="routes-container">

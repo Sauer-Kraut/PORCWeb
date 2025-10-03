@@ -1,23 +1,22 @@
 <script lang="ts" setup>
+import { waitForAppReady } from '@/appReady';
 import CalendarComponent from '@/components/CalendarComponent.vue';
 import MatchScoreComponent from '@/components/MatchScoreComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
-import type { Schedule } from '@/models/schedule/Schedule';
-import { showErrorModal } from '@/services/ErrorModalService';
-import { getDivisionImage } from '@/util/ImageHelper';
-import { computed, onMounted, ref, watch } from 'vue';
-import type { MatchEvent } from '@/models/match_event/MatchEvent';
+import Logo from '@/components/svgs/Logo.vue';
 import type { Availability } from '@/models/availability/Availability';
-import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import type { MatchEvent } from '@/models/match_event/MatchEvent';
 import type { DivisionModel } from '@/models/matchplan/DivisionModel';
 import type { PlayerModel } from '@/models/matchplan/PlayerModel';
-import { matchplanStore } from '@/storage/st_matchplan';
-import { accountsStore } from '@/storage/st_accounts';
 import type { Season } from '@/models/matchplan/Season';
-import { waitForAppReady } from '@/appReady';
-import lineBreak from '@/util/LineBreakFilter';
+import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import type { Schedule } from '@/models/schedule/Schedule';
+import { showErrorModal } from '@/services/ErrorModalService';
+import { accountsStore } from '@/storage/st_accounts';
+import { matchplanStore } from '@/storage/st_matchplan';
+import { getDivisionImage } from '@/util/ImageHelper';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
-import Logo from '@/components/svgs/Logo.vue';
+import { computed, onMounted, ref } from 'vue';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -406,10 +405,6 @@ $tile-bg: rgb(15, 15, 15) !important;
     }
 }
 
-
-
-
-
 .page-header {
 
     border-radius: 32px;
@@ -424,7 +419,6 @@ $tile-bg: rgb(15, 15, 15) !important;
         height: 20rem;
     }
 }
-
 
 .calender-container {
     overflow: hidden;
@@ -444,17 +438,11 @@ $tile-bg: rgb(15, 15, 15) !important;
     border: 1px solid $border-color !important;
 }
 
-
 .note-field {
     border: 1px solid $border-color !important;
     border-radius: 12px;
     padding: 1rem;
 }
-
-
-
-
-
 
 .titel {
     justify-content: center;

@@ -1,21 +1,18 @@
 <script lang="ts" setup>
-    import DivisionComponent from '@/components/DivisionComponent.vue';
-    import DivisionSelector from '@/components/DivisionSelector.vue';
-    import SeasonComponent from '@/components/SeasonComponent.vue';
-    import SignUpFormComponent from '@/components/forms/SignUpFormComponent.vue';
-    import TimerComponent from '@/components/TimerComponent.vue';
-    import type { DivisionModel } from '@/models/matchplan/DivisionModel';
-    import type { Matchplan } from '@/models/matchplan/Matchplan';
-    import type { Season } from '@/models/matchplan/Season';
-    import { showErrorModal } from '@/services/ErrorModalService';
-    import { accountsStore } from '@/storage/st_accounts';
-    import { matchplanStore } from '@/storage/st_matchplan';
-    import { computed, onMounted, ref, watch } from 'vue';
     import { waitForAppReady } from '@/appReady';
-    import PedestalComponent from '@/components/PedestalComponent.vue';
-    import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
-    import EventCarousel from '@/components/CardCarousel/EventCarousel.vue';
+import EventCarousel from '@/components/CardCarousel/EventCarousel.vue';
+import SignUpFormComponent from '@/components/forms/SignUpFormComponent.vue';
+import PedestalComponent from '@/components/PedestalComponent.vue';
+import SeasonComponent from '@/components/SeasonComponent.vue';
+import { Repetition } from '@/models/availability/Availability';
 import type { EventCard } from '@/models/EventCard';
+import type { DivisionModel } from '@/models/matchplan/DivisionModel';
+import type { Season } from '@/models/matchplan/Season';
+import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import { showErrorModal } from '@/services/ErrorModalService';
+import { accountsStore } from '@/storage/st_accounts';
+import { matchplanStore } from '@/storage/st_matchplan';
+import { computed, onMounted, ref, watch } from 'vue';
 
     const seasons = ref<Season[]>([]);
     const selectedSeason = ref<Season | null>(null);
@@ -58,6 +55,39 @@ import type { EventCard } from '@/models/EventCard';
     let TimerText = ref('Time remaining until season 4 of PORC');
 
     const season_name = ref('0');
+    const isFormFilledOut = ref(false);
+    const isScheduleConfigured = ref(false);
+
+    function handleFormComplete(isComplete: boolean) {
+        isFormFilledOut.value = isComplete;
+    }
+
+    async function getCurrentUserSchedule() {
+        let accStore = accountsStore();
+        let res = await accStore.get_competitors_full([user.value]);
+        
+        if (typeof res == 'string') {
+            console.log('Error getting user schedule:', res);
+            return null;
+        } else if (res && res.length > 0) {
+            return res[0].schedule;
+        }
+        return null;
+    }
+
+    async function checkScheduleConfiguration() {
+        const userSchedule = await getCurrentUserSchedule();
+        console.log("SCHEDULE", userSchedule);
+        if (userSchedule && userSchedule.availabilities) {
+            const futureAvailabilities = userSchedule.availabilities.filter(availability => {
+                const startDate = new Date(availability.startDate);
+                return startDate > new Date() || availability.repetition === Repetition.Weekly || availability.repetition === Repetition.Daily;
+            });
+            isScheduleConfigured.value = futureAvailabilities.length > 0;
+        } else {
+            isScheduleConfigured.value = false;
+        }
+    }
 
     async function loadSeasons() {
         // await planStore.fetch_all_seasons();
@@ -206,10 +236,12 @@ import type { EventCard } from '@/models/EventCard';
         },
     );
 
+
     onMounted(async () => {
         await waitForAppReady();
         await getUserId();
         await loadSeasons();
+        await checkScheduleConfiguration();
         getSelectorHeight();
     });
 </script>
@@ -225,8 +257,8 @@ import type { EventCard } from '@/models/EventCard';
                 <!-- <div class="m-1"></div> -->
                 <h2 class="col-12 col-md-8 title-text mb-2 mb-sm-5">Pro Online <span class="primary">Rumble</span> Competition</h2>
                 <div class="col-12 justify-content-center row">
-                    <button class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-primary" @click="loadSeasons">Match Planner</button>
-                    <button class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-secondary" @click="loadSeasons">See the rules</button>
+                    <router-link to="/match-planner" class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-primary text-decoration-none">Match Planner</router-link>
+                    <router-link to="/rules" class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-secondary text-decoration-none">See the rules</router-link>
                 </div>
             </div>
         </div>
@@ -306,23 +338,23 @@ import type { EventCard } from '@/models/EventCard';
 
 
                         <div class="singup-conditions mt-2 mb-2 w-100">
-                            <div class="m-3 mt-5 row text-b align-items-center">
-                                <div class="icon-cross p-0 pt-1 me-3"></div>
-                                On the PORC Discord server
+                            <div class="m-3 mt-5 d-flex text-b align-items-center">
+                                <div :class="user ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
+                                <span>On the <a href="https://discord.gg/2n9prYYZjS" target="_blank">PORC Discord server</a></span>
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 row text-b align-items-center">
-                                <div class="icon-cross p-0 pt-1 me-3"></div>
+                            <div class="m-3 d-flex text-b align-items-center">
+                                <div :class="user ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
                                 Logged in
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 row text-b align-items-center">
-                                <div class="icon-cross p-0 pt-1 me-3"></div>
+                            <div class="m-3 d-flex text-b align-items-center">
+                                <div :class="isFormFilledOut ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
                                 All fields filled out
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 mb-5 row text-b align-items-center">
-                                <div class="icon-cross p-0 pt-1 me-3"></div>
+                            <div class="m-3 mb-5 d-flex text-b align-items-center">
+                                <div :class="isScheduleConfigured ? 'icon-checkmark' : 'icon-cross'" class="p-0 pt-1 me-3"></div>
                                 Configured your schedule
                             </div>
                         </div>
@@ -333,7 +365,11 @@ import type { EventCard } from '@/models/EventCard';
 
 
                 <div class="col-12 col-md align-items-center justify-content-center d-flex me-0 me-md-4">
-                    <SignUpFormComponent :season_name="season_name" class="signup-form mt-4 pt-1 mb-4 ms-auto" />
+                    <SignUpFormComponent 
+                        :season_name="season_name" 
+                        @formComplete="handleFormComplete"
+                        class="signup-form mt-4 pt-1 mb-4 ms-auto" 
+                    />
                 </div>
             </div>
         </div>
@@ -421,7 +457,6 @@ $hero-height: 32rem;
 
 .hero-container {
     height: $hero-height;
-    width: 100% !important;
     margin-top: 2rem !important;
     margin: 2rem;
 
@@ -451,7 +486,7 @@ $hero-height: 32rem;
     margin-top: auto !important;
     margin-bottom: auto !important;
 
-    border-radius: 4px;
+    border-radius: 1rem;
 
     background: #000000af;
 
@@ -594,14 +629,20 @@ $hero-height: 32rem;
     flex-grow: 1 !important;
 
     * {
-        font-size: 1.15rem;
+        //font-size: 1.25rem;
         color: rgb(255, 255, 255);
         font-weight: 600;
+    }
+
+    a {
+        font-style: oblique;
+        color: var(--primary);
     }
 }
 
 
 $bad-color: rgb(255, 32, 0);
+$good-color: rgb(34, 197, 94);
 
 .icon-cross {
     font-weight: 600;
@@ -612,6 +653,19 @@ $bad-color: rgb(255, 32, 0);
     box-shadow: rgba($bad-color, 0.4) 0px 0px 23px;
     border-radius: 2rem;
     background-color: rgba($bad-color, 0.1);
+
+    width: fit-content;
+}
+
+.icon-checkmark {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: $good-color;
+    line-height: 1.7rem;
+
+    box-shadow: rgba($good-color, 0.4) 0px 0px 23px;
+    border-radius: 2rem;
+    background-color: rgba($good-color, 0.1);
 
     width: fit-content;
 }

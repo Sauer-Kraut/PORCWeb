@@ -85,7 +85,7 @@
         flex-direction: row;
         align-items: center;
         width: 100%;
-        max-width: 900px;
+        max-width: 1200px;
         position: relative;
         margin: 0 !important;
     }

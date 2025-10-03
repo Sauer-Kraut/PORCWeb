@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import DiscordUserComponent from '@/components/DiscordUserComponent.vue';
 import config from '@/config';
 import type { SignUpInfo } from '@/models/SignUpInfo';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
 import { signupStore } from '@/storage/st_signups';
-import { defineProps, onMounted, ref } from 'vue';
+import { defineProps, onMounted, ref, computed, watch } from 'vue';
 
 const props = defineProps<{
     season_name: string;
+}>();
+
+const emit = defineEmits<{
+    formComplete: [isComplete: boolean];
 }>();
 
 const discordAuthURL = `${config.getDiscordUrl()}`;
@@ -25,6 +28,20 @@ const isLoggedIn = ref(true);
 let user_id = ref('0');
 
 const signup = ref<SignUpInfo | null>(null);
+
+// Computed property to check if all form fields are complete
+const isFormComplete = computed(() => {
+    return username.value !== '' && 
+           BP.value !== null && 
+           region.value !== null && 
+           isOnDiscord.value === true && 
+           isLoggedIn.value === true;
+});
+
+// Watch for changes in form completion and emit to parent
+watch(isFormComplete, (newValue) => {
+    emit('formComplete', newValue);
+}, { immediate: true });
 
 function showWarning() {
     invalidFillOut.value = true;
@@ -120,8 +137,7 @@ onMounted(async () => {
             </div>
             <div class="form-container row">
                 <form class="col-12" v-if="!signup">
-
-                    <fieldset :disabled="!(!isLoggedIn || signup != null || user_id == '0')">
+                    <fieldset :disabled="!(!isLoggedIn || !signup || user_id == '0')">
 
                         <div class="p-2"></div>
 

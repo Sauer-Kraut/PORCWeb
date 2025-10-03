@@ -181,7 +181,7 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
                 <DivisionComponent v-if="selectedDivision" 
                     :selector-height="selectorHeight" 
                     :placeholder="hide_progress" 
-                    :season="current_season?.name || ''" 
+                    :season="selectedSeason?.name || ''" 
                     :division="selectedDivision" 
                     :UserId="observer_id" 
                     :allowEditSeason="allowEditSeason" 

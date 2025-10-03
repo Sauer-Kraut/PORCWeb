@@ -97,7 +97,7 @@
 <template>
     <div class="container-fluid d-flex flex-row mt-6 hidescroll">
 
-        <div class="sidebar col-2 m-4 ms-5 d-flex">
+        <div class="sidebar col-2 m-4 ms-5 d-none d-lg-flex">
 
             <div
                 class="section-marker"
@@ -122,17 +122,17 @@
             <div class="scroll-marker" :style="{top: placeScrollMarker() + '%'}"></div>
         </div>
 
-        <div class="col-2"></div>
+        <div class="col-2 d-none d-lg-block"></div>
 
 
 
-        <div class="d-flex flex-column col-10 col-xl-8">
+        <div class="d-flex flex-column col-lg-10 col-xl-8">
 
             <div class="d-flex flex-column col-10 col-xl-7 ms-auto me-auto">
             
 
                 <!-- Header -->
-                <header class="mb-4 text-center">
+                <header class="mb-4 mt-0 mt-md-4 text-center">
                     <h1 class="decor-title primary">PORC Rules</h1>
                     <p class="content-subtitle">Official guidelines for fair play & competition</p>
                 </header>
@@ -415,13 +415,18 @@ ul, ol {
 
     h1 {
         color: var(--primary);
-        font-size: 2.5rem !important;
-        font-weight: 700 !important;
+        font-size: 2.5rem;
+        font-weight: 700;
+
+
+        @include media-breakpoint-down(md) {
+            font-size: 2rem;
+        }
     }
 
     h2 {
-        font-size: 1.75rem !important;
-        font-weight: 600 !important;
+        font-size: 1.75rem;
+        font-weight: 600;
         margin-top: 1.5rem !important;
         margin-bottom: 1rem !important;
 
@@ -429,6 +434,10 @@ ul, ol {
         text-decoration-thickness: 0.5px;
         text-decoration-color: color-mix(in srgb, rgb(118, 116, 116), var(--primary) 20%);;
         text-underline-offset: 0.3rem;
+
+        @include media-breakpoint-down(md) {
+            font-size: 1.5rem;
+        }
     }
 
     .rules {
