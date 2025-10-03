@@ -13,11 +13,11 @@
 
     function calcOffsets(): { name: string; offsetPercent: number }[] {
         const offsets: { name: string; offsetPercent: number }[] = [];
-        const viewportHeight = window.outerHeight;
+        const viewportHeight = document.documentElement.scrollHeight;
 
         sections.value.forEach((section) => {
             const posY = getElementPosY(section);
-            const offsetPercent = (posY / viewportHeight) * 40;
+            const offsetPercent = (posY / viewportHeight) * 100 + 3;
             offsets.push({ name: section.id, offsetPercent });
         });
 
@@ -28,7 +28,7 @@
 
     function getScrollPercent(): number {
         const scrollTop = window.scrollY;
-        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const docHeight = document.body.scrollHeight - document.documentElement.clientHeight;
         return (scrollTop / docHeight) * 100;
     }
 
@@ -37,6 +37,7 @@
         sectionMarkers.value = calcOffsets();
         window.addEventListener('resize', () => {
             sectionMarkers.value = calcOffsets();
+            resizeScrollbar();
         });
         window.addEventListener('scroll', () => {
             scrollPercent.value = getScrollPercent();
@@ -48,7 +49,7 @@
 
     function scrollToY(targetY: number, duration = 400) {
         const startY = window.scrollY;
-        const diff = targetY - (window.innerHeight / 2.5) - startY;
+        const diff = targetY - (document.documentElement.clientHeight / 2.5) - startY;
         const startTime = performance.now();
 
         function step(time: number) {
@@ -91,13 +92,22 @@
 
         return spot;
     }
+
+    function resizeScrollbar() {
+        const sidebar = document.querySelector('.sidebar') as HTMLElement;
+        if (sidebar) {
+            const viewportHeight = document.documentElement.clientHeight;
+            sidebar.style.height = `${viewportHeight - 128}px`;
+            console.log("Resized sidebar to " + sidebar.style.height);
+        }
+    }
 </script>
 
 
 <template>
     <div class="container-fluid d-flex flex-row mt-6 hidescroll">
 
-        <div class="sidebar col-2 m-4 ms-5 d-none d-lg-flex">
+        <div class="sidebar col-2 m-4 mt-3 ms-5 d-none d-lg-flex">
 
             <div
                 class="section-marker"
@@ -132,7 +142,7 @@
             
 
                 <!-- Header -->
-                <header class="mb-4 mt-0 mt-md-4 text-center">
+                <header class="mb-4 mt-0 mt-md-3 text-center">
                     <h1 class="decor-title primary">PORC Rules</h1>
                     <p class="content-subtitle">Official guidelines for fair play & competition</p>
                 </header>

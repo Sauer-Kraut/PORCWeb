@@ -223,6 +223,19 @@ textarea:focus {
 }
 
 
+.porc-modal-content {
+    background: rgb(23, 23, 23);
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.408);
+    border: 1px solid #343434;
+    color: #ffffff;
+    transition: 0.5s;
+
+    * {
+        transition: 0.4s ease-in-out;
+    }
+}
+
+
 
 
 // form styles
