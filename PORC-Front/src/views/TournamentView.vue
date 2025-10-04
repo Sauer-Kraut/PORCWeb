@@ -12,6 +12,7 @@ import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
 import { matchplanStore } from '@/storage/st_matchplan';
+import { signupStore } from '@/storage/st_signups';
 import { computed, onMounted, ref, watch } from 'vue';
 
     const seasons = ref<Season[]>([]);
@@ -219,6 +220,23 @@ import { computed, onMounted, ref, watch } from 'vue';
         }
     }
 
+    
+    const signedup = ref(false);
+
+    async function getSignedUp() {
+        let store = signupStore();
+        let signups = await store.get_signups(null);
+
+        if (signups != null) {
+
+            for (let signup_in of signups) {
+                if (signup_in.discord_id == user.value) {
+                    signedup.value = true;
+                }
+            }
+        }
+    }
+
     watch(
         () => selectedSeason.value,
         async () => {
@@ -242,6 +260,7 @@ import { computed, onMounted, ref, watch } from 'vue';
         await getUserId();
         await loadSeasons();
         await checkScheduleConfiguration();
+        await getSignedUp();
         getSelectorHeight();
     });
 </script>
@@ -297,9 +316,9 @@ import { computed, onMounted, ref, watch } from 'vue';
             <PedestalComponent
                 class="pedestal-component col-2 mt-0 first z-2 me-4 ms-4"
                 :account="{
-                    id: '176842075591933952',
-                    username: 'Savitarian',
-                    avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
+                    id: '306467062530965514',
+                    username: 'Sauerkarut',
+                    avatar: '7df79ec5c3938cf59cd8cd4a69242ad3',
                     schedule: null
                 } as PubAccountInfo"
                 :rank="1"
@@ -307,9 +326,9 @@ import { computed, onMounted, ref, watch } from 'vue';
             <PedestalComponent
                 class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-block"
                 :account="{
-                    id: '178905571682942976',
-                    username: '2Guib',
-                    avatar: 'ca2b8d0d1d8e5aede55b95e882a5a09d',
+                    id: '176842075591933952',
+                    username: 'Savitarian',
+                    avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
                     schedule: null
                 } as PubAccountInfo"
                 :rank="2"
@@ -317,9 +336,9 @@ import { computed, onMounted, ref, watch } from 'vue';
             <PedestalComponent
                 class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-block"
                 :account="{
-                    id: '701549482340384828',
-                    username: 'kajo',
-                    avatar: '7ae02b02abdc54817757c8bcbc20ded0',
+                    id: '142689578967498762',
+                    username: 'Omlette',
+                    avatar: 'e368e84d013d70077d9f467dffe95c69',
                     schedule: null
                 } as PubAccountInfo"
                 :rank="3"
@@ -349,12 +368,12 @@ import { computed, onMounted, ref, watch } from 'vue';
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
                             <div class="m-3 d-flex text-b align-items-center">
-                                <div :class="isFormFilledOut ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
+                                <div :class="isFormFilledOut || signedup ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
                                 All fields filled out
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
                             <div class="m-3 mb-5 d-flex text-b align-items-center">
-                                <div :class="isScheduleConfigured ? 'icon-checkmark' : 'icon-cross'" class="p-0 pt-1 me-3"></div>
+                                <div :class="isScheduleConfigured || signedup ? 'icon-checkmark' : 'icon-cross'" class="p-0 pt-1 me-3"></div>
                                 Configured your schedule
                             </div>
                         </div>

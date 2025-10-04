@@ -52,7 +52,10 @@
                     <!-- ========================  TODO  ========================== -->
                     <h2 class="detail-title  mb-1">Total Wins</h2>
                     <div class="d-flex flex-row justify-content-center align-items-center w-75 mb-2">
-                        <div class="icon icon-trophy mb-1 me-2"></div><h4 class="pedestal-text ms-1">30</h4>
+                        <div class="icon icon-trophy mb-1 me-2"></div>
+                        <h4 class="pedestal-text ms-1" v-if="rank === 1">44</h4>
+                        <h4 class="pedestal-text ms-1" v-else-if="rank === 2">28</h4>
+                        <h4 class="pedestal-text ms-1" v-else>25</h4>
                     </div>
                 </div>
 
@@ -61,7 +64,9 @@
                     <h2 class="detail-title mb-1">W/L Ratio</h2>
                     <div class="d-flex flex-row justify-content-center align-items-center w-75 mb-2">
                         <!-- ========================  TODO  ========================== -->
-                        <h4 class="pedestal-text">0.94</h4>
+                        <h4 class="pedestal-text" v-if="rank === 1">0.97</h4>
+                        <h4 class="pedestal-text" v-else-if="rank === 2">0.85</h4>
+                        <h4 class="pedestal-text" v-else>0.62</h4>
                     </div>
                 </div>
         
@@ -75,7 +80,9 @@
             <h2 class="detail-title mb-1 mt-2">Region</h2>
             <div class="d-flex flex-row justify-content-center align-items-center w-75 mb-2">
                 <!-- ========================  TODO  ========================== -->
-                <div class="icon icon-globe me-2"></div><h4 class="pedestal-text ms-1">US</h4>
+                <div class="icon icon-globe me-2"></div>
+                <h4 class="pedestal-text ms-1" v-if="rank === 1">EU</h4>
+                <h4 class="pedestal-text ms-1" v-else>US</h4>
             </div>
 
             </div>

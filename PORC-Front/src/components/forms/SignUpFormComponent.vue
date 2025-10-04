@@ -132,7 +132,8 @@ onMounted(async () => {
     <div class="justify-content-center">
         <div class="inner-container">
             <div class="col-10 d-flex flex-column">
-                <h1 class="decor-title mb-2">Sign Up</h1>
+                <h1 class="decor-title mb-2" v-if="signup == null">Sign Up</h1>
+                <h1 class="decor-title mb-2" v-else>Signed Up</h1>
                 <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">Oct. 8th</span></h3>
             </div>
             <div class="form-container row">
@@ -209,7 +210,7 @@ onMounted(async () => {
                             </div>
                             <div class="p-2"></div>
                             <div class="d-flex flex-row justify-content-between align-items-center ps-1 pe-1">
-                                <button type="button" class="btn btn-danger-sec col-auto button" @click="confirmInput">Delete</button>
+                                <a type="button" class="btn btn-danger-sec col-auto button" :href="'https://discord.gg/2n9prYYZjS'" @click="confirmInput">Request Withdrawl</a>
                             </div>
                         </div>
                     </fieldset>
@@ -224,7 +225,9 @@ onMounted(async () => {
 @import '@/assets/scss/global.scss';
 
 .form-container {
-    width: 350px !important;
+    @media (min-width: 450px) {    
+        width: 350px !important;
+    }
 }
 
 .inner-container {
