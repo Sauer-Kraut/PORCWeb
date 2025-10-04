@@ -103,7 +103,6 @@ import { ref } from 'vue';
 @import '@/assets/scss/global.scss';
 
 .faq-body {
-    height: 100vh;
 }
 
 .faq-item {

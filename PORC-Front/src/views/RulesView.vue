@@ -142,7 +142,7 @@
             
 
                 <!-- Header -->
-                <header class="mb-4 mt-3 text-center">
+                <header class="mb-5 mt-3 text-center">
                     <h1 class="decor-title primary">PORC Rules</h1>
                     <p class="content-subtitle">Official guidelines for fair play & competition</p>
                 </header>
