@@ -293,7 +293,7 @@ import { computed, onMounted, ref, watch } from 'vue';
             <h2 class="decor-title text-center justify-content-center w-auto mt-5">Meet our <span class="text-highlight">Champions</span></h2>
             <h3 class="content-subtitle justify-content-center w-auto mt-2">The best of the best</h3>
         </div>
-        <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1">
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
             <PedestalComponent
                 class="pedestal-component col-2 mt-0 first z-2 me-4 ms-4"
                 :account="{
@@ -305,7 +305,7 @@ import { computed, onMounted, ref, watch } from 'vue';
                 :rank="1"
             />
             <PedestalComponent
-                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4"
+                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-block"
                 :account="{
                     id: '178905571682942976',
                     username: '2Guib',
@@ -315,7 +315,7 @@ import { computed, onMounted, ref, watch } from 'vue';
                 :rank="2"
             />
             <PedestalComponent
-                class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4"
+                class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-block"
                 :account="{
                     id: '701549482340384828',
                     username: 'kajo',
@@ -396,7 +396,7 @@ import { computed, onMounted, ref, watch } from 'vue';
         <div class="p-5 col-10 mt-5 d-none d-md-block"></div>
 
 
-        <div class="d-flex porc-stats justify-content-center col-xxl-7 col-xl-11 mt-5">
+        <div class="d-none d-md-flex porc-stats justify-content-center col-xxl-7 col-xl-11 mt-5">
 
             <div class="d-flex flex-column justify-content-center my-5 mx-0 mx-md-5 stat">
                 <h1 class="XL-text align-text-center mb-0 mt-5">57</h1>

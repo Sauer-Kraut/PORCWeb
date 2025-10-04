@@ -201,6 +201,7 @@ onMounted(async () => {
 
 .first-place {
     background-color: $trophy-color-gold;
+    color: black;
     font-weight: bold;
     border-radius: 8px;
     width: fit-content;
@@ -210,6 +211,7 @@ onMounted(async () => {
 
 .second-place {
     background-color: $trophy-color-silver;
+    color: black;
     font-weight: bold;
     border-radius: 8px;
     padding-left: 0.5rem;
@@ -218,6 +220,7 @@ onMounted(async () => {
 
 .third-place {
     background-color: $trophy-color-bronze;
+    color: black;
     font-weight: bold;
     border-radius: 8px;
     padding-left: 0.5rem;
