@@ -236,7 +236,7 @@ onMounted(async () => {
 // holds the matches
 .match-container {
     max-height: calc(100% - 5rem); /* I know that this sucks ass but Im sooo tierd */
-    margin-top: 2.5rem;
+    margin-top: 2rem;
     margin-bottom: 2.5rem;
 
     transition: all 0.6s ease-in-out;
@@ -249,6 +249,7 @@ onMounted(async () => {
 
     //min-width: 22rem;
     margin: 2.5rem;
+    margin-top: 2rem;
     margin-inline: 0rem;
 }
 

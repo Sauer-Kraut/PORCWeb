@@ -50,7 +50,8 @@ function createMatch(): MatchEvent {
     <VueFinalModal class="confirm-modal" content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
         <div class="porc-modal-content col-xl-2 col-md-6 col-11 p-4 rounded">
             <div>
-                <h3 class="mb-3 title">{{ title }}</h3>
+                <h3 class="mb-3 content-title text-center">{{ title }}</h3>
+                <h4 class="content-subtitle align-self-center justify-contents-center text-center">Reqeust a Match</h4>
                 <!-- <div class="bar"></div> -->
                 <div class="spacer"></div>
                 <div class="xs-spacer"></div>
@@ -65,10 +66,10 @@ function createMatch(): MatchEvent {
                 <div class="s-spacer"></div>
                 <div class="xs-spacer"></div>
                 <div class="row justify-content-center mt-3">
-                    <div class="col-md-4 col-xl-6">
+                    <div class="col-md-6">
                         <button @click="emit('cancel')" class="btn btn-outline-primary w-100">Cancel</button>
                     </div>
-                    <div class="col-md-4 col-xl-6 mt-2 mt-md-0">
+                    <div class="col-md-6 mt-2 mt-md-0">
                         <button @click="submit" class="btn btn-primary w-100">Confirm</button>
                     </div>
                 </div>
@@ -78,11 +79,11 @@ function createMatch(): MatchEvent {
 </template>
 
 <style scoped>
+@import '@/assets/scss/styles.scss';
+@import '@/assets/scss/global.scss';
+
 .porc-modal-content {
-    background: linear-gradient(135deg, #8d7b78, #3b435b);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    color: #ffffff;
-    transition: 0.5s;
+    width: 21rem !important;
 }
 
 .bar {
@@ -216,23 +217,22 @@ function createMatch(): MatchEvent {
 }
 
 .dark-grey-box {
-    background-color: #cfcfcf;
-    width: auto !important; /* Adjust width as needed */
-    min-width: 80px;
+    background-color: #424242;
+    width: auto; /* Adjust width as needed */
     height: 37.5px; /* Match the height of the DatePicker */
     margin-right: 0; /* Remove space between the box and DatePicker */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 20px 0 10px; /* Add padding for better text alignment and overlap */
-    color: rgb(0, 0, 0); /* Text color */
-    border-right: 1px solid #4e4e4e; /* Border color */
+    color: rgb(255, 255, 255); /* Text color */
+    border-right: 1px solid #252525; /* Border color */
     border-top-left-radius: 5px; /* Border radius */
     border-bottom-left-radius: 5px; /* Border radius */
 }
 
 .dark-grey-box-wide {
-    background-color: rgb(244, 93, 116);
+    background-color: var(--primary);
     height: 37.5px; /* Match the height of the DatePicker */
     margin-right: 0; /* Remove space between the box and DatePicker */
     display: flex;
@@ -249,11 +249,40 @@ function createMatch(): MatchEvent {
 }
 
 .middle {
-    margin-left: 0 auto;
-    margin-right: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
     align-items: center !important;
     display: flex !important;
-    padding-left: 13%;
-    padding-right: 13%;
+}
+
+.dp__theme_light {
+  --dp-background-color: #171717;
+  --dp-text-color: #ffffff;
+  --dp-hover-color: #f3f3f3;
+  --dp-hover-text-color: #ffffff;
+  --dp-hover-icon-color: #ffffff;
+  --dp-primary-color: #1976d2;
+  --dp-primary-disabled-color: #6bacea;
+  --dp-primary-text-color: #fff;
+  --dp-secondary-color: #c0c4cc;
+  --dp-border-color: #424242;
+  --dp-menu-border-color: #ddd;
+  --dp-border-color-hover: #aaaeb7;
+  --dp-border-color-focus: #aaaeb7;
+  --dp-disabled-color: #f6f6f6;
+  --dp-scroll-bar-background: #f3f3f3;
+  --dp-scroll-bar-color: #959595;
+  --dp-success-color: #76d275;
+  --dp-success-color-disabled: #a3d9b1;
+  --dp-icon-color: #959595;
+  --dp-danger-color: #ff6f60;
+  --dp-marker-color: #ff6f60;
+  --dp-tooltip-color: #fafafa;
+  --dp-disabled-color-text: #8e8e8e;
+  --dp-highlight-color: rgb(25 118 210 / 10%);
+  --dp-range-between-dates-background-color: var(--dp-hover-color, #f3f3f3);
+  --dp-range-between-dates-text-color: var(--dp-hover-text-color, #212121);
+  --dp-range-between-border-color: var(--dp-hover-color, #f3f3f3);
+  --dp-loader: 5px solid #1976d2;
 }
 </style>
