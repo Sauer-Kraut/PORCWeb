@@ -83,7 +83,7 @@ async function postSignUp() {
         showErrorModal(res);
         return;
     } else {
-        signup.value = res;
+        signup.value = data;
     }
 }
 

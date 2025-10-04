@@ -65,15 +65,34 @@ async function getMatchPlan() {
     } else {
         division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
 
-        // await planStore.fetch_all_seasons();
-        // Extract seasons from the store's matchplans map
-        const seasonList: Season[] = [];
-        for (const [key, value] of planStore.matchplans) {
-            if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
-                seasonList.push(value[1] as Season);
+        if (typeof division.value === 'undefined') {
+            await getPubPlayerInfos([user_id.value]);
+            division.value = {
+                name: 'unrakned',
+                order: 0,
+                players: playerinfos.value.map((p) => ({
+                    id: p.id,
+                    username: p.username,
+                    avatar: p.avatar,
+                    schedule: p.schedule,
+                    tag: '',
+                    division: '',
+                })),
+                matches: {},
+            };
+            season.value = null;
+        } 
+        else {
+            // await planStore.fetch_all_seasons();
+            // Extract seasons from the store's matchplans map
+            const seasonList: Season[] = [];
+            for (const [key, value] of planStore.matchplans) {
+                if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
+                    seasonList.push(value[1] as Season);
+                }
             }
+            season.value = seasonList.find((s: Season) => s.name === String(plan.season)) ?? null;
         }
-        season.value = seasonList.find((s: Season) => s.name === String(plan.season)) ?? null;
     }
 
     check_season_running();
@@ -167,6 +186,7 @@ const season_running = ref(false);
 
 function check_season_running() {
     season_running.value = (new Date() > new Date((season.value?.start_timestamp ?? 0) * 1000) && new Date() < new Date((season.value?.end_timestamp ?? 0) * 1000))
+    console.log("Season running: ", season_running.value, season);
 }
 
 onMounted(async () => {
