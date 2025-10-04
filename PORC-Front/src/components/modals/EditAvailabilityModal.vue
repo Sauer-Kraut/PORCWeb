@@ -109,12 +109,13 @@ function convertTimeRangeToDates(timeRange: { hours: number; minutes: number; se
 
 function createAvailability(): Availability {
     const [startDate, endDate] = convertTimeRangeToDates(time.value);
-    const repetitionConfig = convertToRepetition(repetition.value, daysOfWeek.value);
+    const selectedDays = repConfig.value.filter(day => day.selected).map(day => day.day);
+    const repetitionConfig = convertToRepetition(repetition.value, selectedDays);
     return {
         startDate,
         endDate,
         repetition: repetitionConfig,
-        repetition_config: convertToDailyRepetitionConfig(daysOfWeek.value),
+        repetition_config: convertToDailyRepetitionConfig(selectedDays),
     };
 }
 
@@ -153,7 +154,7 @@ onMounted(() => {
 
 <template>
     <VueFinalModal class="confirm-modal" content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
-        <div class="porc-modal-content col-xl-2 col-md-6 col-11 p-4 rounded">
+        <div class="porc-modal-content col-xl-2 col-md-6 col-11 p-4 rounded" data-bs-theme="dark">
             <div>
                 <h3 class="mb-3 content-title ms-5 me-5">{{ title }}</h3>
                 <h4 class="content-subtitle align-self-center justify-contents-center col-7 ms-auto me-auto">Configure your Availability</h4>
@@ -173,13 +174,8 @@ onMounted(() => {
                             <option>Daily</option>
                             <option>Weekly</option>
                         </select>
-
                     </div>
 
-
-
-                    
-                    
                     <div class="d-flex flex-row mt-3" v-if="repetition == 'Daily'">
                         <div v-for="day in repConfig" :key="day.day" class="btn btn-outline-primary custom-btn" :class="{ active: day.selected }" @click="day.selected = !day.selected">
                             {{ day.day }}
@@ -261,7 +257,6 @@ onMounted(() => {
 }
 
 .form-select {
-    color: black !important;
     border-radius: 5px !important;
     transition: 0.5s;
 }
@@ -326,8 +321,8 @@ onMounted(() => {
 .custom-btn {
     width: 7.5rem;
 
-    background-color: #ffffff00 !important; /* Custom background color */
-    color: var(--primary) !important; /* Custom text color */
+    background-color: #ffffff00; /* Custom background color */
+    color: var(--primary); /* Custom text color */
     border-radius: 0px !important;
     border-width: 0.5px !important;
     border-color: #373737 !important;
@@ -344,10 +339,12 @@ onMounted(() => {
 
     &:hover {
         background-color: color-mix(in srgb, var(--primary), transparent 90%) !important; /* Custom hover background color */
-        color: var(--primary) !important; /* Custom hover text color */
+        color: var(--primary); /* Custom hover text color */
     }
 
-    .active {
+    &.active {
+        background-color: var(--primary) !important;
+        color: white !important;
     }
 }
 
