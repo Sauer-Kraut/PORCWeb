@@ -156,8 +156,8 @@ onMounted(() => {
     <VueFinalModal class="confirm-modal" content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
         <div class="porc-modal-content col-xl-2 col-md-6 col-11 p-4 rounded" data-bs-theme="dark">
             <div>
-                <h3 class="mb-3 content-title ms-5 me-5">{{ title }}</h3>
-                <h4 class="content-subtitle align-self-center justify-contents-center col-7 ms-auto me-auto">Configure your Availability</h4>
+                <h3 class="mb-3 content-title text-center">{{ title }}</h3>
+                <h4 class="content-subtitle align-self-center justify-contents-center text-center">Configure your Availability</h4>
                 <!-- <div class="bar"></div> -->
                 <div class="spacer"></div>
                 <form @submit.prevent="submit">
