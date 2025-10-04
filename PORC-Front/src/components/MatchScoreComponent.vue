@@ -84,7 +84,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 
 <template>
         <!-- Some bootstrap shit i didnt find -->
-        <div class="rounded-custom match row" :class="{ 'hover-edit': isScored && allowedEdit }">
+        <div class="rounded-custom match d-flex flex-row" :class="{ 'hover-edit': isScored && allowedEdit }">
             <div class="d-flex flex-column justify-content-center center match-score" :class="{ 'col-9': !isScored && allowedEdit, 'col-12': isScored || !allowedEdit }">
                 <div class="d-flex justify-content-between card-half" :class="{ winner: p1Win(match) }">
                     <span class="player-tag">{{ shortendP1tag }} <label v-if="p1User" class="user">(you)</label></span>

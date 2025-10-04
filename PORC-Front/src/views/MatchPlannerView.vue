@@ -17,7 +17,7 @@ import { matchplanStore } from '@/storage/st_matchplan';
 import { signupStore } from '@/storage/st_signups';
 import { getDivisionImage } from '@/util/ImageHelper';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
@@ -47,12 +47,6 @@ async function getUserId() {
 
 const division = ref<DivisionModel>();
 const season = ref<Season | null>(null)
-const seasonEdit = computed(
-    () => {
-        var today = new Date();
-        return season.value !== null && new Date(season.value.start_timestamp) <= today && new Date(season.value.end_timestamp) > today;
-    },
-);
 
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
@@ -199,6 +193,21 @@ onMounted(async () => {
     selectSelf();
     updatePrimaryColor(division.value?.name?.toLowerCase() || 'meteorite');
     check_season_running();
+    determineEditibility();
+});
+
+const seasonEdit = ref(false);
+
+function determineEditibility(): boolean {
+    var today = new Date();
+    let res = season.value !== null && new Date(season.value.start_timestamp * 1000) <= today && new Date(season.value.end_timestamp * 1000) > today;
+    console.log("Checking if season is editable today: ", today, season.value);
+    console.log("Determined season editibility: ", res);
+    return res;
+}
+
+watch(() => season.value, (newSeason) => {
+    seasonEdit.value = determineEditibility();
 });
 
 const compStore = accountsStore();
