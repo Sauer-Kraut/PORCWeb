@@ -14,6 +14,7 @@ import type { Schedule } from '@/models/schedule/Schedule';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
 import { matchplanStore } from '@/storage/st_matchplan';
+import { signupStore } from '@/storage/st_signups';
 import { getDivisionImage } from '@/util/ImageHelper';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 import { computed, onMounted, ref } from 'vue';
