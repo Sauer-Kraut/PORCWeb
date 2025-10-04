@@ -305,7 +305,7 @@ import { computed, onMounted, ref, watch } from 'vue';
                 :rank="1"
             />
             <PedestalComponent
-                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-block"
+                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-flex"
                 :account="{
                     id: '178905571682942976',
                     username: '2Guib',
@@ -315,7 +315,7 @@ import { computed, onMounted, ref, watch } from 'vue';
                 :rank="2"
             />
             <PedestalComponent
-                class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-block"
+                class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-flex"
                 :account="{
                     id: '701549482340384828',
                     username: 'kajo',
@@ -384,11 +384,54 @@ import { computed, onMounted, ref, watch } from 'vue';
         <div class="col-12 d-flex justify-content-center mt-5 p-0">
             <EventCarousel
                 :cards="[
-                    { title: 'BoV', img_scr: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSL6UcR992iJn-N5ie_AQkRYy8ZtkMY1eUZgQ&s', description: 'something happens here', link: '' } as EventCard,
-                    { title: 'PORC Cup', img_scr: 'https://preview.redd.it/suisei-is-on-the-front-cover-of-forbes-japan-30-under-30-v0-68k00oamz7lf1.jpeg?width=1080&crop=smart&auto=webp&s=5226a771c968c0288c02d3554cafd4657248e970', description: 'The annual PORC Cup event.', link: 'https://porc.com/cup' } as EventCard,
-                    { title: 'Rumble Royale', img_scr: 'https://upload-os-bbs.hoyolab.com/upload/2024/07/07/61417959/af8f2b802a4e7b6b1b9ecb1201f7f11c_6535124317885581596.png?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70', description: 'Battle it out in the Rumble Royale!', link: 'https://porc.com/royale' } as EventCard,
-                    { title: 'Summer Slam', img_scr: 'https://pbs.twimg.com/profile_images/1245322751239426048/Ikuo3JY7_400x400.jpg', description: 'Summer tournament for all players.', link: 'https://porc.com/summer' } as EventCard,
-                    { title: 'Winter Clash', img_scr: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg', description: 'Compete in the chilly Winter Clash.', link: 'https://porc.com/winter' } as EventCard
+                    { 
+                        title: 'Community Tournaments', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848756503249109/CommunityTournament.png?ex=68e1cdfd&is=68e07c7d&hm=2cc415fc159055186ffd39cdf007f0bdd0883945b5bf61d48faf16cc6808474f&=&format=webp&quality=lossless', 
+                        description: 'Hub to keep track of every new Rumble events', 
+                        link: 'https://discord.gg/6gvjvA84be' 
+                    } as EventCard,
+                    { 
+                        title: 'Battle of Champions', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848755932692653/BOC.png?ex=68e1cdfd&is=68e07c7d&hm=82d94c3cc989e09431a827f71f75d81c98bf8b0cb1fc96760aa403767d2b5e82&=&format=webp&quality=lossless', 
+                        description: 'Rumble latest major world wide tournament', 
+                        link: 'https://discord.gg/DZcuzn6FzA' 
+                    } as EventCard,
+                    { 
+                        title: 'Content Contest S2', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848756821885000/ContentContest.png?ex=68e1cdfd&is=68e07c7d&hm=75b93eb86af98862b3a2eb5321d62f97511b1a581a86a43d14463578d522b310&=&format=webp&quality=lossless', 
+                        description: 'Content creation contest', 
+                        link: 'https://discord.gg/6gvjvA84be' 
+                    } as EventCard,
+                    { 
+                        title: 'BRL', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848756218171412/BRL.png?ex=68e1cdfd&is=68e07c7d&hm=1e317eabf4873e28e579910aa8af90ad72505516201b23970af0db9d5d4ccd3b&=&format=webp&quality=lossless', 
+                        description: 'Tournament and coaching made for beginners', 
+                        link: 'https://discord.gg/4fUZqXHAyN' 
+                    } as EventCard,
+                    { 
+                        title: 'Explode Cup', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848757551829034/ExplodeCup.png?ex=68e1cdfd&is=68e07c7d&hm=a2de621d72343663615895487f341f2208b4620459b45610213866c8992ced27&=&format=webp&quality=lossless', 
+                        description: 'Explosion style competition', 
+                        link: 'https://discord.gg/5mzK2Cn2rG' 
+                    } as EventCard,
+                    { 
+                        title: 'The Silly Series', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848758273376356/SillySeries.png?ex=68e1cdfd&is=68e07c7d&hm=ade88fe91972d25ed4e39d5dce34868307d67fe1979f5a97c0327f2e70b92fd5&=&format=webp&quality=lossless', 
+                        description: 'Very first Rumble Theatre ', 
+                        link: 'https://discord.gg/BEBP2F93wt' 
+                    } as EventCard,
+                    { 
+                        title: 'Europe Moth Cup', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848757199638608/EMC.png?ex=68e1cdfd&is=68e07c7d&hm=3b40361fad2973dc863e5706a0debd923131db7f966bc56d054db540a1fbfe8a&=&format=webp&quality=lossless', 
+                        description: 'Europe based monthly park competition', 
+                        link: 'https://discord.gg/usQKh5GtfC' 
+                    } as EventCard,
+                    { 
+                        title: 'NAMC', 
+                        img_scr: 'https://media.discordapp.net/attachments/1267388475385057353/1423848757971390556/NAMC.png?ex=68e1cdfd&is=68e07c7d&hm=3e09adb8339b2f375b33d8166d7ea0161b980af373d0d7d8bc5ef5882d18109e&=&format=webp&quality=lossless', 
+                        description: 'North America based monthly park competition', 
+                        link: 'https://discord.gg/v8aV8zatHY' 
+                    } as EventCard,
                 ]"
             ></EventCarousel>
         </div>

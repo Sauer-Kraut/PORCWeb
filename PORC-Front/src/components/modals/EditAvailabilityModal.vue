@@ -339,7 +339,7 @@ onMounted(() => {
 
     &:hover {
         background-color: color-mix(in srgb, var(--primary), transparent 90%) !important; /* Custom hover background color */
-        color: var(--primary); /* Custom hover text color */
+        color: var(--primary) !important; /* Custom hover text color */
     }
 
     &.active {
