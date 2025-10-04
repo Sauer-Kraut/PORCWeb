@@ -195,7 +195,7 @@ async function submitNote() {
 </script>
 
 <template>
-    <div class="container-fill justify-content-center match-planner mb-5">
+    <div class="justify-content-center match-planner mb-5">
         <div class="d-flex flex-row justify-content-center mt-5" :class="`division-${division?.name.toLowerCase() || 'iron'}`">
             <!-- <div class="part part-text">
                 <div class="desptiption">

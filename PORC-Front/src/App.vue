@@ -174,6 +174,10 @@ onMounted(async () => {
 
 $header-color: rgb(17, 16, 16);
 
+body {
+    background-color: $background-color !important;
+}
+
 header {
     background-color: $header-color;
     border-bottom: outset 1px rgb(134, 123, 123);
@@ -224,10 +228,6 @@ main {
 
     overflow-x: hidden;
     scrollbar-color: #242424;
-}
-
-.background {
-    background: linear-gradient(135deg, #ff8306, #4a4f5b);
 }
 
 nav {
