@@ -64,14 +64,16 @@ import { computed, onMounted, ref, watch } from 'vue';
     }
 
     async function getCurrentUserSchedule() {
-        let accStore = accountsStore();
-        let res = await accStore.get_competitors_full([user.value]);
-        
-        if (typeof res == 'string') {
-            console.log('Error getting user schedule:', res);
-            return null;
-        } else if (res && res.length > 0) {
-            return res[0].schedule;
+        if (user.value && user.value != '0'){
+            let accStore = accountsStore();
+            let res = await accStore.get_competitors_full([user.value]);
+            
+            if (typeof res == 'string') {
+                console.log('Error getting user schedule:', res);
+                return null;
+            } else if (res && res.length > 0) {
+                return res[0].schedule;
+            }
         }
         return null;
     }
@@ -276,7 +278,8 @@ import { computed, onMounted, ref, watch } from 'vue';
                 <!-- <div class="m-1"></div> -->
                 <h2 class="col-12 col-md-8 title-text mb-2 mb-sm-5">Pro Online <span class="primary">Rumble</span> Competition</h2>
                 <div class="col-12 justify-content-center row">
-                    <router-link to="/match-planner" class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-primary text-decoration-none">Match Planner</router-link>
+                    <router-link v-if="user && user != '0'" to="/match-planner" class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-primary text-decoration-none">Match Planner</router-link>
+                    <router-link v-if="!user || user == '0'" to="/faq" class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-primary text-decoration-none">Go to FAQ</router-link>
                     <router-link to="/rules" class="col-12 col-sm-5 col-md-3 mx-3 mb-3 btn btn-secondary text-decoration-none">See the rules</router-link>
                 </div>
             </div>
@@ -358,12 +361,12 @@ import { computed, onMounted, ref, watch } from 'vue';
 
                         <div class="singup-conditions mt-2 mb-2 w-100">
                             <div class="m-3 mt-5 d-flex text-b align-items-center">
-                                <div :class="user ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
+                                <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
                                 <span>On the <a href="https://discord.gg/2n9prYYZjS" target="_blank">PORC Discord server</a></span>
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
                             <div class="m-3 d-flex text-b align-items-center">
-                                <div :class="user ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
+                                <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
                                 Logged in
                             </div>
                             <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
