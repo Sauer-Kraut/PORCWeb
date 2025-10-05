@@ -163,6 +163,7 @@ function selectSelf() {
         if (player.id == user_id.value) {
             console.log('found self: ', player, 'against user id: ', user_id.value);
             selectedPlayer.value = player;
+            schedule.value.note = selectedPlayer.value?.schedule?.note || '';
         } else {
             console.log('Not self: ', player, 'against user id: ', user_id.value);
         }
@@ -214,8 +215,8 @@ const compStore = accountsStore();
 
 async function submitNote() {
 
-    if (selectedPlayer.value?.schedule != null) {
-        let res = await compStore.self_update_schedule_note(selectedPlayer.value?.schedule.note);
+    if (selectedPlayer.value?.schedule != null && (selectedPlayer.value?.id ?? user_id.value) === user_id.value) {
+        let res = await compStore.self_update_schedule_note(schedule.value.note);
 
         if (res != null) {
             showErrorModal(res);
