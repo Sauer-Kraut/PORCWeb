@@ -1,15 +1,37 @@
 <script setup lang="ts">
     import type { EventCard } from '@/models/EventCard';
-    import { ref, computed } from 'vue'
+    import { computed } from 'vue'
 
     const props = defineProps<{
         card: EventCard;
     }>();
+
+    // Helper function to resolve image source (supports both local assets and URLs)
+    const getImageSrc = (imgSrc: string): string => {
+        // If it's already a full URL, use it directly
+        if (imgSrc.startsWith('http')) {
+            return imgSrc;
+        }
+        
+        // For local assets with @/ alias, convert to relative path
+        // @/ points to src/, and we're in src/components/CardCarousel/
+        // So @/assets/images/... becomes ../../assets/images/...
+        
+        // Seems a bit dirty mr GPT but i'll go with that
+        const relativePath = imgSrc.startsWith('@/') 
+            ? imgSrc.replace('@/', '../../') 
+            : imgSrc;
+        
+        // Use Vite's new URL() with import.meta.url to resolve the asset
+        return new URL(relativePath, import.meta.url).href;
+    };
+
+    const imageSrc = computed(() => getImageSrc(props.card.img_scr));
 </script>
 
 <template>
     <div class="card-body">
-        <a :href="card.link" target="_blank"><img :src="card.img_scr" class="card-image"></img></a>
+        <a :href="card.link" target="_blank"><img :src="imageSrc" class="card-image"></img></a>
         
 
         <div class="card-body d-flex flex-column align-items-center">
