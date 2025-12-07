@@ -413,34 +413,22 @@ import { computed, onMounted, ref, watch } from 'vue';
                         link: 'https://discord.gg/6gvjvA84be' 
                     } as EventCard,
                     { 
-                        title: 'Battle of Champions', 
-                        img_scr: '@/assets/images/tournaments/BOC.png', 
-                        description: 'Rumble latest major world wide tournament', 
-                        link: 'https://discord.gg/DZcuzn6FzA' 
-                    } as EventCard,
-                    { 
                         title: 'Content Contest S2', 
                         img_scr: '@/assets/images/tournaments/ContentContest.png', 
                         description: 'Content creation contest', 
                         link: 'https://discord.gg/6gvjvA84be' 
                     } as EventCard,
                     { 
+                        title: 'Mothmas', 
+                        img_scr: '@/assets/images/tournaments/Mothmas.png', 
+                        description: 'Cassual make your own rules holiday competition', 
+                        link: 'https://discord.gg/DZcuzn6FzA' 
+                    } as EventCard,
+                    { 
                         title: 'BRL', 
                         img_scr: '@/assets/images/tournaments/BRL.png', 
                         description: 'Tournament and coaching made for beginners', 
                         link: 'https://discord.gg/4fUZqXHAyN' 
-                    } as EventCard,
-                    { 
-                        title: 'Explode Cup', 
-                        img_scr: '@/assets/images/tournaments/ExplodeCup.png', 
-                        description: 'Explosion style competition', 
-                        link: 'https://discord.gg/5mzK2Cn2rG' 
-                    } as EventCard,
-                    { 
-                        title: 'The Silly Series', 
-                        img_scr: '@/assets/images/tournaments/SillySeries.png', 
-                        description: 'Very first Rumble Theatre ', 
-                        link: 'https://discord.gg/BEBP2F93wt' 
                     } as EventCard,
                     { 
                         title: 'Europe Moth Cup', 
@@ -453,7 +441,7 @@ import { computed, onMounted, ref, watch } from 'vue';
                         img_scr: '@/assets/images/tournaments/NAMC.png', 
                         description: 'North America based monthly park competition', 
                         link: 'https://discord.gg/v8aV8zatHY' 
-                    } as EventCard,
+                    } as EventCard
                 ]"
             ></EventCarousel>
         </div>

@@ -134,7 +134,12 @@ onMounted(async () => {
             <div class="col-10 d-flex flex-column">
                 <h1 class="decor-title mb-2" v-if="signup == null">Sign Up</h1>
                 <h1 class="decor-title mb-2" v-else>Signed Up</h1>
-                <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">Oct. 8th</span></h3>
+
+                <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+                <!-- TODO: for the love of god make this automatic-->
+                <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+
+                <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">Jan. 3rd</span></h3>
             </div>
             <div class="form-container row">
                 <form class="col-12" v-if="!signup">

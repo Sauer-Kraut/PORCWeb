@@ -18,6 +18,7 @@
         // So @/assets/images/... becomes ../../assets/images/...
         
         // Seems a bit dirty mr GPT but i'll go with that
+        // FUCK THIS NOTHING WORKS ANYMORE 2GUIB
         const relativePath = imgSrc.startsWith('@/') 
             ? imgSrc.replace('@/', '../../') 
             : imgSrc;
@@ -30,7 +31,7 @@
 </script>
 
 <template>
-    <div class="card-body">
+    <a :href="card.link" class="card-body">
         <a :href="card.link" target="_blank"><img :src="imageSrc" class="card-image"></img></a>
         
 
@@ -39,7 +40,7 @@
             <h1 class="content-title px-4 py-2 mt-3 text-start m-0 w-100">{{ card.title }}</h1>
             <h2 class="px-4 py-2 text-start mb-3 mt-auto w-100 text">{{ card.description }}</h2>
         </div>
-    </div>
+    </a>
 </template>
 
 
@@ -86,5 +87,9 @@
                 font-weight: 350;
             }
         }
+    }
+
+    a {
+        text-decoration: none !important;
     }
 </style>
