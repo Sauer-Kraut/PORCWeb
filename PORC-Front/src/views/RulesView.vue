@@ -440,7 +440,7 @@ ul, ol {
         margin-top: 1.5rem !important;
         margin-bottom: 1rem !important;
 
-        text-decoration: underline;
+        /// text-decoration: underline;
         text-decoration-thickness: 0.5px;
         text-decoration-color: color-mix(in srgb, rgb(118, 116, 116), var(--primary) 20%);;
         text-underline-offset: 0.3rem;
@@ -451,6 +451,7 @@ ul, ol {
     }
 
     .rules {
+        color: #ccc;
         font-size: 1rem !important;
         font-weight: 400 !important;
         line-height: 1.5 !important;
@@ -466,10 +467,12 @@ ul, ol {
         text-decoration-color: var(--primary);
         text-underline-offset: 0.3rem;
         text-decoration-thickness: 0.15rem;
+        color: #ccc;
     }
 }
 
 .seperator-h {
-    background-color: color-mix(in srgb, rgb(118, 116, 116), var(--primary) 30%);
+    // background-color: color-mix(in srgb, rgb(118, 116, 116), var(--primary) 30%);
+    height: 0px;
 }
 </style>

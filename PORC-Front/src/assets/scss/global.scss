@@ -181,14 +181,14 @@ select:focus {
     font-size: 1.15rem !important;
     font-weight: 500 !important;
 
-    color: #979797 !important;
+    color: $muted-text !important;
 }
 
 .detail-title {
     margin-top: auto !important;
     margin-bottom: 0rem !important;
     font-size: 0.8rem !important;
-    color: #979797 !important;
+    color: $muted-text !important;
 }
 
 .text-highlight {

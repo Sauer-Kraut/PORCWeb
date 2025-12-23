@@ -1,0 +1,289 @@
+{
+  "match_plan": {
+    "divisions": [
+      {
+        "name": "Meteorite",
+        "order": 0,
+        "matches": {},
+        "players": []
+      },
+      {
+        "name": "Diamond",
+        "order": 1,
+        "matches": {},
+        "players": []
+      },
+      {
+        "name": "Adamantium",
+        "order": 2,
+        "matches": {},
+        "players": []
+      },
+      {
+        "name": "Platinum",
+        "order": 3,
+        "matches": {},
+        "players": []
+      },
+      {
+        "name": "Gold",
+        "order": 4,
+        "matches": {},
+        "players": []
+      },
+      {
+        "name": "Silver",
+        "order": 5,
+        "matches": {},
+        "players": []
+      },
+      {
+        "name": "Iron",
+        "order": 6,
+        "matches": {},
+        "players": []
+      },
+      {
+        "name": "Stone",
+        "order": 6,
+        "matches": {},
+        "players": []
+      }
+    ],
+    "players": [],
+    "end_timestamp": 10,
+    "pause_end_timestamp": 1737226800,
+    "season": 3
+  },
+  "sign_ups": [
+    {
+      "username": "culpepper9",
+      "bp": 3200,
+      "region": "US East",
+      "discord_id": "886708169747873843"
+    },
+    {
+      "username": "2guib",
+      "bp": 20000,
+      "region": "Europe",
+      "discord_id": "178905571682942976"
+    },
+    {
+      "username": "Hollow_Hylian",
+      "bp": 16000,
+      "region": "US East",
+      "discord_id": "597578352601202701"
+    },
+    {
+      "username": "arturonomin",
+      "bp": 7000,
+      "region": "US East",
+      "discord_id": "411898483218579474"
+    },
+    {
+      "username": "pompyy._62788",
+      "bp": 13420,
+      "region": "US East",
+      "discord_id": "1192159863896289445"
+    },
+    {
+      "username": "prismoffireplays",
+      "bp": 1559,
+      "region": "NaN",
+      "discord_id": "684916627275513857"
+    },
+    {
+      "username": "omelette.du.fromage.",
+      "bp": 22000,
+      "region": "NaN",
+      "discord_id": "142689578967498762"
+    },
+    {
+      "username": "oreotrollturbo",
+      "bp": 2700,
+      "region": "NaN",
+      "discord_id": "383267397878153216"
+    },
+    {
+      "username": "domrobin",
+      "bp": 1500,
+      "region": "NaN",
+      "discord_id": "605132858071187472"
+    },
+    {
+      "username": "spopi.",
+      "bp": 2800,
+      "region": "NaN",
+      "discord_id": "714596943053062284"
+    },
+    {
+      "username": "rperkins27",
+      "bp": 15000,
+      "region": "NaN",
+      "discord_id": "1047645209237917757"
+    },
+    {
+      "username": "hasenpartyy",
+      "bp": 700,
+      "region": "NaN",
+      "discord_id": "958057865032106045"
+    },
+    {
+      "username": "orangenaln",
+      "bp": 6000,
+      "region": "NaN",
+      "discord_id": "691615336943845407"
+    },
+    {
+      "username": "bobomonster315",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "620712303100428288"
+    },
+    {
+      "username": "saferemain02",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "1169793085929168997"
+    },
+    {
+      "username": "tikki210",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "919102332699033640"
+    },
+    {
+      "username": "blankochan",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "799732203289706546"
+    },
+    {
+      "username": "ketchup9490",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "310746069200011266"
+    },
+    {
+      "username": "nutssy",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "293314819363438593"
+    },
+    {
+      "username": "orphan_obliterator_",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "803823435154456577"
+    },
+    {
+      "username": "tastefulmedi",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "197062124978176001"
+    },
+    {
+      "username": "juicepar",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "219590386644025344"
+    },
+    {
+      "username": "abbathorsdagger",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "491784389341216768"
+    },
+    {
+      "username": "alonshpo",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "244833436450291722"
+    },
+    {
+      "username": "maninthesky4129",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "1225594951212208138"
+    },
+    {
+      "username": "boomerang_rumble",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "1056210847292198933"
+    },
+    {
+      "username": "rubuscalculum",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "904068234792271882"
+    },
+    {
+      "username": "donk69420",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "695132277792964618"
+    },
+    {
+      "username": "si11ysquid",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "1011388907889381396"
+    },
+    {
+      "username": "monkey_19",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "697138147171237908"
+    },
+    {
+      "username": "tamrell",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "412067213898547201"
+    },
+    {
+      "username": "skellehhh",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "1019310908134146159"
+    },
+    {
+      "username": "mr_lux43",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "300974296283480065"
+    },
+    {
+      "username": "l3mmi05",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "525674055169212426"
+    },
+    {
+      "username": "thelonelypeon",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "358360123959279616"
+    },
+    {
+      "username": "supercopia.",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "782604632807047168"
+    },
+    {
+      "username": "peace_of_mind",
+      "bp": 0,
+      "region": "NaN",
+      "discord_id": "486957106663129089"
+    },
+    {
+      "username": ".kalamart",
+      "bp": 4237,
+      "region": "Europe",
+      "discord_id": "807628783347171398"
+    }
+  ],
+  "season": 3
+}
