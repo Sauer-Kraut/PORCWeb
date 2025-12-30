@@ -351,7 +351,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 
 
-        <div class="col-12 col-xxl-8 col-sm-11 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
+        <section id="sign-up">
+        <div class="col-12 col-sm-11 col-xl-10 col-xxxl-8 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
             <div class="row justify-content-center">
                 <div class="col-12 col-md d-flex ms-3">
                     <div class="signup-info d-flex flex-column w-100">
@@ -395,6 +396,7 @@ import { computed, onMounted, ref, watch } from 'vue';
                 </div>
             </div>
         </div>
+        </section>
 
         <div class="p-5 col-10 mt-5 d-none d-md-block"></div>
 
@@ -408,37 +410,37 @@ import { computed, onMounted, ref, watch } from 'vue';
                 :cards="[
                     { 
                         title: 'Community Tournaments', 
-                        img_scr: '@/assets/images/tournaments/CommunityTournament.png', 
-                        description: 'Hub to keep track of every new Rumble events', 
+                        img_name: 'CommunityTournament.png', 
+                        description: 'Hub to keep track of all new Rumble events', 
                         link: 'https://discord.gg/6gvjvA84be' 
                     } as EventCard,
                     { 
                         title: 'Content Contest S2', 
-                        img_scr: '@/assets/images/tournaments/ContentContest.png', 
+                        img_name: 'ContentContest.png', 
                         description: 'Content creation contest', 
                         link: 'https://discord.gg/6gvjvA84be' 
                     } as EventCard,
                     { 
                         title: 'Mothmas', 
-                        img_scr: '@/assets/images/tournaments/Mothmas.png', 
+                        img_name: 'Mothmas.png', 
                         description: 'Cassual make your own rules holiday competition', 
                         link: 'https://discord.gg/DZcuzn6FzA' 
                     } as EventCard,
                     { 
                         title: 'BRL', 
-                        img_scr: '@/assets/images/tournaments/BRL.png', 
+                        img_name: 'BRL.png', 
                         description: 'Tournament and coaching made for beginners', 
                         link: 'https://discord.gg/4fUZqXHAyN' 
                     } as EventCard,
                     { 
                         title: 'Europe Moth Cup', 
-                        img_scr: '@/assets/images/tournaments/EMC.png', 
+                        img_name: 'EMC.png', 
                         description: 'Europe based monthly park competition', 
                         link: 'https://discord.gg/usQKh5GtfC' 
                     } as EventCard,
                     { 
                         title: 'NAMC', 
-                        img_scr: '@/assets/images/tournaments/NAMC.png', 
+                        img_name: 'NAMC.png', 
                         description: 'North America based monthly park competition', 
                         link: 'https://discord.gg/v8aV8zatHY' 
                     } as EventCard
@@ -844,6 +846,10 @@ $good-color: rgb(34, 197, 94);
 
     .col-xxxl-5 {
         width: 42%;
+    }
+
+    .col-xxxl-8 {
+        width: calc(800% / 12%);
     }
 }
 

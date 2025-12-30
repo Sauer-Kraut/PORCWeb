@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { ModalsContainer } from 'vue-final-modal';
 import DiscordUserComponent from './components/DiscordUserComponent.vue';
 import { showErrorModal } from './services/ErrorModalService';
@@ -112,23 +112,92 @@ async function getPubPlayerInfos(ids: string[]) {
     console.log('Got PubPlayerInfos: ', playerinfos.value);
 }
 
+const newsTargetTime = ref<number>(1767466800);
+const showNews = ref(false);
+const newsText = ref<string | null>(null);
+let newsTimer: ReturnType<typeof setInterval> | null = null;
 
+// cant test right now so Im just hoping this works
+async function determineNews() {
+    const matchplan = await matchplanStore().get_matchplan(null);
 
+    if (typeof matchplan === 'string') {
+        // If an error string is returned, show it
+        // showErrorModal(matchplan);
+        return;
+    } else {
+        // matchplan is an object — add logic here to determine news from the matchplan
+        const season_start_diff = (Date.now() / 1000 - matchplan.start_timestamp);
+        const season_pause_end_diff = (Date.now() / 1000 - matchplan.pause_end_timestamp);
 
+        if (season_start_diff > 0 && season_start_diff < 7 * 24 * 3600) {
+            newsTargetTime.value = matchplan.start_timestamp;
+            showNews.value = true;
+        } 
+        else if (season_pause_end_diff > 0 && season_pause_end_diff < 7 * 24 * 3600) {
+            newsTargetTime.value = matchplan.pause_end_timestamp;
+            showNews.value = true;
+        } 
+        else {
+            console.log("No news to show based on matchplan dates: " + matchplan);
+        }
+    }
+}
+
+function closeNews() {
+    showNews.value = false;
+}
+
+function updateNewsText() {
+    const date = newsTargetTime.value - Date.now() / 1000;
+    newsText.value = Math.floor(date / (3600 * 24)) + ":" + Math.floor((date % (3600 * 24)) / 3600) + ":" + Math.floor((date % 3600) / 60) + ":" + Math.floor(date % 60);
+    // newsText.value = "target: " + newsTargetTime.value + ", current: " + Date.now() / 1000 + ", diff: " + (newsTargetTime.value - Date.now() / 1000) + ", out: " + date.getDay() + ":" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+}
 
 
 
 
 onMounted(async () => {
+
     await getUserId();
     await getMatchPlan();
-    appReady.value = true; // calls early as quirky optimization that wont stab me in the back later fr fr on god
+    appReady.value = true;
+
+    await determineNews();
+
+    // start news timer
+    updateNewsText();
+    newsTimer = setInterval(updateNewsText, 1000);
+    
     await getPubPlayerInfos(getPlayerIds());
+});
+
+onUnmounted(() => {
+  if (newsTimer) clearInterval(newsTimer);
 });
 </script>
 
 <template>
-    <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq' }">
+    <!-- News Banner -->
+    <div class="d-flex flex-row news-banner justify-content-center ms-auto" v-if="showNews">
+        <div class="col-1"></div>
+        <div class="d-flex news col-10">
+            The next <span class="bolder"> Season of PORC </span> starts in {{ newsText }}
+            <span class="ms-2 sep">|</span>
+            <router-link
+                class="link ms-2"
+                :to="{ path: '/', hash: '#sign-up' }"
+                @click="closeMenu"
+            >
+                Sign Up
+            </router-link>
+        </div>
+
+        <div class="d-flex cross col-1" @click.stop="closeNews">
+            <i class="icon-cross"></i>
+        </div>
+    </div>
+    <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq', displaced: showNews == true }">
         <!-- Navigation -->
         <div class="row h-header">
             <!-- Burger Icon -->
@@ -288,6 +357,59 @@ nav {
     }
 }
 
+$news-banner-height: 2rem;
+
+.news-banner {
+    z-index: 1101;
+    position: fixed;
+
+    background-color: var(--primary);
+    
+    color: rgb(0, 0, 0) !important;
+    height: $news-banner-height;
+    width: 100%;
+
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 0.85rem;
+
+    padding: 0.5rem 1rem;
+
+    * {
+        color: rgb(0, 0, 0) !important;
+    }
+
+    .cross {
+        cursor: pointer;
+        margin-right: 1rem !important;
+        justify-content: flex-end;
+    }
+
+    .link {
+        transition: all 0.2s;
+        font-weight: 700;
+        text-decoration: transparent !important;
+
+        &:hover {
+            text-decoration: black !important;
+            text-decoration-thickness: 3px !important;
+            text-underline-offset: 2px !important;
+        }
+    }
+
+    .news {
+        justify-content: center;
+
+        .sep {
+            line-height: 0.7rem !important;
+        }
+    }
+}
+
+.displaced {
+    margin-top: $news-banner-height;
+}
+
 @media (max-width: 2400px) and (min-width: 1699px) {
     .col-xl-6-cust {
         width: 50%;
@@ -335,5 +457,10 @@ nav {
 .fixed {
     position: fixed;
     width: 100%;
+}
+
+.bolder {
+    font-weight: 700;
+    margin-inline: 0.3rem;
 }
 </style>

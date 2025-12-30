@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { defineProps } from 'vue';
+import { defineProps, onMounted } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 
 defineProps<{
