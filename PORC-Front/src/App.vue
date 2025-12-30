@@ -127,8 +127,8 @@ async function determineNews() {
         return;
     } else {
         // matchplan is an object — add logic here to determine news from the matchplan
-        const season_start_diff = (Date.now() / 1000 - matchplan.start_timestamp);
-        const season_pause_end_diff = (Date.now() / 1000 - matchplan.pause_end_timestamp);
+        const season_start_diff = (matchplan.start_timestamp - Date.now() / 1000);
+        const season_pause_end_diff = (matchplan.pause_end_timestamp - Date.now() / 1000);
 
         if (season_start_diff > 0 && season_start_diff < 7 * 24 * 3600) {
             newsTargetTime.value = matchplan.start_timestamp;
