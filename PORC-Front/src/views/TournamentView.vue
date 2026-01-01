@@ -352,14 +352,17 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 
         <section id="sign-up">
-        <div class="col-12 col-sm-11 col-xl-10 col-xxxl-8 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
+        <div class="col-12 col-sm-11 col-xl-10 col-xxxl-8 justify-content-center registration-section ps-md-4 p-md-4 pe-md-4 ms-auto me-auto mw-30">
             <div class="row justify-content-center">
-                <div class="col-12 col-md d-flex ms-3">
+
+                <!-- Info --> <!-- Hidden on small screens -->
+                <div class="col-md d-none d-md-flex ms-3">
                     <div class="signup-info d-flex flex-column w-100">
+                        <!-- Title -->
                         <h1 class="decor-title m-0 p-0 mt-3">Registration</h1>
                         <h2 class="content-subtitle mt-2">Sign up for the next season of PORC</h2>
 
-
+                        <!-- Signup Conditions -->
                         <div class="singup-conditions mt-2 mb-2 w-100">
                             <div class="m-3 mt-5 d-flex text-b align-items-center">
                                 <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
@@ -386,12 +389,13 @@ import { computed, onMounted, ref, watch } from 'vue';
                     </div>
                 </div>
 
-
-                <div class="col-12 col-md align-items-center justify-content-center d-flex me-0 me-md-4">
+                <!-- Form -->
+                <div class="col-md align-items-center justify-content-center d-flex me-0 me-md-4
+                            m-0 p-0 mw-30">
                     <SignUpFormComponent 
                         :season_name="season_name" 
                         @formComplete="handleFormComplete"
-                        class="signup-form mt-4 pt-1 mb-4 ms-auto" 
+                        class="signup-form mt-md-4 pt-md-1 mb-md-4 ms-auto" 
                     />
                 </div>
             </div>
@@ -645,6 +649,12 @@ $hero-height: 32rem;
     }
 }
 
+@include media-breakpoint-down(md) {
+    .mw-30 {
+        max-width: 440px !important;
+    }
+}
+
 .part-signup-contents {
     margin-top: 3rem;
     margin-bottom: 3rem;
@@ -667,13 +677,14 @@ $hero-height: 32rem;
 }
 
 .signup-form {
-    max-width: 30rem;
+    max-width: 440px;
     transform: scale(1.05);
     
     @include media-breakpoint-down(md) {
         width: 100%;
         max-width: 100%;
-        margin: 0rem 1.5rem 1.5rem 1.5rem !important;
+        transform: scale(1);
+        // margin: 0rem 1.5rem 1.5rem 1.5rem !important;
     }
 }
 

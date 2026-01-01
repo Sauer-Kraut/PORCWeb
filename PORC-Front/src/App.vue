@@ -154,10 +154,20 @@ function updateNewsText() {
     // newsText.value = "target: " + newsTargetTime.value + ", current: " + Date.now() / 1000 + ", diff: " + (newsTargetTime.value - Date.now() / 1000) + ", out: " + date.getDay() + ":" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
 }
 
+// add reactive screen width
+const screenWidth = ref(window.innerWidth);
+const isSmallScreen = computed(() => screenWidth.value <= 600);
+
+function updateScreenWidth() {
+  screenWidth.value = window.visualViewport?.width ?? window.innerWidth;
+}
 
 
 
 onMounted(async () => {
+    window.addEventListener('resize', updateScreenWidth);
+    // initial read in case visualViewport is available after mount
+    updateScreenWidth();
 
     await getUserId();
     await getMatchPlan();
@@ -174,6 +184,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (newsTimer) clearInterval(newsTimer);
+  window.removeEventListener('resize', updateScreenWidth);
 });
 </script>
 
@@ -182,7 +193,8 @@ onUnmounted(() => {
     <div class="d-flex flex-row news-banner justify-content-center ms-auto" v-if="showNews">
         <div class="col-1"></div>
         <div class="d-flex news col-10">
-            The next <span class="bolder"> Season of PORC </span> starts in {{ newsText }}
+            <span v-if="!isSmallScreen" class="me-2">The next <span class="bolder"> Season of PORC </span> starts in</span> 
+            {{ newsText }}
             <span class="ms-2 sep">|</span>
             <router-link
                 class="link ms-2"
@@ -199,21 +211,21 @@ onUnmounted(() => {
     </div>
     <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq', displaced: showNews == true }">
         <!-- Navigation -->
-        <div class="row h-header">
+        <div class="d-flex flex-row justify-content-between col-12 col-md-11 col-xl-10 h-header">
             <!-- Burger Icon -->
-            <div class="col-auto d-flex align-items-center d-md-none" @click="toggleMenu">
+            <div class="d-flex align-items-center d-md-none w-7" @click="toggleMenu">
                 <div class="burger-icon p-3">
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                 </div>
             </div>
-            <div class="logo col col-md-auto d-flex align-items-center justify-content-center">
-                <router-link to="/" class="mx-2 mx-md-3 mx-lg-5"> 
+            <div class="logo d-flex align-items-center justify-content-center w-7">
+                <router-link to="/" class="mx-2"> 
                     <Logo />
                 </router-link>
             </div>
-            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center">
+            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center mx-md-4">
                 <div class="routes-container">
                     <router-link to="/" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Tournament</router-link>
                     <router-link to="/match-planner" class="router-link col-12 col-md-2 px-0" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
@@ -222,8 +234,8 @@ onUnmounted(() => {
                     <div v-if="isMenuOpen" class="col-12 m-1 d-md-none" />
                 </div>
             </nav>
-            <div class="col-auto d-flex align-items-center">
-                <DiscordUserComponent class="mx-2 mx-md-3 mx-lg-5"></DiscordUserComponent>
+            <div class="d-flex align-items-center w-7 mw-7">
+                <DiscordUserComponent class="container me-1 me-md-3"></DiscordUserComponent>
             </div>
         </div>
 
@@ -268,16 +280,17 @@ header {
 
 .h-header {
     min-height: 4rem;
-    width: 100%;
-    @include media-breakpoint-up(md) {
-        width: 83.3%;     
+
+    .w-7 {
+        width: 7rem;
+    }
+
+    .mw-7 {
+        min-width: 7rem;
     }
 }
 
 @include media-breakpoint-down(md) {
-    .h-header {
-        min-height: 60px;
-    }
 
     .main {
         margin-top: 60px; // Adjust this value to match the height of your header
