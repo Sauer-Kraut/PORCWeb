@@ -280,6 +280,7 @@ header {
 
 .h-header {
     min-height: 4rem;
+    flex-wrap: wrap;
 
     .w-7 {
         width: 7rem;
