@@ -2,6 +2,7 @@
     import { waitForAppReady } from '@/appReady';
 import EventCarousel from '@/components/CardCarousel/EventCarousel.vue';
 import SignUpFormComponent from '@/components/forms/SignUpFormComponent.vue';
+import DiscordEventComponent from '@/components/LiveEventSection/DiscordEventComponent.vue';
 import PedestalComponent from '@/components/PedestalComponent.vue';
 import SeasonComponent from '@/components/SeasonComponent.vue';
 import { Repetition } from '@/models/availability/Availability';
@@ -311,43 +312,57 @@ import { computed, onMounted, ref, watch } from 'vue';
 
         <div class="row p-5 d-none d-lg-block"></div>
 
-        <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
-            <h2 class="decor-title text-center justify-content-center w-auto mt-5">Meet our <span class="text-highlight">Champions</span></h2>
-            <h3 class="content-subtitle justify-content-center w-auto mt-2">The best of the best</h3>
-        </div>
-        <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
-            <PedestalComponent
-                class="pedestal-component col-2 mt-0 first z-2 me-4 ms-4"
-                :account="{
-                    id: '306467062530965514',
-                    username: 'Sauerkarut',
-                    avatar: '7df79ec5c3938cf59cd8cd4a69242ad3',
-                    schedule: null
-                } as PubAccountInfo"
-                :rank="1"
-            />
-            <PedestalComponent
-                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-flex"
-                :account="{
-                    id: '176842075591933952',
-                    username: 'Savitarian',
-                    avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
-                    schedule: null
-                } as PubAccountInfo"
-                :rank="2"
-            />
-            <PedestalComponent
-                class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-flex"
-                :account="{
-                    id: '142689578967498762',
-                    username: 'Omlette',
-                    avatar: 'e368e84d013d70077d9f467dffe95c69',
-                    schedule: null
-                } as PubAccountInfo"
-                :rank="3"
-            />
-            <div class="highlight"></div>
-        </div>
+        <section id="live-events">
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
+                <h2 class="decor-title text-center justify-content-center w-auto mt-5">Live Matches</h2>
+                <h3 class="content-subtitle justify-content-center w-auto mt-2">Watch high level Rumble matches right as they happen</h3>
+            </div>
+            <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
+                <DiscordEventComponent></DiscordEventComponent>
+            </div>
+        </section>
+
+        <div class="row p-5 d-none d-lg-block"></div>
+
+        <section id="champions">
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
+                <h2 class="decor-title text-center justify-content-center w-auto mt-5">Meet our <span class="text-highlight">Champions</span></h2>
+                <h3 class="content-subtitle justify-content-center w-auto mt-2">The best of the best</h3>
+            </div>
+            <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
+                <PedestalComponent
+                    class="pedestal-component col-2 mt-0 first z-2 me-4 ms-4"
+                    :account="{
+                        id: '306467062530965514',
+                        username: 'Sauerkarut',
+                        avatar: '7df79ec5c3938cf59cd8cd4a69242ad3',
+                        schedule: null
+                    } as PubAccountInfo"
+                    :rank="1"
+                />
+                <PedestalComponent
+                    class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-flex"
+                    :account="{
+                        id: '176842075591933952',
+                        username: 'Savitarian',
+                        avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
+                        schedule: null
+                    } as PubAccountInfo"
+                    :rank="2"
+                />
+                <PedestalComponent
+                    class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-flex"
+                    :account="{
+                        id: '142689578967498762',
+                        username: 'Omlette',
+                        avatar: 'e368e84d013d70077d9f467dffe95c69',
+                        schedule: null
+                    } as PubAccountInfo"
+                    :rank="3"
+                />
+                <div class="highlight"></div>
+            </div>
+        </section>
 
 
 
