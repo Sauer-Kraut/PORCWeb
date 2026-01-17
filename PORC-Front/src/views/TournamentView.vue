@@ -633,8 +633,9 @@ $hero-height: 32rem;
 
     align-self: center;
 
-    border: 1px solid $border-color;
+    border: 1px solid $secondary-border-color;
     border-radius: 16px;
+    background-color: $darker-bg;
 
     box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
 

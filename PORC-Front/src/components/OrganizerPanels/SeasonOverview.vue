@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from "vue"
+import { ref, computed, watch, onMounted } from "vue"
+import InfoCard from "./InfoCard.vue"
+import type { Matchplan } from "@/models/matchplan/Matchplan"
+import { matchplanStore } from "@/storage/st_matchplan"
+import { showErrorModal } from "@/services/ErrorModalService"
+import type { DivisionModel } from "@/models/matchplan/DivisionModel"
 
 /* =========================
    Types
@@ -118,6 +123,50 @@ const recentSignups = ref<Signup[]>([
         season: "S12"
     }
 ])
+
+const planStorage = matchplanStore();
+const selectedMatchplan = ref<Matchplan | null>(null);
+const totalMatches = ref<number>(1);
+
+async function getSelectedMatchplan() {
+
+    // TODO: make it fetch the correct matchplan
+    const plan = await planStorage.get_matchplan(null);
+
+    if (typeof plan == 'string') {
+        showErrorModal(plan);
+    } 
+    else {
+        plan.divisions = plan.divisions.sort((a: DivisionModel, b: DivisionModel) => a.order - b.order);
+        selectedMatchplan.value = plan;
+        totalMatches.value = calcTotalMatches(plan);
+    }
+}
+
+function calcTotalMatches(plan: Matchplan): number {
+    let matches = 0;
+    console.log(plan);
+    for (let division of plan.divisions) {
+        matches += Object.entries(division.matches).length;
+    }
+
+    console.log(matches);
+    return matches;
+}
+
+function getMatchesPlayed(div: DivisionModel): number {
+    let matches = 0;
+    for (let [_, match] of Object.entries(div.matches)) {
+        if (match.p1score && match.p2score) {
+            matches++;
+        }
+    }
+    return matches;
+}
+
+watch(selectedSeason, async (newValue) => {
+    await getSelectedMatchplan();
+})
 
 // Selection state: store stable keys (username) instead of indices so sorting won't break selections
 const selectedKeys = ref<Set<string>>(new Set())
@@ -260,63 +309,102 @@ function ApplyFilters(list: Signup[]) {
 
     return filteredList;
 }
+
+onMounted(async () => {
+    await getSelectedMatchplan();
+});
 </script>
                     
 
 <template>
-    <div class="dashboard container-fluid">
+    <div class="dashboard p-0 container-fluid">
 
-        <!-- Season Selector -->
+        <!-- Season Header -->
         <div class="season-bar">
-            <select v-model="selectedSeason" class="season-select">
-                <option v-for="s in seasons" :key="s">{{ s }}</option>
-            </select>
+            <div class="season-left">
+                <h2 class="season-title">Season Overview</h2>
+                <p class="season-sub">Manage signups, divisions and matchplans</p>
+            </div>
 
-            <div class="season-meta">
-                <!-- TODO: bind to season status -->
-                <span class="badge-active">Active</span>
-                <!-- TODO: replace with real countdown -->
-                <span class="muted">Ends in 12d 4h</span>
+            <div class="ms-auto">
+                <div class="season-select-wrap">
+                    <div class="season-meta">
+                        <span class="badge-active">Active</span>
+                        <span class="muted">Ends in 12d 4h</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="season-right">
+                <button class="btn ghost" @click.prevent>Export CSV</button>
             </div>
         </div>
 
         <!-- Signups Graph -->
-        <div class="graph-card">
-            <div class="graph-header">
-                <h3 class="mb-1">Signups Over Time</h3>
-                <p>Across all seasons</p>
+        <div class="panel-card gap">
+            <div class="d-flex flex-row flex-grow-1 gap">
+
+                <!-- Graph Card-->
+                <div class="info-card flex-grow-1">
+                    <div class="form-label mb-3">
+                        Signups Over Time
+                    </div>
+
+                    <!-- TODO: replace with real chart -->
+                    <div class="graph-placeholder mb-1">
+                        Graph Placeholder
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="d-flex flex-row flex-grow-1 gap">    
+                
+                <!-- Stats Grid -->
+                <div class="info-card flex-grow-1">
+                    <div class="preview-title">
+                        Tournament Stats
+                    </div>
+                    
+                    <!-- Stat Cards-->
+                    <div class="stats-grid flex-grow-1">
+                        <InfoCard titel="Total Signups" :value="metrics.totalSignups.toString()" :subtitle="`▲ ${metrics.totalSignupsDelta}%`"/>
+                        <InfoCard titel="Active Players" :value="metrics.activePlayers.toString()" :subtitle="`▼ ${Math.abs(metrics.activePlayersDelta)}%`"/>
+                        <InfoCard titel="Average BP" :value="metrics.avgBp.toString()" :subtitle="`▲ ${metrics.avgBpDelta}`"/>
+                        <InfoCard titel="Events Planned" :value="'34'" subtitle="▲ 13"/>
+                    </div>
+                    
+                </div>
+
+                <!-- Season Progress -->
+                <div class="d-flex flex-column gap w-25">
+                    <div class="info-card">
+                        <p class="form-label">Matches</p>
+                        <div class="progress-bar w-100 mb-3">
+                            <div v-for="div in selectedMatchplan?.divisions" class="d-flex flex-row h-100" :style="{'width': `${getMatchesPlayed(div) / totalMatches * 100}%`}">
+                                <div class="h-100 w-100" :style="{'background-color':  `var(--${div.name.toLowerCase()})`}"></div>
+                            </div>
+                            <div class="flex-grow-1"></div>
+                        </div>
+
+                        <p class="form-label">Progress</p>
+                        <div class="progress-bar w-100 mb-3">
+                            <div class="primary" :style="{'width': 17 + '%'}"></div>
+                            <div class="primary-weak" :style="{'width': 43 + '%'}"></div>
+                            <div class="flex-grow-1"></div>
+                        </div>
+
+                        <p class="form-label">Time</p>
+                        <div class="progress-bar w-100">
+                            <div class="primary" :style="{'width': 24 + '%'}"></div>
+                            <div class="flex-grow-1"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- TODO: replace with real chart -->
-            <div class="graph-placeholder">
-                Graph Placeholder
-            </div>
-        </div>
+            
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="label">Total Signups</span>
-                <span class="value">{{ metrics.totalSignups }}</span>
-                <span class="trend up">▲ {{ metrics.totalSignupsDelta }}%</span>
-            </div>
-
-            <div class="stat-card">
-                <span class="label">Active Players</span>
-                <span class="value">{{ metrics.activePlayers }}</span>
-                <span class="trend down">▼ {{ Math.abs(metrics.activePlayersDelta) }}%</span>
-            </div>
-
-            <div class="stat-card">
-                <span class="label">Average BP</span>
-                <span class="value">{{ metrics.avgBp }}</span>
-                <span class="trend up">▲ {{ metrics.avgBpDelta }}</span>
-            </div>
-
-            <div class="stat-card">
-                <span class="label">All-Time Signups</span>
-                <span class="value">{{ metrics.allTimeSignups }}</span>
-            </div>
         </div>
 
             <div class="list-header mb-0 p-0">
@@ -356,16 +444,16 @@ function ApplyFilters(list: Signup[]) {
                             <span class="sort-indicator">{{ sortBy === 'username' ? (sortDir === 1 ? '▲' : '▼') : '' }}</span>
                         </span>
                     </div>
-                    <div class="region-box muted">
-                        <span class="sortable" :class="{ active: sortBy === 'bp' }" @click="setSort('bp')">
-                            BP
-                            <span class="sort-indicator">{{ sortBy === 'bp' ? (sortDir === 1 ? '▲' : '▼') : '' }}</span>
-                        </span>
-                    </div>
                     <div class="region-box muted sortable" :class="{ active: sortBy === 'region' }" @click="setSort('region')">
                         <span>
                             Region
                             <span class="sort-indicator">{{ sortBy === 'region' ? (sortDir === 1 ? '▲' : '▼') : '' }}</span>
+                        </span>
+                    </div>
+                    <div class="region-box muted">
+                        <span class="sortable" :class="{ active: sortBy === 'bp' }" @click="setSort('bp')">
+                            BP
+                            <span class="sort-indicator">{{ sortBy === 'bp' ? (sortDir === 1 ? '▲' : '▼') : '' }}</span>
                         </span>
                     </div>
                     <span class="muted sortable" :class="{ active: sortBy === 'signupDate' }" @click="setSort('signupDate')">
@@ -388,18 +476,18 @@ function ApplyFilters(list: Signup[]) {
                 >
                     <div class="checkbox-cell form-check">
                         <input
-                            class="form-check-input"
+                            class="form-check-input mb-1"
                             type="checkbox"
                             :checked="isSelected(signup.username)"
                         />
                     </div>
 
                     <span class="username">{{ signup.username }}</span>
-                    <div class="bp">
-                        <span class="me-1">{{ signup.bp }}</span>
-                    </div>
                     <div class="region-box">
                         <span class="region">{{ signup.region }}</span>
+                    </div>
+                    <div class="bp">
+                        <span class="me-1">{{ signup.bp }}</span>
                     </div>
                     <span class="muted">{{ formatTimeAgo(signup.signupDate) }}</span>
                     <div class="season">
@@ -423,7 +511,6 @@ function ApplyFilters(list: Signup[]) {
     .dashboard {
         // max-width: 1400px;
         margin: auto;
-        padding: 24px;
         display: flex;
         flex-direction: column;
         flex-grow: 1;
@@ -440,13 +527,74 @@ function ApplyFilters(list: Signup[]) {
 
     .season-bar {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        background: $card-background;
+        justify-content: space-between;
+        gap: 16px;
+        background: $darker-bg;
+        border: 1px solid $secondary-border-color;
+        border-radius: 14px;
+        padding: 14px 18px;
+        backdrop-filter: blur(6px);
+    }
+
+    .season-left {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .season-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #eaeaea;
+    }
+
+    .season-sub {
+        margin: 0;
+        color: #a0a0a0;
+        font-size: 13px;
+    }
+
+    .season-center {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .season-select-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .season-right {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        font-size: 13px;
+        background: transparent;
+        color: #eaeaea;
+    }
+
+    .btn.ghost {
         border: 1px solid $border-color;
-        border-radius: $border-radius;
-        padding: 16px 20px;
-        backdrop-filter: blur(8px);
+        background: transparent;
+    }
+
+    .btn.primary {
+        background: linear-gradient(90deg, #b56cff 0%, #7c5bff 100%);
+        border: none;
+        color: white;
     }
 
     .season-select {
@@ -464,8 +612,8 @@ function ApplyFilters(list: Signup[]) {
     }
 
     .badge-active {
-        background: rgba(181,108,255,0.15);
-        color: #b56cff;
+        background: color-mix(in srgb, var(--primary) 16%, transparent);
+        color: var(--primary);
         padding: 6px 12px;
         border-radius: 999px;
         font-size: 13px;
@@ -474,15 +622,29 @@ function ApplyFilters(list: Signup[]) {
     /* Graph */
 
     .graph-card {
+        display: flex;
+        flex-direction: column;
         background: $darker-bg;
         border: 1px solid $border-color;
         border-radius: 18px;
-        padding: 24px;
+        padding: 20px;
+        gap: 16px;
+        
+        .gap {
+            gap: 16px;
+        }
     }
 
-    .graph-header h2 {
-        margin: 0;
+    .actions {
+        // background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+        border: 1px solid $secondary-border-color;
+        border-radius: 12px;
+        padding: 14px;
     }
+
+    
+
+    .preview-title { margin: 0 0 8px 0; font-size: 14px; }
 
     .graph-header p {
         margin: 4px 0 16px;
@@ -492,28 +654,35 @@ function ApplyFilters(list: Signup[]) {
     .graph-placeholder {
         height: 280px;
         border-radius: $border-radius;
-        background: linear-gradient(
-            180deg,
-            rgba(181,108,255,0.15),
-            transparent
-        );
+        /* layered background: subtle color wash + grid lines */
+        background-image:
+            linear-gradient(to right, $border-color 1px, transparent 1px),
+            linear-gradient(to bottom, $border-color 1px, transparent 1px);
+        background-size: 72px 36px, 72px 36px, cover;
+        background-position: -72px -72px, -3px -3px;
         display: flex;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         align-items: center;
         justify-content: center;
         color: #a0a0a0;
+        overflow: hidden;
+
+        &.graph-sm {
+            height: 140px !important;
+        }
     }
 
     /* Stats */
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 16px;
     }
 
     .stat-card {
         background: $card-background;
-        border: 1px solid $border-color;
+        border: 1px solid $secondary-border-color;
         border-radius: 16px;
         padding: 18px;
         display: flex;
@@ -569,7 +738,7 @@ function ApplyFilters(list: Signup[]) {
 
     .list-card {
         background: $card-background;
-        border: 1px solid $border-color;
+        border: 1px solid $secondary-border-color;
         border-radius: 18px;
         // padding: 20px;
         
@@ -617,13 +786,13 @@ function ApplyFilters(list: Signup[]) {
         }
         
         &.selected {
-            background: rgba(181,108,255,0.06);
-            border-left: 4px solid #b56cff;
+            background: color-mix(in srgb, var(--primary) 6%, transparent);
+            border-left: 4px solid var(--primary);
         }
         
         .region {
-            background: rgba(181,108,255,0.15);
-            color: #b56cff;
+            background: color-mix(in srgb, var(--primary) 15%, transparent);
+            color: var(--primary);
             padding: 4px 10px;
             border-radius: 999px;
             font-size: 12px;
@@ -648,6 +817,9 @@ function ApplyFilters(list: Signup[]) {
             user-select: none;
 
             transition: all 0.3s;
+
+            font-weight: 600;
+            // color: $secondary-text !important;
         }
 
         /* Active sort underline */
@@ -660,11 +832,14 @@ function ApplyFilters(list: Signup[]) {
         }
 
         &.header .sortable:hover {
-            color: #c9c9c9;
+            color: $secondary-text;
         }
 
-        .username {
-            color: $muted-text;
+        .username, .bp {
+            color: #c9c9c9 !important;
+            font-size: 0.9rem !important;
+            line-height: 1.55rem;
+            font-weight: 600 !important;
         }
 
         .bp {
@@ -672,6 +847,8 @@ function ApplyFilters(list: Signup[]) {
             justify-content: right;
             align-items: center;
             text-align: right;
+
+            font-weight: 600 !important;
 
             color: $muted-text;
         }
@@ -686,6 +863,13 @@ function ApplyFilters(list: Signup[]) {
         }
     }
 
+
+    .panel-card {
+        border: none;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
     
 
     h3 {
@@ -694,6 +878,7 @@ function ApplyFilters(list: Signup[]) {
 
     .form-check-input {
         border-color: $border-color !important;
+        background-color: transparent !important;
     }
 
     .page-arrows {
@@ -707,5 +892,26 @@ function ApplyFilters(list: Signup[]) {
 
     .page-counter {
         margin-bottom: 0.1rem;
+    }
+
+
+
+
+    .progress-bar {
+        display: flex;
+        flex-direction: row;
+
+        height: 0.35rem;
+
+        border-radius: 1rem;
+        background-color: rgb(61, 61, 61);
+
+        .primary {
+            background-color: var(--primary);
+        }
+
+        .primary-weak {
+            background-color: color-mix(in srgb, var(--primary) 40%, transparent);
+        }
     }
 </style>

@@ -1,36 +1,49 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import Logo from './svgs/Logo.vue';
+    import { onMounted, ref, watch } from 'vue';
+    import Logo from './svgs/Logo.vue';
 
-const props = defineProps<{
-    items: (String | null)[];
-}>();
+    const props = defineProps<{
+        items: (string | null)[];
+        modelValue?: string | null;
+    }>();
 
-const selecteditem = defineModel<String | null>('selectedItem');
+    const emit = defineEmits<(e: 'update:modelValue', value: string | null) => void>();
 
 
-/* =========================
-   Replace icons later
-   ========================= */
+    /* =========================
+    Replace icons later
+    ========================= */
 
-const items: (String | null)[] = [
-  "⌂" ,
-  "🔍",
-  "📥",
-  null,
-  "🔔",
-  null,
-  "🕘",
-  "📅",
-  "👤"
-]
+    // const items: (String | null)[] = [
+    //   "⌂" ,
+    //   "🔍",
+    //   "📥",
+    //   null,
+    //   "🔔",
+    //   null,
+    //   "🕘",
+    //   "📅",
+    //   "👤"
+    // ]
 
-const selectedIndex = ref<number>(0);
+    const selectedIndex = ref<number>(0);
 
-onMounted(() => {
-    selectedIndex.value = 0;
-    selecteditem.value = items[0];
-});
+    onMounted(() => {
+        // initialize selectedIndex from modelValue when provided, otherwise default to first item
+        const initial = props.modelValue ?? props.items[0] ?? null;
+        const idx = props.items.findIndex(i => i === initial);
+        selectedIndex.value = idx >= 0 ? idx : 0;
+        // if parent hasn't provided a modelValue, emit initial value so parent and child stay in sync
+        if (props.modelValue === undefined && props.items.length > 0) {
+            emit('update:modelValue', props.items[selectedIndex.value]);
+        }
+    });
+
+    watch(() => props.modelValue, (v) => {
+        if (v === undefined || v === null) return;
+        const idx = props.items.findIndex(i => i === v);
+        if (idx >= 0) selectedIndex.value = idx;
+    });
 </script>
 
 <template>
@@ -38,7 +51,7 @@ onMounted(() => {
         <Logo class="header-img col-auto" :primaryColor="'rgb(26, 23, 23)'"></Logo>
         <div class="separator" />
         <div
-        v-for="(item, index) in items"
+        v-for="(item, index) in props.items"
         :key="index"
         class="sidebar-item"
         >
@@ -53,7 +66,7 @@ onMounted(() => {
                 v-else
                 class="icon-button"
                 :class="{'active': index === selectedIndex}"
-                @click.stop="selectedIndex = index; selecteditem = item"
+                @click.stop="( () => { selectedIndex = index; emit('update:modelValue', item) } )()"
                 type="button"
             >
                 <span class="icon">{{ item }}</span>
@@ -99,7 +112,7 @@ onMounted(() => {
     transition: 0.15s ease;
 
     &:hover {
-        background: rgba(181,108,255,0.12);
+        background: color-mix(in srgb, var(--primary) 15%, transparent);
         color: #eaeaea;
     }
 

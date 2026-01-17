@@ -277,8 +277,8 @@ onMounted(async () => {
     padding: 1.5rem;
 
     border-radius: 12px;
-    border: solid 1px #51565a;
-    box-shadow: inset 0px 0px 6px rgba(145, 64, 170, 0.15);
+    border: solid 1px $secondary-border-color;
+    // box-shadow: inset 0px 0px 6px rgba(145, 64, 170, 0.15);
     // TODO: meant to highlight important part, but looks pretty ass as of now
     // maybe have it be the division color?
 

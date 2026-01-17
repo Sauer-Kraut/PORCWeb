@@ -195,8 +195,8 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 <style lang="scss" scoped>
     @import '@/assets/scss/styles.scss';
 
-    $background-color: rgba(40, 41, 47, 0);
-    $border-color: #515458;
+    $background-color: $darker-bg;
+    $border-color: $secondary-border-color;
 
     $header-height: 5rem;
     $body-height: 30rem;
@@ -229,7 +229,7 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
         margin: 0 !important;
         padding: 0 !important;
 
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: $darker-bg;
     }
 
     .header-img {

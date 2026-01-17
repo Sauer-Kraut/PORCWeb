@@ -148,7 +148,7 @@ onMounted(async () => {
                         <div class="p-2"></div>
 
                         <div c-lass="col-12">
-                            <div class="row d-flex mb-3">
+                            <div class="row d-flex mb-4">
                                 <h5 class="content-subtitle bold m-0">User Info</h5>
                                 <div class="seperator-h ms-2 me-4"></div>
                             </div>

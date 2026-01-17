@@ -180,7 +180,7 @@ body {
 }
 
 header {
-    background-color: $header-color;
+    background-color: $darker-bg;
     border-bottom: outset 1px rgb(134, 123, 123);
     min-height: 4rem;
 
