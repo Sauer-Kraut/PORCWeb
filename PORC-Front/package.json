@@ -20,6 +20,7 @@
     "dependencies": {
         "@vuepic/vue-datepicker": "^11.0.1",
         "bootstrap": "^5.3.3",
+        "chart.js": "^4.5.1",
         "floating-vue": "^5.2.2",
         "pinia": "^3.0.2",
         "sass": "^1.83.0",

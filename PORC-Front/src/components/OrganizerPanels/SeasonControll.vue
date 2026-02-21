@@ -527,13 +527,32 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
             </div>
         </div>
 
-        <div class="panel-card flex-row">
+        <div class="panel-card flex-column">
 
             <!-- Season Info -->
-            <div class="season-info d-flex flex-column">
+            <div class="season-info info-card d-flex flex-row gap">
 
-                <!-- Left: season info cards -->
-                <div class="info-card mt-0">
+                <!-- Top: Name and date pickers -->
+                <div class="d-flex flex-column gap">
+
+                    <!-- Season Name -->
+                    <div class="info-card m-0">
+                        <div class="date-row mb-4">
+                            <label class="form-label">Season Name</label>
+                            <input class="form-input m-0" v-model="time" placeholder="Season Name" />
+                        </div>
+
+                        <div class="date-row">
+                            <label class="form-label">Pause Date Range</label>
+                            <DatePicker class="range_selector season-date" v-model="time" :range="false" placeholder="Select Pause End" />
+                        </div>
+
+                        <div class="hint muted">Dates are local. Use these to preview the season timeline.</div>
+                    </div>
+                </div>
+
+                <!-- Middle: season info cards -->
+                <!-- <div class="info-card mt-0 flex-grow-1">
                     <h4 class="preview-title">Season Info</h4>
                     <div class="config-grid">
                         <InfoCard titel="Season" :value='Blueprint.season.toString()' subtitle="season id"/>
@@ -548,54 +567,33 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
 
                         <InfoCard titel="Preview Mode" value="Read-only" subtitle="no competitor changes"/>
                     </div>
-                </div>
-
-                <!-- Middle: Name and date pickers -->
-                <div class="d-flex flex-column h-100">
-
-                    <!-- Season Name -->
-                    <div class="info-card mb-3">
-                        <div class="date-row">
-                            <label class="form-label">Season Name</label>
-                            <input class="form-input m-0" v-model="time" placeholder="Season Name" />
-                        </div>
-                    </div>
-
-                    <!-- Season Date -->
-                    <div class="info-card">
-                        <div class="date-row">
-                            <label class="form-label">Season End Date</label>
-                            <DatePicker class="range_selector season-date" v-model="time" :range="false" placeholder="Select End" />
-                        </div>
-
-                        <div class="date-row">
-                            <label class="form-label">Pause End Date</label>
-                            <DatePicker class="range_selector season-date" v-model="time" :range="false" placeholder="Select Pause End" />
-                        </div>
-
-                        <div class="hint muted">Dates are local. Use these to preview the season timeline.</div>
-                    </div>
-                </div>
+                </div> -->
                 
 
-                <!-- Right: preview and actions -->
-                <aside class="actions">
-                    <div class="preview">
-                        <h4 class="preview-title mb-2 pb-1">Divisions Preview</h4>
-                        <ul class="preview-list">
-                            <li v-for="div in Blueprint.divisions" :key="div.order" class="preview-item">
-                                <span class="dot" :style="{ background: `var(--${div.name.toLowerCase()}, #6c6c6c)` }"></span>
-                                <span class="pname">{{ div.name }}</span>
-                                <span class="pcount muted">{{ div.players.length }}</span>
-                            </li>
-                        </ul>
+                <!-- Bottom: Action Buttons -->
+                <div class="info-card d-flex flex-column m-0 flex-grow-5">
+
+                    <div class="d-flex flex-row w-100">
+                        
+                        <div class="graph"></div>
+
+                        <div class="d-flex flex-column flex-grow-1 gap">
+
+                            <div v-for="div in Blueprint.divisions" :key="div.order"
+                                class="progress-bar"
+                            >
+                                <div class="primary" :style="{'background-color': `var(--${div.name.toLowerCase()})`, 'width': `${100 * div.players.length / 7}%`}"></div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="d-flex flex-row justify-content-end mt-2 align-items-center">
-                        <p class="hint muted m-0 me-auto h-50ms-1">52 players unsorted</p>
-                        <button class="btn btn-small" @click.prevent>Reset</button>
-                    </div>
-                </aside>
+                </div>
+
+
+                <!-- <div class="info-card d-flex flex-row justify-content-between flex-grow-1">
+                    <button class="btn btn-small btn-outline-primary">Push Blueprint</button>
+                    <button class="btn btn-small">Reset</button>
+                </div> -->
 
             </div>
 
@@ -606,16 +604,16 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
             </div> -->
 
             <!-- Tier List (logo-based, keep names & counts) -->
-            <div class="d-flex flex-row flex-grow-1">
+            <div class="d-flex flex-column gap">
                 <!-- Tierlist Sorted-->
-                <div class="tierlist d-flex flex-column justify-content-center flex-grow-1">
+                <div class="tierlist d-flex flex-column justify-content-center">
                     <div class="tier d-flex flex-row align-items-center" v-for="div in Blueprint.divisions" :key="div.order">
                         <img :src="getDivisionImage(div.name)" class="division-icon" />
                         <div class="tier-info">
                             <div class="tier-name">{{ div.name }}</div>
                             <div class="tier-count muted">{{ div.players.length }} players</div>
                         </div>
-                        <div class="drop-zone d-flex flex-row w-100 h-100"
+                        <div class="drop-zone d-flex flex-row h-100"
                             :id='`division-drop-${div.name}`'
                             @dragover.prevent="console.log('hi')"
                             @drop="onDropPlayer"
@@ -644,10 +642,10 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
 
                 <!-- Unsorted Players -->
                 <div class="tierlist unsorted d-flex flex-column">
-                    <div class="unsorted-header">
+                    <div class="unsorted-header mb-2">
                         <h4 class="preview-title align-text-center mb-2 pb-1">Unsorted Players</h4>
                     </div>
-                    <div class="drop-zone d-flex flex-column flex-grow-1 justify-content-start align-items-center"
+                    <div class="drop-zone d-flex flex-row flex-grow-1 gap justify-content-start align-items-start mt-1"
                         @dragover.prevent
                         @drop="onDropPlayer"
                         :class="{ 'hovered': HoverDivision === null }">
@@ -656,12 +654,16 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
                             @dragstart="(e) => onDragStart(e, player)" 
                                 :style="draggedPlayer?.id === player.id ? style : {}"
                             class="player-item">
-                            <div class="icon-box d-flex flex-column position-relative pe-4 movement-box" v-if="DetermineMovement(player, Blueprint, LatestHoverDivision).movement != 0">
-                                <div class="icon icon-chevron-up me-1" :class="[draggedPlayer?.id === player.id ? `${translateMovement(DetermineMovement(player, Blueprint, LatestHoverDivision))}`: `${translateMovement(DetermineMovement(player, Blueprint))}`]"></div>
-                                <div class="icon icon-chevron-up support-chevron me-1" :class="[draggedPlayer?.id === player.id ? `${translateMovement(DetermineMovement(player, Blueprint, LatestHoverDivision))}`: `${translateMovement(DetermineMovement(player, Blueprint))}`]"></div>
+                            <div class="icon-box d-flex flex-column position-relative movement-box" :class="[draggedPlayer?.id === player.id ? `${translateMovement(DetermineMovement(player, Blueprint, LatestHoverDivision))}`: `${translateMovement(DetermineMovement(player, Blueprint))}`]">
+                                <div class="icon icon-chevron-up me-1"></div>
+                                <div class="icon icon-chevron-up support-chevron me-1"></div>
                             </div>
-                            <DiscordAvatarComponent :account="accountInfos[player.id]"/>
+                            <DiscordAvatarComponent :account="accountInfos[player.id]" class="me-2 avatar"/>
                             {{ filter_str(player.tag, 5) }}
+
+                            <div class="bp ms-2 ps-2" v-if="signupInfos[player.id] && signupInfos[player.id].bp != 0">
+                                {{ signupInfos[player.id].bp }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -693,6 +695,10 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
 
         .season-info {
             min-width: 21rem;
+
+            .info-card {
+                width: fit-content;
+            }
         }
     }
 
@@ -710,7 +716,7 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
         justify-content: space-between;
         gap: 16px;
         background: $darker-bg;
-        border: 1px solid $border-color;
+        border: 1px solid $secondary-border-color;
         border-radius: 14px;
         padding: 14px 18px;
         backdrop-filter: blur(6px);
@@ -907,6 +913,8 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
         border: 1px solid $secondary-border-color;
         border-radius: 12px;
 
+        max-width: 952px;
+
         .tier {
             width: 100%;
             border-bottom: 1px solid $secondary-border-color;
@@ -972,7 +980,6 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
         }
 
         &.unsorted {
-            margin-left: 18px;
             padding: 14px;
             min-width: 10rem;
 
@@ -1006,7 +1013,7 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
 
             padding: 6px 8px;
             height: 2.3rem;
-            border: 1px solid $secondary-border-color;
+            border: 1px solid $border-color;
             border-radius: 8px;
             color: #d2d2d2;
             font-weight: 600;
@@ -1110,7 +1117,25 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
 
 
 
+    .progress-bar {
+        display: flex;
+        flex-direction: row;
 
+        justify-content: start;
+
+        height: 0.35rem;
+
+        border-radius: 1rem;
+        background-color: rgb(61, 61, 61);
+
+        .primary {
+            background-color: var(--primary);
+        }
+
+        .primary-weak {
+            background-color: color-mix(in srgb, var(--primary) 40%, transparent);
+        }
+    }
 
 
 

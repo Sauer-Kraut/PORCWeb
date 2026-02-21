@@ -63,15 +63,17 @@ select:focus {
     border: 1px solid var(--primary) !important;
     background-color: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
     border-color: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
+
+    color: black !important;
     
     &:hover {
-        background-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
-        border-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
+        background-color: color-mix(in srgb, var(--primary) 90%, black) !important;
+        border-color: color-mix(in srgb, var(--primary) 90%, black) !important;
     }
     
     &:focus {
-        background-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
-        border-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
+        background-color: color-mix(in srgb, var(--primary) 90%, black) !important;
+        border-color: color-mix(in srgb, var(--primary) 90%, black) !important;
         box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent) !important;
     }
     
@@ -481,6 +483,10 @@ input[type=number] {
 
         border: 1px solid $secondary-border-color;
         border-radius: 12px;
+
+        .info-card {
+            border: 1px solid $border-color;
+        }
     }
 }
 
