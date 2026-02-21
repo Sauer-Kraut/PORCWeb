@@ -305,7 +305,8 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/discord/callback").to(discord_callback))
             .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
     })
-    .bind(&format!("{}{}", "[::]:", port))? // Production port: 8081, devolpment sever port: 8082, local port:8082
+    // .bind(&format!("{}{}", "[::]:", port))? // Production port: 8081, devolpment sever port: 8082, local port:8082
+    .bind(&format!("{}{}", "0.0.0.0:", port))?  // surely this wont fuck clients who want to bind with ipv6
     .run()
     .await
 }

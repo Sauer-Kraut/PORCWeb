@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { ModalsContainer } from 'vue-final-modal';
 import DiscordUserComponent from './components/DiscordUserComponent.vue';
 import { showErrorModal } from './services/ErrorModalService';
@@ -112,39 +112,120 @@ async function getPubPlayerInfos(ids: string[]) {
     console.log('Got PubPlayerInfos: ', playerinfos.value);
 }
 
+const newsTargetTime = ref<number>(1767466800);
+const showNews = ref(false);
+const newsText = ref<string | null>(null);
+let newsTimer: ReturnType<typeof setInterval> | null = null;
 
+// cant test right now so Im just hoping this works
+async function determineNews() {
+    const matchplan = await matchplanStore().get_matchplan(null);
 
+    if (typeof matchplan === 'string') {
+        // If an error string is returned, show it
+        // showErrorModal(matchplan);
+        return;
+    } else {
+        // matchplan is an object — add logic here to determine news from the matchplan
+        const season_start_diff = (matchplan.start_timestamp - Date.now() / 1000);
+        const season_pause_end_diff = (matchplan.pause_end_timestamp - Date.now() / 1000);
 
+        if (season_start_diff > 0 && season_start_diff < 7 * 24 * 3600) {
+            newsTargetTime.value = matchplan.start_timestamp;
+            showNews.value = true;
+        } 
+        else if (season_pause_end_diff > 0 && season_pause_end_diff < 7 * 24 * 3600) {
+            newsTargetTime.value = matchplan.pause_end_timestamp;
+            showNews.value = true;
+        } 
+        else {
+            console.log("No news to show based on matchplan dates: " + matchplan);
+        }
+    }
+}
 
+function closeNews() {
+    showNews.value = false;
+}
+
+function updateNewsText() {
+    const date = newsTargetTime.value - Date.now() / 1000;
+    newsText.value = Math.floor(date / (3600 * 24)) + ":" + Math.floor((date % (3600 * 24)) / 3600) + ":" + Math.floor((date % 3600) / 60) + ":" + Math.floor(date % 60);
+    // newsText.value = "target: " + newsTargetTime.value + ", current: " + Date.now() / 1000 + ", diff: " + (newsTargetTime.value - Date.now() / 1000) + ", out: " + date.getDay() + ":" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+}
+
+// add reactive screen width
+const screenWidth = ref(window.innerWidth);
+const isSmallScreen = computed(() => screenWidth.value <= 600);
+
+function updateScreenWidth() {
+  screenWidth.value = window.visualViewport?.width ?? window.innerWidth;
+}
 
 
 
 onMounted(async () => {
+    window.addEventListener('resize', updateScreenWidth);
+    // initial read in case visualViewport is available after mount
+    updateScreenWidth();
+
     await getUserId();
     await getMatchPlan();
-    appReady.value = true; // calls early as quirky optimization that wont stab me in the back later fr fr on god
+    appReady.value = true;
+
+    await determineNews();
+
+    // start news timer
+    updateNewsText();
+    newsTimer = setInterval(updateNewsText, 1000);
+    
     await getPubPlayerInfos(getPlayerIds());
+});
+
+onUnmounted(() => {
+  if (newsTimer) clearInterval(newsTimer);
+  window.removeEventListener('resize', updateScreenWidth);
 });
 </script>
 
 <template>
-    <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq' }">
+    <!-- News Banner -->
+    <div class="d-flex flex-row news-banner justify-content-center ms-auto" v-if="showNews">
+        <div class="col-1"></div>
+        <div class="d-flex news col-10">
+            <span v-if="!isSmallScreen" class="me-2">The next <span class="bolder"> Season of PORC </span> starts in</span> 
+            {{ newsText }}
+            <span class="ms-2 sep">|</span>
+            <router-link
+                class="link ms-2"
+                :to="{ path: '/', hash: '#sign-up' }"
+                @click="closeMenu"
+            >
+                Sign Up
+            </router-link>
+        </div>
+
+        <div class="d-flex cross col-1" @click.stop="closeNews">
+            <i class="icon-cross"></i>
+        </div>
+    </div>
+    <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq', displaced: showNews == true }">
         <!-- Navigation -->
-        <div class="row h-header">
+        <div class="d-flex flex-row justify-content-between col-12 col-md-11 col-xl-10 h-header">
             <!-- Burger Icon -->
-            <div class="col-auto d-flex align-items-center d-md-none" @click="toggleMenu">
+            <div class="d-flex align-items-center d-md-none w-7" @click="toggleMenu">
                 <div class="burger-icon p-3">
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                     <span class="bar" :class="{ open: isMenuOpen }"></span>
                 </div>
             </div>
-            <div class="logo col col-md-auto d-flex align-items-center justify-content-center">
-                <router-link to="/" class="mx-2 mx-md-3 mx-lg-5"> 
+            <div class="logo d-flex align-items-center justify-content-center w-7">
+                <router-link to="/" class="mx-2"> 
                     <Logo />
                 </router-link>
             </div>
-            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center">
+            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center mx-md-4">
                 <div class="routes-container">
                     <router-link to="/" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Tournament</router-link>
                     <router-link to="/match-planner" class="router-link col-12 col-md-2 px-0" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
@@ -154,8 +235,8 @@ onMounted(async () => {
                     <div v-if="isMenuOpen" class="col-12 m-1 d-md-none" />
                 </div>
             </nav>
-            <div class="col-auto d-flex align-items-center">
-                <DiscordUserComponent class="mx-2 mx-md-3 mx-lg-5"></DiscordUserComponent>
+            <div class="d-flex align-items-center w-7 mw-7">
+                <DiscordUserComponent class="container me-1 me-md-3"></DiscordUserComponent>
             </div>
         </div>
 
@@ -200,16 +281,18 @@ header {
 
 .h-header {
     min-height: 4rem;
-    width: 100%;
-    @include media-breakpoint-up(md) {
-        width: 83.3%;     
+    flex-wrap: wrap;
+
+    .w-7 {
+        width: 7rem;
+    }
+
+    .mw-7 {
+        min-width: 7rem;
     }
 }
 
 @include media-breakpoint-down(md) {
-    .h-header {
-        min-height: 60px;
-    }
 
     .main {
         margin-top: 60px; // Adjust this value to match the height of your header
@@ -289,6 +372,59 @@ nav {
     }
 }
 
+$news-banner-height: 2rem;
+
+.news-banner {
+    z-index: 1101;
+    position: fixed;
+
+    background-color: var(--primary);
+    
+    color: rgb(0, 0, 0) !important;
+    height: $news-banner-height;
+    width: 100%;
+
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 0.85rem;
+
+    padding: 0.5rem 1rem;
+
+    * {
+        color: rgb(0, 0, 0) !important;
+    }
+
+    .cross {
+        cursor: pointer;
+        margin-right: 1rem !important;
+        justify-content: flex-end;
+    }
+
+    .link {
+        transition: all 0.2s;
+        font-weight: 700;
+        text-decoration: transparent !important;
+
+        &:hover {
+            text-decoration: black !important;
+            text-decoration-thickness: 3px !important;
+            text-underline-offset: 2px !important;
+        }
+    }
+
+    .news {
+        justify-content: center;
+
+        .sep {
+            line-height: 0.7rem !important;
+        }
+    }
+}
+
+.displaced {
+    margin-top: $news-banner-height;
+}
+
 @media (max-width: 2400px) and (min-width: 1699px) {
     .col-xl-6-cust {
         width: 50%;
@@ -336,5 +472,10 @@ nav {
 .fixed {
     position: fixed;
     width: 100%;
+}
+
+.bolder {
+    font-weight: 700;
+    margin-inline: 0.3rem;
 }
 </style>

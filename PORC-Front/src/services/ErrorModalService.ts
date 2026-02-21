@@ -13,6 +13,7 @@ export function showErrorModal(errorMessage: string = 'An unexpected error occur
         },
     });
     open();
+    //console.log('I was told to show this error here:', errorMessage);
 
     function handleClose() {
         close();

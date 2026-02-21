@@ -2,6 +2,7 @@
     import { waitForAppReady } from '@/appReady';
 import EventCarousel from '@/components/CardCarousel/EventCarousel.vue';
 import SignUpFormComponent from '@/components/forms/SignUpFormComponent.vue';
+import DiscordEventComponent from '@/components/LiveEventSection/DiscordEventComponent.vue';
 import PedestalComponent from '@/components/PedestalComponent.vue';
 import SeasonComponent from '@/components/SeasonComponent.vue';
 import { Repetition } from '@/models/availability/Availability';
@@ -371,54 +372,72 @@ import { computed, onMounted, ref, watch } from 'vue';
 
         <div class="row p-5 d-none d-lg-block"></div>
 
-        <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
-            <h2 class="decor-title text-center justify-content-center w-auto mt-5">Meet our <span class="text-highlight">Champions</span></h2>
-            <h3 class="content-subtitle justify-content-center w-auto mt-2">The best of the best</h3>
-        </div>
-        <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
-            <PedestalComponent
-                class="pedestal-component col-2 mt-0 first z-2 me-4 ms-4"
-                :account="{
-                    id: '306467062530965514',
-                    username: 'Sauerkarut',
-                    avatar: '7df79ec5c3938cf59cd8cd4a69242ad3',
-                    schedule: null
-                } as PubAccountInfo"
-                :rank="1"
-            />
-            <PedestalComponent
-                class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-flex"
-                :account="{
-                    id: '176842075591933952',
-                    username: 'Savitarian',
-                    avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
-                    schedule: null
-                } as PubAccountInfo"
-                :rank="2"
-            />
-            <PedestalComponent
-                class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-flex"
-                :account="{
-                    id: '142689578967498762',
-                    username: 'Omlette',
-                    avatar: 'e368e84d013d70077d9f467dffe95c69',
-                    schedule: null
-                } as PubAccountInfo"
-                :rank="3"
-            />
-            <div class="highlight"></div>
-        </div>
+        <section id="live-events">
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
+                <h2 class="decor-title text-center justify-content-center w-auto mt-5">Live Matches</h2>
+                <h3 class="content-subtitle justify-content-center w-auto mt-2">Watch high level Rumble matches right as they happen</h3>
+            </div>
+            <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
+                <DiscordEventComponent></DiscordEventComponent>
+            </div>
+        </section>
+
+        <div class="row p-5 d-none d-lg-block"></div>
+
+        <section id="champions">
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
+                <h2 class="decor-title text-center justify-content-center w-auto mt-5">Meet our <span class="text-highlight">Champions</span></h2>
+                <h3 class="content-subtitle justify-content-center w-auto mt-2">The best of the best</h3>
+            </div>
+            <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
+                <PedestalComponent
+                    class="pedestal-component col-2 mt-0 first z-2 me-4 ms-4"
+                    :account="{
+                        id: '306467062530965514',
+                        username: 'Sauerkarut',
+                        avatar: '7df79ec5c3938cf59cd8cd4a69242ad3',
+                        schedule: null
+                    } as PubAccountInfo"
+                    :rank="1"
+                />
+                <PedestalComponent
+                    class="pedestal-component col-2 mt-0 second pb-3 z-2 me-4 ms-4 d-none d-md-flex"
+                    :account="{
+                        id: '176842075591933952',
+                        username: 'Savitarian',
+                        avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
+                        schedule: null
+                    } as PubAccountInfo"
+                    :rank="2"
+                />
+                <PedestalComponent
+                    class="pedestal-component col-2 mt-0 third pb-0 z-2 me-4 ms-4 d-none d-md-flex"
+                    :account="{
+                        id: '142689578967498762',
+                        username: 'Omlette',
+                        avatar: 'e368e84d013d70077d9f467dffe95c69',
+                        schedule: null
+                    } as PubAccountInfo"
+                    :rank="3"
+                />
+                <div class="highlight"></div>
+            </div>
+        </section>
 
 
 
-        <div class="col-12 col-xxl-8 col-sm-11 justify-content-center registration-section ps-4 p-4 pe-4 ms-auto me-auto">
+        <section id="sign-up">
+        <div class="col-12 col-sm-11 col-xl-10 col-xxxl-8 justify-content-center registration-section ps-md-4 p-md-4 pe-md-4 ms-auto me-auto mw-30">
             <div class="row justify-content-center">
-                <div class="col-12 col-md d-flex ms-3">
+
+                <!-- Info --> <!-- Hidden on small screens -->
+                <div class="col-md d-none d-md-flex ms-3">
                     <div class="signup-info d-flex flex-column w-100">
+                        <!-- Title -->
                         <h1 class="decor-title m-0 p-0 mt-3">Registration</h1>
                         <h2 class="content-subtitle mt-2">Sign up for the next season of PORC</h2>
 
-
+                        <!-- Signup Conditions -->
                         <div class="singup-conditions mt-2 mb-2 w-100">
                             <div class="m-3 mt-5 d-flex text-b align-items-center">
                                 <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
@@ -445,16 +464,18 @@ import { computed, onMounted, ref, watch } from 'vue';
                     </div>
                 </div>
 
-
-                <div class="col-12 col-md align-items-center justify-content-center d-flex me-0 me-md-4">
+                <!-- Form -->
+                <div class="col-md align-items-center justify-content-center d-flex me-0 me-md-4
+                            m-0 p-0 mw-30">
                     <SignUpFormComponent 
                         :season_name="season_name" 
                         @formComplete="handleFormComplete"
-                        class="signup-form mt-4 pt-1 mb-4 ms-auto" 
+                        class="signup-form mt-md-4 pt-md-1 mb-md-4 ms-auto" 
                     />
                 </div>
             </div>
         </div>
+        </section>
 
         <div class="p-5 col-10 mt-5 d-none d-md-block"></div>
 
@@ -468,37 +489,37 @@ import { computed, onMounted, ref, watch } from 'vue';
                 :cards="[
                     { 
                         title: 'Community Tournaments', 
-                        img_scr: '@/assets/images/tournaments/CommunityTournament.png', 
-                        description: 'Hub to keep track of every new Rumble events', 
+                        img_name: 'CommunityTournament.png', 
+                        description: 'Hub to keep track of all new Rumble events', 
                         link: 'https://discord.gg/6gvjvA84be' 
                     } as EventCard,
                     { 
                         title: 'Content Contest S2', 
-                        img_scr: '@/assets/images/tournaments/ContentContest.png', 
+                        img_name: 'ContentContest.png', 
                         description: 'Content creation contest', 
                         link: 'https://discord.gg/6gvjvA84be' 
                     } as EventCard,
                     { 
                         title: 'Mothmas', 
-                        img_scr: '@/assets/images/tournaments/Mothmas.png', 
+                        img_name: 'Mothmas.png', 
                         description: 'Cassual make your own rules holiday competition', 
                         link: 'https://discord.gg/DZcuzn6FzA' 
                     } as EventCard,
                     { 
                         title: 'BRL', 
-                        img_scr: '@/assets/images/tournaments/BRL.png', 
+                        img_name: 'BRL.png', 
                         description: 'Tournament and coaching made for beginners', 
                         link: 'https://discord.gg/4fUZqXHAyN' 
                     } as EventCard,
                     { 
                         title: 'Europe Moth Cup', 
-                        img_scr: '@/assets/images/tournaments/EMC.png', 
+                        img_name: 'EMC.png', 
                         description: 'Europe based monthly park competition', 
                         link: 'https://discord.gg/usQKh5GtfC' 
                     } as EventCard,
                     { 
                         title: 'NAMC', 
-                        img_scr: '@/assets/images/tournaments/NAMC.png', 
+                        img_name: 'NAMC.png', 
                         description: 'North America based monthly park competition', 
                         link: 'https://discord.gg/v8aV8zatHY' 
                     } as EventCard
@@ -728,6 +749,12 @@ $hero-content-height: 32rem;
     }
 }
 
+@include media-breakpoint-down(md) {
+    .mw-30 {
+        max-width: 440px !important;
+    }
+}
+
 .part-signup-contents {
     margin-top: 3rem;
     margin-bottom: 3rem;
@@ -750,13 +777,14 @@ $hero-content-height: 32rem;
 }
 
 .signup-form {
-    max-width: 30rem;
+    max-width: 440px;
     transform: scale(1.05);
     
     @include media-breakpoint-down(md) {
         width: 100%;
         max-width: 100%;
-        margin: 0rem 1.5rem 1.5rem 1.5rem !important;
+        transform: scale(1);
+        // margin: 0rem 1.5rem 1.5rem 1.5rem !important;
     }
 }
 
@@ -929,6 +957,10 @@ $good-color: rgb(34, 197, 94);
 
     .col-xxxl-5 {
         width: 42%;
+    }
+
+    .col-xxxl-8 {
+        width: calc(800% / 12%);
     }
 }
 

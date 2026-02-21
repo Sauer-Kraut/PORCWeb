@@ -49,13 +49,24 @@ const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes,
     scrollBehavior(to, from, savedPosition) {
-        // always scroll to top
+
+        // if there's a hash, try to scroll to that element (wait briefly for DOM to mount)
+        if (to.hash) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const el = document.querySelector(to.hash as string);
+                    if (el) {
+                        resolve({ el: to.hash, behavior: 'smooth' });
+                    } else {
+                        resolve({ top: 0 });
+                    }
+                }, 50); // increase if your target mounts async
+            });
+        }
+
+        // default: top
         return { top: 0 };
     },
-});
-
-router.afterEach(() => {
-  window.scrollTo(0, 0);
 });
 
 export default router;

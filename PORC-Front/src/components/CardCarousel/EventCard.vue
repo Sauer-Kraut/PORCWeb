@@ -1,5 +1,6 @@
 <script setup lang="ts">
     import type { EventCard } from '@/models/EventCard';
+import { getTournamentCardImage } from '@/util/ImageHelper';
     import { computed } from 'vue'
 
     const props = defineProps<{
@@ -17,17 +18,25 @@
         // @/ points to src/, and we're in src/components/CardCarousel/
         // So @/assets/images/... becomes ../../assets/images/...
         
+
+        //  ------- Leaving this here for future generations to see --------
+
         // Seems a bit dirty mr GPT but i'll go with that
         // FUCK THIS NOTHING WORKS ANYMORE 2GUIB
-        const relativePath = imgSrc.startsWith('@/') 
-            ? imgSrc.replace('@/', '../../') 
-            : imgSrc;
+        // const relativePath = imgSrc.startsWith('@/') 
+        //     ? imgSrc.replace('@/', '../../') 
+        //     : imgSrc;
+
+        //  -----------------------------------------------------------------
+
+
+        const relativePath = getTournamentCardImage(imgSrc);
         
         // Use Vite's new URL() with import.meta.url to resolve the asset
         return new URL(relativePath, import.meta.url).href;
     };
 
-    const imageSrc = computed(() => getImageSrc(props.card.img_scr));
+    const imageSrc = computed(() => getImageSrc(props.card.img_name));
 </script>
 
 <template>
