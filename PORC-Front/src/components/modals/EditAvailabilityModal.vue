@@ -327,6 +327,8 @@ onMounted(() => {
     border-width: 0.5px !important;
     border-color: #373737 !important;
 
+    transition: 0.2s;
+
     &:first-of-type {
         border-bottom-left-radius: 4px !important;
         border-top-left-radius: 4px !important;

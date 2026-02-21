@@ -50,7 +50,7 @@ function getProgress() {
 @import '@/assets/scss/styles.scss';
 
 // this should be a global variable, but its 2am so Ill pass
-$background-color: rgb(20, 20, 20);
+$background-color: $darker-bg;
 
 .list-group-item {
     background-color: $background-color;

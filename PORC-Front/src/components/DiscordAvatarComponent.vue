@@ -15,6 +15,7 @@
     });
 
     onMounted(async () => {
+        console.log(props.account);
         // getSelectorHeight();
     });
 </script>

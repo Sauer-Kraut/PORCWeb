@@ -1,0 +1,204 @@
+{
+    "divisions": [
+        {
+            "name": "Meteorite",
+            "order": 0,
+            "players": [
+	{
+            "tag": "sauerkarut",
+            "id": "306467062530965514"
+        },
+	{
+            "tag": "BIVN",
+            "id": "208344679119454210"
+        },
+	{
+            "tag": "alonshpo",
+            "id": "244833436450291722"
+        },
+	{
+            "tag": "2guib",
+            "id": "178905571682942976"
+        },
+	{
+            "tag": "tamrell",
+            "id": "412067213898547201"
+        }]
+        },
+        {
+            "name": "Diamond",
+            "order": 1,
+            "players": [
+	{
+            "tag": "juicepar",
+            "id": "219590386644025344"
+        },
+	{
+            "tag": "maninthesky",
+            "id": "1225594951212208138"
+        },
+	{
+            "tag": "abbathor",
+            "id": "491784389341216768"
+        },
+	{
+            "tag": "omelette.du.fromage.",
+            "id": "142689578967498762"
+        },
+	{
+            "tag": "pompyy",
+            "id": "1192159863896289445"
+        }]
+        },
+        {
+            "name": "Adamantium",
+            "order": 2,
+            "players": [
+	{
+            "tag": "BoBo",
+            "id": "620712303100428288"
+        },
+	{
+            "tag": "hollow_hylian",
+            "id": "597578352601202701"
+        },
+	{
+            "tag": "saferemain02",
+            "id": "1169793085929168997"
+        },
+	{
+            "tag": "rperkins27",
+            "id": "1047645209237917757"
+        },
+	{
+            "tag": "arturonomin",
+            "id": "411898483218579474"
+        }]
+        },
+        {
+            "name": "Platinum",
+            "order": 3,
+            "players": [
+	{
+            "tag": "peace_of_mind",
+            "id": "486957106663129089"
+        },
+	{
+            "tag": "A_Train",
+            "id": "695132277792964618"
+        },
+	{
+            "tag": "tikki",
+            "id": "919102332699033640"
+        },
+	{
+            "tag": "mr_lux",
+            "id": "300974296283480065"
+        },
+	{
+            "tag": "culpepper9",
+            "id": "886708169747873843"
+        }]
+        },
+        {
+            "name": "Gold",
+            "order": 4,
+            "players": [
+	{
+            "tag": "l3mmi05",
+            "id": "525674055169212426"
+        },
+	{
+            "tag": "si11ysquid",
+            "id": "1011388907889381396"
+        },
+	{
+            "tag": "orangenaln",
+            "id": "691615336943845407"
+        },
+	{
+            "tag": "skellehhh",
+            "id": "1019310908134146159"
+        },
+	{
+            "tag": "oreotrollturbo",
+            "id": "383267397878153216"
+        },
+	{
+            "tag": ".kalamart",
+            "id": "807628783347171398"
+        },
+	{
+            "tag": "domrobin",
+            "id": "605132858071187472"
+        }]
+        },
+        {
+            "name": "Silver",
+            "order": 5,
+            "players": [
+	{
+            "tag": "blankochan",
+            "id": "799732203289706546"
+        },
+	{
+            "tag": "tastefulmedi",
+            "id": "197062124978176001"
+        },
+	{
+            "tag": "orphan_obliterator_",
+            "id": "803823435154456577"
+        },
+	{
+            "tag": "boomerang_rumble",
+            "id": "1056210847292198933"
+        },
+	{
+            "tag": "thelonelypeon",
+            "id": "358360123959279616"
+        },
+	{
+            "tag": "monkey_19",
+            "id": "697138147171237908"
+        },
+	{
+            "tag": "spopi.",
+            "id": "714596943053062284"
+        }]
+        },
+        {
+            "name": "Iron",
+            "order": 6,
+            "players": [
+	{
+            "tag": "rubuscalculum",
+            "id": "904068234792271882"
+        },
+	{
+            "tag": "nutssy",
+            "id": "293314819363438593"
+        },
+	{
+            "tag": "ketchup9490",
+            "id": "310746069200011266"
+        },
+	{
+            "tag": "supercopia.",
+            "id": "782604632807047168"
+        },
+	{
+            "tag": "hasenpartyy",
+            "id": "958057865032106045"
+        },
+	{
+            "tag": "prismoffireplays",
+            "id": "684916627275513857"
+        }
+	]
+        }
+    ],
+    "players_to_sort": [],
+    "end_timestamp": 1739646000,
+    "pause_end_timestamp": 1741460400,
+    "season": 4
+}

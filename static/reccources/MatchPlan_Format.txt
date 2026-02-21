@@ -1,0 +1,59 @@
+{
+
+	"divisions" : [                                                                                             // [] means list
+
+		{                                                                                                   // {} mean its an object (in this case a division Object)
+			"name": string,
+			"order": int,
+			"matches": [
+
+				"LOWERPLAYERID**V**HIGHERPLAYERID": {                                               // LOWERPLAYERID and HIGHERPLAYERID are placeholders for the discord ids 														       of the players, the player with the lower id is also p1
+					"p1": {
+						"id": int,                                                          // discord id
+						"tag": string,                                                      // discord tag (name)
+						"division": string,
+                     			},
+
+					"p2": {
+						"id": int,
+						"tag": string,
+						"division": string,
+					},
+
+					"p1score": int,                                                             // if not yet scored then null
+					"p2score": int                                                              // if not yet scored then null
+
+				},
+				...
+
+			],
+
+			"players": [
+
+				{
+					"id": int,                                                                   // discord id
+					"tag": string,                                                               // discord tag (name)
+					"division": string,
+				},
+				...
+			]
+           
+		},
+		...
+
+	],
+
+	"players": [                                                                                                 // complete list of all players who participated in the season
+
+		{
+			"id": int,                                                                                   // discord id
+			"tag": string,                                                                               // discord tag (name)
+			"division": string,
+		},
+		...
+	],
+
+	"end_timestamp": int,                                                                                        // unix timestamp of when the season ended
+	"pause_end_timestamp": int,                                                                                  // unix timestamp of when the following season began
+	"season": int                                                                                                // name of the season (1, 2, 3, ...)
+}

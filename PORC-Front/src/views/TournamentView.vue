@@ -240,6 +240,59 @@ import { computed, onMounted, ref, watch } from 'vue';
         }
     }
 
+    function sigmoid(k: number, x: number) {
+        return 1 / (1 + Math.exp(-k * x));
+    }
+
+
+
+    const seasonDisplacementY = ref(0);
+    const targetDisplacementY = ref(0);
+    const scroll = ref(0);
+
+    const deadzone = 20;
+    const limit = 150;
+    const scaling = 0.5;
+    const ease = 0.3;
+    const smoothness = 0.2; // lower = smoother UwU
+
+    function clamp(v: number, min: number, max: number) {
+        return Math.min(max, Math.max(min, v));
+    }
+
+    function setSeasonDisplacement() {
+        scroll.value = window.scrollY;
+
+        const raw =
+            limit *
+            (sigmoid(
+                ease,
+                ((Math.abs(((scroll.value - deadzone) * scaling) / limit) +
+                    ((scroll.value - deadzone) * scaling) / limit) *
+                    4) -
+                    8
+            )
+            -
+            sigmoid(
+                ease,
+                ((Math.abs(((0 - deadzone) * scaling) / limit) +
+                    ((0 - deadzone) * scaling) / limit) *
+                    4) -
+                    8
+            ));
+
+        targetDisplacementY.value = clamp(raw, 0, limit);
+    }
+
+    function animate() {
+        // lerp towards target
+        seasonDisplacementY.value +=
+            (targetDisplacementY.value - seasonDisplacementY.value) * smoothness;
+
+        requestAnimationFrame(animate);
+    }
+
+
     watch(
         () => selectedSeason.value,
         async () => {
@@ -259,6 +312,10 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 
     onMounted(async () => {
+        window.addEventListener('scroll', () => {
+            setSeasonDisplacement();
+        });
+        animate();
         await waitForAppReady();
         await getUserId();
         await loadSeasons();
@@ -270,7 +327,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 <template>
     <div class="container-fill row justify-content-center">
-        <div class="page-header timer col-xxl-10 col-sm-11">
+        <div class="page-header col-12">
+            <div class="d-flex flex-grow-1 banner"></div>
             <!-- <TimerComponent :targetTimestamp="globalTimer" :season="season_name" :text="TimerText" class="timer-text"></TimerComponent> -->
         </div>
 
@@ -292,10 +350,12 @@ import { computed, onMounted, ref, watch } from 'vue';
         </div> -->
         <!-- <div class="col-10 text-1 text-normal"><span>Unleash your full </span><span class="text-highlight">potential</span><span>!</span></div> -->
 
-        <div class="col-12 col-xxl-10 col-sm-11 p-0 justify-content-center mt-3 mt-md-5">
+        <div class="season-section col-12 col-xxl-9 col-sm-11 p-0 justify-content-center mt-3 z-1"
+            :style="{'transform': 'translateY(' + seasonDisplacementY + 'px) '}"
+            id="season">
             <SeasonComponent
 
-                class="mt-3"
+                class=""
 
                 :hide_progress="placeholderDisplay"
                 :divisions="divisions"
@@ -505,20 +565,23 @@ import { computed, onMounted, ref, watch } from 'vue';
     overflow-x: hidden !important;
 }
 
-$hero-height: 32rem;
+$hero-height: 60rem;
+$hero-content-height: 32rem;
 
 .page-header {
     position: absolute;
-    height: $hero-height;
+    height: $hero-content-height;
 
-    border-radius: 60px;
+    border-radius: 16px;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
 
-    margin-top: 2rem !important;
-    margin: 2rem;
+    // margin-top: 2rem !important;
+    padding: 1rem;
+    padding-inline: 3rem;
 
-    mask-image: linear-gradient(to bottom, rgb(255, 255, 255) 10%, rgba(255, 255, 255, 0.696) 80%, transparent 100%);
+    background-color: transparent;
+    box-shadow: none;
 
     @media (max-width: $leaderboard-breakpoint) {
         height: 30rem;
@@ -530,9 +593,10 @@ $hero-height: 32rem;
 }
 
 .hero-container {
-    height: $hero-height;
-    margin-top: 2rem !important;
+    height: $hero-content-height;
+    margin-top: 3rem !important;
     margin: 2rem;
+    margin-bottom: 0rem;
 
     justify-content: center;
     display: flex;
@@ -547,10 +611,33 @@ $hero-height: 32rem;
     }
 }
 
+.banner {
+    position: absolute;
+
+    $inline-margins: 8%;
+
+    top: 0;
+    margin-top: 2rem;
+
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
+    mask-image: linear-gradient(to bottom, rgb(255, 255, 255) 10%, rgba(255, 255, 255, 0.696) 100%, rgba(255, 255, 255, 0.493) 100%);
+    z-index: 0;
+
+    border-radius: 1rem;
+
+    width: calc(100% - 2* $inline-margins);
+    height: $hero-height;
+
+    background-size: cover;
+    // -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
 
 .routing-buttons {
     z-index: 3;
-    margin-top: 1.5rem !important;
     margin: 2rem;
     height: 100%;
 
@@ -584,14 +671,6 @@ $hero-height: 32rem;
 
 // Timer
 
-.timer {
-    justify-content: center;
-    display: flex;
-    align-items: center;
-    background-image: url('@/assets/images/CCHeaderWallpaper.png');
-    // -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-}
-
 .timer-fr {
     transform: translate(0, -1rem);
     text-align: center;
@@ -619,6 +698,11 @@ $hero-height: 32rem;
 }
 
 // Divisions
+
+.season-section{
+    border-radius: $border-radius;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.85);
+}
 
 .division-part {
     margin-top: 1rem !important;
@@ -654,8 +738,9 @@ $hero-height: 32rem;
 
     align-self: center;
 
-    border: 1px solid $border-color;
+    border: 1px solid $secondary-border-color;
     border-radius: 16px;
+    background-color: $darker-bg;
 
     box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
 
@@ -889,6 +974,10 @@ $good-color: rgb(34, 197, 94);
     .stat {
         min-width: 15rem !important;
     }
+}
+
+.transition-1 {
+    transition: all 0.05s;
 }
 </style>
 ```

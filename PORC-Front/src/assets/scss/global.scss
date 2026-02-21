@@ -20,19 +20,60 @@ body {
     align-items: center;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////
+////////            FORMS           ////////
+////////////////////////////////////////////
+
+
+/// General
+
+.form-control:focus,
+textarea:focus,
+.form-select:focus,
+select:focus {
+    border-color: color-mix(in srgb, var(--primary) 50%, white 50%) !important;
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--primary) 25%, transparent) !important;
+    outline: 0 !important;
+}
+
+
+
+/// Buttons
+
+.btn {
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+}
+
 .btn-primary {
     border: 1px solid var(--primary) !important;
     background-color: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
     border-color: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
+
+    color: black !important;
     
     &:hover {
-        background-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
-        border-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
+        background-color: color-mix(in srgb, var(--primary) 90%, black) !important;
+        border-color: color-mix(in srgb, var(--primary) 90%, black) !important;
     }
     
     &:focus {
-        background-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
-        border-color: color-mix(in srgb, var(--primary) 80%, black 20%) !important;
+        background-color: color-mix(in srgb, var(--primary) 90%, black) !important;
+        border-color: color-mix(in srgb, var(--primary) 90%, black) !important;
         box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent) !important;
     }
     
@@ -85,6 +126,37 @@ body {
     }
 }
 
+.btn-small {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid $border-color;
+    cursor: pointer;
+    font-size: 13px;
+    background: transparent;
+    color: #eaeaea;
+
+    &:hover {
+        border: 1px solid rgb(160, 160, 160);
+    }
+}
+
+
+
+/// Labels
+
+.form-label {
+    width: 100%;
+
+    color: #eaeaea !important;
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    margin-bottom: 0.5rem;
+}
+
+
+
+/// Checkbox
 
 .form-check-input {
     border-color: var(--primary) !important;
@@ -100,19 +172,71 @@ body {
     }
 }
 
-.form-control:focus,
-textarea:focus,
-.form-select:focus,
-select:focus {
-    border-color: color-mix(in srgb, var(--primary) 50%, white 50%) !important;
-    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--primary) 25%, transparent) !important;
-    outline: 0 !important;
+
+
+/// Input
+
+.form-input {
+    color: #eaeaea !important;
+        
+    padding-top: 6px;
+    padding-bottom: 6px;
+
+    max-width: 100% !important;
+    height: 2.5rem !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: white !important;
+
+
+    border-radius: 4px !important;
+    border: 1px solid #3b4248 !important;
+
+    padding: 0.5rem !important;
+    margin-bottom: 1rem !important;
+
+    &:focus {
+        border-color: var(--primary) !important;      /* highlight border */
+        box-shadow: 0 0 0 2px rgba(255,131,6,0.2); /* subtle glow */
+        background-color: rgb(17, 17, 17) !important;   /* optional: change background */
+        color: #fff !important;                 /* optional: change text color */
+        outline: none !important;               /* remove default outline */
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
 }
 
-.btn {
-    border-radius: 10px !important;
-    font-weight: 600 !important;
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background-color: #444 !important;   /* darker background */
+    color: #aaa !important;              /* lighter text */
+    border-color: #666 !important;       /* muted border */
+    opacity: 1 !important;               /* prevent default opacity */
+    cursor: not-allowed !important;      /* show disabled cursor */
 }
+
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+input[type=number] {
+    -moz-appearance:textfield; // mozilla specific fix because of the ugliest design decision I have ever seen (hides the spinner buttons)
+}
+
+
+
+
+
+
+
+
+////////////////////////////////////////////
+////////          COLORING          ////////
+////////////////////////////////////////////
+
 
 .primary {
     color: var(--primary) !important;
@@ -126,8 +250,25 @@ select:focus {
     color: $danger !important;
 }
 
+.text-highlight {
+    color: #f6f6f6;
+    text-decoration: underline;
+    text-decoration-color: var(--primary);
+    text-underline-offset: 0.5rem;
+    text-decoration-thickness: 0.2rem;
+}
 
-// formating
+
+
+
+
+
+
+
+////////////////////////////////////////////
+////////            TEXT            ////////
+////////////////////////////////////////////
+
 
 .XL-text {
     font-size: 4.75rem !important;
@@ -174,31 +315,22 @@ select:focus {
     font-weight: 600 !important;
     margin-bottom: 0 !important;
 
-    color: white !important;
+    color: white;
 }
 
 .content-subtitle {
     font-size: 1.15rem !important;
     font-weight: 500 !important;
 
-    color: #979797 !important;
+    color: $muted-text !important;
 }
 
 .detail-title {
     margin-top: auto !important;
     margin-bottom: 0rem !important;
     font-size: 0.8rem !important;
-    color: #979797 !important;
+    color: $muted-text !important;
 }
-
-.text-highlight {
-    color: #f6f6f6;
-    text-decoration: underline;
-    text-decoration-color: var(--primary);
-    text-underline-offset: 0.5rem;
-    text-decoration-thickness: 0.2rem;
-}
-
 
 .modal-title {
     font-size: 2rem !important;
@@ -207,94 +339,23 @@ select:focus {
 }
 
 
-.seperator-h {
-    width: auto;
-    flex-grow: 1;
-    align-self: center;
-    height: 1px;
-    background-color: rgb(118, 116, 116);
-}
-
-.seperator-v {
-    width: auto;
-    flex-grow: 1;
-    align-self: center;
-    width: 1px;
-    background-color: rgb(118, 116, 116);
-}
-
-
-.porc-modal-content {
-    background: rgb(23, 23, 23);
-    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.408);
-    border: 1px solid #343434;
-    color: #ffffff;
-    transition: 0.5s;
-
-    * {
-        transition: 0.4s ease-in-out;
-    }
-}
 
 
 
 
-// form styles
-
-.form-label {
-    width: 100% !important;
-
-}
-
-.form-input {
-    max-width: 100% !important;
-    height: 2.5rem !important;
-    background-color: #2c3339 !important;
-    color: white !important;
-
-
-    border-radius: 10px !important;
-    border: 1px solid #3b4248 !important;
-
-    padding: 0.5rem !important;
-    margin-bottom: 1rem !important;
-
-    &:focus {
-        border-color: var(--primary) !important;      /* highlight border */
-        box-shadow: 0 0 0 2px rgba(255,131,6,0.2); /* subtle glow */
-        background-color: #232323 !important;   /* optional: change background */
-        color: #fff !important;                 /* optional: change text color */
-        outline: none !important;               /* remove default outline */
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-}
-
-
-input:disabled,
-select:disabled,
-textarea:disabled {
-    background-color: #444 !important;   /* darker background */
-    color: #aaa !important;              /* lighter text */
-    border-color: #666 !important;       /* muted border */
-    opacity: 1 !important;               /* prevent default opacity */
-    cursor: not-allowed !important;      /* show disabled cursor */
-}
-
-
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-
-input[type=number] {
-    -moz-appearance:textfield; // mozilla specific fix because of the ugliest design decision I have ever seen (hides the spinner buttons)
-}
 
 
 
-// utility
+
+
+
+
+
+
+
+////////////////////////////////////////////
+////////          UTILITY           ////////
+////////////////////////////////////////////
 
 .align-text-center {
     text-align: center;
@@ -320,6 +381,143 @@ input[type=number] {
     width: max-content !important;
 }
 
+.gap {
+    gap: $gap-size;
+}
+
 .f-grow {
     flex-grow: 1;
+}
+
+@for $i from 1 through 5 {
+    .flex-grow-#{$i} {
+        flex-grow: $i !important;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////
+////////       CONFIGURATION        ////////
+////////////////////////////////////////////
+
+.dp__theme_light {
+  --dp-background-color: #171717;
+  --dp-text-color: #ffffff;
+  --dp-hover-color: #f3f3f31d;
+  --dp-hover-text-color: #ffffff;
+  --dp-hover-icon-color: #ffffff;
+  --dp-primary-color: var(--primary);
+  --dp-primary-disabled-color: #6bacea;
+  --dp-primary-text-color: #fff;
+  --dp-secondary-color: #c0c4cc;
+  --dp-border-color: #3b4248;
+  --dp-menu-border-color: #3b4248;
+  --dp-border-color-hover: #585858;
+  --dp-border-color-focus: #aaaeb7;
+  --dp-disabled-color: #f6f6f6;
+  --dp-scroll-bar-background: #f3f3f3;
+  --dp-scroll-bar-color: #959595;
+  --dp-success-color: #76d275;
+  --dp-success-color-disabled: #a3d9b1;
+  --dp-icon-color: #959595;
+  --dp-danger-color: #ff6f60;
+  --dp-marker-color: #ff6f60;
+  --dp-tooltip-color: #fafafa;
+  --dp-disabled-color-text: #8e8e8e;
+  --dp-highlight-color: rgb(25 118 210 / 10%);
+  --dp-range-between-dates-background-color: var(--dp-hover-color, #f3f3f3);
+  --dp-range-between-dates-text-color: var(--dp-hover-text-color, #212121);
+  --dp-range-between-border-color: var(--dp-hover-color, #f3f3f3);
+  --dp-loader: 5px solid #1976d2;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////
+////////          ELEMENTS          ////////
+////////////////////////////////////////////
+
+
+/// Containers
+
+.panel-card {
+    display: flex;
+    flex-direction: column;
+
+    background: $darker-bg;
+    border: 1px solid $border-color;
+    border-radius: 18px;
+
+    padding: 20px;
+    
+    gap: $gap-size;
+
+    .info-card {
+        width: 100%;
+        
+        padding: 14px;
+        margin-top: 6px;
+
+        border: 1px solid $secondary-border-color;
+        border-radius: 12px;
+
+        .info-card {
+            border: 1px solid $border-color;
+        }
+    }
+}
+
+.porc-modal-content {
+    background: rgb(23, 23, 23);
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.408);
+    border: 1px solid #343434;
+    color: #ffffff;
+    transition: 0.5s;
+
+    * {
+        transition: 0.4s ease-in-out;
+    }
+}
+
+
+
+/// Elements
+
+.seperator-h {
+    width: auto;
+    flex-grow: 1;
+    align-self: center;
+    height: 1px;
+    background-color: rgb(118, 116, 116);
+}
+
+.seperator-v {
+    width: auto;
+    flex-grow: 1;
+    align-self: center;
+    width: 1px;
+    background-color: rgb(118, 116, 116);
 }

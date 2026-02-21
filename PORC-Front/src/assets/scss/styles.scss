@@ -1,21 +1,31 @@
 //Bootstrap
 $primary: #b25ef7; // fallback color
+$secondary-text: #eaeaea;
 $muted: #979797;
 //$secondary: white;
 $danger: #e22d67;
-$background-color: rgb(20, 20, 20);
+$background-color: rgb(13, 13, 13);
 $body-bg: #ffffff;
 // $body-color: #ffffff;
 $border-radius: 1rem;
 $border-radius-sm: 1rem;
 
+$muted-text: #979797;
+
 //Custom
 
+$darker-bg: rgb(15, 15, 15);
 $dark-bg: #212529; //Bootstrap hardcoded
 $dark-border: #495057; //Bootstrap hardcoded
-$border-color: #515458;
+//$border-color: #515458;
+$secondary-border-color: #515458;
+//$secondary-border-color: rgba(255,255,255,0.1);
+$border-color: rgba(255,255,255,0.1);
+$border-radius: 14px;
 $background-header: linear-gradient(135deg, #7a6464, #5b77e8);
 $leaderboard-breakpoint: 1600px;
+
+$gap-size: 16px;
 
 //Division colors
 $division-colors: (

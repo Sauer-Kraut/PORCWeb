@@ -261,8 +261,8 @@ async function submitNote() {
                                 <form @submit.prevent="submitNote" v-if="(selectedPlayer?.id ?? user_id) === user_id">
                                     <div class="row">
                                         <div class="col-12">
-                                            <label for="noteTextArea" class="form-label fw-bold">Notes</label>
-                                            <textarea v-model="schedule.note" class="form-control notes-area mb-4" id="noteTextArea"></textarea>
+                                            <label for="noteTextArea" class="form-label fw-bold ms-1">Notes</label>
+                                            <textarea v-model="schedule.note" class="form-control mb-4" id="noteTextArea"></textarea>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -504,5 +504,9 @@ $tile-bg: rgb(15, 15, 15) !important;
 .bold {
     font-weight: 700;
     margin-top: 0.1rem;
+}
+
+textarea.form-control {
+    min-height: 5rem !important;
 }
 </style>

@@ -34,6 +34,18 @@ export const matchplanStore = defineStore('matchplan', {
             return (this.matchplans.get(season ||'0')?.[2] || null);
         },
 
+        async get_all_season_infos() {
+            let seasons: Season[] = [];
+
+            for (let [key, value] of this.matchplans) {
+                if (value[1] != null && typeof value[1] !== 'boolean') {
+                    seasons.push(value[1]);
+                }
+            }
+
+            return seasons;
+        },
+
         async get_ranking(season: string | null) {
             return await this.fetch_ranking(season);
         },
