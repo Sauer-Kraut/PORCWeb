@@ -6,6 +6,7 @@
     import type { DivisionModel } from '@/models/matchplan/DivisionModel';
     import type { Season } from '@/models/matchplan/Season';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
+import { formatTimeDiff } from '@/util/FormatTime';
 
     const props = defineProps<{
         hide_progress: boolean;
@@ -68,21 +69,6 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
     onMounted(async () => {
         // getSelectorHeight();
     });
-
-    function formatTimeDiff(ms: number): string {
-        // Calculate days, hours, minutes, seconds
-        const totalSeconds = Math.floor(ms / 1000);
-        const days = Math.floor(totalSeconds / (3600 * 24));
-        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        let result = '';
-        if (days > 0) result += `${days}d `;
-        if (hours > 0 || days > 0) result += `${hours}h `;
-        if (minutes > 0 || hours > 0 || days > 0) result += `${minutes}m `;
-        result += `${seconds}s`;
-        return result.trim();
-    }
 
     function formatDate(timestamp: number): string {
         const date = new Date(timestamp);
@@ -211,7 +197,7 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 
         box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
 
-        //transform: scale(1.03); // I know, but its the most convinient way to handle this and doesnt really hurt that much as there isnt a lot of other text within the same page
+        transform: scale(1.02); // I know, but its the most convinient way to handle this and doesnt really hurt that much as there isnt a lot of other text within the same page
     }
 
     // Header scss
@@ -275,6 +261,7 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
         color: #979797 !important;
         margin-left: 0.5rem;
         align-self: center;
+        font-weight: 500;
 
         margin: 0;
 

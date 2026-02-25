@@ -2,6 +2,7 @@
 
 :root {
     --primary: #b25ef7; // or any color you want
+    --accent-highlight: rgb(255, 100, 100);
 
     @each $name, $color in $division-colors {
         --#{$name}: #{$color};
@@ -48,6 +49,10 @@ select:focus {
     border-color: color-mix(in srgb, var(--primary) 50%, white 50%) !important;
     box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--primary) 25%, transparent) !important;
     outline: 0 !important;
+}
+
+textarea {
+    background-color: transparent!important;
 }
 
 
@@ -224,6 +229,33 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input[type=number] {
     -moz-appearance:textfield; // mozilla specific fix because of the ugliest design decision I have ever seen (hides the spinner buttons)
+}
+
+
+
+/// Select
+
+.soft-options {
+    margin-left: auto !important;
+    // width: calc(100% - 1.5rem) !important;
+    width: 12rem !important;
+    height: 2.35rem !important;
+
+    border-radius: 10px;
+    border-color: $border-color;
+
+    background-color: transparent !important;
+        
+    transition: all 0.2s !important;
+    
+    font-weight: 600;
+
+    align-self: center;
+
+    &:focus {
+        border-color: rgb(159, 159, 159) !important;
+        box-shadow: 0 0 0 0rem rgba($secondary-border-color, 0) !important;
+    }
 }
 
 
@@ -515,7 +547,7 @@ input[type=number] {
 }
 
 .seperator-v {
-    width: auto;
+    height: auto;
     flex-grow: 1;
     align-self: center;
     width: 1px;

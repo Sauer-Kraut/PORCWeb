@@ -120,7 +120,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
 
     &.hover-edit {
         .match-score {
-            transition: width 0.35s ease-in-out;
+            transition: width 0.25s ease-in-out;
             padding: 0 !important;
         }
 
@@ -128,7 +128,7 @@ watch(() => props.match.p2score, (newScore: null | number) => {
             width: 0%;
             overflow: hidden;
             padding: 0;
-            transition: width 0.35s ease-in-out;
+            transition: width 0.25s ease-in-out;
         }
     }
 

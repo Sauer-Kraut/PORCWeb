@@ -38,7 +38,7 @@ onMounted(() => {
     <div class="container">
         <img class="profile" v-if="isLoggedIn" :src="url" alt="Discord User Image" />
         <!-- <a class="LogInLink" v-if="!isLoggedIn" :href="discordAuthURL" target="_self">Log in</a> -->
-        <a class="btn btn-secondary" v-if="!isLoggedIn" :href="discordAuthURL">Log in</a>
+        <a class="btn btn-secondary no-wrap" v-if="!isLoggedIn" :href="discordAuthURL">Log in</a>
     </div>
 </template>
 
@@ -68,5 +68,8 @@ onMounted(() => {
         margin-right: 0rem;
     }
 }
-/* Add your styles here */
+
+.no-wrap {
+    text-wrap: nowrap;
+}
 </style>

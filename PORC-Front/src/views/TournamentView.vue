@@ -1,6 +1,8 @@
 <script lang="ts" setup>
     import { waitForAppReady } from '@/appReady';
+import YoutubeVideo from '@/components/AssetDisplay/YoutubeVideo.vue';
 import EventCarousel from '@/components/CardCarousel/EventCarousel.vue';
+import VideoCarousel from '@/components/CardCarousel/VideoCarousel.vue';
 import SignUpFormComponent from '@/components/forms/SignUpFormComponent.vue';
 import DiscordEventComponent from '@/components/LiveEventSection/DiscordEventComponent.vue';
 import PedestalComponent from '@/components/PedestalComponent.vue';
@@ -252,7 +254,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 
     const deadzone = 20;
     const limit = 150;
-    const scaling = 0.5;
+    const scaling = 0.8;
     const ease = 0.3;
     const smoothness = 0.2; // lower = smoother UwU
 
@@ -291,6 +293,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 
         requestAnimationFrame(animate);
     }
+
+    let eventSortPopularity = ref(false);
 
 
     watch(
@@ -370,18 +374,55 @@ import { computed, onMounted, ref, watch } from 'vue';
                 :current_season="current_season" />
         </div>
 
-        <div class="row p-5 d-none d-lg-block"></div>
+        <div class="row p-5 m-4 d-none d-lg-block"></div>
 
-        <section id="live-events">
-            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
-                <h2 class="decor-title text-center justify-content-center w-auto mt-5">Live Matches</h2>
-                <h3 class="content-subtitle justify-content-center w-auto mt-2">Watch high level Rumble matches right as they happen</h3>
+        <section id="live-events" class="mt-4">
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4 mb-5 pb-3">
+                <h2 class="decor-title text-center justify-content-center w-auto mt-5">Content <span class="text-highlight">Highlights</span></h2>
+                <h3 class="content-subtitle justify-content-center w-auto mt-2">Watch The best PORC has to offer as it happens</h3>
             </div>
-            <div class="col-12 d-flex flex-column flex-md-row justify-content-center align-items-center mt-1 mb-4">
-                <DiscordEventComponent></DiscordEventComponent>
+            <div class="col-12 d-flex flex-row flex-md-row justify-content-center align-items-center pt-5 mb-4">
+                <div class="video me-5">
+                    <div class="feature-title">
+                        <span style="display:inline-block; width:8px; height:8px; background: var(--accent-highlight); border-radius:50%"></span> 
+                        Featured Video
+                    </div>
+                    <YoutubeVideo  :videoId="'7deD4tDVzoE|'" :width="800" :height="450"></YoutubeVideo>
+                </div>
+                <!-- <div class="seperator-v flex-grow-0 m-1" :style="{height: '280px', width: '1px'}"></div> -->
+                <div class="d-flex flex-column pe-3 ms-0 mb-auto" >
+                    <div class="d-flex flex-row mb-2 mx-2">
+                        <h5 class="events-title">PORC Matches</h5>
+                        <!-- <div class="d-flex flex-row">
+                            <button class="btn btn-sm" :class="{'btn-primary': eventSortPopularity, 'btn-secondary': !eventSortPopularity}" style="border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; border-right: none !important;" @click="eventSortPopularity = !eventSortPopularity">Popularity</button>
+                            <button class="btn btn-sm" :class="{'btn-primary': !eventSortPopularity, 'btn-secondary': eventSortPopularity}" style="border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; border-left: none !important;" @click="eventSortPopularity = !eventSortPopularity">Date</button>
+                        </div> -->
+                        <!-- <select v-model="eventSortPopularity" class="form-select mb-3 soft-options col-auto primary">
+                            <option :value="false">Sort by Date</option>
+                            <option :value="true">Sort by Popularity</option>
+                        </select> -->
+                        <h5 class="sort-option ms-auto primary">Sort by Popular ▾</h5>
+                    </div>
+                    <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible" style="max-height: 24rem; scrollbar-width: none;">
+                        <DiscordEventComponent :Event="{ title: '[Mithril] Sauerkraut vs. Omelette du Fromage', start_time: new Date(Date.now() + 3600000), place: 'Online', interested: 42, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
+                        <DiscordEventComponent :Event="{ title: '[Meteorite] Savitarian vs. Omlette', start_time: new Date(Date.now() + 7200000), place: 'Online', interested: 18, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
+                        <DiscordEventComponent :Event="{ title: '[Gold] Paufs2007 vs. Vulcaninc', start_time: new Date(Date.now() + 10800000), place: 'Online', interested: 73, live: true, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
+                        <DiscordEventComponent :Event="{ title: '[Diamond] The edj vs. Delay', start_time: new Date(Date.now() + 14400000), place: 'Online', interested: 9, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
+                        <DiscordEventComponent :Event="{ title: '[Iron] Stone Eater vs. The Mole', start_time: new Date(Date.now() + 18000000), place: 'Online', interested: 256, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
+                    </div>
+                </div>
             </div>
+
+            <div class="m-4 p-2"></div>
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4 mb-1 pb-3">
+                <h3 class="content-subtitle justify-content-center w-auto mt-2">PORC VODs</h3>
+            </div>
+            <!-- <VideoCarousel :gap="50" :videos="['TPfSEj3xx8g', 'u1iuvoamOFQ', 'R401j1QAvEg', '2dx9nGBsl7I', 'IUARG6yQKvE', 'iNpWR1KbJJI', 'Q3sKIFYe2cQ']" :width="460" :height="250"></VideoCarousel> -->
         </section>
 
+
+        <div class="row p-5 m-4 d-none d-lg-block"></div>
+        <div class="row p-5 m-4 d-none d-lg-block"></div>
         <div class="row p-5 d-none d-lg-block"></div>
 
         <section id="champions">
@@ -978,6 +1019,28 @@ $good-color: rgb(34, 197, 94);
 
 .transition-1 {
     transition: all 0.05s;
+}
+
+.seperator-v {
+    background-color: color-mix(in srgb, $border-color 80%, $secondary-border-color); // counts as keeping the scheme because its a linear combination, its called innovating the design meta
+}
+
+
+.events-title {
+    color: $muted;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.sort-option {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.feature-title {
+    color: var(--accent-highlight);
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 </style>
 ```
