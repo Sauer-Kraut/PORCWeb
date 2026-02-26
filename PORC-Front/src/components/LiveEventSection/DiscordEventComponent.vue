@@ -51,8 +51,8 @@ import { filter_str } from '@/util/stringFilter';
 
     const formattedDate = computed(() => {
         const date = new Date(event.value.start_time);
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
             day: 'numeric',
             weekday: 'short',
             hour: 'numeric',
@@ -82,7 +82,7 @@ import { filter_str } from '@/util/stringFilter';
 </script>
 
 <template>
-    <a class="discord-event d-flex flex-row p-2 pb-0" :href="event.link">
+    <a class="discord-event d-flex flex-row px-2" :href="event.link">
         <div class="ms-1">
             <div class="division-logo">
                 <img :src="`/src/assets/images/divisions/${getDivision()}.png`" alt="Division Logo" />
@@ -93,14 +93,14 @@ import { filter_str } from '@/util/stringFilter';
 
             <!-- Event Content-->
             <div class="d-flex flex-row event-content">
-                <h4 class="event-title"> 
-                    {{ filter_str(getPlayers()[0], 11) }} 
-                    <span class="mx-3">vs.</span> 
+                <h4 class="event-title">
+                    {{ filter_str(getPlayers()[0], 11) }}
+                    <span class="mx-3">vs.</span>
                     {{ filter_str(getPlayers()[1], 11) }}
                 </h4>
 
                 <div v-if="live" class="event-live ms-auto me-3 mt-1">
-                    live
+                    Live
                 </div>
                 <div v-else class="event-upcoming ms-auto me-3 mt-1">
                     in {{ formatTimeDiff(event.start_time.getTime() - new Date().getTime(), getPrecision()) }}
@@ -110,20 +110,20 @@ import { filter_str } from '@/util/stringFilter';
             <!-- Event Details -->
             <div class="d-flex flex-row event-details mb-1">
                 <div class="event-time d-flex flex-row me-2">
-                    <div class="icon-container me-2" style="transform: translateY(-0.07rem)">  
+                    <div class="icon-container me-2" style="transform: translateY(-0.07rem)">
                         <i class="icon icon-calender"></i>
                     </div>
                     <!-- Jan 26. Friday, 6PM -->
                     {{ formattedDate }}
                 </div>
                 <div class="event-time d-flex flex-row ms-4">
-                    <div class="icon-container me-2" style="transform: translateY(-0.06rem)">  
+                    <div class="icon-container me-2" style="transform: translateY(-0.06rem)">
                         <i class="icon icon-globe"></i>
                     </div>
                     {{ event.place }}
                 </div>
                 <div class="event-time d-flex flex-row ms-4">
-                    <div class="icon-container me-2" style="transform: translateY(-0.04rem)">  
+                    <div class="icon-container me-2" style="transform: translateY(-0.04rem)">
                         <i class="icon icon-group"></i>
                     </div>
                     {{ event.interested }}
@@ -139,19 +139,21 @@ import { filter_str } from '@/util/stringFilter';
     @import '@/assets/scss/global.scss';
 
     .discord-event {
-        scale: 0.8;
+        scale: 1;
 
         border: 1px solid $border-color;
         border-radius: $border-radius;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.272);
 
-        width: 35rem;
-        height: 5.25rem;
+        width: 40rem;
+        height: 5rem;
         margin: 0 0.4rem;
+
+        padding-top: 0.75rem !important;
 
         // background-color: $dark-bg;
         text-decoration: none;
-        
+
         transition: all 0.15s;
 
 
@@ -181,7 +183,7 @@ import { filter_str } from '@/util/stringFilter';
                 line-height: 1.4rem;
                 font-style: italic;
 
-                
+
 
                 .icon-container {
                     margin-top: 0.255rem;
@@ -200,9 +202,31 @@ import { filter_str } from '@/util/stringFilter';
 
         .event-live {
             font-size: 0.94rem;
-            color: rgb(255, 100, 100);
+            color: color-mix(in srgb, var(--primary) 100%, rgb(255, 255, 255));
             font-weight: 600;
+
+            &:after {
+                content: "";
+                position: absolute;
+                width: 3rem;
+                height: 1.5rem;
+                transform: translateX(-2.25rem) translateY(-0rem);
+                background: radial-gradient(circle at center, color-mix(in srgb, var(--primary) 20%, transparent) 0%, transparent 70%);
+            }
         }
+
+        // .event-live {
+        //     font-size: 0.94rem;
+
+        //     border-radius: 12px;
+        //     padding: 0rem 0.5rem;
+
+        //     height: 1.45rem;
+
+        //     font-weight: 600;
+        //     color: black;
+        //     background-color: var(--primary);
+        // }
 
         .event-upcoming {
             font-size: 0.94rem;

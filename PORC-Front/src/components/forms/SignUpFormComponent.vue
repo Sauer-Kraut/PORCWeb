@@ -3,6 +3,7 @@ import config from '@/config';
 import type { SignUpInfo } from '@/models/SignUpInfo';
 import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
+import { matchplanStore } from '@/storage/st_matchplan';
 import { signupStore } from '@/storage/st_signups';
 import { defineProps, onMounted, ref, computed, watch } from 'vue';
 
@@ -119,9 +120,48 @@ async function getSignedUp() {
     }
 }
 
+let termDate = ref(new Date());
+
+async function getTerminationDate() {
+    let store = matchplanStore();
+
+    let res = await store.get_matchplan(null);
+
+    if (typeof res === 'string') {
+        showErrorModal(res);
+    }
+    else {
+        termDate.value = new Date(res.pause_end_timestamp * 1000);
+    }
+}
+
+function formatDate(date: Date): string {
+    const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+
+    return `${month}. ${day}${getOrdinalSuffix(day)}`;
+}
+
+function getOrdinalSuffix(day: number): string {
+    if (day >= 11 && day <= 13) return "th";
+
+    switch (day % 10) {
+        case 1: return "st";
+        case 2: return "nd";
+        case 3: return "rd";
+        default: return "th";
+    }
+}
+
 onMounted(async () => {
     await getUserId();
     await getSignedUp();
+    await getTerminationDate();
     setTimeout(async () => {
         await getSignedUp();
     }, 300); // Wait for 500 milliseconds
@@ -132,14 +172,14 @@ onMounted(async () => {
     <div class="justify-content-center">
         <div class="inner-container">
             <div class="col-10 d-flex flex-column">
-                <h1 class="decor-title mb-2" v-if="signup == null">Sign Up</h1>
-                <h1 class="decor-title mb-2" v-else>Signed Up</h1>
+                <h1 class="decor-title mb-2 no-wrap" v-if="signup == null">Sign Up</h1>
+                <h1 class="decor-title mb-2 no-wrap" v-else>Signed Up</h1>
 
                 <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
                 <!-- TODO: for the love of god make this automatic-->
                 <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
-                <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">Jan. 3rd</span></h3>
+                <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">{{ formatDate(termDate) }}</span></h3>
             </div>
             <div class="form-container row">
                 <form class="col-12" v-if="!signup">
@@ -166,6 +206,7 @@ onMounted(async () => {
                                         <option>US East</option>
                                         <option>US West</option>
                                         <option>Austrailia</option>
+                                        <option>Japan</option>
                                         <option>Asia</option>
                                     </select>
                                 </div>
@@ -317,5 +358,9 @@ fieldset:disabled a {
     color: #ffffff;
     background-color: #ffffff14;
     border-radius: 8px;
+}
+
+.no-wrap {
+    text-wrap: nowrap;
 }
 </style>

@@ -14,7 +14,7 @@ export function ScheduleFromRecv(recv: ScheduleRecv, match_event_map: Map<number
 
     let matches = [] as MatchEvent[];
     for (const id of recv.matches) {
-        console.log(match_event_map);
+        // console.log(match_event_map);
         const match_event = match_event_map.get(id);
         if (match_event !== undefined) {
             matches.push(matchEventFromRecv(match_event));

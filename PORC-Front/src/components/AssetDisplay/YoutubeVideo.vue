@@ -6,7 +6,6 @@
         width?: number
         height?: number
         noplay?: boolean
-        isParentDragging?: boolean
     }
 
     const props = defineProps<Props>()
@@ -16,16 +15,10 @@
     const iframeUrl = `https://www.youtube-nocookie.com/embed/${props.videoId}?autoplay=1`
 
     function playVideo() {
-        if (props.isParentDragging) return
         if (!props.noplay) isPlaying.value = true;
     }
 
     function onOverlayClick(e: MouseEvent) {
-        if (props.isParentDragging) {
-            e.preventDefault()
-            e.stopImmediatePropagation()
-            return
-        }
         // fall back to navigating when not dragging
         const url = `https://www.youtube.com/watch?v=${props.videoId}`
         window.location.href = url

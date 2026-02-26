@@ -51,6 +51,13 @@ pub const STAGE_IDS: Lazy<Arc<(u64, u64, u64)>> = Lazy::new( || {
     }
 });
 
+pub const VOD_FORUM_ID: Lazy<Arc<(u64)>> = Lazy::new( || {
+    match StorageMod::read_config().unwrap().dev {
+        true => Arc::new(1476341172900331693), // dev server stage id
+        false => Arc::new(1279765445062426664), // main server stage ids
+    }
+});
+
 pub fn get_http() -> Arc<Http> {
     HTTP.clone()
 }

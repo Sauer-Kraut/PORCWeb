@@ -41,6 +41,13 @@ use tokio::time::{sleep, Duration};
 
 use dotenvy::dotenv;
 
+use crate::backend::backend_api::discord::get_discord_events::get_discord_events_reqeust;
+use crate::backend::backend_api::discord::get_discord_vods::get_discord_vods_reqeust;
+use crate::liberary::discord_lib::discord_event::discord_event::DiscordEvent;
+use crate::liberary::discord_lib::video_reference::video_reference::VideoReference;
+use crate::porcbot::tasks::functions::{collect_discord_vods, fetch_discord_events};
+use crate::fetch_discord_events::fetch_discord_events;
+
 
 
 
@@ -179,6 +186,8 @@ async fn main() -> std::io::Result<()> {
         // accounts,
         // matchevents,
         // dialogues,
+        discord_events: Arc::new(RwLock::new(vec!())),
+        discord_vods: Arc::new(RwLock::new(vec!())),
         season: season.clone(),
         config: config.clone(),
         pool
@@ -221,10 +230,48 @@ async fn main() -> std::io::Result<()> {
         });
     });
 
+    let appstate_clone_2 = appstate.clone();
+
+    // spawns a loop to fetch discord events and vods
+    tokio::spawn(async move {
+        let appstate_clone = appstate_clone_2.clone();
+        let _event_task = tokio::task::spawn(async move {
+            println!("\n{}", "Discord event fetch loop has launched");
+            loop {
+                match fetch_discord_events(&appstate_clone).await {
+                    Ok(events) => {
+                        let mut events_lock = appstate_clone.discord_events.write().await;
+                        *events_lock = events;
+                    },
+                    Err(err) => println!("{}", format!("An error has occured while fetching discord events: {err}").red()),
+                }
+                sleep(Duration::from_secs(300)).await; // waits 5 minutes between each loop
+            }
+        });
+
+        let appstate_clone = appstate_clone_2;
+        let _vod_task = tokio::task::spawn(async move {
+            println!("\n{}", "Discord vod fetch loop has launched");
+            loop {
+                match collect_discord_vods(&appstate_clone, 24).await {
+                    Ok(vods) => {
+                        let mut vods_lock = appstate_clone.discord_vods.write().await;
+                        *vods_lock = vods;
+                    },
+                    Err(err) => println!("{}", format!("An error has occured while fetching discord vods: {err}").red()),
+                }
+                sleep(Duration::from_secs(300)).await; // waits 5 minutes between each loop
+            }
+        });
+    });
+
     println!("\n{}", "Server has launched".bright_white());
 
     let port_clone = port.clone();
     let url = config.read().await.url.clone();
+
+    use crate::collect_discord_vods::collect_discord_vods;
+    collect_discord_vods(&appstate, 10).await.unwrap();
 
     HttpServer::new(move || {
         App::new()
@@ -301,6 +348,14 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/api/query-testing")
             .route(web::get().to(get_account_info_request)))
 
+            // /api/discord
+
+            .service(web::resource("/api/discord/events")
+            .route(web::get().to(get_discord_events_reqeust)))
+
+            .service(web::resource("/api/discord/vods")
+            .route(web::get().to(get_discord_vods_reqeust)))
+
 
             .service(web::resource("/discord/callback").to(discord_callback))
             .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
@@ -320,6 +375,8 @@ pub struct AppState {
     // accounts: Arc<Mutex<HashMap<String, Account>>>,
     // matchevents: Arc<Mutex<HashMap<String, MatchEvent>>>,
     // dialogues: Arc<Mutex<Vec<DialogueBuilder>>>,
+    discord_events: Arc<RwLock<Vec<DiscordEvent>>>,
+    discord_vods: Arc<RwLock<Vec<VideoReference>>>,
     season: Arc<RwLock<Option<Season>>>,
     config: Arc<RwLock<Config>>,
     pool: Pool<Postgres>

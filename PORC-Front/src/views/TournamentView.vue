@@ -1,22 +1,40 @@
 <script lang="ts" setup>
     import { waitForAppReady } from '@/appReady';
-import YoutubeVideo from '@/components/AssetDisplay/YoutubeVideo.vue';
-import EventCarousel from '@/components/CardCarousel/EventCarousel.vue';
-import VideoCarousel from '@/components/CardCarousel/VideoCarousel.vue';
-import SignUpFormComponent from '@/components/forms/SignUpFormComponent.vue';
-import DiscordEventComponent from '@/components/LiveEventSection/DiscordEventComponent.vue';
-import PedestalComponent from '@/components/PedestalComponent.vue';
-import SeasonComponent from '@/components/SeasonComponent.vue';
-import { Repetition } from '@/models/availability/Availability';
-import type { EventCard } from '@/models/EventCard';
-import type { DivisionModel } from '@/models/matchplan/DivisionModel';
-import type { Season } from '@/models/matchplan/Season';
-import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
-import { showErrorModal } from '@/services/ErrorModalService';
-import { accountsStore } from '@/storage/st_accounts';
-import { matchplanStore } from '@/storage/st_matchplan';
-import { signupStore } from '@/storage/st_signups';
-import { computed, onMounted, ref, watch } from 'vue';
+    import YoutubeVideo from '@/components/AssetDisplay/YoutubeVideo.vue';
+    import EventCarousel from '@/components/CardCarousel/EventCarousel.vue';
+    import VideoCarousel from '@/components/CardCarousel/VideoCarousel.vue';
+    import SignUpFormComponent from '@/components/forms/SignUpFormComponent.vue';
+    import DiscordEventComponent from '@/components/LiveEventSection/DiscordEventComponent.vue';
+    import PedestalComponent from '@/components/PedestalComponent.vue';
+    import SeasonComponent from '@/components/SeasonComponent.vue';
+    import { Repetition } from '@/models/availability/Availability';
+    import type { DiscordEvent } from '@/models/discord/DiscordEvent';
+import type { VideoReference } from '@/models/discord/VideoReference';
+    import type { EventCard } from '@/models/EventCard';
+    import type { DivisionModel } from '@/models/matchplan/DivisionModel';
+    import type { Season } from '@/models/matchplan/Season';
+    import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+    import { showErrorModal } from '@/services/ErrorModalService';
+    import { accountsStore } from '@/storage/st_accounts';
+import { discordInfoStore } from '@/storage/st_discord';
+    import { matchplanStore } from '@/storage/st_matchplan';
+    import { signupStore } from '@/storage/st_signups';
+    import { computed, onMounted, ref, watch } from 'vue';
+
+    let screenSizeMd = ref(false);
+    let screenSizeSm = ref(false)
+
+    function getScreenSize() {
+        const viewportWidth = window.innerWidth;
+        screenSizeMd.value = false;
+        screenSizeSm.value = false;
+        if (viewportWidth < 1750 && viewportWidth > 799) {
+            screenSizeMd.value = true;
+        } 
+        else if (viewportWidth <= 799) {
+            screenSizeSm.value = true;
+        } 
+    }
 
     const seasons = ref<Season[]>([]);
     const selectedSeason = ref<Season | null>(null);
@@ -37,6 +55,14 @@ import { computed, onMounted, ref, watch } from 'vue';
             return selectedSeason.value !== null && new Date(selectedSeason.value.start_timestamp * 1000) <= today && new Date(selectedSeason.value.end_timestamp * 1000) > today;
         },
     );
+
+    const InfoPlaceholders = [
+        ["Dont look yet, We're still getting ready!"],
+        ["Looks like there isnt a whole lot going on yet,","But just you wait until the next season!"],
+
+    ]
+
+    let selectedInfoPlaceholder = InfoPlaceholders[Math.floor(Math.random() * InfoPlaceholders.length)];
 
     const current_season = ref<Season | null>(null);
 
@@ -257,6 +283,14 @@ import { computed, onMounted, ref, watch } from 'vue';
     const scaling = 0.8;
     const ease = 0.3;
     const smoothness = 0.2; // lower = smoother UwU
+    let active_f = 1;
+
+    function setActiveFactor() {
+        const viewportWidth = window.innerWidth;
+        if (viewportWidth < 800) {
+            active_f = 0;
+        }
+    }
 
     function clamp(v: number, min: number, max: number) {
         return Math.min(max, Math.max(min, v));
@@ -269,16 +303,16 @@ import { computed, onMounted, ref, watch } from 'vue';
             limit *
             (sigmoid(
                 ease,
-                ((Math.abs(((scroll.value - deadzone) * scaling) / limit) +
-                    ((scroll.value - deadzone) * scaling) / limit) *
+                ((Math.abs(((scroll.value - deadzone) * scaling * active_f) / limit) +
+                    ((scroll.value - deadzone) * scaling * active_f) / limit) *
                     4) -
                     8
             )
             -
             sigmoid(
                 ease,
-                ((Math.abs(((0 - deadzone) * scaling) / limit) +
-                    ((0 - deadzone) * scaling) / limit) *
+                ((Math.abs(((0 - deadzone) * scaling * active_f) / limit) +
+                    ((0 - deadzone) * scaling * active_f) / limit) *
                     4) -
                     8
             ));
@@ -294,8 +328,47 @@ import { computed, onMounted, ref, watch } from 'vue';
         requestAnimationFrame(animate);
     }
 
+    const ds_storage = discordInfoStore();
+
+    let discordEvents = ref([] as DiscordEvent[]);
+
+    // let discordEvents = ref([
+    //     { title: '[Mithril] Sauerkraut vs. Omelette du Fromage', start_time: new Date(Date.now() + 3600000), place: 'Online', interested: 42, live: false, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent,
+    //     { title: '[Meteorite] Savitarian vs. Omlette', start_time: new Date(Date.now() + 7200000), place: 'Online', interested: 18, live: false, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent,
+    //     { title: '[Gold] Paufs2007 vs. Vulcaninc', start_time: new Date(Date.now() + 10800000), place: 'Online', interested: 73, live: true, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent,
+    //     { title: '[Diamond] The edj vs. Delay', start_time: new Date(Date.now() + 14400000), place: 'Online', interested: 9, live: false, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent,
+    //     { title: '[Iron] Stone Eater vs. The Mole', start_time: new Date(Date.now() + 18000000), place: 'Online', interested: 256, live: false, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent,
+    //     { title: '[Gold] Paufs2007 vs. Vulcaninc', start_time: new Date(Date.now() + 10800000), place: 'Online', interested: 73, live: true, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent,
+    //     { title: '[Diamond] The edj vs. Delay', start_time: new Date(Date.now() + 14400000), place: 'Online', interested: 9, live: false, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent,
+    //     { title: '[Iron] Stone Eater vs. The Mole', start_time: new Date(Date.now() + 18000000), place: 'Online', interested: 256, live: false, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent
+    // ].sort((a, b) => a.start_time.getTime() - b.start_time.getTime()).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0))); // Sort events by start time
+    // //discordEvents.value = [];
     let eventSortPopularity = ref(false);
 
+    async function getEvents() {
+        
+        let res = await ds_storage.get_events();
+
+        if (typeof res == 'string') {
+            showErrorModal(res);
+        } else {
+            discordEvents.value = res;
+        }
+    }
+
+    let discordVods = ref([] as VideoReference[]);
+
+
+    async function getVods() {
+        
+        let res = await ds_storage.get_vods();
+
+        if (typeof res == 'string') {
+            showErrorModal(res);
+        } else {
+            discordVods.value = res;
+        }
+    }
 
     watch(
         () => selectedSeason.value,
@@ -314,18 +387,38 @@ import { computed, onMounted, ref, watch } from 'vue';
         },
     );
 
+    watch(
+        () => eventSortPopularity.value,
+        (newSorting) => {
+            console.log("Event Sorting was changed");
+            if (newSorting) {
+                discordEvents.value.sort((a, b) => a.interested - b.interested).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
+            } else {
+                discordEvents.value.sort((a, b) => a.start_time.getTime() - b.start_time.getTime()).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
+            }
+        }
+    )
+
 
     onMounted(async () => {
         window.addEventListener('scroll', () => {
             setSeasonDisplacement();
         });
+        window.addEventListener('resize', () => {
+            getScreenSize();
+        })
+        setActiveFactor();
+        getScreenSize();
         animate();
         await waitForAppReady();
         await getUserId();
         await loadSeasons();
         await checkScheduleConfiguration();
         await getSignedUp();
+        await getVods();
+        await getEvents();
         getSelectorHeight();
+
     });
 </script>
 
@@ -381,18 +474,20 @@ import { computed, onMounted, ref, watch } from 'vue';
                 <h2 class="decor-title text-center justify-content-center w-auto mt-5">Content <span class="text-highlight">Highlights</span></h2>
                 <h3 class="content-subtitle justify-content-center w-auto mt-2">Watch The best PORC has to offer as it happens</h3>
             </div>
-            <div class="col-12 d-flex flex-row flex-md-row justify-content-center align-items-center pt-5 mb-4">
-                <div class="video me-5">
-                    <div class="feature-title">
-                        <span style="display:inline-block; width:8px; height:8px; background: var(--accent-highlight); border-radius:50%"></span> 
-                        Featured Video
+            <div class="col-12 d-flex flex-row flex-md-row justify-content-center align-items-center pt-5 mb5 mb-sm-4">
+                <div class="video me-3">
+                    <div class="feature-title mb-2">
+                        <span style="display:inline-block; width:9px; height:9px; background: var(--primary); border-radius:50%; transform: translateY(-0.085rem);" class="me-1"></span> 
+                        FEAUTURED VIDEO
                     </div>
-                    <YoutubeVideo  :videoId="'7deD4tDVzoE|'" :width="800" :height="450"></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" :width="320" :height="200" v-if="screenSizeSm"></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" :width="760" :height="400" v-else-if="screenSizeMd"></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" :width="800" :height="450" v-else></YoutubeVideo>
                 </div>
-                <!-- <div class="seperator-v flex-grow-0 m-1" :style="{height: '280px', width: '1px'}"></div> -->
-                <div class="d-flex flex-column pe-3 ms-0 mb-auto" >
+                <div class="seperator-v flex-grow-0 m-5" :style="{height: '320px', width: '1px'}" v-if="!screenSizeSm && !screenSizeMd"></div>
+                <div class="d-flex flex-column pe-3 ms-0 mb-auto" v-if="!screenSizeSm && !screenSizeMd">
                     <div class="d-flex flex-row mb-2 mx-2">
-                        <h5 class="events-title">PORC Matches</h5>
+                        <h5 class="events-title spaced-text me-5 pe-3">PORC Matches</h5>
                         <!-- <div class="d-flex flex-row">
                             <button class="btn btn-sm" :class="{'btn-primary': eventSortPopularity, 'btn-secondary': !eventSortPopularity}" style="border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; border-right: none !important;" @click="eventSortPopularity = !eventSortPopularity">Popularity</button>
                             <button class="btn btn-sm" :class="{'btn-primary': !eventSortPopularity, 'btn-secondary': eventSortPopularity}" style="border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; border-left: none !important;" @click="eventSortPopularity = !eventSortPopularity">Date</button>
@@ -403,27 +498,34 @@ import { computed, onMounted, ref, watch } from 'vue';
                         </select> -->
                         <h5 class="sort-option ms-auto primary">Sort by Popular ▾</h5>
                     </div>
-                    <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible" style="max-height: 24rem; scrollbar-width: none;">
-                        <DiscordEventComponent :Event="{ title: '[Mithril] Sauerkraut vs. Omelette du Fromage', start_time: new Date(Date.now() + 3600000), place: 'Online', interested: 42, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
-                        <DiscordEventComponent :Event="{ title: '[Meteorite] Savitarian vs. Omlette', start_time: new Date(Date.now() + 7200000), place: 'Online', interested: 18, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
-                        <DiscordEventComponent :Event="{ title: '[Gold] Paufs2007 vs. Vulcaninc', start_time: new Date(Date.now() + 10800000), place: 'Online', interested: 73, live: true, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
-                        <DiscordEventComponent :Event="{ title: '[Diamond] The edj vs. Delay', start_time: new Date(Date.now() + 14400000), place: 'Online', interested: 9, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
-                        <DiscordEventComponent :Event="{ title: '[Iron] Stone Eater vs. The Mole', start_time: new Date(Date.now() + 18000000), place: 'Online', interested: 256, live: false, description: 'Sample event description', img_id: '', link: '' }"></DiscordEventComponent>
+                    <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
+                        <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>
+                        <div v-if="discordEvents.length < 1" class="d-flex flex-column flex-grow-1 event-placeholder p-3" style="width: 100%; justify-content: center; align-items: center;"> <span v-for="line in selectedInfoPlaceholder" :key="line">{{ line }}</span> </div>
                     </div>
                 </div>
             </div>
+            <div class="d-flex flex-column pe-3 ms-0 mt-5 pt-4 ms-auto me-auto" v-if="screenSizeMd" style="max-width: 43rem;">
+                    <div class="d-flex flex-row mb-2 mx-2">
+                        <h5 class="events-title spaced-text me-5 pe-3">PORC Matches</h5>
+                        <h5 class="sort-option ms-auto primary">Sort by Popular ▾</h5>
+                    </div>
+                    <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
+                        <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>
+                        <div v-if="discordEvents.length < 1" class="d-flex flex-column flex-grow-1 event-placeholder p-3" style="width: 100%; justify-content: center; align-items: center;"> <span v-for="line in selectedInfoPlaceholder" :key="line">{{ line }}</span> </div>
+                    </div>
+                </div>
 
-            <div class="m-4 p-2"></div>
-            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4 mb-1 pb-3">
-                <h3 class="content-subtitle justify-content-center w-auto mt-2">PORC VODs</h3>
+            <div class="m-4 p-2" v-if="!screenSizeSm"></div>
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-xl-5 pt-xl-5 mb-1 pb-3">
+                <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="240" :gap="40" style="width: 24rem" v-if="screenSizeSm"></VideoCarousel>
+                <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="320" :gap="60" style="width: 55rem" v-else-if="screenSizeMd"></VideoCarousel>
+                <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="320" :gap="60" style="width: 101rem" v-else></VideoCarousel>
             </div>
-            <!-- <VideoCarousel :gap="50" :videos="['TPfSEj3xx8g', 'u1iuvoamOFQ', 'R401j1QAvEg', '2dx9nGBsl7I', 'IUARG6yQKvE', 'iNpWR1KbJJI', 'Q3sKIFYe2cQ']" :width="460" :height="250"></VideoCarousel> -->
         </section>
 
 
-        <div class="row p-5 m-4 d-none d-lg-block"></div>
-        <div class="row p-5 m-4 d-none d-lg-block"></div>
-        <div class="row p-5 d-none d-lg-block"></div>
+        <div class="row p-5 m-0 d-none d-lg-block"></div>
+        <div class="row p-5 m-2 d-none d-lg-block"></div>
 
         <section id="champions">
             <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4">
@@ -465,6 +567,8 @@ import { computed, onMounted, ref, watch } from 'vue';
             </div>
         </section>
 
+
+        <div class="row p-4 ,-1 d-none d-lg-block"></div>
 
 
         <section id="sign-up">
@@ -518,6 +622,7 @@ import { computed, onMounted, ref, watch } from 'vue';
         </div>
         </section>
 
+        <div class="row m-3 d-none d-lg-block"></div>
         <div class="p-5 col-10 mt-5 d-none d-md-block"></div>
 
         <div class="d-flex flex-column justify-content-center align-items-center col-12 m-5 pt-4">
@@ -568,7 +673,7 @@ import { computed, onMounted, ref, watch } from 'vue';
             ></EventCarousel>
         </div>
 
-        <div class="p-5 col-10 mt-5 d-none d-md-block"></div>
+        <div class="p-5 col-10 m-5 d-none d-md-block"></div>
 
 
         <div class="d-none d-md-flex porc-stats justify-content-center col-xxl-7 col-xl-11 mt-5">
@@ -1028,19 +1133,65 @@ $good-color: rgb(34, 197, 94);
 
 .events-title {
     color: $muted;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.sort-option {
     font-size: 1rem;
     font-weight: 600;
 }
 
-.feature-title {
-    color: var(--accent-highlight);
-    font-size: 1.25rem;
+.sort-option {
+    font-size: 0.96rem;
     font-weight: 600;
+}
+
+.feature-title {
+    color: var(--primary);
+    font-size: 0.94rem;
+    font-weight: 600;
+}
+
+.event-scroll-container {
+    scrollbar-color: var(--primary) transparent;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 4px;
+
+        &:hover {
+            background: color-mix(in srgb, var(--primary) 120%, white);
+        }
+    }
+
+    .event-placeholder {
+        color: $muted;
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+}
+
+.featured-video {
+    &:after {
+        content: "";
+        position: absolute;
+        transform: translateX(-100%);
+        border-radius: 4px;
+        height: 100%;
+        width: 100%;
+        background-color: var(--primary);
+        opacity: 0.04;
+        transition: all 0.1s;
+    }
+}
+
+.content-subtitle {
+    text-align: center;
 }
 </style>
 ```

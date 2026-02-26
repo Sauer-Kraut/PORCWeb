@@ -8,7 +8,31 @@ const props = defineProps<{
     performances: PlayerPerformance[];
 }>();
 
+const highlightedPlayerId = defineModel<string>('highlightedPlayerId', { default: '' });
+let highlightPin = ref(false);
+
 const internalPerformances = ref<PlayerPerformance[]>([]);
+
+function selectPlayer(p: PlayerPerformance) {
+    if (!highlightPin.value) {
+        highlightedPlayerId.value = p.player.id;
+    }
+}
+
+function unselectPlayer(p: PlayerPerformance) {
+    if (highlightedPlayerId.value == p.player.id && !highlightPin.value) {
+        highlightedPlayerId.value = '';
+    }
+}
+
+function pin_player(p: PlayerPerformance) {
+    if (highlightedPlayerId.value == p.player.id) {
+        highlightPin.value = !highlightPin.value;
+    } else {
+        highlightedPlayerId.value = p.player.id;
+        highlightPin.value = true;
+    }
+}
 
 // Watch for changes in the performances prop
 watch(
@@ -40,17 +64,19 @@ onMounted(async () => {
 
 <template>
     <div class="leaderboard-cont row justify-content-center d-flex">
-        <div class="leaderboard-head">
-            <div class="row collum-title justify-content-center d-flex leaderboard-row">
-                <div class="col-4 col-sm-3 collum-description">Player</div>
+            <div class="leaderboard-row row justify-content-center d-flex column-title">
+                <div class="col-4 col-sm-3 column-description">Player</div>
                 <div class="col-2 col-sm-1"></div>
-                <div class="col-4 col-sm-3 collum-description">Matches</div>
+                <div class="col-4 col-sm-3 column-description">Matches</div>
                 <div class="col-1 add-col"></div>
-                <div class="col-3 add-col collum-description" title="This shows the average match score difference over all played sets.">Advantage</div>
+                <div class="col-3 add-col column-description" title="This shows the average match score difference over all played sets.">Advantage</div>
             </div>
-            <div class="p-1"></div>
-        </div>
-        <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content">
+        <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content"
+            @mouseover="selectPlayer(player)"
+            @mouseleave="unselectPlayer(player)"
+            @click="pin_player(player)"
+            :class="{'selected': highlightedPlayerId == player.player.id}"
+            >
             <div class="col-4 col-sm-3 d-flex justify-content-center">
                 <div class="d-flex flex-column">
                     <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
@@ -80,8 +106,8 @@ onMounted(async () => {
     width: 100%;
     height: fit-content;
 
-    padding: 1rem !important;
-    padding-inline: 2rem !important;
+    padding: 0rem !important;
+    padding-inline: 0rem !important;
 
     text-align: center;
     flex-wrap: none;
@@ -91,24 +117,24 @@ onMounted(async () => {
     border-style: solid;
 
     // background-color: $dark-bg;
-    border-color: #51565a;
+    border-color: $secondary-border-color;
 
     transition: all 0.6s ease !important;
 }
 
 .leaderboard-row {
-    margin-top: 0rem !important;
-    margin-bottom: 0rem !important;
+
     padding-bottom: 0.5rem;
     padding-top: 0.5rem;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+
     min-height: 3rem;
     overflow: hidden;
     align-items: center;
     justify-content: center;
 
-    border-top: $dark-border solid 1px;
+    border-top: $border-color solid 1px;
+
+    transition: all 0.1s !important;
 
     * {
         text-align: center;
@@ -117,16 +143,35 @@ onMounted(async () => {
             display: none;
         }
     }
+
+    &:first-child {
+        background-color: rgba(255, 255, 255, 0.0);
+        height: 3.75rem !important;
+    }
+
+    // &:nth-child(2) {
+    //     padding-top: 1rem !important;
+    //     height: 3.5rem !important;
+    // }
+
+    &:not(:first-child) {
+        margin: 0 !important;
+    }
+
+    &:hover:not(:first-child), &.selected {
+        background-color: rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+    }
 }
 
 @media (max-width: 400px) {
-    .leaderboard-head {
+    .column-title {
         display: none;
     }
 
     .leaderboard-row {
         border-top: none;
-        &:not(:nth-child(2)) { 
+        &:not(:nth-child(2)) {
             border-top: $dark-border solid 1px;
         }
 
@@ -150,16 +195,15 @@ onMounted(async () => {
     }
 }
 
-.collum-title {
+.column-title {
     font-weight: bold;
-    font-size: 1.2rem;
-    color: #ffffff;
+    font-size: 1.15rem;
+    color: $secondary-text;
     text-align: center;
-    margin-bottom: 0.5rem;
     border: 0px !important;
 }
 
-.collum-description {
+.column-description {
     padding: 0px !important;
 }
 

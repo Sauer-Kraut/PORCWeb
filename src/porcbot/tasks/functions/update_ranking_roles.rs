@@ -32,12 +32,17 @@ pub async fn update_ranking_roles(appstate: &AppState, matchplan: MatchPlan) -> 
             if rank_roles.iter().any(|r| *r.0 == *role) {
 
                 role_remover_tasks.push(async {
-                    let res = member.remove_roles(get_http(), &rank_roles_ids).await;
+                    let res = match member.remove_roles(get_http(), &rank_roles_ids).await {
+                        Ok(_) => Ok(()),
+                        Err(e) => Err(format!("Failed to remove roles from {}: {}", member.user.name, e)),
+                    };
                     res
                 })
             }
         }
     }
+
+    println!("{}", "Finished creating tasks to remove old ranking roles".green());
 
     // errors get logged and ignored
     let remover_taks_results = futures::future::join_all(role_remover_tasks).await;
@@ -48,7 +53,7 @@ pub async fn update_ranking_roles(appstate: &AppState, matchplan: MatchPlan) -> 
         }
     }
 
-
+    println!("{}", "Finished removing old ranking roles".green());
 
     let mut add_role_tasks = Vec::new();
 
@@ -70,6 +75,8 @@ pub async fn update_ranking_roles(appstate: &AppState, matchplan: MatchPlan) -> 
         })
     }
 
+    println!("{}", "Finished creating tasks to add new ranking roles".green());
+
 
     // errors get logged and ignored
     let add_taks_results = futures::future::join_all(add_role_tasks).await;
@@ -79,6 +86,8 @@ pub async fn update_ranking_roles(appstate: &AppState, matchplan: MatchPlan) -> 
             println!("{}\n{}{}", "An error occurred while removing roles: ".red(), e.to_string().bright_red(), " - role removal was therefore skipped".yellow());
         }
     }
+
+    println!("{}", "Finished adding new ranking roles".green());
     
     Ok(())
 }

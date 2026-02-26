@@ -17,6 +17,8 @@ const props = defineProps<{
     placeholder?: boolean; // Optional prop to control placeholder visibility
 }>();
 
+const highlightedPlayerId = defineModel<string>('highlightedPlayerId', { default: '' });
+
 const placeholders = [
     "Shh... The scores are still taking their beauty sleep. If you keep being this loud you'll wake them up! (✧ω✧)",
     'Look at me! So empty, but I promise... it’s about to get exciting in here! (｡•̀ᴗ•́｡)',
@@ -157,7 +159,7 @@ onMounted(async () => {
                 <div class="scroll-container flex-grow-1">
                     <div class="transition-width matches">
                         <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="w-auto">
-                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="allowEditSeason" v-on:reload="reload"/>
+                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="allowEditSeason" v-on:reload="reload" class="match" :class="{'match-highlight': match.p1.id == highlightedPlayerId || match.p2.id == highlightedPlayerId}"/>
                         </div>
                     </div>
                 </div>
@@ -166,7 +168,7 @@ onMounted(async () => {
             <div class="col-4 col-xxl-4 col-xml-11 col-10 justify-content-center transition-width item-container d-flex h-100 leaderboard-container" :style="{ transform: matchesTransform }">
                 <div class="leaderboard-ref d-flex flex-column align-items-center" ref="leaderboardRef">
                     <div class="toggle-arrow mb-2" @click="toggleMatchesExtended"><i class="icon-chevron-up"></i></div>
-                    <LeaderbordComponent class="leaderbord" :performances="performances" :divisionName="division?.name || 'Unnamed Division'" />
+                    <LeaderbordComponent class="leaderbord" v-model:highlightedPlayerId="highlightedPlayerId" :performances="performances" :divisionName="division?.name || 'Unnamed Division'" />
                 </div>
             </div>
         </div>
@@ -423,4 +425,15 @@ onMounted(async () => {
 .transition-0 {
     transition: 0.1s !important;
 }
+
+.match {
+    transition: all 0.2s ease-in-out !important;
+    
+    &.match-highlight {
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.082) !important;
+    }
+}
+
+
 </style>

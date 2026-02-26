@@ -8,3 +8,4 @@ pub mod match_event;
 pub mod season;
 pub mod signup;
 pub mod discord_communication;
+pub mod discord;

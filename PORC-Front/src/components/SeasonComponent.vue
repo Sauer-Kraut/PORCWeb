@@ -5,8 +5,8 @@
     import Logo from './svgs/Logo.vue';
     import type { DivisionModel } from '@/models/matchplan/DivisionModel';
     import type { Season } from '@/models/matchplan/Season';
-import { updatePrimaryColor } from '@/util/updatePrimaryColor';
-import { formatTimeDiff } from '@/util/FormatTime';
+    import { updatePrimaryColor } from '@/util/updatePrimaryColor';
+    import { formatTimeDiff } from '@/util/FormatTime';
 
     const props = defineProps<{
         hide_progress: boolean;
