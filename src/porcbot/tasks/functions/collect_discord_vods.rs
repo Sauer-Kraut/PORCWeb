@@ -16,7 +16,7 @@ pub async fn collect_discord_vods(appstate: &AppState, limit: usize) -> Result<V
     let mut vods = vec!();
 
     for post in posts.iter() {
-        println!("{} {}, {}", "Found vod post:".green(), post.name.clone(), post.topic.clone().unwrap_or_default());
+        // println!("{} {}, {}", "Found vod post:".green(), post.name.clone(), post.topic.clone().unwrap_or_default());
 
         let messages = post.messages(get_http(), GetMessages::default().limit(10)).await?;
         let mut video_id = "";

@@ -33,13 +33,6 @@ export async function getDiscordVods(): Promise<VideoReference[] | string> {
                 vods.push(videoReferenceFromRecv(v));
             }
 
-            for (let v of vods) {
-                console.warn(v.title);
-                console.warn(v.creator);
-                console.warn(v.date);
-                console.warn(v.youtube_id);
-            }
-
             return vods;
         }
     } 

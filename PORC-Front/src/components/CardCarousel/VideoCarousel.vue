@@ -140,7 +140,7 @@ import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
                     <p class="vod-meta" v-if="video.date">
                         <!-- <span v-if="video.views">{{ video.views }} views</span>
                         <span class="dot" v-if="video.views && video.date">•</span> -->
-                        <span v-if="video.creator" class="me-3">{{ video.creator.username }}Savitarian</span>
+                        <span v-if="video.creator" class="me-3">{{ video.creator.username }}</span>
                         <span v-if="video.date">{{ formatDate(video.date) }}</span>
                     </p>
                 </div>

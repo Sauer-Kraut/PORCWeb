@@ -470,19 +470,19 @@ import { discordInfoStore } from '@/storage/st_discord';
         <div class="row p-5 m-4 d-none d-lg-block"></div>
 
         <section id="live-events" class="mt-4">
-            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4 mb-5 pb-3">
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 pt-4 mb-md-5 pb-3">
                 <h2 class="decor-title text-center justify-content-center w-auto mt-5">Content <span class="text-highlight">Highlights</span></h2>
                 <h3 class="content-subtitle justify-content-center w-auto mt-2">Watch The best PORC has to offer as it happens</h3>
             </div>
             <div class="col-12 d-flex flex-row flex-md-row justify-content-center align-items-center pt-5 mb5 mb-sm-4">
-                <div class="video me-3">
+                <div class="video me-xxl-3">
                     <div class="feature-title mb-2">
                         <span style="display:inline-block; width:9px; height:9px; background: var(--primary); border-radius:50%; transform: translateY(-0.085rem);" class="me-1"></span> 
                         FEAUTURED VIDEO
                     </div>
-                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" :width="320" :height="200" v-if="screenSizeSm"></YoutubeVideo>
-                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" :width="760" :height="400" v-else-if="screenSizeMd"></YoutubeVideo>
-                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" :width="800" :height="450" v-else></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="320" :height="200" v-if="screenSizeSm"></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="760" :height="400" v-else-if="screenSizeMd"></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="800" :height="450" v-else></YoutubeVideo>
                 </div>
                 <div class="seperator-v flex-grow-0 m-5" :style="{height: '320px', width: '1px'}" v-if="!screenSizeSm && !screenSizeMd"></div>
                 <div class="d-flex flex-column pe-3 ms-0 mb-auto" v-if="!screenSizeSm && !screenSizeMd">
@@ -496,7 +496,7 @@ import { discordInfoStore } from '@/storage/st_discord';
                             <option :value="false">Sort by Date</option>
                             <option :value="true">Sort by Popularity</option>
                         </select> -->
-                        <h5 class="sort-option ms-auto primary">Sort by Popular ▾</h5>
+                        <h5 class="sort-option ms-auto primary" @click="eventSortPopularity = !eventSortPopularity">Sorted by {{ eventSortPopularity ? "Popular" : "Date" }} ▾</h5>
                     </div>
                     <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
                         <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>
@@ -507,7 +507,7 @@ import { discordInfoStore } from '@/storage/st_discord';
             <div class="d-flex flex-column pe-3 ms-0 mt-5 pt-4 ms-auto me-auto" v-if="screenSizeMd" style="max-width: 43rem;">
                     <div class="d-flex flex-row mb-2 mx-2">
                         <h5 class="events-title spaced-text me-5 pe-3">PORC Matches</h5>
-                        <h5 class="sort-option ms-auto primary">Sort by Popular ▾</h5>
+                        <h5 class="sort-option ms-auto primary" @click="eventSortPopularity = !eventSortPopularity">Sorted by {{ eventSortPopularity ? "Popular" : "Date" }} ▾</h5>
                     </div>
                     <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
                         <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>
@@ -516,8 +516,8 @@ import { discordInfoStore } from '@/storage/st_discord';
                 </div>
 
             <div class="m-4 p-2" v-if="!screenSizeSm"></div>
-            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-xl-5 pt-xl-5 mb-1 pb-3">
-                <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="240" :gap="40" style="width: 24rem" v-if="screenSizeSm"></VideoCarousel>
+            <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 mt-xl-5 pt-xl-5 mb-1 pb-3">
+                <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="240" :gap="40" style="width: 22rem" v-if="screenSizeSm"></VideoCarousel>
                 <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="320" :gap="60" style="width: 55rem" v-else-if="screenSizeMd"></VideoCarousel>
                 <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="320" :gap="60" style="width: 101rem" v-else></VideoCarousel>
             </div>
@@ -580,7 +580,7 @@ import { discordInfoStore } from '@/storage/st_discord';
                     <div class="signup-info d-flex flex-column w-100">
                         <!-- Title -->
                         <h1 class="decor-title m-0 p-0 mt-3">Registration</h1>
-                        <h2 class="content-subtitle mt-2">Sign up for the next season of PORC</h2>
+                        <h2 class="content-subtitle left mt-2">Sign up for the next season of PORC</h2>
 
                         <!-- Signup Conditions -->
                         <div class="singup-conditions mt-2 mb-2 w-100">
@@ -779,6 +779,14 @@ $hero-content-height: 32rem;
 
     background-size: cover;
     // -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+
+    @media (max-width: 799px) {
+        height: calc($hero-height - 14rem);
+        width: 100%;
+        margin-top: 0;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
 }
 
 
@@ -1138,6 +1146,7 @@ $good-color: rgb(34, 197, 94);
 }
 
 .sort-option {
+    cursor: pointer;
     font-size: 0.96rem;
     font-weight: 600;
 }
@@ -1187,11 +1196,16 @@ $good-color: rgb(34, 197, 94);
         background-color: var(--primary);
         opacity: 0.04;
         transition: all 0.1s;
+        pointer-events: none;
     }
 }
 
 .content-subtitle {
     text-align: center;
+
+    &.left {
+        text-align: start;
+    }
 }
 </style>
 ```

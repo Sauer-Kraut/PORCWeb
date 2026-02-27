@@ -10,6 +10,8 @@ import type { PubAccountInfo } from './models/pub_account_info/PubAccountInfo';
 import { accountsStore } from './storage/st_accounts';
 import Logo from './components/svgs/Logo.vue';
 import { appReady } from './appReady';
+import { signupStore } from './storage/st_signups';
+import type { SignUpInfo } from './models/SignUpInfo';
 
 const isMenuOpen = ref(false);
 function toggleMenu() {
@@ -162,6 +164,24 @@ function updateScreenWidth() {
   screenWidth.value = window.visualViewport?.width ?? window.innerWidth;
 }
 
+let signup = ref<SignUpInfo | null>(null);
+
+async function getSignedUp() {
+    let store = signupStore();
+    let signups = await store.get_signups(null);
+
+    signup.value = null;
+
+    if (signups != null) {
+
+        for (let signup_in of signups) {
+            if (signup_in.discord_id == user_id.value) {
+                signup.value = signup_in;
+            }
+        }
+    }
+}
+
 
 
 onMounted(async () => {
@@ -173,6 +193,7 @@ onMounted(async () => {
     await getMatchPlan();
     appReady.value = true;
 
+    await getSignedUp();
     await determineNews();
 
     // start news timer
@@ -195,11 +216,12 @@ onUnmounted(() => {
         <div class="d-flex news col-10">
             <span v-if="!isSmallScreen" class="me-2">The next <span class="bolder"> Season of PORC </span> starts in</span> 
             {{ newsText }}
-            <span class="ms-2 sep">|</span>
+            <span class="ms-2 sep" v-if="!signup || signup == null">|</span>
             <router-link
                 class="link ms-2"
                 :to="{ path: '/', hash: '#sign-up' }"
                 @click="closeMenu"
+                v-if="!signup || signup == null"
             >
                 Sign Up
             </router-link>

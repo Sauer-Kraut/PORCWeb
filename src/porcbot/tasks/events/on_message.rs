@@ -81,6 +81,17 @@ pub async fn on_message(me: &BotEventHandler, ctx: Context, msg: Message) {
                 let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
             }
         },
+        "signups" => {
+            if has_role_from_message(&ctx, &msg, "DEV").await {  //TODO: more modular role check
+
+                match crate::porcbot::tasks::commands::get_season_signups::get_season_signups(&me.appstate, msg.channel_id).await {
+                    Ok(_) => {},
+                    Err(err) => {let _ = msg.channel_id.say(get_http(), format!("Oh no! An error occurred while executing the command: {err}")).await;}
+                }
+            } else {
+                let _ = msg.channel_id.say(get_http(), format!("You do not have the permision to call this command")).await;
+            }
+        },
         _ => ()
     }
 }

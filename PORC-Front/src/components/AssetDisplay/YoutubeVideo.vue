@@ -6,12 +6,13 @@
         width?: number
         height?: number
         noplay?: boolean
+        maxres?: boolean
     }
 
     const props = defineProps<Props>()
     const isPlaying = ref(false)
 
-    const thumbnailUrl = `https://img.youtube.com/vi/${props.videoId}/maxresdefault.jpg`
+    const thumbnailUrl = props.maxres ? `https://img.youtube.com/vi/${props.videoId}/maxresdefault.jpg` : `https://img.youtube.com/vi/${props.videoId}/sddefault.jpg`
     const iframeUrl = `https://www.youtube-nocookie.com/embed/${props.videoId}?autoplay=1`
 
     function playVideo() {

@@ -4,3 +4,4 @@ pub mod get_season_blueprint;
 pub mod start_season_command;
 pub mod init_season_invites;
 pub mod distribute_roles;
+pub mod get_season_signups;
