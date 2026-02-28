@@ -45,6 +45,49 @@
         }
     }
 
+    const defaultDivisions = [
+        "meteorite",
+        "diamond",
+        "mithril",
+        "malachite",
+        "adamantium",
+        "platinum",
+        "gold",
+        "silver",
+        "bronze",
+        "steel",
+        "iron",
+        "stone"
+    ];
+
+    function groupDivisions(): DivisionModel[][] {
+        let groupedDivision = [];
+        
+        for (let divName of defaultDivisions) {
+            let group: DivisionModel[] = [];
+            for (let div of props.divisions) {
+                let s = divName;
+                let t = div.name;
+
+                s = s.replace(/\s+/g, "").toLowerCase();
+                t = t.replace(/\s+/g, "").toLowerCase();
+
+                if (t.includes(s)) {
+                    group.push(div);
+                }
+            }
+            group.sort((a, b) => a.order - b.order)
+            if (group.length > 0) {
+                groupedDivision.push(group);
+            }
+        }
+
+        groupedDivision.sort((a, b) => a[0].order - b[0].order)
+        return groupedDivision;
+    }
+
+    let groupedDivisions: DivisionModel[][] = [];
+
 
 
     // Reactive variable for dynamic height
@@ -64,6 +107,7 @@
 
     watch(() => props.divisions, (newValue) => {
         updatePrimaryColor(selectedDivision.value?.name?.toLowerCase() || 'meteorite');
+        groupedDivisions = groupDivisions();
     });
 
     onMounted(async () => {
@@ -92,6 +136,7 @@
     let _timerId: number | undefined;
     onMounted(() => {
         _timerId = window.setInterval(() => { now.value = new Date(); }, 1000);
+        groupedDivisions = groupDivisions();
     });
     onUnmounted(() => {
         if (_timerId !== undefined) window.clearInterval(_timerId);
@@ -157,11 +202,11 @@
                 <div class=""></div>
                     <DivisionSelector 
                         :hide_progress="hide_progress" 
-                        :divisions="divisions" 
+                        :subDivisions="groupedDivisions" 
                         :observer_id="observer_id" 
                         v-model:selectedDivision="selectedDivision" 
                         class="selector" :style="{ 'max-width': '100%', 'opacity': opacity}" 
-                        />
+                    />
             </div>
             <div class="col col-ms-12 division-container">
                 <DivisionComponent v-if="selectedDivision" 
