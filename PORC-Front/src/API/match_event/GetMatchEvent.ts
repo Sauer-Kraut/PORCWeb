@@ -2,12 +2,10 @@ import config from '@/config';
 import type { MatchEvent } from '@/models/match_event/MatchEvent';
 import { matchEventFromRecv, type MatchEventRecv } from '@/models/match_event/MatchEventRecv';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import { showErrorModal } from '@/services/ErrorModalService';
 
 export async function getMatchEvent(ids: number[]): Promise<MatchEvent[] | string> {
     //console.log('Trying to get Logged in status');
 
-    try {
         let url = `${config.getBackendUrl()}/api/match-event`;
         let constructed_url = appendURLQueryParam(url, "match_events", ids);
 
@@ -16,8 +14,7 @@ export async function getMatchEvent(ids: number[]): Promise<MatchEvent[] | strin
         if (!response.ok) {
             let error = await response.text();
             let status = response.status;
-            showErrorModal(`Error: "${error}" with response code ${status}`);
-            return String(error);
+            throw new Error(`Failed to fetch match events with Error: "${error}" with response code ${status}`);
         }
 
         else {
@@ -31,10 +28,4 @@ export async function getMatchEvent(ids: number[]): Promise<MatchEvent[] | strin
 
             return match_events;
         }
-    } 
-    catch (error) {
-        //console.log('Error occurred: ', error);
-        showErrorModal(String(error));
-        return String(error);
-    }
 }

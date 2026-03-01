@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import config from '@/config';
 import type { SignUpInfo } from '@/models/SignUpInfo';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
 import { matchplanStore } from '@/storage/st_matchplan';
 import { signupStore } from '@/storage/st_signups';
@@ -80,22 +79,14 @@ async function postSignUp() {
     };
 
     let res = await store.post_signup(data);
-    if (typeof res == 'string') {
-        showErrorModal(res);
-        return;
-    } else {
-        signup.value = data;
-    }
+    signup.value = data;
 }
 
 async function getUserId() {
     let accStore = accountsStore();
     let res = await accStore.get_login();
 
-    if (typeof res == 'string' || res == null) {
-        if (typeof res == 'string') {
-            showErrorModal(res);
-        }
+    if (res == null) {
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
@@ -126,13 +117,7 @@ async function getTerminationDate() {
     let store = matchplanStore();
 
     let res = await store.get_matchplan(null);
-
-    if (typeof res === 'string') {
-        showErrorModal(res);
-    }
-    else {
-        termDate.value = new Date(res.pause_end_timestamp * 1000);
-    }
+    termDate.value = new Date(res.pause_end_timestamp * 1000);
 }
 
 function formatDate(date: Date): string {

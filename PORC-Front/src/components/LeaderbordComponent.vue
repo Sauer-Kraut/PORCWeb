@@ -64,29 +64,31 @@ onMounted(async () => {
 
 <template>
     <div class="leaderboard-cont row justify-content-center d-flex">
-            <div class="leaderboard-row row justify-content-center d-flex column-title">
+            <div class="leaderboard-row head-row row justify-content-center d-flex column-title">
                 <div class="col-4 col-sm-3 column-description">Player</div>
                 <div class="col-2 col-sm-1"></div>
                 <div class="col-4 col-sm-3 column-description">Matches</div>
                 <div class="col-1 add-col"></div>
                 <div class="col-3 add-col column-description" title="This shows the average match score difference over all played sets.">Advantage</div>
             </div>
-        <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content"
-            @mouseover="selectPlayer(player)"
-            @mouseleave="unselectPlayer(player)"
-            @click="pin_player(player)"
-            :class="{'selected': highlightedPlayerId == player.player.id}"
-            >
-            <div class="col-4 col-sm-3 d-flex justify-content-center">
-                <div class="d-flex flex-column">
-                    <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
-                    <div class="score-sm">{{ player.wins }}-{{ player.matches - player.wins }}</div>
+        <div class="d-flex flex-column p-0 m-0" :style="{overflowY: 'scroll', maxHeight: '350px'}">
+            <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content"
+                @mouseover="selectPlayer(player)"
+                @mouseleave="unselectPlayer(player)"
+                @click="pin_player(player)"
+                :class="{'selected': highlightedPlayerId == player.player.id}"
+                >
+                <div class="col-4 col-sm-3 d-flex justify-content-center">
+                    <div class="d-flex flex-column">
+                        <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
+                        <div class="score-sm">{{ player.wins }}-{{ player.matches - player.wins }}</div>
+                    </div>
                 </div>
+                <div class="col-2 col-sm-1"></div>
+                <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
+                <div class="col-1 add-col"></div>
+                <div class="col-3 add-col" title="This shows the average match score difference over all played sets."> {{ avgAdvantage(player) }}</div>
             </div>
-            <div class="col-2 col-sm-1"></div>
-            <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
-            <div class="col-1 add-col"></div>
-            <div class="col-3 add-col" title="This shows the average match score difference over all played sets."> {{ avgAdvantage(player) }}</div>
         </div>
         <div class="ß-1"></div>
         <div></div>
@@ -144,7 +146,7 @@ onMounted(async () => {
         }
     }
 
-    &:first-child {
+    &.head-row {
         background-color: rgba(255, 255, 255, 0.0);
         height: 3.75rem !important;
     }
@@ -154,11 +156,11 @@ onMounted(async () => {
     //     height: 3.5rem !important;
     // }
 
-    &:not(:first-child) {
+    &:not(.head-row) {
         margin: 0 !important;
     }
 
-    &:hover:not(:first-child), &.selected {
+    &:hover:not(.head-row), &.selected {
         background-color: rgba(255, 255, 255, 0.05);
         cursor: pointer;
     }

@@ -22,10 +22,22 @@ const divisionName = computed(
     }
 )
 
+function stripAfterFirstSpace(input: string): string {
+    const idx = input.indexOf(" ");
+    return idx === -1 ? input : input.slice(0, idx);
+}
+
+function capitalizeFirst(input: string): string {
+    if (input.length === 0) return input;
+
+    return input[0].toUpperCase() + input.slice(1);
+}
+
 function findOverlapNoSpaces(a: string, b: string): string {
     // Remove all whitespace
-    const s1 = a.replace(/\s+/g, "");
-    const s2 = b.replace(/\s+/g, "");
+    
+    const s1 = stripAfterFirstSpace(a).replace(/\s+/g, "");
+    const s2 = stripAfterFirstSpace(b).replace(/\s+/g, "");
 
     let maxOverlap = "";
 
@@ -117,12 +129,12 @@ function toRomanUpToFive(num: number): string {
 </script>
 
 <template>
-    <div class="overflow-hidden transition" :style="{height: !active() ? '4rem' : `${subDivision.length > 1 ? (4 * 16 + subDivision.length * 27 +4) : (4 * 16)}px`}">
+    <div class="overflow-hidden transition flex-shrink-0" :style="{'height': !active() ? '65px !important' : `${subDivision.length > 1 ? (65 + subDivision.length * 27 +4) : (4 * 16)}px !important`}">
         <div class="list-group-item list-group-item-action body-div" :class="{ active: active(), [`division-${divisionName || 'iron'}`]: true }" @click="select">
             <div class="d-flex flex-column flex-md-row align-items-center">
                 <img :src="getDivisionImage(divisionName)" class="division-icon" />
                 <div class="division-info w-100 d-block d-md-flex">
-                    <h5 class="d-none d-md-flex m-0 ms-2">{{ filter_str(divisionName, 14) }}</h5>
+                    <h5 class="d-none d-md-flex m-0 ms-2">{{  capitalizeFirst(filter_str(divisionName, 14)) }}</h5>
                     <div class="progress m-0 mx-md-2" role="progressbar">
                         <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
                     </div>
@@ -130,13 +142,13 @@ function toRomanUpToFive(num: number): string {
             </div>
             
         </div>
-        <div v-if="active()" class="d-flex flex-row pe-2 pt-2">
-            <div class="d-flex flex-grow-1 indent-bar ms-5 mt-1 mb-1" :style="{maxWidth: '2px !important'}"></div>
+        <div class="d-flex flex-row pe-2 pt-2">
+            <div class="d-none d-sm-flex flex-grow-1 indent-bar ms-5 mt-1 mb-1" :style="{maxWidth: '2px !important'}"></div>
             <div class="d-flex flex-column flex-grow-1 gap-2">
                 <div v-for="[idx, division] of Object.entries(subDivision)" class="sub-division d-flex flex-row align-items-center ms-2" :style="{width: 'calc(100% - 0.75rem)'}" :class="{active: activeSub(division)}" @click="selectedDivision = division">
                     <h5 class="m-0 ms-2" :class="{[`division-${divisionName || 'iron'}-color`]: true}">{{ toRomanUpToFive(Number(idx) + 1) }}</h5>
-                    <div class="progress m-0 mx-md-2 mt-atuo mb-atuo me-5">
-                        <div class="progress-bar" :style="{ width: getProgress() + '%', backgroundColor: 'var(--primary)'}"></div>
+                    <div class="d-none d-sm-flex progress m-0 mx-md-2 mt-atuo mb-atuo me-5">
+                        <div class="progress-bar" :style="{ width: getSubProgress(division) + '%', backgroundColor: `var(--${divisionName})`}"></div>
                     </div>
                 </div>
             </div>
@@ -317,6 +329,8 @@ $background-color: $darker-bg;
 }
 
 .sub-division {
+    cursor: pointer;
+
     * {
         font-size: 0.97rem;
         font-weight: 600;
@@ -340,6 +354,6 @@ $background-color: $darker-bg;
 }
 
 .transition {
-    transition: all 0.1s ease-in-out;
+    transition: height 0.3s ease-in-out !important;
 }
 </style>

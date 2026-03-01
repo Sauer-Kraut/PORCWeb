@@ -18,15 +18,13 @@ export const matchplanStore = defineStore('matchplan', {
     actions: {
 
         // gets matchplan of any season, returns current season if no season name is provided
-        async get_matchplan(season: string | null) {
+        async get_matchplan(season: string | null): Promise<Matchplan> {
             let res = await this.fetch_season(season);
 
-            if (typeof res === 'string') {
-                return res; // return error message
-            } else if (res[0] != null && typeof res[0] !== 'boolean') {
+            if (res[0] != null && typeof res[0] !== 'boolean') {
                 return res[0]; // return matchplan
             } else {
-                return "this error should not happen, matchplan is null even though it was fetched before"; // return error message
+                throw new Error("this error should not happen, matchplan is null even though it was fetched before"); // return error message
             }
         },
 
@@ -52,7 +50,7 @@ export const matchplanStore = defineStore('matchplan', {
 
         // fetches season with provided name or default current season
         // also sets current season name if current season is fetched
-        async fetch_season(season: string | null) {
+        async fetch_season(season: string | null): Promise<[boolean | Matchplan | null, Season | null, boolean | DivisionRanking[] | null]> {
             // console.log(this.matchplans);
 
             let res = this.matchplans.get(season || '0');
@@ -70,33 +68,37 @@ export const matchplanStore = defineStore('matchplan', {
 
                     let entry_ref = this.matchplans.get(season || '0') || [true, null, null];
 
-                    let plan = await getMatchplan(season);
-
-                    if (typeof plan != 'string') {
+                    try {
+                        let plan = await getMatchplan(season);
 
                         let named_entry = [plan, res?.[1] || null,  res?.[2] || null] as [Matchplan | null | boolean, Season | null, DivisionRanking[] | null | boolean]; // gives reference to the entry in the map
                         this.matchplans.set(season || '0', named_entry); // update matchplan in map
                         
                         return named_entry; // return matchplan
                     } 
-                    else {
+                    catch (err) {
                         entry_ref[0] = null; // reset fetch status
-                        return plan; // return error message
+                        if (err instanceof Error) {
+                            throw new Error(err.message)
+                        } else {
+                            console.warn("throwing unspecified error");
+                            throw new Error
+                        }
                     }
                 } 
                 else if (res[0] == null) {
-                    return "no matchplan found for season " + (season || '0') + " even though it was fetched before";
+                    throw new Error("no matchplan found for season " + (season || '0') + " even though it was fetched before");
                 }
                 else {
                     return res;
                 }
             } 
             else {
-                return "currently fetching matchplan, try again later" // should be imposible since the wait right before
+                throw new Error("currently fetching matchplan, try again later") // should be imposible since the wait right before
             }
         },
 
-        async fetch_ranking(season: string | null) {
+        async fetch_ranking(season: string | null): Promise<DivisionRanking[]> {
 
             console.log("fetching ranking for season " + (season || '0'));
 
@@ -119,20 +121,27 @@ export const matchplanStore = defineStore('matchplan', {
                 }
                 
                 res[2] = true; // set fetch status to true
-                let ranking = await getRanking(season);
-                res[2] = false; // reset fetch status
 
-                if (typeof ranking != 'string') {
+                try {
+                    let ranking = await getRanking(season);
                     res[2] = ranking; // set ranking in the map entry
+                    return ranking;
                 }
-
-                return ranking; // return ranking
+                catch (err) {
+                    res[2] = false; // reset fetch status
+                    if (err instanceof Error) {
+                        throw new Error(err.message)
+                    } else {
+                        console.warn("throwing unspecified error");
+                        throw new Error
+                    }
+                }
             } 
             else if (res && typeof res[2] != 'boolean' && res[2]) {
                 return res[2]; // return ranking if already fetched
             } 
             else {
-                return "season not found, probably not fetched yet"; // return error message
+                throw new Error("season not found, probably not fetched yet"); // return error message
             }
         },
 
@@ -157,9 +166,6 @@ export const matchplanStore = defineStore('matchplan', {
 
         async storeMatch(match: MatchModel) {
             let res = await postMatch(match);
-            if (typeof res === 'string') {
-                return res; // return error message
-            }
 
             let season = '0'; // current season is assigned to 0
 

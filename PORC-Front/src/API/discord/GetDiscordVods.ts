@@ -1,17 +1,10 @@
 import config from '@/config';
-import type { MatchEvent } from '@/models/match_event/MatchEvent';
-import { matchEventFromRecv, type MatchEventRecv } from '@/models/match_event/MatchEventRecv';
-import { appendURLQueryParam } from '../AppendURLQueryParam';
-import { showErrorModal } from '@/services/ErrorModalService';
-import type { DiscordEvent } from '@/models/discord/DiscordEvent';
-import { discordEventFromRecv, type DiscordEventRecv } from '@/models/discord/DiscordEventRecv';
 import type { VideoReference } from '@/models/discord/VideoReference';
 import { videoReferenceFromRecv, type VideoReferenceRecv } from '@/models/discord/VideoReferenceRecv';
 
-export async function getDiscordVods(): Promise<VideoReference[] | string> {
+export async function getDiscordVods(): Promise<VideoReference[]> {
     //console.log('Trying to get Logged in status');
 
-    try {
         let url = `${config.getBackendUrl()}/api/discord/vods`;
         let constructed_url = url;
 
@@ -20,8 +13,7 @@ export async function getDiscordVods(): Promise<VideoReference[] | string> {
         if (!response.ok) {
             let error = await response.text();
             let status = response.status;
-            showErrorModal(`Error: "${error}" with response code ${status}`);
-            return String(error);
+            throw new Error(`Failed to fetch discord vods with Error: "${error}" with response code ${status}`);
         }
 
         else {
@@ -35,10 +27,4 @@ export async function getDiscordVods(): Promise<VideoReference[] | string> {
 
             return vods;
         }
-    } 
-    catch (error) {
-        //console.log('Error occurred: ', error);
-        showErrorModal(String(error));
-        return String(error);
-    }
 }

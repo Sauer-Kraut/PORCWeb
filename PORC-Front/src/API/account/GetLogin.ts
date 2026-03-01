@@ -1,11 +1,10 @@
 import config from '@/config';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { getClientId } from '../GetClientId';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
 import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/models/pub_account_info/PubAccountInfoRecv';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 
-export async function getLogin(): Promise<PubAccountInfo | string | null> {
+export async function getLogin(): Promise<PubAccountInfo | null> {
     //console.log('Trying to get Logged in status');
 
     const clinet_id = getClientId();
@@ -14,7 +13,6 @@ export async function getLogin(): Promise<PubAccountInfo | string | null> {
         return clinet_id;
     }
 
-    try {
         let url = `${config.getBackendUrl()}/api/account/login`;
         let constructed_url = appendURLQueryParam(url, "auth_key", clinet_id);
 
@@ -23,8 +21,7 @@ export async function getLogin(): Promise<PubAccountInfo | string | null> {
         if (!response.ok) {
             let error = await response.text();
             let status = response.status;
-            showErrorModal(`Error: "${error}" with response code ${status}`);
-            return String(error);
+            throw new Error(`Failed to fetch login with Error: "${error}" with response code ${status}`);
         }
 
         else {
@@ -33,10 +30,4 @@ export async function getLogin(): Promise<PubAccountInfo | string | null> {
             const account = PubAccountInfoFromRecv(account_recv, new Map());
             return account;
         }
-    } 
-    catch (error) {
-        //console.log('Error occurred: ', error);
-        showErrorModal(String(error));
-        return String(error);
-    }
 }

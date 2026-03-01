@@ -1,11 +1,9 @@
 import config from '@/config';
-import { showErrorModal } from '@/services/ErrorModalService';
 import type { SignUpInfo } from '@/models/SignUpInfo';
 
-export async function postSignup(signup: SignUpInfo): Promise<null | string> {
+export async function postSignup(signup: SignUpInfo) {
     //console.log('Trying to get Logged in status');
 
-    try {
         let url = `${config.getBackendUrl()}/api/sign-up`;
         const requestData = JSON.stringify({
             signup: signup
@@ -22,16 +20,7 @@ export async function postSignup(signup: SignUpInfo): Promise<null | string> {
         if (!response.ok) {
             let error = await response.text();
             let status = response.status;
-            showErrorModal(`Error: "${error}" with response code ${status}`);
-            return String(error);
-        } 
-        else {
-            return null;
+            throw new Error(`Failed to post signups with Error: "${error}" with response code ${status}`);
         }
-    } 
-    catch (error) {
-        //console.log('Error occurred: ', error);
-        showErrorModal(String(error));
-        return String(error);
-    }
+    
 }

@@ -2,7 +2,6 @@
     import { ref, computed, reactive, toRaw, markRaw, onMounted } from "vue"
     import type { PlanBlueprint } from "@/models/matchplan_blueprint/MatchplanBlueprintModel.ts"
     import type { PlayerBlueprint } from "@/models/matchplan_blueprint/PlayerBlueprintModel.ts";
-    import { showErrorModal } from "@/services/ErrorModalService";
     import type { DivisionModel } from "@/models/matchplan/DivisionModel";
     import type { DivisionBlueprint } from "@/models/matchplan_blueprint/DivisionBlueprintModel.ts";
     import DatePicker from '@vuepic/vue-datepicker';
@@ -17,6 +16,7 @@
     import { signupStore } from "@/storage/st_signups";
     import { matchplanStore } from "@/storage/st_matchplan";
 import type { SignUpInfo } from "@/models/SignUpInfo";
+import { showErrorModal } from "@/services/ErrorModalService";
 
     const totalPlayers = computed(() => {
         const fromDivs = Blueprint.value.divisions.reduce((acc, d) => acc + (d.players?.length ?? 0), 0);
@@ -245,7 +245,7 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
         age: number; // number of seasons since last signup
     }
 
-    const matchplanCache = ref<(string | Matchplan)[]>([])
+    const matchplanCache = ref<Matchplan[]>([])
     const accountInfos = ref<Record<string, PubAccountInfo>>({} as Record<string, PubAccountInfo>)
     const signupInfos = ref<Record<string, SignUpInfo>>({} as Record<string, SignUpInfo>)
 
@@ -255,40 +255,48 @@ import type { SignUpInfo } from "@/models/SignUpInfo";
 
         let matchplanlist = [];
         for (const [idx, season] of seasons.entries()) {
-            let matchplan = await PlanStorage.get_matchplan(season.name);
-            matchplanlist.push(matchplan);
+            try {
+                let matchplan = await PlanStorage.get_matchplan(season.name);
+                matchplanlist.push(matchplan);
+            }
+            catch (err) {
+                if (err instanceof Error) {
+                    showErrorModal(err.message)
+                } 
+                continue;
+            }
         }
         
         matchplanCache.value = matchplanlist;
 
         let players: string[] = [];
         for (let plan of matchplanlist) {
-            if (typeof plan != "string") {
-                for (let div of plan.divisions) {
-                    for (let player of div.players) {
-                        if (!players.find(p => player.id == p)) {
-                            players.push(player.id);
-                        }
+            for (let div of plan.divisions) {
+                for (let player of div.players) {
+                    if (!players.find(p => player.id == p)) {
+                        players.push(player.id);
                     }
                 }
             }
         }
 
-        let playerInfosfut = accountStorage.get_competitors_min(players);
-        let signupsfut = signupStorage.get_signups(null);
-        let [playerInfos, signups] = await Promise.all([playerInfosfut, signupsfut]);
-        if (typeof playerInfos != "string") {
+        try {
+            let playerInfosfut = accountStorage.get_competitors_min(players);
+            let signupsfut = signupStorage.get_signups(null);
+            let [playerInfos, signups] = await Promise.all([playerInfosfut, signupsfut]);
             accountInfos.value = Object.fromEntries(playerInfos.map(p => [p.id, p]));
+            signupInfos.value = Object.fromEntries((signups ?? []).map(s => [s.discord_id, s]));
         }
-        signupInfos.value = Object.fromEntries((signups ?? []).map(s => [s.discord_id, s]));
+        catch (err) {
+            signupInfos.value = Object.fromEntries([]);
+        }
     }
 
 
     function DetermineMovement(player: PlayerBlueprint, planBlueprint: PlanBlueprint, division?: DivisionBlueprint | null): RankingMovement {
         for (const [idx, matchplan] of matchplanCache.value.entries()) {
 
-            if (typeof matchplan === "string" || matchplan === null) {
-                showErrorModal("An Error occured while retrieving the matchplan: " + matchplan);
+            if (matchplan === null) {
                 continue;
             }
             else {

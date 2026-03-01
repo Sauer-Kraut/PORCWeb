@@ -11,7 +11,6 @@ import type { PlayerModel } from '@/models/matchplan/PlayerModel';
 import type { Season } from '@/models/matchplan/Season';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { Schedule } from '@/models/schedule/Schedule';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { accountsStore } from '@/storage/st_accounts';
 import { matchplanStore } from '@/storage/st_matchplan';
 import { signupStore } from '@/storage/st_signups';
@@ -34,15 +33,10 @@ const user_id = ref('default');
 
 async function getUserId() {
     let accStore = accountsStore();
-    let res = await accStore.get_login();
-
-    if (typeof res == 'string') {
-        showErrorModal(res);
-        isLoggedIn.value = false;
-    } else {
-        isLoggedIn.value = (res != null && typeof res != 'undefined');
-        user_id.value = res?.id || 'default';
-    }
+    let res = await accStore.get_id();
+    
+    isLoggedIn.value = (res != null && typeof res != 'undefined');
+    user_id.value = res ?? 'default';
 }
 
 const division = ref<DivisionModel>();
@@ -53,40 +47,35 @@ async function getMatchPlan() {
     let planStore = matchplanStore();
     let plan = await planStore.get_matchplan(null);
 
-    if (typeof plan == 'string') {
-        showErrorModal(plan);
-        return;
-    } else {
-        division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+    division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
 
-        if (typeof division.value === 'undefined') {
-            await getPubPlayerInfos([user_id.value]);
-            division.value = {
-                name: 'unrakned',
-                order: 0,
-                players: playerinfos.value.map((p) => ({
-                    id: p.id,
-                    username: p.username,
+    if (typeof division.value === 'undefined') {
+        await getPubPlayerInfos([user_id.value]);
+        division.value = {
+            name: 'unrakned',
+            order: 0,
+            players: playerinfos.value.map((p) => ({
+                id: p.id,
+                username: p.username,
                     avatar: p.avatar,
-                    schedule: p.schedule,
-                    tag: '',
-                    division: '',
-                })),
-                matches: {},
-            };
-            season.value = null;
-        } 
-        else {
-            // await planStore.fetch_all_seasons();
-            // Extract seasons from the store's matchplans map
-            const seasonList: Season[] = [];
-            for (const [key, value] of planStore.matchplans) {
-                if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
-                    seasonList.push(value[1] as Season);
-                }
+                schedule: p.schedule,
+                tag: '',
+                division: '',
+            })),
+            matches: {},
+        };
+        season.value = null;
+    } 
+    else {
+        // await planStore.fetch_all_seasons();
+        // Extract seasons from the store's matchplans map
+        const seasonList: Season[] = [];
+        for (const [key, value] of planStore.matchplans) {
+            if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
+                seasonList.push(value[1] as Season);
             }
-            season.value = seasonList.find((s: Season) => s.name === String(plan.season)) ?? null;
         }
+        season.value = seasonList.find((s: Season) => s.name === String(plan.season)) ?? null;
     }
 
     check_season_running();
@@ -128,20 +117,17 @@ async function getPubPlayerInfos(ids: string[]) {
     console.log(getPlayerIds());
     console.log('Filtered IDs:', filteredIds);
 
-    console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
+    // console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
 
     let compStore = accountsStore();
     let res = await compStore.get_competitors_full(filteredIds);
 
-    console.log("evaluating result of get_competitors_full: ", res);
+    // console.log("evaluating result of get_competitors_full: ", res);
 
-    if (typeof res == 'string') {
-        showErrorModal(res);
-    } else {
-        playerinfos.value = res;
-    }
+    
+    playerinfos.value = res;
 
-    console.log('Got PubPlayerInfos: ', playerinfos.value);
+    // console.log('Got PubPlayerInfos: ', playerinfos.value);
 }
 
 async function reload() {
@@ -186,11 +172,13 @@ function check_season_running() {
 
 onMounted(async () => {
     await waitForAppReady();
+    
     await getUserId();
     await getMatchPlan();
 
     opponents.value = find_opponents();
     await getPubPlayerInfos(getPlayerIds());
+    
     selectSelf();
     updatePrimaryColor(division.value?.name?.toLowerCase() || 'meteorite');
     check_season_running();
@@ -217,10 +205,6 @@ async function submitNote() {
 
     if (selectedPlayer.value?.schedule != null && (selectedPlayer.value?.id ?? user_id.value) === user_id.value) {
         let res = await compStore.self_update_schedule_note(schedule.value.note);
-
-        if (res != null) {
-            showErrorModal(res);
-        }
     }
 }
 </script>

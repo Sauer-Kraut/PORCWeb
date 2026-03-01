@@ -3,7 +3,7 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::liberary::dialogue_lib::bot_error::BotError;
+use crate::liberary::{dialogue_lib::bot_error::BotError, util::functions::build_query::QueryBuildError};
 
 
 
@@ -25,6 +25,9 @@ pub enum ServerError {
     #[error("Discord bot error: {0}")]
     BotError(#[from] BotError),
 
+    #[error("Query building error: {0}")]
+    QueryBuildError(#[from] QueryBuildError),
+
     #[error("error: {0}")]
     Other(String)
 }
@@ -40,6 +43,7 @@ impl ResponseError for ServerError {
             ServerError::BadInput(error) => HttpResponse::BadRequest().body(error.to_string()),
             ServerError::Unauthorized => HttpResponse::Unauthorized().finish(),
             ServerError::BotError(error) => HttpResponse::InternalServerError().body(error.to_string()),
+            ServerError::QueryBuildError(error) => HttpResponse::InternalServerError().body(error.to_string()),
             ServerError::Other(error) => HttpResponse::InternalServerError().body(error.to_string()),
         }
     }
@@ -64,6 +68,13 @@ impl From<String> for ServerError
 {
     fn from(value: String) -> Self {
         Self::Other(value.into())
+    }
+}
+
+impl From<&str> for ServerError
+{
+    fn from(value: &str) -> Self {
+        Self::Other(value.to_string().into())
     }
 }
 

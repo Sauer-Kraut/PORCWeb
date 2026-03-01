@@ -129,7 +129,7 @@ import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
                 <div class="thumbnail-wrapper" :style="{ width: `${videoWidth}px`, height: `${videoHeight}px` }">
                     <YoutubeVideo :videoId="video.youtube_id" :width="videoWidth" :height="videoHeight" noplay style="opacity: 0.9;"></YoutubeVideo>
                     <div class="overlay">
-                        <span class="play-icon">▶</span>
+                        <span class="play-icon triangle"></span>
                     </div>
                     <div class="shader"></div>
                     <!-- <span class="duration" v-if="video.duration">{{ video.duration }}</span> -->
@@ -250,6 +250,15 @@ import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
                     color: white;
                     transform: scale(0.8);
                     transition: $transition;
+                }
+
+                .triangle {
+                    width: 0;
+                    height: 0;
+                    border-left: 20px solid white;
+                    border-top: 12px solid transparent;
+                    border-bottom: 12px solid transparent;
+                    margin-left: 2px;
                 }
             }
 

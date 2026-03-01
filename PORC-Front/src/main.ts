@@ -12,6 +12,7 @@ import './assets/scss/styles.scss';
 import './assets/scss/pages.scss';
 import './assets/scss/global.scss';
 import { createPinia } from 'pinia';
+import { showErrorModal } from './services/ErrorModalService';
 
 const app = createApp(App);
 
@@ -39,5 +40,13 @@ app.use(FloatingVue, {
 });
 app.use(router);
 app.use(createVfm());
+app.config.errorHandler = (err, instance, info) => {
+    if (err instanceof Error) {
+        showErrorModal("An Error occured:\n" + err.message + " | " + info);
+    } else {
+        showErrorModal("Ran into unspecified Error at " + info)
+    }
+
+}
 app.mount('#app');
 

@@ -1,15 +1,13 @@
 import config from '@/config';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
 import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/models/pub_account_info/PubAccountInfoRecv';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { MatchEventRecv } from '@/models/match_event/MatchEventRecv';
 
 // Retrieves accounts without schedule, is faster than full fetch in return
-export async function getAccountSimple(ids: string[]): Promise<PubAccountInfo[] | string> {
+export async function getAccountSimple(ids: string[]): Promise<PubAccountInfo[]> {
     //console.log('Trying to get Logged in status');
 
-    try {
         let url = `${config.getBackendUrl()}/api/account/simple`;
         let constructed_url = appendURLQueryParam(url, "ids", ids);
 
@@ -18,8 +16,7 @@ export async function getAccountSimple(ids: string[]): Promise<PubAccountInfo[] 
         if (!response.ok) {
             let error = await response.text();
             let status = response.status;
-            showErrorModal(`Error: "${error}" with response code ${status}`);
-            return String(error);
+            throw new Error(`Failed to fetch account (min) with Error: "${error}" with response code ${status}`);
         }
 
         else {
@@ -33,10 +30,4 @@ export async function getAccountSimple(ids: string[]): Promise<PubAccountInfo[] 
             
             return accounts;
         }
-    } 
-    catch (error) {
-        //console.log('Error occurred: ', error);
-        showErrorModal(String(error));
-        return String(error);
-    }
 }

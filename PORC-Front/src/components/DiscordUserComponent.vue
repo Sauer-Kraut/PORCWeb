@@ -16,10 +16,7 @@ async function getUserId() {
     let accStore = accountsStore();
     let res = await accStore.get_login();
 
-    if (typeof res == 'string' || res == null) {
-        if (typeof res == 'string') {
-            showErrorModal(res);
-        }
+    if (res == null) {
         isLoggedIn.value = false;
     } else {
         isLoggedIn.value = true;
@@ -29,8 +26,8 @@ async function getUserId() {
     }
 }
 
-onMounted(() => {
-    getUserId();
+onMounted(async () => {
+    await getUserId();
 });
 </script>
 

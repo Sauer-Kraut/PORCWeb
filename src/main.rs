@@ -2,6 +2,8 @@ mod backend;
 mod porcbot;
 pub mod liberary;
 
+use actix_web::dev::Server;
+use askama::filters::format;
 use backend::backend_api::account::get_account_info::get_account_info_request;
 use backend::backend_api::account::get_account_info_full::get_account_info_full_request;
 use backend::backend_api::account::get_login::get_login_request;
@@ -32,6 +34,7 @@ use liberary::matchplan_lib::season::storage::get_season::get_season;
 use porcbot::config::{BOT_TOKEN, INTENTS};
 use porcbot::tasks::events::bot_event_handler::BotEventHandler;
 use porcbot::tasks::functions::check_dialogues::check_dialogues;
+use serde::{Deserialize, Serialize};
 use serenity::Client;
 use sqlx::*;
 use tokio;
@@ -45,18 +48,40 @@ use crate::backend::backend_api::discord::get_discord_events::get_discord_events
 use crate::backend::backend_api::discord::get_discord_vods::get_discord_vods_reqeust;
 use crate::liberary::discord_lib::discord_event::discord_event::DiscordEvent;
 use crate::liberary::discord_lib::video_reference::video_reference::VideoReference;
-use crate::porcbot::tasks::functions::{collect_discord_vods, fetch_discord_events};
-use crate::fetch_discord_events::fetch_discord_events;
+use crate::liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
+use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
+use crate::liberary::util::functions::build_index::build_index;
+use crate::porcbot::tasks::functions::collect_discord_vods::collect_discord_vods;
+use crate::porcbot::tasks::functions::fetch_discord_events::fetch_discord_events;
 
 
 
-
+#[derive(Serialize, Deserialize, Debug)]
+struct InitialData {
+    matchplan: MatchPlan,
+    season: Season,
+    vods: Vec<VideoReference>,
+    events: Vec<DiscordEvent>
+}
 
 
 // retruns the html site we want to serve
-async fn index() -> impl Responder {
+async fn index(appstate: web::Data<AppState>) -> Result<impl Responder, ServerError> {
     println!("\nYay, we got a request!");
-    HttpResponse::Ok().body(fs::read_to_string("PORC-Front/dist/index.html").await.unwrap())
+
+    let data = InitialData {
+        matchplan: appstate.get_matchplan().await?,
+        season: appstate.get_season().await?,
+        vods: appstate.discord_vods.read().await.clone(),
+        events: appstate.discord_events.read().await.clone(),
+    };
+
+    let argument_key = "{INITIALDATAPLACEHOLDER}";
+    let json_contents = serde_json::to_string(&data).map_err(|e| e.to_string())?;
+
+    let index = build_index(json_contents, fs::read_to_string("PORC-Front/dist/index.html").await.unwrap(), argument_key)?;
+    println!("{}", index);
+    Ok(HttpResponse::Ok().body(index))
 }
 
 
@@ -188,6 +213,7 @@ async fn main() -> std::io::Result<()> {
         // dialogues,
         discord_events: Arc::new(RwLock::new(vec!())),
         discord_vods: Arc::new(RwLock::new(vec!())),
+        matchplan: Arc::new(RwLock::new(None)),
         season: season.clone(),
         config: config.clone(),
         pool
@@ -201,7 +227,7 @@ async fn main() -> std::io::Result<()> {
         let appstate_clone_2 = appstate_clone.clone();
 
         let _dialogue_task = tokio::task::spawn(async move {
-            println!("\n{}", "Bot dialogue check loop has launched");
+            println!("\n{}", "Bot dialogue check loop has has launched".bright_green());
             loop {
                 // println!("checking active dialogues");
                 match check_dialogues(&appstate_clone).await {
@@ -236,7 +262,7 @@ async fn main() -> std::io::Result<()> {
     tokio::spawn(async move {
         let appstate_clone = appstate_clone_2.clone();
         let _event_task = tokio::task::spawn(async move {
-            println!("\n{}", "Discord event fetch loop has launched");
+            println!("\n{}", "Discord event fetch loop has has launched".bright_green());
             loop {
                 match fetch_discord_events(&appstate_clone).await {
                     Ok(events) => {
@@ -251,9 +277,9 @@ async fn main() -> std::io::Result<()> {
 
         let appstate_clone = appstate_clone_2;
         let _vod_task = tokio::task::spawn(async move {
-            println!("\n{}", "Discord vod fetch loop has launched");
+            println!("\n{}", "Discord vod fetch loop has has launched".bright_green());
             loop {
-                match collect_discord_vods(&appstate_clone, 24).await {
+                match collect_discord_vods(&appstate_clone, 50).await {
                     Ok(vods) => {
                         let mut vods_lock = appstate_clone.discord_vods.write().await;
                         *vods_lock = vods;
@@ -265,13 +291,26 @@ async fn main() -> std::io::Result<()> {
         });
     });
 
+    let appstate_clone_3 = appstate.clone();
+
+    // loop to regularly refresh matchplan
+    tokio::spawn(async move {
+        let _event_task = tokio::task::spawn(async move {
+            println!("\n{}", "matchplan refresh loop has has launched".bright_green());
+            loop {
+                match appstate_clone_3.refresh_matchplan().await {
+                    Ok(_) => {},
+                    Err(err) => println!("{}", format!("An error has occured while refreshing matchplan: {err}").red()),
+                }
+                sleep(Duration::from_secs(120)).await; // waits 5 minutes between each loop
+            }
+        });
+    });
+
     println!("\n{}", "Server has launched".bright_white());
 
     let port_clone = port.clone();
     let url = config.read().await.url.clone();
-
-    use crate::collect_discord_vods::collect_discord_vods;
-    collect_discord_vods(&appstate, 10).await.unwrap();
 
     HttpServer::new(move || {
         App::new()
@@ -362,6 +401,7 @@ async fn main() -> std::io::Result<()> {
     })
     // .bind(&format!("{}{}", "[::]:", port))? // Production port: 8081, devolpment sever port: 8082, local port:8082
     .bind(&format!("{}{}", "0.0.0.0:", port))?  // surely this wont fuck clients who want to bind with ipv6
+    .bind(&format!("{}{}", "[::]:", port))?
     .run()
     .await
 }
@@ -377,6 +417,7 @@ pub struct AppState {
     // dialogues: Arc<Mutex<Vec<DialogueBuilder>>>,
     discord_events: Arc<RwLock<Vec<DiscordEvent>>>,
     discord_vods: Arc<RwLock<Vec<VideoReference>>>,
+    matchplan: Arc<RwLock<Option<MatchPlan>>>,    // needs to be refreshed every time its updated
     season: Arc<RwLock<Option<Season>>>,
     config: Arc<RwLock<Config>>,
     pool: Pool<Postgres>
@@ -390,6 +431,43 @@ impl AppState {
             Some(s) => return Ok(s.clone()),
             None => return Err(ServerError::Other("current season could not be found".into())),
         }
+    }
+
+    pub async fn get_matchplan(&self) -> Result<MatchPlan, ServerError> {
+
+        match self.matchplan.read().await.as_ref() {
+            Some(plan) => {
+                Ok(plan.clone())
+            },
+
+            None => {
+                let season = self.get_season().await?;
+                let plan = get_matchplan(season.name, self.pool.clone()).await?;
+
+                let mut plan_lock = self.matchplan.write().await;
+                *plan_lock = Some(plan.clone());
+
+                Ok(plan)
+            }
+        }
+    }
+
+    pub async fn refresh_matchplan(&self) -> Result<(), ServerError> {
+        let mut plan = self.matchplan.write().await;
+        *plan = None;
+
+        match self.get_season().await {
+            Ok(s) => {
+                match get_matchplan(s.name, self.pool.clone()).await {
+                    Ok(m) => {
+                        *plan = Some(m);
+                    },
+                    _ => ()
+                }
+            }
+            _ => ()
+        }
+        Ok(())      
     }
 }
 

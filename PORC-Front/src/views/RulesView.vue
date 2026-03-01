@@ -164,7 +164,7 @@
                     <ol class="rules">
                         <li>The players are allowed to decide which map they want to play on (custom maps are also allowed).</li>
                         <li>They may also choose to go to a random map together.</li>
-                        <li>If both players cannot agree, Pit is chosen as the default map.</li>
+                        <li>If both players cannot agree, Ring is chosen as the default map.</li>
                         <li>After each match, <span class="text-highlight">if any client rounds were won, the host may decide to switch to another map</span>.</li>
                     </ol>
 

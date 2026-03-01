@@ -14,7 +14,6 @@ import type { VideoReference } from '@/models/discord/VideoReference';
     import type { DivisionModel } from '@/models/matchplan/DivisionModel';
     import type { Season } from '@/models/matchplan/Season';
     import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
-    import { showErrorModal } from '@/services/ErrorModalService';
     import { accountsStore } from '@/storage/st_accounts';
 import { discordInfoStore } from '@/storage/st_discord';
     import { matchplanStore } from '@/storage/st_matchplan';
@@ -147,12 +146,8 @@ import { discordInfoStore } from '@/storage/st_discord';
         });
 
 
-        const current_season_res = await planStore.get_matchplan(null);
-        if (typeof current_season_res == 'string') {
-            showErrorModal(current_season_res);
-            TimerText.value = `Time until next season of PORC unknown`;
-            globalTimer = 0;
-        } else {
+        try {
+            const current_season_res = await planStore.get_matchplan(null);
             current_season.value = seasons.value.find((s: Season) => s.name == (current_season_res.season ?? "")) ?? null;
 
             if (current_season.value != null) {
@@ -171,9 +166,19 @@ import { discordInfoStore } from '@/storage/st_discord';
                     TimerText.value = `Time remaining for season ${current_season.value.name} of PORC`;
                 }
             } else {
-                showErrorModal("Couldnt find info for the current season");
                 TimerText.value = `Time until next season of PORC unknown`;
                 globalTimer = 0;
+                throw new Error("Couldnt find info for the current season");
+            }
+        } 
+        catch (err) {
+            TimerText.value = `Time until next season of PORC unknown`;
+            globalTimer = 0;
+            if (err instanceof Error) {
+                throw new Error(err.message)
+            } else {
+                console.warn("throwing unspecified error");
+                throw new Error
             }
         }
 
@@ -218,36 +223,23 @@ import { discordInfoStore } from '@/storage/st_discord';
     async function getMatchPlan() {
         let plan = await planStore.get_matchplan(selectedSeason.value?.name ?? null);
 
-        if (typeof plan == 'string') {
-            showErrorModal(plan);
-            return;
-        } else {
-            divisions.value = plan.divisions;
-            const now = Math.floor(Date.now() / 1000);
-            const seasonEnd = plan.end_timestamp;
-            const seasonPause = plan.pause_end_timestamp;
-            selectedDivision.value = divisions.value.find((division) => division.players.some((p) => p.id == user.value)) ?? divisions.value[0];
+        divisions.value = plan.divisions;
+        const now = Math.floor(Date.now() / 1000);
+        const seasonEnd = plan.end_timestamp;
+        const seasonPause = plan.pause_end_timestamp;
+        selectedDivision.value = divisions.value.find((division) => division.players.some((p) => p.id == user.value)) ?? divisions.value[0];
 
-            // Sort divisions by order
-            divisions.value.sort((a, b) => a.order - b.order);
+        // Sort divisions by order
+        divisions.value.sort((a, b) => a.order - b.order);
 
-            console.log('got matchplan: ', plan);
-        }
+        console.log('got matchplan: ', plan);
     }
 
     async function getUserId() {
         let accStore = accountsStore();
-        let res = await accStore.get_login();
-
-        if (typeof res == 'string') {
-            showErrorModal(res);
-        } else {
-            if (res && res.id) {
-                user.value = res.id;
-            } else if (typeof res == 'string') {
-                showErrorModal(res);
-            }
-
+        let res = await accStore.get_id();
+        if (res != null) {
+            user.value = res;
         }
     }
 
@@ -348,12 +340,7 @@ import { discordInfoStore } from '@/storage/st_discord';
     async function getEvents() {
         
         let res = await ds_storage.get_events();
-
-        if (typeof res == 'string') {
-            showErrorModal(res);
-        } else {
-            discordEvents.value = res;
-        }
+        discordEvents.value = res;
     }
 
     let discordVods = ref([] as VideoReference[]);
@@ -362,12 +349,7 @@ import { discordInfoStore } from '@/storage/st_discord';
     async function getVods() {
         
         let res = await ds_storage.get_vods();
-
-        if (typeof res == 'string') {
-            showErrorModal(res);
-        } else {
-            discordVods.value = res;
-        }
+        discordVods.value = res;
     }
 
     watch(
@@ -410,13 +392,15 @@ import { discordInfoStore } from '@/storage/st_discord';
         setActiveFactor();
         getScreenSize();
         animate();
-        await waitForAppReady();
+        await waitForAppReady(),
         await getUserId();
-        await loadSeasons();
-        await checkScheduleConfiguration();
-        await getSignedUp();
-        await getVods();
-        await getEvents();
+        await Promise.all([ 
+            loadSeasons(),
+            checkScheduleConfiguration(),
+            getSignedUp(),
+            getVods(),
+            getEvents()
+        ]);
         getSelectorHeight();
 
     });

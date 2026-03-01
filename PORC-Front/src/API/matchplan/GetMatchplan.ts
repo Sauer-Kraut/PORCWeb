@@ -1,12 +1,10 @@
 import config from '@/config';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
 import type { Matchplan } from '@/models/matchplan/Matchplan';
 
-export async function getMatchplan(season: string | null): Promise<Matchplan | string> {
+export async function getMatchplan(season: string | null): Promise<Matchplan> {
     console.log('Fetching matchplan');
 
-    try {
         let url = `${config.getBackendUrl()}/api/matchplan`;
         let constructed_url: string;
 
@@ -22,8 +20,7 @@ export async function getMatchplan(season: string | null): Promise<Matchplan | s
         if (!response.ok) {
             let error = await response.text();
             let status = response.status;
-            showErrorModal(`Error: "${error}" with response code ${status}`);
-            return String(error);
+            throw new Error(`Failed to fetch matchplan with Error: "${error}", response code ${status}`);
         }
 
         else {
@@ -32,10 +29,5 @@ export async function getMatchplan(season: string | null): Promise<Matchplan | s
             console.log('Matchplan received: ', matchplan);
             return matchplan;
         }
-    } 
-    catch (error) {
-        //console.log('Error occurred: ', error);
-        showErrorModal(String(error));
-        return String(error);
-    }
+    
 }

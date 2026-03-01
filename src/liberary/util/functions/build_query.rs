@@ -1,5 +1,8 @@
 use std::{fmt, fs::File, io::Read};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+use crate::backend::backend_api::server_error::ServerError;
 
 pub enum ArgumentType {
     String(String),
@@ -14,17 +17,17 @@ pub enum ArgumentType {
 // I tried to just properly bind variables, but it wouldnt work so here is my crappy alternative that wont allow users to input ' since that would inject sql code and break the query. 
 // I will fix this later, but for now this is a good enough solution.      ------- Copilot suggested I add this second line of the comment, and I really appreciate the optimism, but that shit wont happen
 
-pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<String, QueryBuildError> {
+pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<String, ServerError> {
     let mut file = match File::open(query_file_path) {
         Ok(file) => file,
-        Err(e) => return Err(QueryBuildError::FileReadError(e)),
+        Err(e) => return Err(QueryBuildError::FileReadError(e.to_string()).into()),
     };
 
     let mut query = String::new();
 
     match file.read_to_string(&mut query) {
         Ok(_) => (),
-        Err(e) => return Err(QueryBuildError::FileReadError(e)),
+        Err(e) => return Err(QueryBuildError::FileReadError(e.to_string()).into()),
     };
 
     for (index, arg) in args.iter().enumerate() {
@@ -43,7 +46,7 @@ pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<Str
         let mut filled_query = String::new();
         let parts = query.split(&argument_key).collect::<Vec<&str>>();
         if parts.len() == 1 {
-            return Err(QueryBuildError::ArgumentError(format!("No placeholder found for argument: {}", argument_key)));
+            return Err(QueryBuildError::ArgumentError(format!("No placeholder found for argument: {}", argument_key)).into());
         }
         
         for (index, part) in parts.iter().enumerate() {
@@ -62,9 +65,9 @@ pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<Str
 
 
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum QueryBuildError {
-    FileReadError(std::io::Error),
+    FileReadError(String),
     ArgumentError(String),
 }
 

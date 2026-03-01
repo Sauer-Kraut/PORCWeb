@@ -82,7 +82,7 @@
             }
         }
 
-        groupedDivision.sort((a, b) => a[0].order - b[0].order)
+        groupedDivision.sort((a, b) => a[0].order - b[0].order);
         return groupedDivision;
     }
 

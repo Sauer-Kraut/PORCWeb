@@ -20,20 +20,10 @@ pub struct RespPackage {
 // GET Request to retrieve match plan for currrent season
 pub async fn get_matchplan_request(query: web::Query<RecvPackage>, appstate: web::Data<AppState>) -> Result<impl Responder, ServerError> {
 
-    let season = match &query.season {
-        Some(v) => v.clone(),
-        None => {
-            let season_opt = appstate.season.read().await.clone();
-            match season_opt {
-                Some(season) => season.name.clone(),
-                None => {
-                    return Err(ServerError::Other("No current season found".to_owned().into()));
-                }
-            }
-        }
+    let matchplan = match &query.season {
+        Some(v) => get_matchplan(v.clone(), appstate.pool.clone()).await?,
+        None => appstate.get_matchplan().await?
     };
-
-    let matchplan = get_matchplan(season.clone(), appstate.pool.clone()).await?;
 
     Ok(HttpResponse::Ok().json(RespPackage {
         plan: matchplan

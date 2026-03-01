@@ -132,15 +132,10 @@ async function getSelectedMatchplan() {
 
     // TODO: make it fetch the correct matchplan
     const plan = await planStorage.get_matchplan(null);
-
-    if (typeof plan == 'string') {
-        showErrorModal(plan);
-    } 
-    else {
-        plan.divisions = plan.divisions.sort((a: DivisionModel, b: DivisionModel) => a.order - b.order);
-        selectedMatchplan.value = plan;
-        totalMatches.value = calcTotalMatches(plan);
-    }
+    
+    plan.divisions = plan.divisions.sort((a: DivisionModel, b: DivisionModel) => a.order - b.order);
+    selectedMatchplan.value = plan;
+    totalMatches.value = calcTotalMatches(plan);
 }
 
 function calcTotalMatches(plan: Matchplan): number {

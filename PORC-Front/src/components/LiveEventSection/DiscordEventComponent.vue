@@ -2,6 +2,7 @@
     import type { DiscordEvent } from '@/models/discord/DiscordEvent';
     import { divisionNames } from '@/storage/defaults';
     import { formatTimeDiff } from '@/util/FormatTime';
+import { getDivisionImage } from '@/util/ImageHelper';
 import { filter_str } from '@/util/stringFilter';
     import { ref, computed, watch, onMounted } from 'vue';
 
@@ -85,7 +86,7 @@ import { filter_str } from '@/util/stringFilter';
     <a class="discord-event d-flex flex-row px-2" :href="event.link">
         <div class="ms-1">
             <div class="division-logo">
-                <img :src="`/src/assets/images/divisions/${getDivision()}.png`" alt="Division Logo" />
+                <img :src="`${getDivisionImage(getDivision())}`" alt="Division Logo" />
             </div>
         </div>
 

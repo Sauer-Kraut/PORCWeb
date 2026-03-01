@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import config from '@/config';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { onMounted, ref, watch } from 'vue';
 import LeaderbordComponent from './LeaderbordComponent.vue';
 import MatchScoreComponent from './MatchScoreComponent.vue';
@@ -79,22 +77,15 @@ async function getPlayerRanking() {
 
     const store = matchplanStore();
     let rankings = await store.get_ranking(props.season);
+    
+    for (let division_r of rankings) {
+        let division_name = division_r[0];
 
-    if (typeof rankings === 'string') {
-        showErrorModal(rankings);
-    }
-    else {
-
-        for (let division_r of rankings) {
-            let division_name = division_r[0];
-
-            if (division_name == props.division?.name) {
-                performances.value = division_r[1];
-                break;
-            }
+        if (division_name == props.division?.name) {
+            performances.value = division_r[1];
+            break;
         }
     }
-
 }
 
 async function reload() {
@@ -102,11 +93,6 @@ async function reload() {
 
     const store = matchplanStore();
     let res = await store.reset_ranking(props.season);
-    if (typeof res === 'string') {
-        showErrorModal(res);
-    } else {
-        console.log("Ranking reset successfully, new ranking: ", res);
-    }
 
     await getPlayerRanking();
 }

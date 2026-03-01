@@ -5,8 +5,11 @@ import { getDiscordEvents } from '@/API/discord/GetDiscordEvents';
 import { getDiscordVods } from '@/API/discord/GetDiscordVods';
 import type { Availability } from '@/models/availability/Availability';
 import type { DiscordEvent } from '@/models/discord/DiscordEvent';
+import { discordEventFromRecv } from '@/models/discord/DiscordEventRecv';
 import type { VideoReference } from '@/models/discord/VideoReference';
+import { videoReferenceFromRecv } from '@/models/discord/VideoReferenceRecv';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import { getInitData } from '@/util/GetInitData';
 import {defineStore} from 'pinia';
 
 export const discordInfoStore = defineStore('discord_info', {
@@ -18,8 +21,24 @@ export const discordInfoStore = defineStore('discord_info', {
 
     actions: {
 
+        init_storage() {
+            const data = getInitData();
+            if (data != null) {
+                let events = [];
+                for (let [idx, ev_recv] of Object.entries(data.events)) {
+                    events.push(discordEventFromRecv(ev_recv));
+                }
+                this.discord_events = events;
+                let vods = [];
+                for (let [idx, vod_recv] of Object.entries(data.vods)) {
+                    vods.push(videoReferenceFromRecv(vod_recv));
+                }
+                this.discord_vods = vods;
+            }
+        },
+
         // will keep fetching every time its called if no events are scheduled
-        async get_events(): Promise<DiscordEvent[] | string> {
+        async get_events(): Promise<DiscordEvent[]> {
             while (this.fetching) {
                 await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
             }
@@ -33,31 +52,35 @@ export const discordInfoStore = defineStore('discord_info', {
         },
 
 
-        async fetch_discord_events(): Promise<DiscordEvent[] | string> {
+        async fetch_discord_events(): Promise<DiscordEvent[]> {
             
             while (this.fetching) {
                 await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
             }
 
             this.fetching = true;
-            let res = await getDiscordEvents();
-
-            if (!(typeof res === 'string')) {
+            try {
+                let res = await getDiscordEvents();
                 this.discord_events = res;
-                console.log("Log in succesfull");
+                // console.log("Log in succesfull");
                 this.fetching = false;
                 return res;
-            } 
-            else {
+            }
+            catch (err) {
                 this.fetching = false;
-                return res;
+                if (err instanceof Error) {
+                    throw new Error(err.message)
+                } else {
+                    console.warn("throwing unspecified error");
+                    throw new Error
+                }
             }
         },
 
 
 
         // will keep fetching every time its called if no events are scheduled
-        async get_vods(): Promise<VideoReference[] | string> {
+        async get_vods(): Promise<VideoReference[]> {
             while (this.fetching) {
                 await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
             }
@@ -71,26 +94,29 @@ export const discordInfoStore = defineStore('discord_info', {
         },
 
 
-        async fetch_discord_vods(): Promise<VideoReference[] | string> {
+        async fetch_discord_vods(): Promise<VideoReference[]> {
             
             while (this.fetching) {
                 await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
             }
 
             this.fetching = true;
-            let res = await getDiscordVods();
-
-            if (!(typeof res === 'string')) {
+            try {
+                let res = await getDiscordVods();
                 this.discord_vods = res;
-                console.log("Log in succesfull");
-                this.fetching = false;
-                return res;
-            } 
-            else {
+                // console.log("Log in succesfull");
                 this.fetching = false;
                 return res;
             }
-
+            catch (err) {
+                this.fetching = false;
+                if (err instanceof Error) {
+                    throw new Error(err.message)
+                } else {
+                    console.warn("throwing unspecified error");
+                    throw new Error
+                }
+            }
         }
     }
 })

@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { ModalsContainer } from 'vue-final-modal';
 import DiscordUserComponent from './components/DiscordUserComponent.vue';
-import { showErrorModal } from './services/ErrorModalService';
 import { matchplanStore } from './storage/st_matchplan';
 import type { DivisionModel } from './models/matchplan/DivisionModel';
 import type { PlayerModel } from './models/matchplan/PlayerModel';
@@ -12,6 +11,8 @@ import Logo from './components/svgs/Logo.vue';
 import { appReady } from './appReady';
 import { signupStore } from './storage/st_signups';
 import type { SignUpInfo } from './models/SignUpInfo';
+import type { Matchplan } from './models/matchplan/Matchplan';
+import { getInitData } from './util/GetInitData';
 
 const isMenuOpen = ref(false);
 function toggleMenu() {
@@ -27,19 +28,11 @@ const user_id = ref('0');
 
 async function getUserId() {
     let accStore = accountsStore();
-    let res = await accStore.get_login();
-
-    if (typeof res == 'string') {
-        showErrorModal(res);
-        isLoggedIn.value = false;
-    } else {
-        isLoggedIn.value = (res != null && typeof res != 'undefined');
-        if (res && res.id) {
-            user_id.value = res.id;
-        } else if (typeof res == 'string') {
-            showErrorModal(res);
-            console.error(res);
-        }
+    let res = await accStore.get_id();
+    
+    isLoggedIn.value = (res != null);
+    if (res != null) {
+        user_id.value = res;
     }
 }
 
@@ -47,6 +40,7 @@ async function getUserId() {
 
 const playerinfos = ref<PubAccountInfo[]>([]);
 
+const matchplan = ref<Matchplan>();
 const division = ref<DivisionModel>();
 const season_name = ref('default');
 
@@ -56,15 +50,18 @@ async function getMatchPlan() {
     let plan = await planStore.get_matchplan(null);
     await planStore.fetch_all_seasons();
 
-    if (typeof plan == 'string') {
-        showErrorModal(plan);
-        return;
-    } else {
-        division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
-        season_name.value = String(plan.season);
-        console.log('matchplan: ', plan);
-    }
+    matchplan.value = plan;
+    division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+    season_name.value = String(plan.season);
+    console.log('matchplan: ', plan);
 }
+
+watch( 
+    () => user_id.value,
+    (newId) => {
+        division.value = matchplan.value?.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === newId));
+    }
+);
 
 const opponents = ref<PlayerModel[]>([]);
 const participants = ref<PlayerModel[]>([]);
@@ -88,30 +85,26 @@ function getPlayerIds(): string[] {
 }
 
 async function getPubPlayerInfos(ids: string[]) {
-    console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
+    // console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
     if (ids.length == 0 || ids[0] == 'default') {
         playerinfos.value = [];
         return;
     }
 
     let filteredIds = [...new Set(ids)];
-    console.log(getPlayerIds());
-    console.log('Filtered IDs:', filteredIds);
+    // console.log(getPlayerIds());
+    // console.log('Filtered IDs:', filteredIds);
 
-    console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
+    // console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
 
     let compStore = accountsStore();
     let res = await compStore.get_competitors_full(filteredIds);
 
-    console.log("evaluating result of get_competitors_full: ", res);
+    // console.log("evaluating result of get_competitors_full: ", res);
 
-    if (typeof res == 'string') {
-        showErrorModal(res);
-    } else {
-        playerinfos.value = res;
-    }
+    playerinfos.value = res;
 
-    console.log('Got PubPlayerInfos: ', playerinfos.value);
+    // console.log('Got PubPlayerInfos: ', playerinfos.value);
 }
 
 const newsTargetTime = ref<number>(1767466800);
@@ -123,11 +116,7 @@ let newsTimer: ReturnType<typeof setInterval> | null = null;
 async function determineNews() {
     const matchplan = await matchplanStore().get_matchplan(null);
 
-    if (typeof matchplan === 'string') {
-        // If an error string is returned, show it
-        // showErrorModal(matchplan);
-        return;
-    } else {
+    try {
         // matchplan is an object — add logic here to determine news from the matchplan
         const season_start_diff = (matchplan.start_timestamp - Date.now() / 1000);
         const season_pause_end_diff = (matchplan.pause_end_timestamp - Date.now() / 1000);
@@ -144,6 +133,7 @@ async function determineNews() {
             console.log("No news to show based on matchplan dates: " + matchplan);
         }
     }
+    catch (err) {}
 }
 
 function closeNews() {
@@ -189,24 +179,28 @@ onMounted(async () => {
     // initial read in case visualViewport is available after mount
     updateScreenWidth();
 
-    await getUserId();
-    await getMatchPlan();
+    
+    await getMatchPlan()
+    await getUserId(),
     appReady.value = true;
 
-    await getSignedUp();
-    await determineNews();
+    await Promise.all([ 
+        getSignedUp(),
+        determineNews(),
+        getPubPlayerInfos(getPlayerIds())
+    ]);
 
     // start news timer
     updateNewsText();
     newsTimer = setInterval(updateNewsText, 1000);
-    
-    await getPubPlayerInfos(getPlayerIds());
 });
 
 onUnmounted(() => {
   if (newsTimer) clearInterval(newsTimer);
   window.removeEventListener('resize', updateScreenWidth);
 });
+
+console.warn("INIT DATA: " + getInitData());
 </script>
 
 <template>

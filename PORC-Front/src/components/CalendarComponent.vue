@@ -6,8 +6,6 @@ import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
 import RequestMatchModal from './modals/RequestMatchModal.vue';
 import { filter_str } from '@/util/stringFilter';
-import lineBreak from '@/util/LineBreakFilter';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { Repetition, type Availability, type DailyRepetitionConfig } from '@/models/availability/Availability';
 import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
 import { accountsStore } from '@/storage/st_accounts';
@@ -334,19 +332,10 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                 },
                 async onSubmitAvailability(data: Availability) {
                     //console.log('submiting something', data);
-                    let set_res = await compStore.self_edit_availabilities_local([data], []);
-                    if (typeof set_res == 'string') {
-                        console.log('Error adding availability', set_res);
-                        showErrorModal(set_res);
-                    }
-
                     close();
+                    let set_res = await compStore.self_edit_availabilities_local([data], []);
 
                     let store_res = await compStore.store_self();
-                    if (typeof store_res == 'string') {
-                        console.log('Error storing account', store_res);
-                        showErrorModal(store_res);
-                    }
 
                     emit('reload');
                 },
@@ -372,19 +361,11 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     },
                     async onSubmitMatch(data: MatchEvent) {
                         //console.log('submiting something', data);
-                        let set_res = await compStore.create_match_event_local(data);
-                        if (set_res != null) {
-                            console.log('Error adding availability', set_res);
-                            showErrorModal(set_res);
-                        }
-
                         close();
+                        let set_res = await compStore.create_match_event_local(data);
+
 
                         let store_res = await compStore.post_match_event(data);
-                        if (store_res != null) {
-                            console.log('Error storing account', store_res);
-                            showErrorModal(store_res);
-                        }
                         emit('reload');
                     },
                 },
@@ -409,36 +390,19 @@ function editAvailability(availability: Availability) {
             create: false,
             async onSubmitAvailability(data: Availability) {
                 //console.log('submiting something', data);
-                let set_res = await compStore.self_edit_availabilities_local([data], [availability]);
-                if (typeof set_res == 'string') {
-                    console.log('Error adding availability', set_res);
-                    showErrorModal(set_res);
-                }
-
                 close();
+                let set_res = await compStore.self_edit_availabilities_local([data], [availability]);
+
 
                 let store_res = await compStore.store_self();
-                if (typeof store_res == 'string') {
-                    console.log('Error storing account', store_res);
-                    showErrorModal(store_res);
-                }
                 emit('reload');
             },
             async onDelete() {
                 //console.log('deleting something');
-                let set_res = await compStore.self_edit_availabilities_local([], [availability]);
-                if (typeof set_res == 'string') {
-                    console.log('Error adding availability', set_res);
-                    showErrorModal(set_res);
-                }
-
                 close();
+                let set_res = await compStore.self_edit_availabilities_local([], [availability]);
 
                 let store_res = await compStore.store_self();
-                if (typeof store_res == 'string') {
-                    console.log('Error storing account', store_res);
-                    showErrorModal(store_res);
-                }
                 emit('reload');
             },
         },
@@ -448,41 +412,21 @@ function editAvailability(availability: Availability) {
 
 async function deleteAvailability(availability: Availability) {
     let set_res = await compStore.self_edit_availabilities_local([], [availability]);
-    if (typeof set_res == 'string') {
-        console.log('Error adding availability', set_res);
-        showErrorModal(set_res);
-    }
 
     let store_res = await compStore.store_self();
-    if (typeof store_res == 'string') {
-        console.log('Error storing account', store_res);
-        showErrorModal(store_res);
-    }
     emit('reload');
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
     match.status = accept ? MatchStatus.Confirmed : MatchStatus.Declined;
     let set_res = await compStore.create_match_event_local(match);
-    if (typeof set_res == 'string') {
-        console.log('Error adding availability', set_res);
-        showErrorModal(set_res);
-    }
 
     let store_res = await compStore.post_match_event(match);
-    if (typeof store_res == 'string') {
-        console.log('Error storing account', store_res);
-        showErrorModal(store_res);
-    }
     emit('reload');
 }
 
 async function submitNote() {
     let res = await compStore.self_update_schedule_note(props.schedule.note);
-
-    if (res != null) {
-        showErrorModal(res);
-    }
 }
 </script>
 

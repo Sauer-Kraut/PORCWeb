@@ -1,19 +1,17 @@
 import config from '@/config';
-import { showErrorModal } from '@/services/ErrorModalService';
 import { getClientId } from '../GetClientId';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
 import type { SignUpInfo } from '@/models/SignUpInfo';
 
-export async function getSignups(season: string | null): Promise<SignUpInfo[] | string> {
+export async function getSignups(season: string | null): Promise<SignUpInfo[]> {
     //console.log('Trying to get Logged in status');
 
     const clinet_id = getClientId();
 
     if (clinet_id == null) {
-        return 'no client id found';
+        throw new Error('Tried to fetch signups without auth: no client id found');
     }
 
-    try {
         let url = `${config.getBackendUrl()}/api/sign-up`;
         let constructed_url: string;
 
@@ -29,8 +27,7 @@ export async function getSignups(season: string | null): Promise<SignUpInfo[] | 
         if (!response.ok) {
             let error = await response.text();
             let status = response.status;
-            showErrorModal(`Error: "${error}" with response code ${status}`);
-            return String(error);
+            throw new Error(`Failed to fetch signups with Error: "${error}" with response code ${status}`);
         }
 
         else {
@@ -38,10 +35,5 @@ export async function getSignups(season: string | null): Promise<SignUpInfo[] | 
             const signups = jsonData.signups as SignUpInfo[];
             return signups;
         }
-    } 
-    catch (error) {
-        //console.log('Error occurred: ', error);
-        showErrorModal(String(error));
-        return String(error);
-    }
+    
 }

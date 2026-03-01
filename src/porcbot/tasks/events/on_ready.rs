@@ -6,5 +6,5 @@ pub use serenity::prelude::*;
 pub use serenity::model::gateway::Ready;
 
 pub async fn on_ready(me: &BotEventHandler, _ctx: Context, _ready: Ready) {
-    println!("{} \n\n", "Bot has launched".bright_white());
+    println!("\n{} \n\n", "Bot has launched".bright_white());
 }
