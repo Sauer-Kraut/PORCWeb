@@ -19,6 +19,8 @@ import { discordInfoStore } from '@/storage/st_discord';
     import { matchplanStore } from '@/storage/st_matchplan';
     import { signupStore } from '@/storage/st_signups';
     import { computed, onMounted, ref, watch } from 'vue';
+    import { divisionNames } from '@/storage/defaults';
+import type { Matchplan } from '@/models/matchplan/Matchplan';
 
     let screenSizeMd = ref(false);
     let screenSizeSm = ref(false)
@@ -121,7 +123,7 @@ import { discordInfoStore } from '@/storage/st_discord';
     }
 
     async function loadSeasons() {
-        // await planStore.fetch_all_seasons();
+        await planStore.fetch_all_seasons();
 
         // Extract seasons from the store's matchplans map
         const seasonList: Season[] = [];
@@ -335,21 +337,73 @@ import { discordInfoStore } from '@/storage/st_discord';
     //     { title: '[Iron] Stone Eater vs. The Mole', start_time: new Date(Date.now() + 18000000), place: 'Online', interested: 256, live: false, description: 'Sample event description', img_id: '', link: '' } as DiscordEvent
     // ].sort((a, b) => a.start_time.getTime() - b.start_time.getTime()).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0))); // Sort events by start time
     // //discordEvents.value = [];
-    let eventSortPopularity = ref(false);
+    let selectedSortFeature = ref(0);
+    const sortingFeatures = ["Popular", "Date", "Division"];
 
     async function getEvents() {
         
         let res = await ds_storage.get_events();
         discordEvents.value = res;
+        sortEvents();
     }
 
     let discordVods = ref([] as VideoReference[]);
 
 
     async function getVods() {
-        
+
         let res = await ds_storage.get_vods();
         discordVods.value = res;
+    }
+
+    function sortEvents(feature?: string) {
+
+        const sortFeature = feature ?? sortingFeatures[selectedSortFeature.value % (sortingFeatures.length)];
+        // console.log("Sorting VODs by " + sortFeature);
+
+        let out = [];
+
+        switch (sortFeature) {
+            case "Division":
+                out = discordEvents.value.sort((a, b) => (getEventDivision(a)?.order ?? 0) - (getEventDivision(b)?.order ?? 0)).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
+                break;
+            
+            case "Date":
+                out = discordEvents.value.sort((a, b) => a.start_time.getTime() - b.start_time.getTime()).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));;
+                break;
+
+            default:  // Popularity sorting is default
+                out = discordEvents.value.sort((a, b) => b.interested - a.interested).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
+                break;
+        }
+
+        // let debug = "VODs: ";
+        // for (let entry of out) {
+        //     debug += "\n" + entry.title + ": " + entry.start_time;
+        // }
+        // console.log(debug);
+    }
+
+    function getEventDivision(event: DiscordEvent): DivisionModel | null {
+        const match = event.title.match(/\[([^\]]*)\]/);
+        const matchplan = localMatchplan.value;
+        if (matchplan) {
+            for (const division of divisionNames) {
+                if (match && match[1].toLowerCase().includes(division)) {
+                    const name = division;
+                    
+                    for (let div of matchplan.divisions) {
+                        if (div.name.includes(name)) {
+                            return div;
+                        }
+                    }
+                }
+            }
+            return matchplan.divisions[0];
+        }
+        else {
+            return null;
+        }
     }
 
     watch(
@@ -370,16 +424,21 @@ import { discordInfoStore } from '@/storage/st_discord';
     );
 
     watch(
-        () => eventSortPopularity.value,
+        () => selectedSortFeature.value,
         (newSorting) => {
-            console.log("Event Sorting was changed");
-            if (newSorting) {
-                discordEvents.value.sort((a, b) => a.interested - b.interested).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
-            } else {
-                discordEvents.value.sort((a, b) => a.start_time.getTime() - b.start_time.getTime()).sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
-            }
+            // console.log("Event Sorting was changed");
+            sortEvents(sortingFeatures[newSorting % (sortingFeatures.length)]);
         }
     )
+
+    watch(
+        () => discordEvents.value,
+        (events) => {
+            sortEvents();
+        }
+    )
+
+    let localMatchplan = ref<Matchplan | null>(null);
 
 
     onMounted(async () => {
@@ -401,6 +460,7 @@ import { discordInfoStore } from '@/storage/st_discord';
             getVods(),
             getEvents()
         ]);
+        localMatchplan.value = await planStore.get_matchplan();
         getSelectorHeight();
 
     });
@@ -480,7 +540,7 @@ import { discordInfoStore } from '@/storage/st_discord';
                             <option :value="false">Sort by Date</option>
                             <option :value="true">Sort by Popularity</option>
                         </select> -->
-                        <h5 class="sort-option ms-auto primary" @click="eventSortPopularity = !eventSortPopularity">Sorted by {{ eventSortPopularity ? "Popular" : "Date" }} ▾</h5>
+                        <h5 class="sort-option ms-auto primary" @click="selectedSortFeature += 1">Sorted by {{ sortingFeatures[selectedSortFeature % (sortingFeatures.length)] }} ▾</h5>
                     </div>
                     <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
                         <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>
@@ -491,7 +551,7 @@ import { discordInfoStore } from '@/storage/st_discord';
             <div class="d-flex flex-column pe-3 ms-0 mt-5 pt-4 ms-auto me-auto" v-if="screenSizeMd" style="max-width: 43rem;">
                     <div class="d-flex flex-row mb-2 mx-2">
                         <h5 class="events-title spaced-text me-5 pe-3">PORC Matches</h5>
-                        <h5 class="sort-option ms-auto primary" @click="eventSortPopularity = !eventSortPopularity">Sorted by {{ eventSortPopularity ? "Popular" : "Date" }} ▾</h5>
+                        <h5 class="sort-option ms-auto primary" @click="selectedSortFeature += 1">Sorted by {{ sortingFeatures[selectedSortFeature % (sortingFeatures.length)] }} ▾</h5>
                     </div>
                     <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
                         <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>

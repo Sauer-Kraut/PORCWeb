@@ -15,6 +15,7 @@ import { accountsStore } from '@/storage/st_accounts';
 import { matchplanStore } from '@/storage/st_matchplan';
 import { signupStore } from '@/storage/st_signups';
 import { getDivisionImage } from '@/util/ImageHelper';
+import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 import { computed, onMounted, ref, watch } from 'vue';
 
@@ -289,7 +290,7 @@ async function submitNote() {
                     <div class="d-flex flex-column calender-container p-5 pt-3">
                         <div class="mb-3 d-flex justify-content-center justify-content-xl-start w-fit">
                             <div v-if="season_running" class="division-title">
-                                <h2 class="mb-0 d-flex align-items-center me-3"><img :src="getDivisionImage(division.name)" class="division-icon me-3" />{{ division.name }}</h2>
+                                <h2 class="mb-0 d-flex align-items-center me-3 no-text-wrap"><img :src="getDivisionImage(stripAfterFirstSpace(division.name))" class="division-icon me-3"/>{{ division.name }}</h2>
                                 <div class="progress" role="progressbar">
                                     <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
                                 </div>
@@ -492,5 +493,9 @@ $tile-bg: rgb(15, 15, 15) !important;
 
 textarea.form-control {
     min-height: 5rem !important;
+}
+
+.no-text-wrap {
+    text-wrap: nowrap;
 }
 </style>

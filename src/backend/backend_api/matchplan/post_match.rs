@@ -31,7 +31,7 @@ pub async fn post_match_request(info: web::Json<RecvPackage>, appstate: web::Dat
 
     // spawns a seperate thread to refresh local matchplan
     actix_web::rt::spawn(async move {
-        let _ = appstate.refresh_matchplan().await;
+        let _ = appstate.refresh_season_info().await;
     });
 
     Ok(HttpResponse::Ok())

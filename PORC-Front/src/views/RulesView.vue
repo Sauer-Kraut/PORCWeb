@@ -189,10 +189,11 @@
                         <li>The opponent has the right of reply:
                             <ul class="sub-rules">
                                 <li>If they equal the client round, the tiebreaker resets.</li>
+                                <li>If they surpass the bar, it is raised to one game for the opponent to meet.</li>
                                 <li>If they fail, the first client round winner wins.</li>
                             </ul>
                         </li>
-                        <li>If the tiebreaker winner wins the match, they win the set.</li>
+                        <li>Once a bar is set extended tiebraker rules may not advance until it is either met or a player has won the game</li>
                     </ol>
                 </div>
 

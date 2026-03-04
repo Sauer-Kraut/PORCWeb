@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import type { VideoReference } from '@/models/discord/VideoReference';
-import YoutubeVideo from '../AssetDisplay/YoutubeVideo.vue';
-import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+    import YoutubeVideo from '../AssetDisplay/YoutubeVideo.vue';
+    import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 
     /**
      * Types for the Video Object

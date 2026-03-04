@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-    import { ref } from 'vue'
+    import { onMounted, ref } from 'vue'
 
     interface Props {
         videoId: string
@@ -12,7 +12,36 @@
     const props = defineProps<Props>()
     const isPlaying = ref(false)
 
-    const thumbnailUrl = props.maxres ? `https://img.youtube.com/vi/${props.videoId}/maxresdefault.jpg` : `https://img.youtube.com/vi/${props.videoId}/sddefault.jpg`
+    const QUALITIES = [
+        "sddefault.jpg",
+        "hqdefault.jpg",
+        "mqdefault.jpg",
+        "default.jpg",
+    ];
+
+    async function getBestThumbnail(videoId: string): Promise<string> {
+        if (props.maxres) {
+            return `https://img.youtube.com/vi/${props.videoId}/maxresdefault.jpg`;
+        }
+        else {
+            for (const quality of QUALITIES) {
+                const url = `https://i.ytimg.com/vi/${videoId}/${quality}`;
+
+                try {
+                    const res = await fetch(url, { method: "HEAD" });
+                    if (res.ok) {
+                        return url;
+                    }
+                } catch {
+                // ignore network errors and try next
+                }
+            }
+
+            throw new Error("No thumbnail found");
+        }        
+    }
+
+    let  thumbnailUrl = ref('');
     const iframeUrl = `https://www.youtube-nocookie.com/embed/${props.videoId}?autoplay=1`
 
     function playVideo() {
@@ -24,6 +53,10 @@
         const url = `https://www.youtube.com/watch?v=${props.videoId}`
         window.location.href = url
     }
+
+    onMounted(async () => {
+        thumbnailUrl.value = await getBestThumbnail(props.videoId);
+    });
 </script>
 
 <template>

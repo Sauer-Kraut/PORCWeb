@@ -6,6 +6,7 @@ import type { MatchModel } from '@/models/matchplan/MatchModel';
 import type { Matchplan } from '@/models/matchplan/Matchplan';
 import type { DivisionRanking } from '@/models/matchplan/PlayerPerformancModel';
 import type { Season } from '@/models/matchplan/Season';
+import { getInitData } from '@/util/GetInitData';
 import {defineStore} from 'pinia';
 
 export const matchplanStore = defineStore('matchplan', {
@@ -17,8 +18,16 @@ export const matchplanStore = defineStore('matchplan', {
 
     actions: {
 
+        init_storage() {
+            const data = getInitData();
+            if (data != null && data.matchplan && data.season) {
+                this.matchplans.set('0', [data.matchplan, data.season, data.ranking]);
+                this.matchplans.set(data.season.name, [data.matchplan, data.season, data.ranking]);
+            }
+        },
+
         // gets matchplan of any season, returns current season if no season name is provided
-        async get_matchplan(season: string | null): Promise<Matchplan> {
+        async get_matchplan(season: string | null = null): Promise<Matchplan> {
             let res = await this.fetch_season(season);
 
             if (res[0] != null && typeof res[0] !== 'boolean') {
@@ -50,7 +59,7 @@ export const matchplanStore = defineStore('matchplan', {
 
         // fetches season with provided name or default current season
         // also sets current season name if current season is fetched
-        async fetch_season(season: string | null): Promise<[boolean | Matchplan | null, Season | null, boolean | DivisionRanking[] | null]> {
+        async fetch_season(season: string | null = null): Promise<[boolean | Matchplan | null, Season | null, boolean | DivisionRanking[] | null]> {
             // console.log(this.matchplans);
 
             let res = this.matchplans.get(season || '0');

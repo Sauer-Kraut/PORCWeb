@@ -13,6 +13,13 @@ import { signupStore } from './storage/st_signups';
 import type { SignUpInfo } from './models/SignUpInfo';
 import type { Matchplan } from './models/matchplan/Matchplan';
 import { getInitData } from './util/GetInitData';
+import { discordInfoStore } from './storage/st_discord';
+
+
+const st_plan = matchplanStore();
+const st_account = accountsStore();
+const st_discord = discordInfoStore();
+
 
 const isMenuOpen = ref(false);
 function toggleMenu() {
@@ -27,8 +34,7 @@ const isLoggedIn = ref(false);
 const user_id = ref('0');
 
 async function getUserId() {
-    let accStore = accountsStore();
-    let res = await accStore.get_id();
+    let res = await st_account.get_id();
     
     isLoggedIn.value = (res != null);
     if (res != null) {
@@ -46,9 +52,8 @@ const season_name = ref('default');
 
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
-    let planStore = matchplanStore();
-    let plan = await planStore.get_matchplan(null);
-    await planStore.fetch_all_seasons();
+    let plan = await st_plan.get_matchplan(null);
+    await st_plan.fetch_all_seasons();
 
     matchplan.value = plan;
     division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
@@ -97,8 +102,7 @@ async function getPubPlayerInfos(ids: string[]) {
 
     // console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
 
-    let compStore = accountsStore();
-    let res = await compStore.get_competitors_full(filteredIds);
+    let res = await st_account.get_competitors_full(filteredIds);
 
     // console.log("evaluating result of get_competitors_full: ", res);
 
@@ -179,10 +183,13 @@ onMounted(async () => {
     // initial read in case visualViewport is available after mount
     updateScreenWidth();
 
+    st_account.init_storage();
+    st_discord.init_storage();
+    st_plan.init_storage();
+    appReady.value = true;
     
     await getMatchPlan()
     await getUserId(),
-    appReady.value = true;
 
     await Promise.all([ 
         getSignedUp(),
@@ -200,7 +207,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateScreenWidth);
 });
 
-console.warn("INIT DATA: " + getInitData());
+// console.warn("INIT DATA: " + getInitData());
 </script>
 
 <template>

@@ -1,4 +1,7 @@
-use actix_web::{web, HttpResponse, Responder};
+use std::time::Duration;
+
+use actix_web::{web, HttpResponse, Responder, cookie::Cookie};
+use cookie::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::backend::backend_api::server_error::ServerError;
@@ -32,7 +35,20 @@ pub async fn get_login_request(query: web::Query<RecvPackage>, appstate: web::Da
 
     let account = get_account(login.account_id.clone(), appstate.pool.clone()).await?.get_pub_info();
 
-    Ok(HttpResponse::Ok().json(RespPackage {
+    let expiry = OffsetDateTime::now_utc() + Duration::from_secs(60 * 60 * 24 * 30);
+    
+    let user_id_cookie = Cookie::build("user_id", account.id.clone())
+        .domain(appstate.config.read().await.domain.clone())         // TODO: needs to be updated for deployment
+        .path("/")
+        .http_only(false)
+        .secure(true)               
+        .expires(expiry)
+        .same_site(actix_web::cookie::SameSite::Strict)       // TODO: needs to be set to strict for deployment
+        .finish();
+
+    Ok(HttpResponse::Ok()
+    .cookie(user_id_cookie)
+    .json(RespPackage {
         account,
     }))
 }

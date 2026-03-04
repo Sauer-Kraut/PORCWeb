@@ -1,6 +1,7 @@
 import type { DiscordEventRecv } from "./discord/DiscordEventRecv"
 import type { VideoReferenceRecv } from "./discord/VideoReferenceRecv"
 import type { Matchplan } from "./matchplan/Matchplan"
+import type { DivisionRanking } from "./matchplan/PlayerPerformancModel";
 import type { Season } from "./matchplan/Season"
 
 export {};
@@ -14,6 +15,7 @@ declare global {
 export interface InitData {
     matchplan: Matchplan,
     season: Season,
+    ranking: DivisionRanking[],
     vods: VideoReferenceRecv[]
     events: DiscordEventRecv
 }

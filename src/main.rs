@@ -48,6 +48,7 @@ use crate::backend::backend_api::discord::get_discord_events::get_discord_events
 use crate::backend::backend_api::discord::get_discord_vods::get_discord_vods_reqeust;
 use crate::liberary::discord_lib::discord_event::discord_event::DiscordEvent;
 use crate::liberary::discord_lib::video_reference::video_reference::VideoReference;
+use crate::liberary::matchplan_lib::division::player_performance::PlayerPerformance;
 use crate::liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
 use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use crate::liberary::util::functions::build_index::build_index;
@@ -60,6 +61,7 @@ use crate::porcbot::tasks::functions::fetch_discord_events::fetch_discord_events
 struct InitialData {
     matchplan: MatchPlan,
     season: Season,
+    ranking: Vec<(String, Vec<PlayerPerformance>)>,
     vods: Vec<VideoReference>,
     events: Vec<DiscordEvent>
 }
@@ -72,6 +74,7 @@ async fn index(appstate: web::Data<AppState>) -> Result<impl Responder, ServerEr
     let data = InitialData {
         matchplan: appstate.get_matchplan().await?,
         season: appstate.get_season().await?,
+        ranking: appstate.get_ranking().await?,
         vods: appstate.discord_vods.read().await.clone(),
         events: appstate.discord_events.read().await.clone(),
     };
@@ -214,6 +217,7 @@ async fn main() -> std::io::Result<()> {
         discord_events: Arc::new(RwLock::new(vec!())),
         discord_vods: Arc::new(RwLock::new(vec!())),
         matchplan: Arc::new(RwLock::new(None)),
+        ranking: Arc::new(RwLock::new(None)),
         season: season.clone(),
         config: config.clone(),
         pool
@@ -293,12 +297,12 @@ async fn main() -> std::io::Result<()> {
 
     let appstate_clone_3 = appstate.clone();
 
-    // loop to regularly refresh matchplan
+    // loop to regularly refresh matchplan and rankings
     tokio::spawn(async move {
         let _event_task = tokio::task::spawn(async move {
             println!("\n{}", "matchplan refresh loop has has launched".bright_green());
             loop {
-                match appstate_clone_3.refresh_matchplan().await {
+                match appstate_clone_3.refresh_season_info().await {
                     Ok(_) => {},
                     Err(err) => println!("{}", format!("An error has occured while refreshing matchplan: {err}").red()),
                 }
@@ -399,9 +403,8 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/discord/callback").to(discord_callback))
             .service(Files::new("/", "./PORC-Front/dist").index_file("index.html"))
     })
-    // .bind(&format!("{}{}", "[::]:", port))? // Production port: 8081, devolpment sever port: 8082, local port:8082
-    .bind(&format!("{}{}", "0.0.0.0:", port))?  // surely this wont fuck clients who want to bind with ipv6
-    .bind(&format!("{}{}", "[::]:", port))?
+    .bind(&format!("{}{}", "[::]:", port))? // Production port: 8081, devolpment sever port: 8082, local port:8082
+    // .bind(&format!("{}{}", "0.0.0.0:", port))?  // surely this wont fuck clients who want to bind with ipv6
     .run()
     .await
 }
@@ -419,6 +422,7 @@ pub struct AppState {
     discord_vods: Arc<RwLock<Vec<VideoReference>>>,
     matchplan: Arc<RwLock<Option<MatchPlan>>>,    // needs to be refreshed every time its updated
     season: Arc<RwLock<Option<Season>>>,
+    ranking: Arc<RwLock<Option<Vec<(String, Vec<PlayerPerformance>)>>>>,
     config: Arc<RwLock<Config>>,
     pool: Pool<Postgres>
 }
@@ -441,33 +445,72 @@ impl AppState {
             },
 
             None => {
-                let season = self.get_season().await?;
-                let plan = get_matchplan(season.name, self.pool.clone()).await?;
-
-                let mut plan_lock = self.matchplan.write().await;
-                *plan_lock = Some(plan.clone());
-
-                Ok(plan)
+                
+                match self.refresh_season_info().await? {
+                    Some(res) => {
+                        Ok(res.0)
+                    },
+                    None => {
+                        Err("couldnt find current matchplan".into())
+                    }
+                }
             }
         }
     }
 
-    pub async fn refresh_matchplan(&self) -> Result<(), ServerError> {
+    pub async fn get_ranking(&self) -> Result<Vec<(String, Vec<PlayerPerformance>)>, ServerError> {
+
+        match self.ranking.read().await.as_ref() {
+            Some(ranking) => {
+                Ok(ranking.clone())
+            },
+
+            None => {
+                
+                match self.refresh_season_info().await? {
+                    Some(res) => {
+                        Ok(res.1)
+                    },
+                    None => {
+                        Err("couldnt find current ranking".into())
+                    }
+                }
+            }
+        }
+    }
+
+    // ranking and matchplan grouped together to avoid faulty partial refreshing
+    // perfomance wise not optimal to always returned cloned values but it makes my life easier
+    pub async fn refresh_season_info(&self) -> Result<Option<(MatchPlan, Vec<(String, Vec<PlayerPerformance>)>)>, ServerError> {
         let mut plan = self.matchplan.write().await;
         *plan = None;
+
+        let mut ranking = self.ranking.write().await;
+        *ranking = None;
 
         match self.get_season().await {
             Ok(s) => {
                 match get_matchplan(s.name, self.pool.clone()).await {
                     Ok(m) => {
-                        *plan = Some(m);
+
+                        let divisions = m.divisions.clone();
+                        let mut rankings = vec!();
+
+                        for division in divisions {
+                            let performance = division.generate_perfomance().await;
+                            let res = (division.name, performance);
+                            rankings.push(res);
+                        }
+
+                        (*plan, *ranking) = (Some(m.clone()), Some(rankings.clone()));
+                        return Ok(Some((m, rankings)))
                     },
                     _ => ()
                 }
             }
             _ => ()
         }
-        Ok(())      
+        Ok(None)   
     }
 }
 

@@ -51,7 +51,7 @@ function createMatch(): MatchEvent {
         <div class="porc-modal-content col-xl-2 col-md-6 col-11 p-4 rounded">
             <div>
                 <h3 class="mb-3 content-title text-center">{{ title }}</h3>
-                <h4 class="content-subtitle align-self-center justify-contents-center text-center">Reqeust a Match</h4>
+                <h4 class="content-subtitle align-self-center justify-contents-center text-center">Request a Match</h4>
                 <!-- <div class="bar"></div> -->
                 <div class="spacer"></div>
                 <div class="xs-spacer"></div>

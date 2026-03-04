@@ -27,19 +27,6 @@ pub async fn get_player_ranking_request(query: web::Query<RecvPackage>, appstate
 
     println!("Received request to get player ranking for season: {:?}", query.season);
 
-    let season = match &query.season {
-        Some(v) => v.clone(),
-        None => {
-            let season_opt = appstate.season.read().await.clone();
-            match season_opt {
-                Some(season) => season.name.clone(),
-                None => {
-                    return Err(ServerError::Other("No current season found".to_owned().into()));
-                }
-            }
-        }
-    };
-
     let matchplan = appstate.get_matchplan().await?;
 
     let divisions = matchplan.divisions;

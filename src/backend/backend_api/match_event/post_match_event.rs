@@ -27,8 +27,6 @@ pub struct RecvPackage {
 // if match event is a new request a match request dialgoue will also be started
 pub async fn post_match_event_request(info: web::Json<RecvPackage>, appstate: web::Data<AppState>) -> Result<impl Responder, ServerError> {
 
-    let state_clone = appstate.clone();
-
     let login_fut = get_login(info.auth_key.clone(), appstate.pool.clone());
     let match_event_entry_fut = get_match_event(info.match_event.challenger_id.clone(), info.match_event.opponent_id.clone(), info.match_event.start_timestamp, info.match_event.season.clone(), appstate.pool.clone());
 

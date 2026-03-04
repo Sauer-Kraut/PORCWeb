@@ -1,4 +1,6 @@
 use std::future::{ready, Ready};
+use std::thread;
+use std::time::Duration;
 
 use actix_http::body::MessageBody;
 use actix_web::body::{to_bytes, BoxBody};
@@ -56,6 +58,7 @@ where
         let fut = self.service.call(req);
 
         Box::pin(async move {
+            // let _ = thread::sleep(Duration::from_secs(5)); // FOR TESTING ONLY
             let res = fut.await;
 
             let duration = start.elapsed();
