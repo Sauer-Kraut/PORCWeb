@@ -25,7 +25,7 @@
         }
         else {
             for (const quality of QUALITIES) {
-                const url = `https://i.ytimg.com/vi/${videoId}/${quality}`;
+                const url = `https://img.youtube.com/vi/${videoId}/${quality}`;
 
                 try {
                     const res = await fetch(url, { method: "HEAD" });
@@ -37,7 +37,7 @@
                 }
             }
 
-            throw new Error("No thumbnail found");
+            return `https://img.youtube.com/vi/${videoId}/${QUALITIES[0]}`;
         }        
     }
 

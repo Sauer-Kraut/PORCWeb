@@ -21,6 +21,7 @@ import { discordInfoStore } from '@/storage/st_discord';
     import { computed, onMounted, ref, watch } from 'vue';
     import { divisionNames } from '@/storage/defaults';
 import type { Matchplan } from '@/models/matchplan/Matchplan';
+import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 
     let screenSizeMd = ref(false);
     let screenSizeSm = ref(false)
@@ -385,25 +386,17 @@ import type { Matchplan } from '@/models/matchplan/Matchplan';
     }
 
     function getEventDivision(event: DiscordEvent): DivisionModel | null {
-        const match = event.title.match(/\[([^\]]*)\]/);
+        const match = stripAfterFirstSpace((event.title.match(/\[([^\]]*)\]/) ?? ['', 'NO_MATCH'])[1].toLowerCase());
         const matchplan = localMatchplan.value;
+        
         if (matchplan) {
-            for (const division of divisionNames) {
-                if (match && match[1].toLowerCase().includes(division)) {
-                    const name = division;
-                    
-                    for (let div of matchplan.divisions) {
-                        if (div.name.includes(name)) {
-                            return div;
-                        }
-                    }
+            for (let div of matchplan.divisions) {
+                if (div.name.toLowerCase().includes(match ?? 'no match')) {
+                    return div;
                 }
             }
-            return matchplan.divisions[0];
         }
-        else {
-            return null;
-        }
+        return null;
     }
 
     watch(

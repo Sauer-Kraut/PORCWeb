@@ -83,7 +83,7 @@ async fn index(appstate: web::Data<AppState>) -> Result<impl Responder, ServerEr
     let json_contents = serde_json::to_string(&data).map_err(|e| e.to_string())?;
 
     let index = build_index(json_contents, fs::read_to_string("PORC-Front/dist/index.html").await.unwrap(), argument_key)?;
-    println!("{}", index);
+    // println!("{}", index);
     Ok(HttpResponse::Ok().body(index))
 }
 

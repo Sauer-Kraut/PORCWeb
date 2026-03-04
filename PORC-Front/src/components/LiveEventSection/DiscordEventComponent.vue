@@ -23,7 +23,7 @@ import { filter_str } from '@/util/stringFilter';
 
     let event = ref(props.Event ?? sampleEvent);
 
-    let live = ref(event.value.live);
+    let live = ref(true);
 
     function getDivision() {
         const match = event.value.title.match(/\[([^\]]*)\]/);
@@ -209,10 +209,11 @@ import { filter_str } from '@/util/stringFilter';
             &:after {
                 content: "";
                 position: absolute;
-                width: 3rem;
+                width: 4rem;
                 height: 1.5rem;
-                transform: translateX(-2.25rem) translateY(-0rem);
-                background: radial-gradient(circle at center, color-mix(in srgb, var(--primary) 20%, transparent) 0%, transparent 70%);
+                transform: translateX(-3rem) translateY(-0rem);
+                background: radial-gradient(circle at center, color-mix(in srgb, var(--primary) 10%, transparent) 0%, transparent 60%);
+                overflow: visible;
             }
         }
 

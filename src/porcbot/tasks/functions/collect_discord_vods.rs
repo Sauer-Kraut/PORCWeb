@@ -67,7 +67,9 @@ pub async fn collect_discord_vods(appstate: &AppState, limit: usize) -> Result<V
             date: first_msg.timestamp.timestamp() as u64
         };
 
-        vods.push(vod);
+        if video_id.len() > 0 {
+            vods.push(vod);
+        }
     }
     
     Ok(vods)
