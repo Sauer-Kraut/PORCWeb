@@ -8,161 +8,162 @@ import type { MatchEvent } from '@/models/match_event/MatchEvent';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { getCookieValue } from '@/util/GetCookieValue';
 import {defineStore} from 'pinia';
+import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
+import { createFetching, isFetching, type Fetching } from './fetching';
 
 export const accountsStore = defineStore('accounts', {
-    state: (): {loggedInId: string | null | boolean, competiros: Map<string, PubAccountInfo | boolean>} => ({
-        loggedInId: 'unfetched', // unfetched is not yet fetched, null if not logged in, boolean if fetching logged in, or string with id of logged in account
-        competiros: new Map()
+    state: (): {loggedInId: string | null | Fetching<PubAccountInfo> | undefined, competiros: Map<string | null, PubAccountInfo | Fetching<PubAccountInfo>>} => ({
+        loggedInId: undefined, // unfetched is not yet fetched, null if not logged in, boolean if fetching logged in, or string with id of logged in account
+        competiros: new Map() // entry null is self
     }),
 
     actions: {
 
-        init_storage(): void {
+        // Called once when app is mounted
+        async init_storage(): Promise<void> {
+
             const cookieId = getCookieValue("user_id");
             if (cookieId != null) {
                 this.loggedInId = cookieId;
             }
+
+            await this.get_login_full();
         },
 
-        async get_id(): Promise<string | null> {
-            while (typeof this.loggedInId == 'boolean') {
-                await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
-            }
+        
+        //////////////////////////////
+        ///////// LOCAL USE //////////
+        //////////////////////////////
 
-            if (typeof this.loggedInId == 'string' && this.loggedInId != 'unfetched') {
-                return this.loggedInId;
-            } else {
-                const fetch = await this.fetch_self_min();
 
-                if (fetch != null) {
-                    return fetch.id;
-                }
-                return null;
-            }
-        },
+        async map_id(id: string | null): Promise<string | null> {
+            let fitId = id;
 
-        async get_login() {
-            return await this.fetch_self_min();
-        },
+            if (fitId) {
+                let selfId = await this.get_login_id();
 
-        async get_competitor(id: string): Promise<PubAccountInfo | null> {
-            if (id == 'unfetched' || id == this.loggedInId) {
-                id = 'self'
-            }
-
-            let entry = this.competiros.get(id) ?? null;
-            while (typeof entry == 'boolean') {
-                await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
-                entry = this.competiros.get(id) ?? null;
-            }
-            return entry;
-        },
-
-        async store_competitor(id: string, info: PubAccountInfo | boolean | undefined) {
-            if (id == 'unfetched' || id == this.loggedInId) {
-                id = 'self'
-            }
-
-            let entry = this.competiros.get(id);
-            while (typeof entry == 'boolean') {
-                await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
-                entry = this.competiros.get(id);
-            }
-            entry = info;
-        },
-
-        // could be optimised in the future
-        async get_competitors_min(ids: string[]): Promise<PubAccountInfo[]> {
-            let accounts = [] as PubAccountInfo[];
-            let incomplete = false;
-
-            for (let id of ids) {
-
-                let account = await this.get_competitor(id);
-                if (account != null) {
-                    accounts.push(account);
-                } else  {
-                    incomplete = true;
+                if (fitId == selfId) {
+                    fitId = null;
                 }
             }
 
-            if (incomplete) {
-                return await this.fetch_min(ids);
-            } else {
-                return accounts;
+            return fitId;
+        },
+
+
+        // returns boolean according to if currently fetching or not
+        get_competitor_entry(id: string | null = null): [PubAccountInfo | null, boolean] {
+
+            let fitId = id;
+            let selfId = (typeof this.loggedInId !== 'string') ? '' : this.loggedInId;
+
+            if (fitId == selfId) {
+                fitId = null;
+            }
+
+            let entry = this.competiros.get(fitId);
+
+            if (isFetching(entry)) {
+                return [entry.fallBack, true];
+            }
+            else {
+                return [(entry ?? null), false];
             }
         },
 
-        // ensures that all accounts have a schedule
-        async get_competitors_full(ids: string[]): Promise<PubAccountInfo[]> {
-            let accounts = [] as PubAccountInfo[];
-            let incomplete = false;
 
-            for (const id of ids) {
+        // For local use, does not fetch in case of missing data
+        async get_competitor(id: string | null = null): Promise<PubAccountInfo | null> {
 
-                let account = await this.get_competitor(id);
-                if (account == null || account.schedule === null) {
-                    incomplete = true;
-                } else {
-                    accounts.push(account);
-                }
+            let fitId = await this.map_id(id);
+            let entry = this.get_competitor_entry(fitId);
+
+            // stall loop
+            while (entry[1]) {
+                // waits for 100ms
+                await new Promise(resolve => setTimeout(resolve, 100));
+                entry = this.get_competitor_entry(fitId);
             }
 
-            if (incomplete) {
-                return await this.fetch_full(ids);
-            } else {
-                return accounts;
+            return (entry[0] ?? null);
+        },
+
+
+        async set_competitor(id: string | null = null, account: PubAccountInfo | Fetching<PubAccountInfo> | null) {
+
+            let fitId = await this.map_id(id);
+
+            // automatically populates fetching with previous value
+            while (this.get_competitor_entry(fitId)[1]) {await new Promise(resolve => setTimeout(resolve, 100));}
+            if (isFetching(account)) {
+                let acc = this.get_competitor_entry(fitId)[0];
+                this.competiros.set(fitId, createFetching(acc));
+            }
+            else if (account) {
+                this.competiros.set(fitId, account);
+            }
+            else {
+                this.competiros.delete(fitId);
+            } 
+        },
+        
+
+        async post_account() {
+
+            let account = await this.get_login_full();
+            if (account && account.schedule) {
+                await postAccount(account);
+            }
+            else {
+                throw new Error("Tried to post account while account was not fully loaded")
             }
         },
 
-        // fetches accounts without schedule
-        async fetch_min(ids: string[]) {
-            let accounts = await getAccountSimple(ids);
 
-            for (const a of accounts) {
-                this.competiros.set(a.id, a);
-            }
 
-            return accounts;
-        },
 
-        // fetches accounts with schedule
-        async fetch_full(ids: string[]) {
-            let accounts = await getAccountFull(ids);
 
-            for (const a of accounts) {
-                this.competiros.set(a.id, a);
-            }
 
-            return accounts;
-        },
+        ///////////////////////////////
+        ///////// PUBLIC USE //////////
+        ///////////////////////////////
 
-        // fetches account without schedule
-        // will only fetch once
-        async fetch_self_min(): Promise<PubAccountInfo | null> {
+
+        async get_login_id(): Promise<string | null> {
+
+            // cant be allowed to definitively map id as it would create a loop of different functions waiting for each other
+            let id = this.loggedInId;
             
-            let entry = await this.get_competitor('self');
+            // stall loop
+            while (isFetching(id)) {
+                // waits for 100ms
+                await new Promise(resolve => setTimeout(resolve, 100));
+                id = this.loggedInId
+            }
 
-            if (entry == null) {
-                    
-                this.store_competitor('self', true);
+            if (this.loggedInId === undefined) {
+                let acc = await this.get_login_min();
+                return (acc?.id ?? null)
+            }
+
+            return (id ?? null);
+        },
+
+
+        async get_login_min(): Promise<PubAccountInfo | null> {
+
+            let account = await this.get_competitor();
+
+            if (!account && this.loggedInId === undefined) {
+                this.set_competitor(null, createFetching());
 
                 try {
-                    let res = await getLogin();
-            
-                    if (res == null) {
-                        this.loggedInId = null;
-                        this.store_competitor('self', undefined);
-                    }
-                    else {
-                        this.loggedInId = res.id;
-                        this.store_competitor('self', res);
-                        console.log("Log in succesfull");
-                    }
-                    return res;
+                    let acc = await getLogin();
+                    this.loggedInId = (acc?.id ?? null)
+                    this.set_competitor(null, acc);
                 }
                 catch (err) {
-                    this.loggedInId = null;
+                    this.set_competitor(null, null);
                     if (err instanceof Error) {
                         throw new Error(err.message)
                     } else {
@@ -170,25 +171,154 @@ export const accountsStore = defineStore('accounts', {
                         throw new Error
                     }
                 }
+            }
+
+            return await this.get_competitor();
+        },
+
+
+        async get_login_full(): Promise<PubAccountInfo | null> {
+
+            let account_fut = await this.get_competitor();
+            let id_fut = await this.get_login_id();
+
+            const [account, id] = await Promise.all([account_fut, id_fut]);
+
+            if (id === null) {
+                return null
+            }
+            else if (!account || !account.schedule) {
+                this.set_competitor(null, createFetching());
+
+                try {
+                    let acc = await getAccountFull([id]);
+                    this.set_competitor(null, acc[0]);
+                }
+                catch (err) {
+                    this.set_competitor(null, null);
+                    if (err instanceof Error) {
+                        throw new Error(err.message)
+                    } else {
+                        console.warn("throwing unspecified error");
+                        throw new Error
+                    }
+                }
+            }
+
+            return await this.get_competitor();
+        },
+
+
+        
+        async get_accounts_min(ids: string[]): Promise<PubAccountInfo[]> {
+            let missing = await Promise.all(ids.filter(async (a) => this.get_competitor(a) !== null));
+
+            if (missing.length > 0) {
+
+                for (let msId of missing) {
+                    await this.set_competitor(msId, createFetching())
+                }
+
+                try {
+                    let fetchedAccounts = await getAccountSimple(missing);
+
+                    for (let acc of fetchedAccounts) {
+                        this.set_competitor(acc.id, acc);
+                    }
+                }
+                catch (err) {
+                    for (let msId of missing) {
+                        await this.set_competitor(msId, null)
+                    }
+                    if (err instanceof Error) {
+                        throw new Error(err.message)
+                    } else {
+                        console.warn("throwing unspecified error");
+                        throw new Error
+                    }
+                }
+            }
+
+            let accounts = await Promise.all(ids.map(async (a) => await this.get_competitor(a)));
+
+            if (accounts.some((a) => (!a || !a.schedule))) {
+                let missingIds = ids.filter(async (id) => !accounts.some(async (a) => a?.id === id));
+                throw new Error("Unable to fetch some competitor Ids (min). Missing Ids: " + missingIds)
             } 
             else {
-                // no need to set loggedInId here, as it is already corectly set
-                this.loggedInId = entry.id;
-                return entry;
+                // unessecary filter but type checking wont pass otherwise
+                return accounts.filter((a) => a != null);
             }
         },
 
-        async create_match_event_local(fight: MatchEvent) {
-            let accounts = await this.get_competitors_full([fight.initiatorId, fight.opponentId]);
 
-            
-            for (const account of accounts) {
-                if (account.schedule == null) {
-                    throw new Error("Cant create match event while account is not fully loaded");
+        async get_accounts_full(ids: string[]): Promise<PubAccountInfo[]> {
+            const checks = await Promise.all(
+                ids.map(async (a) => {
+                    const acc = await this.get_competitor(a);
+                    return {
+                        id: a,
+                        missing: !(acc && acc.schedule)
+                    };
+                })
+            );
+
+            const missing = checks
+                .filter(x => x.missing)
+                .map(x => x.id);
+
+
+            if (missing.length > 0) {
+                for (let msId of missing) {
+                    await this.set_competitor(msId, createFetching(await this.get_competitor(msId)))
                 }
 
+                try {
+                    let fetchedAccounts = await getAccountSimple(missing);
+
+                    for (let acc of fetchedAccounts) {
+                        this.set_competitor(acc.id, acc);
+                    }
+                }
+                catch (err) {
+                    for (let msId of missing) {
+                        await this.set_competitor(msId, null)
+                    }
+                    if (err instanceof Error) {
+                        throw new Error(err.message)
+                    } else {
+                        console.warn("throwing unspecified error");
+                        throw new Error
+                    }
+                }
+            }
+
+            let accounts = await Promise.all(ids.map(async (a) => await this.get_competitor(a)));
+
+            if (accounts.some((a) => (!a || !a.schedule))) {
+                let missingIds = ids.filter(async (id) => !accounts.some(async (a) => a?.id === id));
+                throw new Error("Unable to fetch some competitor Ids (full). Missing Ids: " + missingIds)
+            } 
+            else {
+                // unessecary filter but type checking wont pass otherwise
+                return accounts.filter((a) => a != null);
+            }
+        },
+
+
+
+
+        async create_match_event_local(fight: MatchEvent) {
+            let accounts = await this.get_accounts_full([fight.initiatorId, fight.opponentId]);
+
+            if (accounts.some((a) => !a.schedule)) {
+                throw new Error("Cant create match event while account is not fully loaded");
+            }
+
+            for (const account of accounts) {
+            
                 // Avoid duplicates
-                if (!account.schedule.matches.some(e =>
+                if (account && account.schedule && !account.schedule.matches.some(e =>
                     e.startDate.getTime() === fight.startDate.getTime() &&
                     e.endDate.getTime() === fight.endDate.getTime() &&
                     e.initiatorId === fight.initiatorId &&
@@ -197,34 +327,27 @@ export const accountsStore = defineStore('accounts', {
                     account.schedule.matches.push(fight);
                 }
 
-                this.competiros.set(account.id, account); // update the store
+                this.set_competitor(account.id, account); // update the store
             }    
         },
+
 
         async post_match_event(fight: MatchEvent) {
             let res = await postMatchEvent(fight);
 
-            this.competiros.delete(fight.initiatorId); // remove the cached account, so it will be refetched
-            this.competiros.delete(fight.opponentId); // remove the cached account, so it will be refetched
+            this.set_competitor(fight.initiatorId, null); // remove the cached account, so it will be refetched
+            this.set_competitor(fight.opponentId, null); // remove the cached account, so it will be refetched
 
             return res;
         },
 
+
         // doesnt automatically store the account, less input latency this way
         async self_edit_availabilities_local(add_av: Availability[], rem_av: Availability[]) {
             // console.log("editing availability");
-            let account = await this.get_login();
+            let account = await this.get_login_full();
 
             if (account != null && account.schedule != null) {
-                // Add new availabilities
-                for (const av of add_av) {
-                    // Avoid duplicates
-                    if (!account.schedule.availabilities.some(a =>
-                        a.startDate === av.startDate && a.endDate === av.endDate
-                    )) {
-                        account.schedule.availabilities.push(av);
-                    }
-                }
         
                 // Remove availabilities
                 for (const av of rem_av) {
@@ -238,58 +361,52 @@ export const accountsStore = defineStore('accounts', {
                     }
                 }
 
-                this.competiros.set(account.id, account); // update the store
+                // Add new availabilities
+                for (const av of add_av) {
+                    // Avoid duplicates
+                    if (!account.schedule.availabilities.some(a =>
+                        a.startDate === av.startDate && a.endDate === av.endDate
+                    )) {
+                        account.schedule.availabilities.push(av);
+                    }
+                }
+
+                await this.set_competitor(null, account)
+                await this.post_account(); // update the store
             } 
             else {
                 throw new Error("Cant edit account while account is not fully loaded")
             }
         },
 
+
         async self_update_schedule_note(note: string) {
-            let account = await this.get_login();
+            let account = await this.get_login_full();
 
-            if (account == null) {
+            if (account && account.schedule) {
+                account.schedule.note = note;
+                await this.set_competitor(null, account);
+                await this.post_account();
+            }
+            else {
                 throw new Error("cant update schedule while account isnt fully loaded");
-            } else {
-                if (account.schedule == null) {
-                    throw new Error("cant update schedule while account isnt fully loaded");
-                }
-                else {
-                    account.schedule.note = note;
-                    return await this.store_self();
-                }
             }
         },
 
-        async store_self() {
-            let account = await this.get_login();
-            if (account != null && account.schedule != null) {
-
-                try {
-                    let res = await postAccount(account);
-                    return res;
-                }
-                catch {
-                    this.loggedInId = 'unfetched';
-                    await this.get_login();
-                }
-
-            } else {
-                throw new Error("cant store account while its not fully loaded")
-            }
-        },
 
         async refresh_accounts(ids: (string | null)[]) {
-            for (const id of ids) {
-                if (id != null) {
-                    this.competiros.delete(id);
-                } else {
-                    this.loggedInId = 'unfetched'; // reset logged in id
-                    await this.get_login(); // refetch logged in account
+            const fitIds = await Promise.all(ids.map(async (id) => await this.map_id(id)));
+
+            for (const id of fitIds) {
+                this.set_competitor(id, null);
+                if (id === null) {
+                    this.loggedInId = undefined; // reset logged in id
+                    this.set_competitor(id, null);
+                    await this.get_login_full(); // refetch logged in account
                 }
             }
 
-            let res = await this.fetch_min(ids as string[]);
+            let res = await this.get_accounts_full(fitIds.filter((id) => typeof id === 'string'));
         }
     }
 })

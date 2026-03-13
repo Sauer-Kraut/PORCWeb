@@ -11,12 +11,12 @@ import { videoReferenceFromRecv } from '@/models/discord/VideoReferenceRecv';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { getInitData } from '@/util/GetInitData';
 import {defineStore} from 'pinia';
+import { createFetching, isFetching, type Fetching } from './fetching';
 
 export const discordInfoStore = defineStore('discord_info', {
-    state: (): {discord_events: DiscordEvent[], discord_vods: VideoReference[], fetching: boolean} => ({
-        discord_events: [],
-        discord_vods: [],
-        fetching: false
+    state: (): {discord_events: DiscordEvent[] | Fetching<DiscordEvent[]> | null, discord_vods: VideoReference[] | Fetching<VideoReference[]> | null} => ({
+        discord_events: null,
+        discord_vods: null
     }),
 
     actions: {
@@ -39,84 +39,73 @@ export const discordInfoStore = defineStore('discord_info', {
 
         // will keep fetching every time its called if no events are scheduled
         async get_events(): Promise<DiscordEvent[]> {
-            while (this.fetching) {
+            let events = this.discord_events;
+
+            while (isFetching(events)) {
                 await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
+                events = this.discord_events;
             }
             
-            if (!(this.discord_events.length > 0)) {
-                let res = await this.fetch_discord_events();
-                return res;
-            } else {
-                return this.discord_events;
-            }
-        },
-
-
-        async fetch_discord_events(): Promise<DiscordEvent[]> {
-            
-            while (this.fetching) {
-                await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
+            if (isFetching(events)) {
+                return events.fallBack as DiscordEvent[];
             }
 
-            this.fetching = true;
-            try {
-                let res = await getDiscordEvents();
-                this.discord_events = res;
-                // console.log("Log in succesfull");
-                this.fetching = false;
-                return res;
-            }
-            catch (err) {
-                this.fetching = false;
-                if (err instanceof Error) {
-                    throw new Error(err.message)
-                } else {
-                    console.warn("throwing unspecified error");
-                    throw new Error
+            else {
+                if (!events) {
+                    this.discord_events = createFetching();
+                    try {
+                        events = await getDiscordEvents();
+                        this.discord_events = events;
+                    }
+                    catch (err) {
+                        events = null;
+                        if (err instanceof Error) {
+                            throw new Error(err.message)
+                        } else {
+                            console.warn("throwing unspecified error");
+                            throw new Error
+                        }
+                    }
                 }
+
+                return events;
             }
         },
-
-
+        
 
         // will keep fetching every time its called if no events are scheduled
         async get_vods(): Promise<VideoReference[]> {
-            while (this.fetching) {
+            let vods = this.discord_vods;
+
+            while (isFetching(vods)) {
                 await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
+                vods = this.discord_vods;
             }
             
-            if (!(this.discord_vods.length > 0)) {
-                let res = await this.fetch_discord_vods();
-                return res;
-            } else {
-                return this.discord_vods;
+            if (isFetching(vods)) {
+                return vods.fallBack as VideoReference[];
+            }
+
+            else {
+                if (!vods) {
+                    this.discord_vods = createFetching();
+                    try {
+                        vods = await getDiscordVods();
+                        this.discord_vods = vods;
+                    }
+                    catch (err) {
+                        this.discord_vods = null;
+                        if (err instanceof Error) {
+                            throw new Error(err.message)
+                        } else {
+                            console.warn("throwing unspecified error");
+                            throw new Error
+                        }
+                    }
+                }
+
+                return vods;
             }
         },
-
-
-        async fetch_discord_vods(): Promise<VideoReference[]> {
-            
-            while (this.fetching) {
-                await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
-            }
-
-            this.fetching = true;
-            try {
-                let res = await getDiscordVods();
-                this.discord_vods = res;
-                // console.log("Log in succesfull");
-                this.fetching = false;
-                return res;
-            }
-            catch (err) {
-                this.fetching = false;
-                if (err instanceof Error) {
-                    throw new Error(err.message)
-                } else {
-                    console.warn("throwing unspecified error");
-                    throw new Error
-                }
-            }
-        }
     }
 })

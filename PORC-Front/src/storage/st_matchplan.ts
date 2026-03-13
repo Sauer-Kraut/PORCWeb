@@ -8,136 +8,171 @@ import type { DivisionRanking } from '@/models/matchplan/PlayerPerformancModel';
 import type { Season } from '@/models/matchplan/Season';
 import { getInitData } from '@/util/GetInitData';
 import {defineStore} from 'pinia';
+import { createFetching, isFetching, type Fetching } from './fetching';
+
+
+type InfoTypeMap = {
+    matchplan: Matchplan
+    season: Season
+    ranking: DivisionRanking[]
+}
+
+type SeasonInfoEntry = {
+    [K in keyof InfoTypeMap]: InfoTypeMap[K] | Fetching<InfoTypeMap[K]> | null
+};
 
 export const matchplanStore = defineStore('matchplan', {
     state: (): {
-        matchplans: Map<string, [Matchplan | null | boolean, Season | null, DivisionRanking[] | null | boolean]>, // boolean designates if currently fetching to avoid multiple fetches at the same time: If type is boolean than its currently being fetched, if type is Matchplan or null then it was fetched before
+        currentSeason: string | undefined, // cant be null cause there is always a current season
+        seasonInfos: Map<string | null, SeasonInfoEntry>,
     } => ({
-        matchplans: new Map<string, [Matchplan | null | boolean, Season | null, DivisionRanking[] | null | boolean]>() // current season is assigned to key '0', other seasons are assigned to their name
+        currentSeason: undefined,
+        seasonInfos: new Map<string | null, SeasonInfoEntry>() // current season has key null
     }),
 
     actions: {
 
         init_storage() {
             const data = getInitData();
-            if (data != null && data.matchplan && data.season) {
-                this.matchplans.set('0', [data.matchplan, data.season, data.ranking]);
-                this.matchplans.set(data.season.name, [data.matchplan, data.season, data.ranking]);
+            if (data && data.matchplan && data.season) {
+                this.seasonInfos.set(null, { 
+                    matchplan: data.matchplan, 
+                    season: data.season, 
+                    ranking: data.ranking
+                });
+                this.currentSeason = data.season.name;
+            }
+
+            this.get_all_seasons();
+        },
+
+
+
+
+
+        //////////////////////////////
+        ///////// LOCAL USE //////////
+        //////////////////////////////
+
+
+        async map_season_name(name: string | null): Promise<string | null> {
+
+            let fitName = name;
+
+            if(fitName) {
+                const currentMatchplan = await this.get_matchplan();
+
+                if (fitName === currentMatchplan.season) {
+                    fitName = null;
+                } 
+            }
+        
+            return fitName;
+        },
+
+
+        get_entry<T extends keyof InfoTypeMap>(name: string | null, type: T): [InfoTypeMap[T] | null, boolean] {
+
+            let fitName = name;
+            let selfName = (typeof this.currentSeason !== 'string') ? '' : this.currentSeason;
+
+            if (fitName == selfName) {
+                fitName = null;
+            }
+
+            let entry = this.seasonInfos.get(fitName);
+            if (!entry) {
+                return [null, false];
+            }
+
+            let v = entry[type];
+
+            if (isFetching(v)) {
+                return [v.fallBack as InfoTypeMap[T], true];
+            }
+            else {
+                return [v as InfoTypeMap[T], false];
             }
         },
+
+
+        async set_entry<T extends keyof InfoTypeMap>(seasonName: string | null, info: InfoTypeMap[T] | Fetching<InfoTypeMap[T]> | null, type: T) {
+            let fitName = await this.map_season_name(seasonName);
+
+            let entry = this.seasonInfos.get(fitName) ??
+                {
+                    matchplan: null,
+                    season: null,
+                    ranking: null
+                } as SeasonInfoEntry;
+
+            while (this.get_entry(fitName, type)[1]) {await new Promise(resolve => setTimeout(resolve, 100));}
+
+            let fitInfo = info;
+            if (isFetching(fitInfo)) {
+                let v = entry[type];
+
+                if (isFetching(v)) {
+                    v = null;
+                }
+
+                fitInfo = createFetching<InfoTypeMap[T]>(v as InfoTypeMap[T] | null);
+            }
+
+            (entry as any)[type] = fitInfo;
+
+            this.seasonInfos.set(fitName, entry)
+        },
+
+
+        async get_info<T extends keyof InfoTypeMap>(seasonName: string | null, type: T): Promise<InfoTypeMap[T] | null> {
+            let fitName = await this.map_season_name(seasonName);
+            let entry = this.get_entry(fitName, type);
+
+            // stall loop
+            while (entry[1]) {
+                // waits for 100ms
+                await new Promise(resolve => setTimeout(resolve, 100));
+                entry = this.get_entry(fitName, type);
+            }
+
+            return (entry[0] ?? null);
+        },
+
+
+
+
+
+
+
+
+
+        ///////////////////////////////
+        ///////// PUBLIC USE //////////
+        ///////////////////////////////
+        
 
         // gets matchplan of any season, returns current season if no season name is provided
         async get_matchplan(season: string | null = null): Promise<Matchplan> {
-            let res = await this.fetch_season(season);
 
-            if (res[0] != null && typeof res[0] !== 'boolean') {
-                return res[0]; // return matchplan
-            } else {
-                throw new Error("this error should not happen, matchplan is null even though it was fetched before"); // return error message
-            }
-        },
-
-        async get_season_info(season: string | null) {
-            return (this.matchplans.get(season ||'0')?.[2] || null);
-        },
-
-        async get_all_season_infos() {
-            let seasons: Season[] = [];
-
-            for (let [key, value] of this.matchplans) {
-                if (value[1] != null && typeof value[1] !== 'boolean') {
-                    seasons.push(value[1]);
-                }
-            }
-
-            return seasons;
-        },
-
-        async get_ranking(season: string | null) {
-            return await this.fetch_ranking(season);
-        },
-
-        // fetches season with provided name or default current season
-        // also sets current season name if current season is fetched
-        async fetch_season(season: string | null = null): Promise<[boolean | Matchplan | null, Season | null, boolean | DivisionRanking[] | null]> {
-            // console.log(this.matchplans);
-
-            let res = this.matchplans.get(season || '0');
-
-            while (res && typeof res[0] == 'boolean') {
-                console.log("fetch season: waiting");
-                res = this.matchplans.get(season || '0');
-                await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
-            }
-
-            if (!res || typeof res[0] != 'boolean') {
-                if (!res || res[0] == null) {
-
-                    this.matchplans.set(season || '0', [true, res?.[1] || null,  res?.[2] || null]);  // concurent initial calls for current season will meat a key 0
-
-                    let entry_ref = this.matchplans.get(season || '0') || [true, null, null];
-
-                    try {
-                        let plan = await getMatchplan(season);
-
-                        let named_entry = [plan, res?.[1] || null,  res?.[2] || null] as [Matchplan | null | boolean, Season | null, DivisionRanking[] | null | boolean]; // gives reference to the entry in the map
-                        this.matchplans.set(season || '0', named_entry); // update matchplan in map
-                        
-                        return named_entry; // return matchplan
-                    } 
-                    catch (err) {
-                        entry_ref[0] = null; // reset fetch status
-                        if (err instanceof Error) {
-                            throw new Error(err.message)
-                        } else {
-                            console.warn("throwing unspecified error");
-                            throw new Error
-                        }
-                    }
-                } 
-                else if (res[0] == null) {
-                    throw new Error("no matchplan found for season " + (season || '0') + " even though it was fetched before");
-                }
-                else {
-                    return res;
-                }
-            } 
-            else {
-                throw new Error("currently fetching matchplan, try again later") // should be imposible since the wait right before
-            }
-        },
-
-        async fetch_ranking(season: string | null): Promise<DivisionRanking[]> {
-
-            console.log("fetching ranking for season " + (season || '0'));
-
-            let res = this.matchplans.get(season || '0');
-
-            if (!res || res == null) {
-                console.log("fetching season " + (season) + " because it was not fetched before");
-                const fetched = await this.fetch_season(season);
-                if (typeof fetched !== 'string') {
-                    res = fetched;
-                } else {
-                    return fetched; // return error message if fetch_season returns a string
-                }
-            }
-
-            if (res && (res[2] == null || typeof res[2] === 'boolean')) {
-
-                while (res && typeof res[2] == 'boolean') {
-                    await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
-                }
-                
-                res[2] = true; // set fetch status to true
+            let infoMatchplan = await this.get_info(season, 'matchplan');
+            
+            if (!infoMatchplan) {
+                let fitSeason = await this.map_season_name(season);
 
                 try {
-                    let ranking = await getRanking(season);
-                    res[2] = ranking; // set ranking in the map entry
-                    return ranking;
+                    this.set_entry(fitSeason, createFetching(), 'matchplan');
+                    let matchplan = await getMatchplan(fitSeason);
+
+                    if (!fitSeason) {
+                        this.currentSeason = matchplan.season;
+                    }
+
+                    this.set_entry(season, matchplan, 'matchplan');
+                    return matchplan;
                 }
                 catch (err) {
-                    res[2] = false; // reset fetch status
+                    this.set_entry(fitSeason, null, 'matchplan');
                     if (err instanceof Error) {
                         throw new Error(err.message)
                     } else {
@@ -145,72 +180,112 @@ export const matchplanStore = defineStore('matchplan', {
                         throw new Error
                     }
                 }
-            } 
-            else if (res && typeof res[2] != 'boolean' && res[2]) {
-                return res[2]; // return ranking if already fetched
-            } 
-            else {
-                throw new Error("season not found, probably not fetched yet"); // return error message
             }
+            
+            return infoMatchplan;
         },
 
-        // fetches all seasons, ment to be called once during initial page load
-        async fetch_all_seasons() {
-            let seasons = await getSeasons();
+        async get_all_seasons(): Promise<Season[]> {
+            let seasons = (await Promise.all(Object.entries(this.seasonInfos).map(async ([id, e]) => await this.get_info(id, 'season')))).filter((e) => e !== null);
+
+            if (seasons.length < 1) {
+                let seasons = await getSeasons();
+                await Promise.all(seasons.map(async (s) => await this.set_entry(s.name, s, 'season')));
+            } 
+
+            return seasons;
+        },
+
+        async get_season(seasonName: string | null = null): Promise<Season> {
+            let infoSeason = await this.get_info(seasonName, 'season');
             
-            if (typeof seasons !== 'string') {
+            if (!infoSeason) {
+                let fitSeason = await this.map_season_name(seasonName);
 
-                for (let season_info of seasons) {
+                this.set_entry(fitSeason, createFetching(), 'season');
+                let seasons = await this.get_all_seasons();
 
-                    let info = this.matchplans.get(season_info.name);
-                    if (info != undefined) {
-                        info[1] = season_info; // update season info in the map entry
+                try {
+                    this.set_entry(fitSeason, createFetching(), 'season');
+                    let seasons = await this.get_all_seasons();
+
+                    let target = seasons.filter((s) => s.name === fitSeason || (s.name === this.currentSeason && fitSeason === null))[0];
+                    if (target) {
+                        this.set_entry(fitSeason, target, 'season');
+                        return target;
                     }
                     else {
-                        this.matchplans.set(season_info.name, [null, season_info, null]);
+                        this.set_entry(fitSeason, null, 'season');
+                        throw new Error("Querried Season could not be found among all retrieved seasons");
+                    }
+                }
+                catch (err) {
+                    this.set_entry(fitSeason, null, 'season');
+                    if (err instanceof Error) {
+                        throw new Error(err.message)
+                    } else {
+                        console.warn("throwing unspecified error");
+                        throw new Error
+                    }
+                }
+
+            }
+            
+            return infoSeason;
+        },
+
+        async get_ranking(season: string | null = null) {
+            let infoRanking = await this.get_info(season, 'ranking');
+            
+            if (!infoRanking) {
+                let fitSeason = await this.map_season_name(season);
+
+                this.set_entry(fitSeason, createFetching(), 'ranking');
+
+                try {
+                    let ranking = await getRanking(fitSeason);
+                    this.set_entry(season, ranking, 'ranking');
+                    return ranking;
+                }
+                catch (err) {
+                    this.set_entry(fitSeason, null, 'ranking');
+                    if (err instanceof Error) {
+                        throw new Error(err.message)
+                    } else {
+                        console.warn("throwing unspecified error");
+                        throw new Error
                     }
                 }
             }
+            
+            return infoRanking;
         },
+        
 
         async storeMatch(match: MatchModel) {
-            let res = await postMatch(match);
+            let _res = await postMatch(match);
 
-            let season = '0'; // current season is assigned to 0
-
-            if (season != null) {
-                let info = this.matchplans.get(season);
-                if (info != undefined) {
-                    info[0] = null; // reset matchplan fetch status
-                    info[2] = null; // reset ranking fetch status
-                }
-            }
+            await Promise.all([
+                this.set_entry(null, null, 'matchplan'),
+                this.set_entry(null, null, 'ranking')
+            ]);
         },
 
-        async reset_ranking(season: string | null) {
-            let res = this.matchplans.get(season || '0');
+        async reset_info() {
+            await Promise.all(Object.entries(this.seasonInfos).map(async ([id, entry]) => {
+                await Promise.all([
+                    this.get_info(id, 'matchplan'),
+                    this.get_info(id, 'season'),
+                    this.get_info(id, 'ranking')
+                ])
+                this.seasonInfos.delete(id);
+            }));
 
-            while (res && typeof res[2] == 'boolean') {
-                console.log("fetch season: waiting");
-                res = this.matchplans.get(season || '0');
-                await new Promise(resolve => setTimeout(resolve, 100)); // waits for 100ms
-            }
-
-            if (res && typeof res[2] != 'boolean') {
-                console.log("resetting ranking for season " + (season || '0'));
-                res[2] = null; // reset ranking fetch status
-                console.log(this.matchplans.get(season || '0'));
-            }
-
-            return this.fetch_ranking(season); // fetch ranking again
-        },
-
-        reset_fetch() {
-            for (let [key, value] of this.matchplans) {
-                let value_new = value;
-                value_new[0] = false;
-                this.matchplans.set(key, value_new);
-            }
+            await this.get_matchplan();
+            return await Promise.all([
+                this.get_all_seasons(),
+                this.get_ranking()
+            ])
         }
     }
 })

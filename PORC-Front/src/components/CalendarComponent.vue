@@ -12,6 +12,7 @@ import { accountsStore } from '@/storage/st_accounts';
 import { postMatchEvent } from '@/API/match_event/PostMatchEvent';
 import type { PlayerModel } from '@/models/matchplan/PlayerModel';
 import type { Season } from '@/models/matchplan/Season';
+import MatchPopper from './Calender/MatchPopper.vue';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -432,6 +433,8 @@ async function submitNote() {
 
 <template>
     <div class="calendar-container m-0 px-0">
+
+
         <div class="calendar-header m-0 ps-0 pe-0">
             <div class="calendar-header-top row align-items-center mb-3 ps-5 pe-5">
                 <div class="col-auto day-arrows">
@@ -455,15 +458,23 @@ async function submitNote() {
                 </div>
             </div>
         </div>
+
+
         <div class="calendar-body">
+
+
             <div class="calendar-days">
                 <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString(), 'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()) }">
+
                     <div v-for="(hour, index) in hours" 
                         :key="hour.name" 
                         class="calendar-hour-day"
                         :id="`hour-${index}`"
                         @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)">
                     </div>
+
+
+                    <!-- Availabilities -->
                     <div
                         class="event availability"
                         :class="{ own: ownCalendar }"
@@ -484,6 +495,9 @@ async function submitNote() {
                             :style="getHourStyle(hour, availability.startDate, availability.endDate)"
                         ></div>
                     </div>
+
+
+                    <!-- Matches -->
                     <VDropdown
                         v-for="match in matches.filter((m) => m.startDate.toDateString() === day.toDateString() && displayMatch(m))"
                         class="event match"
@@ -500,33 +514,7 @@ async function submitNote() {
                             <div class="match-status pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]" :season="season_info ?? undefined"></MatchStatusComponent></div>
                         </div>
                         <template #popper>
-                            <div class="container p-3">
-                                <div class="row align-items-center">
-                                    <h4 class="col-auto">
-                                        <div class="icon calander icon-calender"></div>
-                                    </h4>
-                                    <h6 class="col">{{ match.startDate.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}</h6>
-                                    <h6 class="col-auto">
-                                        {{ match.startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }} -
-                                        {{ match.endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) }}
-                                    </h6>
-                                </div>
-                                <div class="row">
-                                    <h5 class="col text-center">
-                                        {{ filter_str(getPlayer(match.initiatorId).tag || 'Player 1', 12) }}
-                                        &nbsp;&nbsp;&nbsp;vs.&nbsp;&nbsp;&nbsp;
-                                        {{ filter_str(getPlayer(match.opponentId).tag || 'Player 2', 12) }}
-                                    </h5>
-                                </div>
-                                <div class="row mt-4" v-if="ownCalendar && match.status === MatchStatus.Requested && match.opponentId === ownId">
-                                    <div class="col">
-                                        <button class="btn btn-sm btn-outline-light w-100" @click="respondToMatch(match, false)"><i></i>Decline</button>
-                                    </div>
-                                    <div class="col">
-                                        <button class="btn btn-sm btn-light w-100" @click="respondToMatch(match, true)"><i></i>Accept</button>
-                                    </div>
-                                </div>
-                            </div>
+                            <MatchPopper :match="match" :own-calendar="ownCalendar"></MatchPopper>
                         </template>
                     </VDropdown>
                 </div>

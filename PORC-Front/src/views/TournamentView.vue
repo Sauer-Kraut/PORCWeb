@@ -97,7 +97,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
     async function getCurrentUserSchedule() {
         if (user.value && user.value != '0'){
             let accStore = accountsStore();
-            let res = await accStore.get_competitors_full([user.value]);
+            let res = await accStore.get_accounts_full([user.value]);
             
             if (typeof res == 'string') {
                 console.log('Error getting user schedule:', res);
@@ -240,7 +240,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 
     async function getUserId() {
         let accStore = accountsStore();
-        let res = await accStore.get_id();
+        let res = await accStore.get_login_id();
         if (res != null) {
             user.value = res;
         }

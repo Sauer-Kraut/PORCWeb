@@ -23,7 +23,7 @@ import { filter_str } from '@/util/stringFilter';
 
     let event = ref(props.Event ?? sampleEvent);
 
-    let live = ref(true);
+    let live = ref(event.value.live);
 
     function getDivision() {
         const match = event.value.title.match(/\[([^\]]*)\]/);

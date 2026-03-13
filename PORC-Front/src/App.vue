@@ -34,7 +34,7 @@ const isLoggedIn = ref(false);
 const user_id = ref('0');
 
 async function getUserId() {
-    let res = await st_account.get_id();
+    let res = await st_account.get_login_id();
     
     isLoggedIn.value = (res != null);
     if (res != null) {
@@ -102,7 +102,7 @@ async function getPubPlayerInfos(ids: string[]) {
 
     // console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
 
-    let res = await st_account.get_competitors_full(filteredIds);
+    let res = await st_account.get_accounts_full(filteredIds);
 
     // console.log("evaluating result of get_competitors_full: ", res);
 

@@ -34,7 +34,7 @@ const user_id = ref('default');
 
 async function getUserId() {
     let accStore = accountsStore();
-    let res = await accStore.get_id();
+    let res = await accStore.get_login_id();
     
     isLoggedIn.value = (res != null && typeof res != 'undefined');
     user_id.value = res ?? 'default';
@@ -121,7 +121,7 @@ async function getPubPlayerInfos(ids: string[]) {
     // console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
 
     let compStore = accountsStore();
-    let res = await compStore.get_competitors_full(filteredIds);
+    let res = await compStore.get_accounts_full(filteredIds);
 
     // console.log("evaluating result of get_competitors_full: ", res);
 
@@ -265,6 +265,11 @@ async function submitNote() {
                     </div>
 
                     <div class="col d-flex flex-row calender-container px-0 mt-3 mt-md-0">
+                        {{ selectedPlayer?.schedule ?? schedule }}
+                        <br>{{ division?.players || [] }}
+                        <br>{{(selectedPlayer?.id ?? user_id) === user_id}}
+                        <br>{{ user_id}}
+                        <br>{{season?.name ?? 'default'}}
                         <CalendarComponent
                             v-if="selectedPlayer?.schedule"
                             :schedule="selectedPlayer?.schedule ?? schedule"

@@ -14,7 +14,7 @@ let errorMessage: string = 'This is an error message';
 
 async function getUserId() {
     let accStore = accountsStore();
-    let res = await accStore.get_login();
+    let res = await accStore.get_login_min();
 
     if (res == null) {
         isLoggedIn.value = false;
