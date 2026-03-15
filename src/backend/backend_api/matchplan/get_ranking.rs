@@ -27,7 +27,14 @@ pub async fn get_player_ranking_request(query: web::Query<RecvPackage>, appstate
 
     println!("Received request to get player ranking for season: {:?}", query.season);
 
-    let matchplan = appstate.get_matchplan().await?;
+    let matchplan = match query.season.clone() {
+        None => {
+            appstate.get_matchplan().await?
+        },
+        Some(s) =>  {
+            get_matchplan(s, appstate.pool.clone()).await?
+        }
+    };
 
     let divisions = matchplan.divisions;
     let mut rankings = vec!();

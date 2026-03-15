@@ -253,7 +253,7 @@ export const matchplanStore = defineStore('matchplan', {
 
                 try {
                     let ranking = await getRanking(fitSeason);
-                    await this.set_entry(season, ranking, 'ranking');
+                    await this.set_entry(fitSeason, ranking, 'ranking');
                     return ranking;
                 }
                 catch (err) {
