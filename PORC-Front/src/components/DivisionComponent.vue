@@ -92,7 +92,7 @@ async function reload() {
     console.log("Reloading ranking");
 
     const store = matchplanStore();
-    let res = await store.reset_ranking(props.season);
+    let res = await store.reset_info([props.season]);
 
     await getPlayerRanking();
 }

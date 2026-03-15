@@ -1,14 +1,11 @@
 <script lang="ts" setup>
-/// <reference types="../../node_modules/.vue-global-types/vue_3.5_0_0_0.d.ts" />
 import PlayerSelectionComponent from '@/components/PlayerSelectionComponent.vue';
 import type { Availability } from '@/models/availability/Availability';
 import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
 import type { Season } from '@/models/matchplan/Season';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { Schedule } from '@/models/schedule/Schedule';
-import { defineProps, defineModel, ref } from 'vue';
-import DiscordAvatarComponent from './DiscordAvatarComponent.vue';
-import Logo from './svgs/Logo.vue';
+import { ref, watch } from 'vue';
 
 const schedule = ref({
     availabilities: [

@@ -6,64 +6,99 @@ import type { Season } from '@/models/matchplan/Season';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import type { SignUpInfo } from '@/models/SignUpInfo';
 import {defineStore} from 'pinia';
+import { createFetching, isFetching, type Fetching } from './fetching';
+import { matchplanStore } from './st_matchplan';
 
 export const signupStore = defineStore('signups', {
-    state: (): {current_season_signups: SignUpInfo[] | null, signups: Map<Season, SignUpInfo[]>} => ({
-        current_season_signups: null,
+    state: (): {signups: Map<string | null, SignUpInfo[] | Fetching<SignUpInfo[]>>} => ({
         signups: new Map()
     }),
 
     actions: {
 
-        async get_signups(season: Season | null) {
-            let current_season = season;
+        async map_season_name(name: string | null): Promise<string | null> {
+            if (name) {
+                let planStore = matchplanStore();
+                let currentSeason = (await planStore.get_season()).name;
 
-            if (current_season == null) {
-                let signups = this.current_season_signups;
-                if (signups == null) {
-                    await this.fetch_signups(null);
-                }
-                return this.current_season_signups;
+                name = (name == currentSeason) ? null: name;
             }
 
+            return name
+        },
+
+        // returns boolean according to if currently fetching or not
+        get_signup_entry(id: string | null = null): [SignUpInfo[] | null, boolean] {
+
+            let entry = this.signups.get(id);
+
+            if (isFetching(entry)) {
+                return [entry.fallBack, true];
+            }
             else {
-                let signups = season ? this.signups.get(season) || null : null;
-                if (signups == null) {
-                    await this.fetch_signups(season);
+                return [(entry ?? null), false];
+            }
+        },
+
+        async get_season_signup(key: string | null = null): Promise<SignUpInfo[] | null> {
+            let fitName = await this.map_season_name(key);
+
+            let entry = this.get_signup_entry(fitName);
+
+            // stall loop
+            while (entry[1]) {
+                // waits for 100ms
+                await new Promise(resolve => setTimeout(resolve, 100));
+                entry = this.get_signup_entry(fitName);
+            }
+
+            return (entry[0] ?? null);
+        },
+
+        async set_entry(key: string | null = null, info: SignUpInfo[] | Fetching<SignUpInfo[]> | null) {
+            let fitName = await this.map_season_name(key);
+
+            if (isFetching(info)) {
+                let i = this.get_signup_entry(fitName)[0];
+                this.signups.set(fitName, createFetching(i));
+            }
+            else if (info) {
+                this.signups.set(fitName, info);
+            }
+            else {
+                this.signups.delete(fitName);
+            } 
+        },
+
+
+        async get_signups(key: string | null): Promise<SignUpInfo[] | null> {
+
+            let signups = await this.get_season_signup(key);
+
+            if (!signups) {
+                let fitName = await this.map_season_name(key);
+                await this.set_entry(fitName, createFetching());
+
+                try {
+                    let fetched = await getSignups(fitName);
+                    signups = fetched;
+                    await this.set_entry(fitName, signups);
                 }
-                return season ? this.signups.get(season) || null : null;
+                catch (err) {
+                    await this.set_entry(fitName, null);
+                    return null;
+                }
             }
+            
+            return signups;
         },
-
-        async fetch_signups(season: Season | null) {
-            let signups = await getSignups(season?.name || null);
         
-            let val: SignUpInfo[] | null;
-            if (Array.isArray(signups)) {
-                val = signups;
-            } else {
-                val = null;
-            }
-
-            if (season == null) {
-                this.current_season_signups = val;
-            } else {
-                this.signups.set(season, val || []);
-            }
-        },
 
         async post_signup(signup: SignUpInfo) {
             let res = await postSignup(signup);
-            if (typeof res != 'string') {
-                let c_season = this.current_season_signups;
-
-                if (typeof c_season != null) {
-                    c_season?.push(signup);
-                    this.current_season_signups = c_season;
-                }
-            }
-
-            return res;
+            let signups = (await this.get_season_signup());
+            signups?.push(signup);
+            signups ? await this.set_entry(null, signups): {};
         }
     }
 })

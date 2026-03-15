@@ -55,4 +55,13 @@ $trophy-color-gold: color-mix(in srgb, var(--primary) 100%, #fffbf300 0%);
 $trophy-color-silver: color-mix(in srgb, var(--primary) 70%, #fffbf300 0%);
 $trophy-color-bronze: color-mix(in srgb, var(--primary) 40%, #fffbf300 0%);
 
+$grid-breakpoints: (
+  xs: 0,
+  sm: 480px,
+  md: 700px,
+  lg: 1000px,
+  xl: 1280px,
+  xxl: 1800px
+);
+
 @import 'bootstrap/scss/bootstrap';

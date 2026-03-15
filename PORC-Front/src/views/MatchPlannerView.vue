@@ -19,88 +19,100 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 import { computed, onMounted, ref, watch } from 'vue';
 
+
+const accStore = accountsStore();
+
+
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
-const schedule = ref({
-    availabilities: [] as Availability[],
-    matches: [] as MatchEvent[],
-    note: ``,
-} as Schedule);
+const schedule = computed<Schedule | null>(
+    () => {
+        console.warn("switching selected player to: " + (selectedPlayer.value?.id ?? "unkown"));
+        console.log(selectedPlayer.value?.schedule?.note);
+        scheduleNote.value = selectedPlayer.value?.schedule?.note ?? "";
+        return selectedPlayer.value?.schedule ?? null;
+    }
+);
+
+watch(
+    () => selectedPlayer.value,
+    (newPlayer) => {
+        // console.warn("New note: " + (newPlayer?.schedule?.note ?? ""));
+        scheduleNote.value = newPlayer?.schedule?.note ?? "";
+    }
+)
+const scheduleNote = ref<string>(selectedPlayer.value?.schedule?.note ?? "");
+
 
 const playerinfos = ref<PubAccountInfo[]>([]);
 
-const isLoggedIn = ref(true);
-const user_id = ref('default');
+const userId = ref<string | null>(null);
+
+const division = ref<DivisionModel | null>(null);
+const season = ref<Season | null>(null);
+
+const season_running = computed(
+    () => {
+        return (new Date() > new Date((season.value?.start_timestamp ?? 0) * 1000) && new Date() < new Date((season.value?.end_timestamp ?? 0) * 1000));
+    }
+);
+
+
+const seasonEdit = computed(
+    () => {
+        return season.value && new Date(season.value.start_timestamp * 1000) <= new Date() && new Date(season.value.end_timestamp * 1000) > new Date();
+    }
+);;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function getUserId() {
-    let accStore = accountsStore();
-    let res = await accStore.get_login_id();
-    
-    isLoggedIn.value = (res != null && typeof res != 'undefined');
-    user_id.value = res ?? 'default';
+    userId.value = await accStore.get_login_id();
 }
 
-const division = ref<DivisionModel>();
-const season = ref<Season | null>(null)
+
+
+
+
 
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
     let planStore = matchplanStore();
-    let plan = await planStore.get_matchplan(null);
 
-    division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+    let [plan, season_res] = await Promise.all([
+        planStore.get_matchplan(),
+        planStore.get_season()
+    ]);
+    
+    season.value = season_res;
 
-    if (typeof division.value === 'undefined') {
-        await getPubPlayerInfos([user_id.value]);
-        division.value = {
-            name: 'unrakned',
-            order: 0,
-            players: playerinfos.value.map((p) => ({
-                id: p.id,
-                username: p.username,
-                    avatar: p.avatar,
-                schedule: p.schedule,
-                tag: '',
-                division: '',
-            })),
-            matches: {},
-        };
-        season.value = null;
-    } 
-    else {
-        // await planStore.fetch_all_seasons();
-        // Extract seasons from the store's matchplans map
-        const seasonList: Season[] = [];
-        for (const [key, value] of planStore.matchplans) {
-            if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
-                seasonList.push(value[1] as Season);
-            }
-        }
-        season.value = seasonList.find((s: Season) => s.name === String(plan.season)) ?? null;
-    }
+    division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === userId.value)) ?? null;
 
-    check_season_running();
+    await getPubPlayerInfos(division.value? division.value.players.map((p) => p.id) ?? [userId.value]: []);
 }
 
-const opponents = ref<PlayerModel[]>([]);
-function find_opponents(): PlayerModel[] {
-    const now = new Date();
-
-    if (now > new Date((season.value?.start_timestamp ?? 0) * 1000) && now < new Date((season.value?.end_timestamp ?? 0) * 1000)) {
-        return division.value?.players.filter((player: PlayerModel) => player.id !== user_id.value) ?? [];
-    } else {
-        return [];
-    }
-}
-
-function find_user(): PlayerModel[] {
-    return division.value?.players.filter((player: PlayerModel) => player.id === user_id.value) ?? [];
-}
 
 function getPlayerIds(): string[] {
     let ids = [] as string[];
 
-    let players = [...find_opponents(), ...find_user()];
+    let players = division.value?.players ?? [];
     for (const player of players) {
         ids.push(player.id.toString());
     }
@@ -108,53 +120,35 @@ function getPlayerIds(): string[] {
 }
 
 async function getPubPlayerInfos(ids: string[]) {
-    console.log('Trying to get PubPlayerInfos for the following ids: ', ids);
+    // console.warn('Trying to get PubPlayerInfos for the following ids: ', ids);
     if (ids.length == 0 || ids[0] == 'default') {
         playerinfos.value = [];
         return;
     }
 
     let filteredIds = [...new Set(ids)];
-    console.log(getPlayerIds());
-    console.log('Filtered IDs:', filteredIds);
-
-    // console.log("Calling get_competitors_full with filtered IDs: ", filteredIds);
-
-    let compStore = accountsStore();
-    let res = await compStore.get_accounts_full(filteredIds);
-
-    // console.log("evaluating result of get_competitors_full: ", res);
-
-    
+    let res = await accStore.get_accounts_full(filteredIds);
     playerinfos.value = res;
-
-    // console.log('Got PubPlayerInfos: ', playerinfos.value);
 }
+
+
+
 
 async function reload() {
     const selectedPlayerId = selectedPlayer.value?.id ?? '0';
     await getMatchPlan();
     await getPubPlayerInfos(getPlayerIds());
-    opponents.value = find_opponents();
     playerinfos.value = [...new Set(playerinfos.value)];
     for (let player of playerinfos.value) {
         if (player.id == selectedPlayerId) {
             selectedPlayer.value = player;
         }
     }
-    check_season_running();
 }
 
 function selectSelf() {
-    for (let player of playerinfos.value) {
-        if (player.id == user_id.value) {
-            console.log('found self: ', player, 'against user id: ', user_id.value);
-            selectedPlayer.value = player;
-            schedule.value.note = selectedPlayer.value?.schedule?.note || '';
-        } else {
-            console.log('Not self: ', player, 'against user id: ', user_id.value);
-        }
-    }
+    let selected = playerinfos.value.filter((p) => p.id === userId.value)[0] ?? playerinfos.value[0] ?? null;
+    selectedPlayer.value = selected;
 }
 
 function getProgress() {
@@ -164,48 +158,23 @@ function getProgress() {
     return matches.length ? (matches.filter((match) => match.done).length / matches.length) * 100 : 0;
 }
 
-const season_running = ref(false);
-
-function check_season_running() {
-    season_running.value = (new Date() > new Date((season.value?.start_timestamp ?? 0) * 1000) && new Date() < new Date((season.value?.end_timestamp ?? 0) * 1000))
-    console.log("Season running: ", season_running.value, season);
-}
-
 onMounted(async () => {
     await waitForAppReady();
     
     await getUserId();
     await getMatchPlan();
 
-    opponents.value = find_opponents();
     await getPubPlayerInfos(getPlayerIds());
     
     selectSelf();
     updatePrimaryColor(division.value?.name?.toLowerCase() || 'meteorite');
-    check_season_running();
-    determineEditibility();
 });
 
-const seasonEdit = ref(false);
-
-function determineEditibility(): boolean {
-    var today = new Date();
-    let res = season.value !== null && new Date(season.value.start_timestamp * 1000) <= today && new Date(season.value.end_timestamp * 1000) > today;
-    console.log("Checking if season is editable today: ", today, season.value);
-    console.log("Determined season editibility: ", res);
-    return res;
-}
-
-watch(() => season.value, (newSeason) => {
-    seasonEdit.value = determineEditibility();
-});
-
-const compStore = accountsStore();
 
 async function submitNote() {
 
-    if (selectedPlayer.value?.schedule != null && (selectedPlayer.value?.id ?? user_id.value) === user_id.value) {
-        let res = await compStore.self_update_schedule_note(schedule.value.note);
+    if (scheduleNote.value && selectedPlayer.value?.schedule != null && (selectedPlayer.value?.id ?? userId.value) === userId.value) {
+        let res = await accStore.self_update_schedule_note(scheduleNote.value);
     }
 }
 </script>
@@ -226,7 +195,7 @@ async function submitNote() {
                     </label>
                 </div>
             </div> -->
-            <div class="row justify-content-center col-12 col-md-11 col-xl-10">
+            <div class="row justify-content-center col-12 col-xl-11 col-xxl-10">
 
                 <div class="col row">
 
@@ -237,17 +206,17 @@ async function submitNote() {
                                 Players
                             </h3>
                         </div>
-                        <div style="max-height: 800px; overflow-y: auto;">
-                            <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="user_id" class=""></PlayerSelector>
+                        <div class="player-selector" style="overflow-y: auto;">
+                            <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="userId ?? ''" class=""></PlayerSelector>
                         </div>
 
                         <div class="note-box mt-auto mb-0 d-none d-md-block">
                             <div class="container mb-4 notes-container">
-                                <form @submit.prevent="submitNote" v-if="(selectedPlayer?.id ?? user_id) === user_id">
+                                <form @submit.prevent="submitNote" v-if="(selectedPlayer?.id ?? userId) === userId">
                                     <div class="row">
                                         <div class="col-12">
                                             <label for="noteTextArea" class="form-label fw-bold ms-1">Notes</label>
-                                            <textarea v-model="schedule.note" class="form-control mb-4" id="noteTextArea"></textarea>
+                                            <textarea v-model="scheduleNote" class="form-control mb-4" id="noteTextArea"></textarea>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -265,17 +234,12 @@ async function submitNote() {
                     </div>
 
                     <div class="col d-flex flex-row calender-container px-0 mt-3 mt-md-0">
-                        {{ selectedPlayer?.schedule ?? schedule }}
-                        <br>{{ division?.players || [] }}
-                        <br>{{(selectedPlayer?.id ?? user_id) === user_id}}
-                        <br>{{ user_id}}
-                        <br>{{season?.name ?? 'default'}}
                         <CalendarComponent
                             v-if="selectedPlayer?.schedule"
                             :schedule="selectedPlayer?.schedule ?? schedule"
                             :players="division?.players || []"
-                            :own-calendar="(selectedPlayer?.id ?? user_id) === user_id"
-                            :ownId="user_id"
+                            :own-calendar="(selectedPlayer?.id ?? userId) === userId"
+                            :ownId="userId ?? ''"
                             :season="season?.name ?? 'default'"
                             :scheduleUserId="selectedPlayer?.id ?? 'default'"
                             v-on:reload="reload"
@@ -288,7 +252,7 @@ async function submitNote() {
                 
                 </div>
 
-                <div class="col-12 col-xxl-3 mt-4 mt-xxl-0 ps-xxl-4"  v-if="division && season_running">     
+                <div class="d-none d-xxl-flex col-12 col-xxl-3 mt-4 mt-xxl-0 ps-xxl-4"  v-if="division && season_running">     
 
                     <!-- // <div class="page-header"></div> -->
 
@@ -309,7 +273,7 @@ async function submitNote() {
                                 class="match-score rounded"
                                 :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
                             >
-                                <MatchScoreComponent :match="match" :user_id="user_id" :editMode="true" />
+                                <MatchScoreComponent :match="match" :user_id="userId ?? ''" :editMode="true" />
                             </div>
                         </div>
                     </div>
@@ -426,6 +390,14 @@ $tile-bg: rgb(15, 15, 15) !important;
     }
 }
 
+.player-selector {
+    max-height: 800px;
+
+    @include media-breakpoint-down(xxl) {
+        max-height: 480px;
+    }
+}
+
 .page-header {
 
     border-radius: 32px;
@@ -443,6 +415,8 @@ $tile-bg: rgb(15, 15, 15) !important;
 
 .calender-container {
     overflow: hidden;
+    display: inline-block;
+    height: fit-content;
     border-radius: 16px;
 
     background-color: $tile-bg;

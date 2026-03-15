@@ -94,7 +94,8 @@ export const accountsStore = defineStore('accounts', {
             let fitId = await this.map_id(id);
 
             // automatically populates fetching with previous value
-            while (this.get_competitor_entry(fitId)[1]) {await new Promise(resolve => setTimeout(resolve, 100));}
+            // no awaiting fetching because it can lead to race conditions
+            // while (this.get_competitor_entry(fitId)[1]) {await new Promise(resolve => setTimeout(resolve, 100))}
             if (isFetching(account)) {
                 let acc = this.get_competitor_entry(fitId)[0];
                 this.competiros.set(fitId, createFetching(acc));
@@ -154,16 +155,16 @@ export const accountsStore = defineStore('accounts', {
 
             let account = await this.get_competitor();
 
-            if (!account && this.loggedInId === undefined) {
-                this.set_competitor(null, createFetching());
+            if (!account && this.loggedInId !== null) {
+                await this.set_competitor(null, createFetching());
 
                 try {
                     let acc = await getLogin();
-                    this.loggedInId = (acc?.id ?? null)
-                    this.set_competitor(null, acc);
+                    this.loggedInId = (acc?.id ?? null);
+                    await this.set_competitor(null, acc);
                 }
                 catch (err) {
-                    this.set_competitor(null, null);
+                    await this.set_competitor(null, null);
                     if (err instanceof Error) {
                         throw new Error(err.message)
                     } else {
@@ -179,23 +180,23 @@ export const accountsStore = defineStore('accounts', {
 
         async get_login_full(): Promise<PubAccountInfo | null> {
 
-            let account_fut = await this.get_competitor();
-            let id_fut = await this.get_login_id();
+            let account_fut = this.get_competitor();
+            let id_fut = this.get_login_id();
 
             const [account, id] = await Promise.all([account_fut, id_fut]);
 
-            if (id === null) {
-                return null
+            if (!id) {
+                return null;
             }
             else if (!account || !account.schedule) {
-                this.set_competitor(null, createFetching());
+                await this.set_competitor(null, createFetching());
 
                 try {
                     let acc = await getAccountFull([id]);
-                    this.set_competitor(null, acc[0]);
+                    await this.set_competitor(null, acc[0]);
                 }
                 catch (err) {
-                    this.set_competitor(null, null);
+                    await this.set_competitor(null, null);
                     if (err instanceof Error) {
                         throw new Error(err.message)
                     } else {
@@ -222,8 +223,14 @@ export const accountsStore = defineStore('accounts', {
                 try {
                     let fetchedAccounts = await getAccountSimple(missing);
 
-                    for (let acc of fetchedAccounts) {
-                        this.set_competitor(acc.id, acc);
+                    for (let id of missing) {
+                        let match = fetchedAccounts.filter((a) => a.id === id);
+                        if (match[0]) {
+                            await this.set_competitor(id, match[0]);
+                        }
+                        else {
+                            await this.set_competitor(id, null);
+                        }
                     }
                 }
                 catch (err) {
@@ -242,7 +249,10 @@ export const accountsStore = defineStore('accounts', {
             let accounts = await Promise.all(ids.map(async (a) => await this.get_competitor(a)));
 
             if (accounts.some((a) => (!a || !a.schedule))) {
-                let missingIds = ids.filter(async (id) => !accounts.some(async (a) => a?.id === id));
+                let missingIds = ids.filter((id) => !accounts.some((a) => (a?.id ?? '') == id));
+                if (missingIds[0]) {
+                    console.warn("missing ids: " + missingIds);
+                }
                 throw new Error("Unable to fetch some competitor Ids (min). Missing Ids: " + missingIds)
             } 
             else {
@@ -262,6 +272,7 @@ export const accountsStore = defineStore('accounts', {
                     };
                 })
             );
+            
 
             const missing = checks
                 .filter(x => x.missing)
@@ -274,10 +285,16 @@ export const accountsStore = defineStore('accounts', {
                 }
 
                 try {
-                    let fetchedAccounts = await getAccountSimple(missing);
+                    let fetchedAccounts = await getAccountFull(missing);
 
-                    for (let acc of fetchedAccounts) {
-                        this.set_competitor(acc.id, acc);
+                    for (let id of missing) {
+                        let match = fetchedAccounts.filter((a) => a.id === id);
+                        if (match[0]) {
+                            await this.set_competitor(id, match[0]);
+                        }
+                        else {
+                            await this.set_competitor(id, null);
+                        }
                     }
                 }
                 catch (err) {
@@ -293,16 +310,21 @@ export const accountsStore = defineStore('accounts', {
                 }
             }
 
-            let accounts = await Promise.all(ids.map(async (a) => await this.get_competitor(a)));
+            let accounts = await Promise.all(ids.map(async (a) => {return await this.get_competitor(a)}));
+
 
             if (accounts.some((a) => (!a || !a.schedule))) {
-                let missingIds = ids.filter(async (id) => !accounts.some(async (a) => a?.id === id));
-                throw new Error("Unable to fetch some competitor Ids (full). Missing Ids: " + missingIds)
+                let missingIds = ids.filter((id) => !accounts.some((a) => (a?.id ?? '') == id));
+                if (missingIds[0]) {
+                    console.warn("missing ids: " + missingIds);
+                }
+                let fillups = await this.get_accounts_min(missingIds);
+                accounts.push(...fillups);
+                //throw new Error("Unable to fetch some competitor Ids (full). Missing Ids: " + missingIds)
             } 
-            else {
-                // unessecary filter but type checking wont pass otherwise
-                return accounts.filter((a) => a != null);
-            }
+            
+            // unessecary filter but type checking wont pass otherwise
+            return accounts.filter((a) => a != null);
         },
 
 
@@ -327,7 +349,7 @@ export const accountsStore = defineStore('accounts', {
                     account.schedule.matches.push(fight);
                 }
 
-                this.set_competitor(account.id, account); // update the store
+                await this.set_competitor(account.id, account); // update the store
             }    
         },
 
@@ -335,8 +357,8 @@ export const accountsStore = defineStore('accounts', {
         async post_match_event(fight: MatchEvent) {
             let res = await postMatchEvent(fight);
 
-            this.set_competitor(fight.initiatorId, null); // remove the cached account, so it will be refetched
-            this.set_competitor(fight.opponentId, null); // remove the cached account, so it will be refetched
+            await this.set_competitor(fight.initiatorId, null); // remove the cached account, so it will be refetched
+            await this.set_competitor(fight.opponentId, null); // remove the cached account, so it will be refetched
 
             return res;
         },
@@ -398,10 +420,10 @@ export const accountsStore = defineStore('accounts', {
             const fitIds = await Promise.all(ids.map(async (id) => await this.map_id(id)));
 
             for (const id of fitIds) {
-                this.set_competitor(id, null);
+                await this.set_competitor(id, null);
                 if (id === null) {
                     this.loggedInId = undefined; // reset logged in id
-                    this.set_competitor(id, null);
+                    await this.set_competitor(id, null);
                     await this.get_login_full(); // refetch logged in account
                 }
             }

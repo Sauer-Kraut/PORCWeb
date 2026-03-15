@@ -32,7 +32,7 @@ export const matchplanStore = defineStore('matchplan', {
 
     actions: {
 
-        init_storage() {
+        async init_storage() {
             const data = getInitData();
             if (data && data.matchplan && data.season) {
                 this.seasonInfos.set(null, { 
@@ -43,7 +43,10 @@ export const matchplanStore = defineStore('matchplan', {
                 this.currentSeason = data.season.name;
             }
 
-            this.get_all_seasons();
+            await Promise.all([
+                this.get_matchplan(),
+                this.get_all_seasons()
+            ]);
         },
 
 
@@ -106,7 +109,8 @@ export const matchplanStore = defineStore('matchplan', {
                     ranking: null
                 } as SeasonInfoEntry;
 
-            while (this.get_entry(fitName, type)[1]) {await new Promise(resolve => setTimeout(resolve, 100));}
+            // no awaiting fetching because it can lead to race conditions
+            // while (this.get_entry(fitName, type)[1]) {await new Promise(resolve => setTimeout(resolve, 100));}
 
             let fitInfo = info;
             if (isFetching(fitInfo)) {
@@ -161,18 +165,18 @@ export const matchplanStore = defineStore('matchplan', {
                 let fitSeason = await this.map_season_name(season);
 
                 try {
-                    this.set_entry(fitSeason, createFetching(), 'matchplan');
+                    await this.set_entry(fitSeason, createFetching(), 'matchplan');
                     let matchplan = await getMatchplan(fitSeason);
 
                     if (!fitSeason) {
                         this.currentSeason = matchplan.season;
                     }
 
-                    this.set_entry(season, matchplan, 'matchplan');
+                    await this.set_entry(season, matchplan, 'matchplan');
                     return matchplan;
                 }
                 catch (err) {
-                    this.set_entry(fitSeason, null, 'matchplan');
+                    await this.set_entry(fitSeason, null, 'matchplan');
                     if (err instanceof Error) {
                         throw new Error(err.message)
                     } else {
@@ -186,9 +190,16 @@ export const matchplanStore = defineStore('matchplan', {
         },
 
         async get_all_seasons(): Promise<Season[]> {
-            let seasons = (await Promise.all(Object.entries(this.seasonInfos).map(async ([id, e]) => await this.get_info(id, 'season')))).filter((e) => e !== null);
-
-            if (seasons.length < 1) {
+            let seasons = (
+                await Promise.all(
+                    Array.from(this.seasonInfos.entries()).map(async ([id, e]) => {
+                        const realId = id === "null" ? null : id;
+                        return await this.get_info(realId, 'season');
+                    })
+                )
+            ).filter(e => e != null);
+                
+            if (seasons.length == 0) {
                 let seasons = await getSeasons();
                 await Promise.all(seasons.map(async (s) => await this.set_entry(s.name, s, 'season')));
             } 
@@ -202,25 +213,23 @@ export const matchplanStore = defineStore('matchplan', {
             if (!infoSeason) {
                 let fitSeason = await this.map_season_name(seasonName);
 
-                this.set_entry(fitSeason, createFetching(), 'season');
-                let seasons = await this.get_all_seasons();
-
                 try {
-                    this.set_entry(fitSeason, createFetching(), 'season');
+                    await this.set_entry(fitSeason, createFetching(), 'season');
                     let seasons = await this.get_all_seasons();
 
-                    let target = seasons.filter((s) => s.name === fitSeason || (s.name === this.currentSeason && fitSeason === null))[0];
-                    if (target) {
-                        this.set_entry(fitSeason, target, 'season');
-                        return target;
+                    console.warn("seasons: " + seasons.map((s) => s.name));
+                    let target = await Promise.all(seasons.filter(async (s) => (await this.map_season_name(s.name)) == fitSeason || (s.name == this.currentSeason && fitSeason == null)));
+                    if (target[0]) {
+                        await this.set_entry(fitSeason, target[0], 'season');
+                        return target[0];
                     }
                     else {
-                        this.set_entry(fitSeason, null, 'season');
+                        await this.set_entry(fitSeason, null, 'season');
                         throw new Error("Querried Season could not be found among all retrieved seasons");
                     }
                 }
                 catch (err) {
-                    this.set_entry(fitSeason, null, 'season');
+                    await this.set_entry(fitSeason, null, 'season');
                     if (err instanceof Error) {
                         throw new Error(err.message)
                     } else {
@@ -240,15 +249,15 @@ export const matchplanStore = defineStore('matchplan', {
             if (!infoRanking) {
                 let fitSeason = await this.map_season_name(season);
 
-                this.set_entry(fitSeason, createFetching(), 'ranking');
+                await this.set_entry(fitSeason, createFetching(), 'ranking');
 
                 try {
                     let ranking = await getRanking(fitSeason);
-                    this.set_entry(season, ranking, 'ranking');
+                    await this.set_entry(season, ranking, 'ranking');
                     return ranking;
                 }
                 catch (err) {
-                    this.set_entry(fitSeason, null, 'ranking');
+                    await this.set_entry(fitSeason, null, 'ranking');
                     if (err instanceof Error) {
                         throw new Error(err.message)
                     } else {
@@ -271,8 +280,8 @@ export const matchplanStore = defineStore('matchplan', {
             ]);
         },
 
-        async reset_info() {
-            await Promise.all(Object.entries(this.seasonInfos).map(async ([id, entry]) => {
+        async reset_info(seasons: (string | null)[]) {
+            await Promise.all(seasons.map(async (id) => {
                 await Promise.all([
                     this.get_info(id, 'matchplan'),
                     this.get_info(id, 'season'),

@@ -53,7 +53,7 @@ const season_name = ref('default');
 async function getMatchPlan() {
     //console.log('Trying to get match plan');
     let plan = await st_plan.get_matchplan(null);
-    await st_plan.fetch_all_seasons();
+    await st_plan.get_all_seasons();
 
     matchplan.value = plan;
     division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
@@ -179,14 +179,32 @@ async function getSignedUp() {
 
 
 onMounted(async () => {
+    
+    // console.warn("Hello world");
+
     window.addEventListener('resize', updateScreenWidth);
     // initial read in case visualViewport is available after mount
     updateScreenWidth();
 
-    st_account.init_storage();
-    st_discord.init_storage();
-    st_plan.init_storage();
+    // console.warn("Getting ready");
+
+    // console.warn("Initiating accounts");
+    // await st_account.init_storage();
+
+    // console.warn("Initiating matchplan");
+    // await st_plan.init_storage();
+
+    // console.warn("Initiating discord info");
+    // st_discord.init_storage();
+
+    await Promise.all([
+        st_account.init_storage(),
+        st_plan.init_storage(),
+        st_discord.init_storage()
+    ]);
+
     appReady.value = true;
+    console.log("App is ready");
     
     await getMatchPlan()
     await getUserId(),
@@ -341,6 +359,7 @@ nav {
     overflow-x: hidden;
 
     .router-link {
+        text-wrap: nowrap !important;
         align-content: center;
         color: rgb(255, 255, 255);
         text-decoration: none;

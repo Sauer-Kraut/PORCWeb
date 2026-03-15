@@ -10,7 +10,7 @@ export interface PubAccountInfoRecv {
 }
 
 export function PubAccountInfoFromRecv(recv: PubAccountInfoRecv, match_event_map: Map<number, MatchEventRecv>): PubAccountInfo {
-    console.log(match_event_map);
+    // console.log(match_event_map);
     return {
         id: recv.id,
         username: recv.username,

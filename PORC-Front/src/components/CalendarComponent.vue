@@ -336,7 +336,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     close();
                     let set_res = await compStore.self_edit_availabilities_local([data], []);
 
-                    let store_res = await compStore.store_self();
+                    let store_res = await compStore.post_account();
 
                     emit('reload');
                 },
@@ -395,7 +395,7 @@ function editAvailability(availability: Availability) {
                 let set_res = await compStore.self_edit_availabilities_local([data], [availability]);
 
 
-                let store_res = await compStore.store_self();
+                let store_res = await compStore.post_account();
                 emit('reload');
             },
             async onDelete() {
@@ -403,7 +403,7 @@ function editAvailability(availability: Availability) {
                 close();
                 let set_res = await compStore.self_edit_availabilities_local([], [availability]);
 
-                let store_res = await compStore.store_self();
+                let store_res = await compStore.post_account();
                 emit('reload');
             },
         },
@@ -414,7 +414,7 @@ function editAvailability(availability: Availability) {
 async function deleteAvailability(availability: Availability) {
     let set_res = await compStore.self_edit_availabilities_local([], [availability]);
 
-    let store_res = await compStore.store_self();
+    let store_res = await compStore.post_account();
     emit('reload');
 }
 

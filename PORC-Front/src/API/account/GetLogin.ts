@@ -3,9 +3,10 @@ import { getClientId } from '../GetClientId';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
 import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/models/pub_account_info/PubAccountInfoRecv';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import { setCookie } from '@/util/SetCookieValue';
 
 export async function getLogin(): Promise<PubAccountInfo | null> {
-    //console.log('Trying to get Logged in status');
+    console.log('Trying to get Logged in status');
 
     const clinet_id = getClientId();
 
@@ -28,6 +29,9 @@ export async function getLogin(): Promise<PubAccountInfo | null> {
             const jsonData = await response.json();
             const account_recv = jsonData.account as PubAccountInfoRecv;
             const account = PubAccountInfoFromRecv(account_recv, new Map());
+
+            setCookie("user_id", account.id, 30);
+
             return account;
         }
 }

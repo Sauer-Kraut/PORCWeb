@@ -9,19 +9,19 @@
     import SeasonComponent from '@/components/SeasonComponent.vue';
     import { Repetition } from '@/models/availability/Availability';
     import type { DiscordEvent } from '@/models/discord/DiscordEvent';
-import type { VideoReference } from '@/models/discord/VideoReference';
+    import type { VideoReference } from '@/models/discord/VideoReference';
     import type { EventCard } from '@/models/EventCard';
     import type { DivisionModel } from '@/models/matchplan/DivisionModel';
     import type { Season } from '@/models/matchplan/Season';
     import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
     import { accountsStore } from '@/storage/st_accounts';
-import { discordInfoStore } from '@/storage/st_discord';
+    import { discordInfoStore } from '@/storage/st_discord';
     import { matchplanStore } from '@/storage/st_matchplan';
     import { signupStore } from '@/storage/st_signups';
     import { computed, onMounted, ref, watch } from 'vue';
     import { divisionNames } from '@/storage/defaults';
-import type { Matchplan } from '@/models/matchplan/Matchplan';
-import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
+    import type { Matchplan } from '@/models/matchplan/Matchplan';
+    import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 
     let screenSizeMd = ref(false);
     let screenSizeSm = ref(false)
@@ -38,7 +38,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
         } 
     }
 
-    const seasons = ref<Season[]>([]);
+    const seasons = ref<Season[] | null>();
     const selectedSeason = ref<Season | null>(null);
 
     let placeholderDisplay = ref(false);
@@ -47,7 +47,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
     const selectedSeasonName = computed({
         get: () => selectedSeason.value?.name || '',
         set: (seasonName: string) => {
-            const season = seasons.value.find(s => s.name === seasonName);
+            const season = seasons.value?.find(s => s.name === seasonName) ?? null;
             selectedSeason.value = season || null;
         }
     });
@@ -68,9 +68,9 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 
     const current_season = ref<Season | null>(null);
 
-    const divisions = ref<DivisionModel[]>([]);
+    const divisions = ref<DivisionModel[] | null>(null);
     const selectedDivision = defineModel<DivisionModel | null>('selectedDivision');
-    selectedDivision.value = divisions.value[0] ?? null;
+    selectedDivision.value = (divisions.value ?? [])[0] ?? null;
 
     // Reactive variable for dynamic height
     const selectorRef = ref<HTMLElement | null>(null);
@@ -124,71 +124,34 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
     }
 
     async function loadSeasons() {
-        await planStore.fetch_all_seasons();
-
-        // Extract seasons from the store's matchplans map
-        const seasonList: Season[] = [];
-        for (const [key, value] of planStore.matchplans) {
-            if (value[1] && typeof value[1] === 'object' && 'name' in value[1]) {
-                seasonList.push(value[1] as Season);
-            }
-        }
-
-        // Add debug season "5" for testing purposes
-        // const debugSeason: Season = {
-        //     name: "5",
-        //     start_timestamp: 1704067200, // December 31, 2024
-        //     end_timestamp: 1735689600,   // January 1, 2025
-        //     pause_end_timestamp: 1735689600,   // January 1, 2025
-        // };
-        // seasonList.push(debugSeason);
-
-        // Sort seasons by start date, most recent first
-        seasons.value = seasonList.sort((a, b) => {
+        let seasonList = (await planStore.get_all_seasons()).sort((a, b) => {
             return b.start_timestamp - a.start_timestamp; // Most recent first
         });
 
+        TimerText.value = `Time until next season of PORC unknown`;
+        globalTimer = 0;
 
-        try {
-            const current_season_res = await planStore.get_matchplan(null);
-            current_season.value = seasons.value.find((s: Season) => s.name == (current_season_res.season ?? "")) ?? null;
+        current_season.value = await planStore.get_season();
 
-            if (current_season.value != null) {
-                const seasonEnd = current_season.value.end_timestamp ?? 0;
-                const seasonPause = current_season.value.pause_end_timestamp ?? 0;
-                const now = Math.floor(Date.now() / 1000);
+        const seasonEnd = current_season.value.end_timestamp ?? 0;
+        const seasonPause = current_season.value.pause_end_timestamp ?? 0;
+        const now = Math.floor(Date.now() / 1000);
 
-                if (now > seasonPause) {
-                    globalTimer = seasonPause;
-                    TimerText.value = `Time until next season of PORC unknown`;
-                } else if (now > seasonEnd) {
-                    globalTimer = seasonPause;
-                    TimerText.value = `Time remaining until next season of PORC`;
-                } else {
-                    globalTimer = seasonEnd;
-                    TimerText.value = `Time remaining for season ${current_season.value.name} of PORC`;
-                }
-            } else {
-                TimerText.value = `Time until next season of PORC unknown`;
-                globalTimer = 0;
-                throw new Error("Couldnt find info for the current season");
-            }
-        } 
-        catch (err) {
+        if (now > seasonPause) {
+            globalTimer = seasonPause;
             TimerText.value = `Time until next season of PORC unknown`;
-            globalTimer = 0;
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            } else {
-                console.warn("throwing unspecified error");
-                throw new Error
-            }
+        } else if (now > seasonEnd) {
+            globalTimer = seasonPause;
+            TimerText.value = `Time remaining until next season of PORC`;
+        } else {
+            globalTimer = seasonEnd;
+            TimerText.value = `Time remaining for season ${current_season.value.name} of PORC`;
         }
 
 
-
-        if (seasons.value[0] && seasons.value[0] == current_season.value && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
+        if (seasons.value && seasons.value[0] && seasons.value[0] == current_season.value && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
             // Season in the far future -> on top of list
+            console.warn("Debug Info: " + seasons.value + seasons.value[0]);
             const dummySeason: Season = {
                 name: seasons.value[0].name,
                 start_timestamp: seasons.value[0].pause_end_timestamp,
@@ -203,15 +166,15 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
             return b.start_timestamp - a.start_timestamp; // Most recent first
         });
 
-        console.log('Seasons loaded:', seasons.value);
+        // console.log('Seasons loaded:', seasons.value);
 
-        if (current_season.value != null && new Date(current_season.value.end_timestamp * 1000) > new Date()) {
+        if (current_season.value && new Date(current_season.value.end_timestamp * 1000) > new Date()) {
             selectedSeason.value = current_season.value;
         } else {
             selectedSeason.value = seasons.value[0];
         }
 
-        season_name.value = String(seasons.value[0].name);
+        season_name.value = (seasons.value ?? [])[0]? (seasons.value ?? [])[0].name: "unknown";
         await getMatchPlan();
         setPlaceholderDisplay();
     }
@@ -492,7 +455,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
                 class=""
 
                 :hide_progress="placeholderDisplay"
-                :divisions="divisions"
+                :divisions="divisions ?? []"
                 :observer_id="user"
 
                 v-model:selectedDivision="selectedDivision"
@@ -500,7 +463,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 
                 :selectorHeight="selectorHeight"
                 :allowEditSeason="selectedSeasonEdit"
-                :seasons="seasons"
+                :seasons="seasons ?? []"
                 :current_season="current_season" />
         </div>
 
@@ -577,7 +540,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
                         username: 'Sauerkarut',
                         avatar: '7df79ec5c3938cf59cd8cd4a69242ad3',
                         schedule: null
-                    } as PubAccountInfo"
+                    }"
                     :rank="1"
                 />
                 <PedestalComponent
@@ -587,7 +550,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
                         username: 'Savitarian',
                         avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
                         schedule: null
-                    } as PubAccountInfo"
+                    }"
                     :rank="2"
                 />
                 <PedestalComponent
@@ -597,7 +560,7 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
                         username: 'Omlette',
                         avatar: 'e368e84d013d70077d9f467dffe95c69',
                         schedule: null
-                    } as PubAccountInfo"
+                    }"
                     :rank="3"
                 />
                 <div class="highlight"></div>
@@ -1094,6 +1057,9 @@ $good-color: rgb(34, 197, 94);
             order: 1;
             transform: translate(0, -2rem);
         }
+        @include media-breakpoint-down(lg) {
+            display: none !important;
+        }
     }
 
     &.third {
@@ -1102,6 +1068,9 @@ $good-color: rgb(34, 197, 94);
         @include media-breakpoint-up(md) {
             order: 3;
             transform: scale(0.9) translate(0, -3.5rem);
+        }
+        @include media-breakpoint-down(lg) {
+            display: none !important;
         }
     }
 }

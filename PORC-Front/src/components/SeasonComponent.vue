@@ -150,6 +150,9 @@
         const end = new Date(selectedSeason.value.end_timestamp * 1000);
         if (start > current) {
             // Time until season start
+            if((start.getTime() - current.getTime()) > 62899200000) { // equivelant of 2 years in milliseconds. If this condition is triggered season most likely placeholder
+                return "soon™" // 
+            }
             return formatTimeDiff(start.getTime() - current.getTime());
         } else if (end > current) {
             // Time until season end

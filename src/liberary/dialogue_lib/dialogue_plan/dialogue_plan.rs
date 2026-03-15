@@ -37,28 +37,34 @@ impl <'a, 'b> DialoguePlan<'a> {
         let next_index = match res_next_index {
             Ok(i) => i,
             Err(err) => {
-                println!("{}\n{}", "An error occured while checking a dialogue:".red(), err.to_string().bright_red());
+            
+                match err {
+                    BotError::APIError(e) => {None}, // most likely just the discord API fucking up
+                    _ => {
+                        println!("{}\n{}", "An error occured while checking a dialogue:".red(), err.to_string().bright_red());
 
-                let error = err.to_string();
+                        let error = err.to_string();
 
-                // !!!!!!!!!!!!!!!!!!
-                // TODO: report to DB
-                // !!!!!!!!!!!!!!!!!!
+                        // !!!!!!!!!!!!!!!!!!
+                        // TODO: report to DB
+                        // !!!!!!!!!!!!!!!!!!
 
-                // Return None so that step may be repeated in the future
-                let mut res = None;
+                        // Return None so that step may be repeated in the future
+                        let mut res = None;
 
-                if let Some(prev_err) = &self.dialogue_data.error {
-                    if *prev_err == error {
-                        println!("{}\n{}", "Stoping Dialgogue because of recouring error:".red(), prev_err.bright_red());
-                        let _ = send_dm(self.dialogue_data.user_id.clone(), "A critical error has occured in our dialogue. Feel free to contact the PORC mods about this issue. \nError: ".to_string() + &error).await;
+                        if let Some(prev_err) = &self.dialogue_data.error {
+                            if *prev_err == error {
+                                println!("{}\n{}", "Stoping Dialgogue because of recouring error:".red(), prev_err.bright_red());
+                                let _ = send_dm(self.dialogue_data.user_id.clone(), "A critical error has occured in our dialogue. Feel free to contact the PORC mods about this issue. \nError: ".to_string() + &error).await;
+                                self.dialogue_data.error = Some(err.to_string());
+                                res = Some(400);
+                            } 
+                        }
+
                         self.dialogue_data.error = Some(err.to_string());
-                        res = Some(400);
-                    } 
+                        res       
+                    }
                 }
-
-                self.dialogue_data.error = Some(err.to_string());
-                res
             },
         };
 
