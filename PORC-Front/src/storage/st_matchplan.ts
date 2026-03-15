@@ -129,7 +129,7 @@ export const matchplanStore = defineStore('matchplan', {
             let entry = this.get_entry(fitName, type);
 
             // stall loop
-            while (entry[1]) {
+            while (entry[1] && type != 'season') {
                 // waits for 100ms
                 await new Promise(resolve => setTimeout(resolve, 100));
                 entry = this.get_entry(fitName, type);
