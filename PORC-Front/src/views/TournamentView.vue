@@ -416,6 +416,7 @@
             getVods(),
             getEvents()
         ]);
+        console.warn("Passed tournament view setup")
         localMatchplan.value = await planStore.get_matchplan();
         getSelectorHeight();
 

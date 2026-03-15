@@ -139,18 +139,8 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
         .same_site(actix_web::cookie::SameSite::Strict)       // TODO: needs to be set to strict for deployment
         .finish();
 
-    let user_id_cookie = Cookie::build("user_id", result.id)
-        .domain(appstate.config.read().await.domain.clone())         // TODO: needs to be updated for deployment
-        .path("/")
-        .http_only(false)
-        .secure(true)               
-        .expires(expiry)
-        .same_site(actix_web::cookie::SameSite::Strict)       // TODO: needs to be set to strict for deployment
-        .finish();
-
     return HttpResponse::Ok()
         .cookie(token_cookie)
-        .cookie(user_id_cookie)
         .body(fs::read_to_string("PORC-Front/dist/index.html").await.unwrap())
 }
 

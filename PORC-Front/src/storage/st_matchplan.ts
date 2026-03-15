@@ -199,7 +199,7 @@ export const matchplanStore = defineStore('matchplan', {
                 )
             ).filter(e => e != null);
                 
-            if (seasons.length == 0) {
+            if (seasons.length == 0 || (seasons.length == 1 && getInitData())) {
                 let seasons = await getSeasons();
                 await Promise.all(seasons.map(async (s) => await this.set_entry(s.name, s, 'season')));
             } 
