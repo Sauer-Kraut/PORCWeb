@@ -27,8 +27,8 @@
     const scrollPercent = ref(0)
 
     function getScrollPercent(): number {
-        const scrollTop = window.scrollY;
-        const docHeight = document.body.scrollHeight - document.documentElement.clientHeight;
+        const scrollTop = window.scrollY + (document.documentElement.clientHeight / 4);
+        const docHeight = document.body.scrollHeight - document.documentElement.clientHeight + 800;
         return (scrollTop / docHeight) * 100;
     }
 
@@ -128,7 +128,6 @@
             <div class="sidebar-limit" :style="{ top: '0%' }"></div>
             <div class="sidebar-limit" :style="{ top: '100%' }"></div>
             
-
             <div class="scroll-marker" :style="{top: placeScrollMarker() + '%'}"></div>
         </div>
 
@@ -251,6 +250,39 @@
                             </ul>
                         </li>
                         <li>Exceptional performance may result in promotion over two divisions.</li>
+                    </ol>
+                </div>
+
+                <div id="Game-Modification-&-Cheating" class="rule-section">
+                    <h1>Game Modification & Cheating</h1>
+                    <div class="seperator-h"></div>
+
+                    <h2>1. Cheating</h2>
+                    <ol class="rules">
+                        <li>Any player proven to have cheated in any of their matches beyond reasonable doubt will be disqualified from the season with immediate effect.</li>
+
+                        <li>All unplayed as well as played matches of the cheater will retroactively be set to 0–3 in the opponent's favor.</li>
+
+                        <li>A non-exhaustive list of actions considered cheating includes:
+                            <ul class="sub-rules">
+                                <li>Bug abuse as determined by the mod team</li>
+                                <li>Modifying the game in order to gain an unfair advantage</li>
+                                <li>Unfair strategies such as lag switching</li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <h2>2. Game Modification</h2>
+                    <ol class="rules">
+                        <li>By default, all modifications to RUMBLE that do not impact gameplay or the information available during a match are allowed.</li>
+
+                        <li>In ambiguous cases, the PORC mod team may be approached for a ruling on a specific mod.</li>
+
+                        <li>To simplify mod legality assessment for participants, some ambiguous mods that have been ruled as disallowed are listed here:
+                            <ul class="sub-rules">
+                                <li>Advanced Structure Shaders (any shader that changes structure appearance based on grounded state)</li>
+                            </ul>
+                        </li>
                     </ol>
                 </div>
 

@@ -179,6 +179,66 @@
         setPlaceholderDisplay();
     }
 
+    async function loadSeasonEarly() {
+        let season = await planStore.get_info(null, 'season');
+
+        if (season) {
+
+            let seasonList = [season];
+
+            TimerText.value = `Time until next season of PORC unknown`;
+            globalTimer = 0;
+
+            current_season.value = season;
+
+            const seasonEnd = current_season.value.end_timestamp ?? 0;
+            const seasonPause = current_season.value.pause_end_timestamp ?? 0;
+            const now = Math.floor(Date.now() / 1000);
+
+            if (now > seasonPause) {
+                globalTimer = seasonPause;
+                TimerText.value = `Time until next season of PORC unknown`;
+            } else if (now > seasonEnd) {
+                globalTimer = seasonPause;
+                TimerText.value = `Time remaining until next season of PORC`;
+            } else {
+                globalTimer = seasonEnd;
+                TimerText.value = `Time remaining for season ${current_season.value.name} of PORC`;
+            }
+
+
+            if (seasons.value && seasons.value[0] && seasons.value[0] == current_season.value && new Date(seasons.value[0].end_timestamp * 1000) < new Date()) {
+                // Season in the far future -> on top of list
+                console.warn("Debug Info: " + seasons.value + seasons.value[0]);
+                const dummySeason: Season = {
+                    name: seasons.value[0].name,
+                    start_timestamp: seasons.value[0].pause_end_timestamp,
+                    end_timestamp: 7260796800,   // Feburary 1, 2200
+                    pause_end_timestamp: 7263216000,   // March 1, 2200
+                };
+                seasonList.push(dummySeason);
+            }
+
+            // Sort seasons by start date, most recent first
+            seasons.value = seasonList.sort((a, b) => {
+                return b.start_timestamp - a.start_timestamp; // Most recent first
+            });
+
+            // console.log('Seasons loaded:', seasons.value);
+
+            if (current_season.value && new Date(current_season.value.end_timestamp * 1000) > new Date()) {
+                selectedSeason.value = current_season.value;
+            } else {
+                selectedSeason.value = seasons.value[0];
+            }
+
+            season_name.value = (seasons.value ?? [])[0]? (seasons.value ?? [])[0].name: "unknown";
+            await getMatchPlan();
+            setPlaceholderDisplay();
+        }
+    }
+
+
     function setPlaceholderDisplay() {
         placeholderDisplay.value = (selectedSeason.value == null ||
             new Date(selectedSeason.value.start_timestamp * 1000) > new Date() ||
@@ -409,16 +469,26 @@
         animate();
         await waitForAppReady(),
         await getUserId();
+
+        getSelectorHeight();
+        
+        localMatchplan.value = await planStore.get_matchplan();
+
+        await loadSeasonEarly();
+
         await Promise.all([ 
             loadSeasons(),
-            checkScheduleConfiguration(),
-            getSignedUp(),
-            getVods(),
-            getEvents()
         ]);
-        console.warn("Passed tournament view setup")
-        localMatchplan.value = await planStore.get_matchplan();
-        getSelectorHeight();
+
+
+        await Promise.all([
+            getVods(),
+            getEvents(),
+            checkScheduleConfiguration(),
+            getSignedUp()
+        ]);
+
+        // console.warn("Passed tournament view setup")
 
     });
 </script>

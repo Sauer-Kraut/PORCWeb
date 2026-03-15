@@ -26,8 +26,6 @@ export const accountsStore = defineStore('accounts', {
             if (cookieId != null) {
                 this.loggedInId = cookieId;
             }
-
-            await this.get_login_full();
         },
 
         

@@ -42,11 +42,6 @@ export const matchplanStore = defineStore('matchplan', {
                 });
                 this.currentSeason = data.season.name;
             }
-
-            await Promise.all([
-                this.get_matchplan(),
-                this.get_all_seasons()
-            ]);
         },
 
 
@@ -162,10 +157,10 @@ export const matchplanStore = defineStore('matchplan', {
             let infoMatchplan = await this.get_info(season, 'matchplan');
             
             if (!infoMatchplan) {
+                await this.set_entry(season, createFetching(), 'matchplan');
                 let fitSeason = await this.map_season_name(season);
 
                 try {
-                    await this.set_entry(fitSeason, createFetching(), 'matchplan');
                     let matchplan = await getMatchplan(fitSeason);
 
                     if (!fitSeason) {
@@ -190,6 +185,8 @@ export const matchplanStore = defineStore('matchplan', {
         },
 
         async get_all_seasons(): Promise<Season[]> {
+            while (Array.from(this.seasonInfos.entries()).some(([id, e]) => isFetching(e))) {await new Promise(resolve => setTimeout(resolve, 100));}
+
             let seasons = (
                 await Promise.all(
                     Array.from(this.seasonInfos.entries()).map(async ([id, e]) => {
@@ -200,6 +197,7 @@ export const matchplanStore = defineStore('matchplan', {
             ).filter(e => e != null);
                 
             if (seasons.length == 0 || (seasons.length == 1 && getInitData())) {
+                await this.set_entry(null, createFetching(), 'season');
                 let seasons = await getSeasons();
                 await Promise.all(seasons.map(async (s) => await this.set_entry(s.name, s, 'season')));
             } 
@@ -211,10 +209,10 @@ export const matchplanStore = defineStore('matchplan', {
             let infoSeason = await this.get_info(seasonName, 'season');
             
             if (!infoSeason) {
+                await this.set_entry(seasonName, createFetching(), 'season');
                 let fitSeason = await this.map_season_name(seasonName);
 
                 try {
-                    await this.set_entry(fitSeason, createFetching(), 'season');
                     let seasons = await this.get_all_seasons();
 
                     console.warn("seasons: " + seasons.map((s) => s.name));

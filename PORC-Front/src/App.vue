@@ -205,9 +205,18 @@ onMounted(async () => {
 
     appReady.value = true;
     console.log("App is ready");
-    
-    await getMatchPlan()
-    await getUserId(),
+
+
+    await Promise.all([
+        st_plan.get_matchplan(),
+        st_plan.get_all_seasons(),
+        st_account.get_login_full(),
+    ]);
+
+    await Promise.all([ 
+        getMatchPlan(),
+        getUserId()
+    ]);
 
     await Promise.all([ 
         getSignedUp(),
