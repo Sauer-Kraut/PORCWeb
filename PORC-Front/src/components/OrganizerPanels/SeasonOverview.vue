@@ -357,7 +357,7 @@ onMounted(async () => {
                 
                 <!-- Stats Grid -->
                 <div class="info-card flex-grow-1">
-                    <div class="preview-title">
+                    <div class="form-label">
                         Tournament Stats
                     </div>
                     
@@ -445,7 +445,7 @@ onMounted(async () => {
                             <span class="sort-indicator">{{ sortBy === 'region' ? (sortDir === 1 ? '▲' : '▼') : '' }}</span>
                         </span>
                     </div>
-                    <div class="region-box muted">
+                    <div class="pe-2 region-box muted">
                         <span class="sortable" :class="{ active: sortBy === 'bp' }" @click="setSort('bp')">
                             BP
                             <span class="sort-indicator">{{ sortBy === 'bp' ? (sortDir === 1 ? '▲' : '▼') : '' }}</span>
@@ -526,21 +526,20 @@ onMounted(async () => {
         justify-content: space-between;
         gap: 16px;
         background: $darker-bg;
-        border: 1px solid $secondary-border-color;
+        // border: 1px solid $secondary-border-color;
         border-radius: 14px;
-        padding: 14px 18px;
+        padding: 0px 4px;
         backdrop-filter: blur(6px);
     }
 
     .season-left {
         display: flex;
         flex-direction: column;
-        gap: 4px;
     }
 
     .season-title {
         margin: 0;
-        font-size: 18px;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #eaeaea;
     }
@@ -548,7 +547,7 @@ onMounted(async () => {
     .season-sub {
         margin: 0;
         color: #a0a0a0;
-        font-size: 13px;
+        font-size: 0.9rem;
     }
 
     .season-center {
@@ -602,7 +601,7 @@ onMounted(async () => {
 
     .season-meta {
         display: flex;
-        gap: 12px;
+        gap: 14px;
         align-items: center;
     }
 
@@ -611,7 +610,7 @@ onMounted(async () => {
         color: var(--primary);
         padding: 6px 12px;
         border-radius: 999px;
-        font-size: 13px;
+        font-size: 14px;
     }
 
     /* Graph */
@@ -639,7 +638,7 @@ onMounted(async () => {
 
     
 
-    .preview-title { margin: 0 0 8px 0; font-size: 14px; }
+    .preview-title { margin: 0 0 8px 0; font-size: 15px; font-weight: 600; }
 
     .graph-header p {
         margin: 4px 0 16px;
@@ -759,7 +758,7 @@ onMounted(async () => {
         /* checkbox + username + bp + region + signupDate + season */
         grid-template-columns: 40px 1.2fr 0.7fr 0.6fr 0.6fr 0.35fr;
         // gap: 12px;
-        padding: 8px 24px;
+        padding: 10px 24px;
         // border-radius: 12px;
         // background: #1a1a1a;
 
@@ -778,6 +777,12 @@ onMounted(async () => {
             transition: all 0.3s;
 
             border: none;
+
+            // font-size: 1rem;
+
+            .muted {
+                font-size: 14px !important;
+            }
         }
         
         &.selected {
@@ -790,12 +795,12 @@ onMounted(async () => {
             color: var(--primary);
             padding: 4px 10px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 13px;
             width: fit-content;
         }
 
         .region-box {
-            width: 3.5rem;
+            width: 5rem;
             justify-content: center;
             align-items: center;
             text-align: center;
@@ -832,7 +837,7 @@ onMounted(async () => {
 
         .username, .bp {
             color: #c9c9c9 !important;
-            font-size: 0.9rem !important;
+            font-size: 0.95rem !important;
             line-height: 1.55rem;
             font-weight: 600 !important;
         }
@@ -849,7 +854,7 @@ onMounted(async () => {
         }
 
         .season {
-            width: 4rem;
+            width: 5rem;
             justify-content: center;
             align-items: center;
             text-align: center;

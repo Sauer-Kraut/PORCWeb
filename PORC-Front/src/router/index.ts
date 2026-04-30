@@ -38,11 +38,11 @@ const routes: RouteRecordRaw[] = [
         name: 'Callback catch',
         component: CallbackCatchView,
     },
-    // {
-    //     path: '/organizer',
-    //     name: 'Organizer',
-    //     component: OrganizerView,
-    // },
+    {
+        path: '/organizer',
+        name: 'Organizer',
+        component: OrganizerView,
+    },
 ];
 
 const router = createRouter({

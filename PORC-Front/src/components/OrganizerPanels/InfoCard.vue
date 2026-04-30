@@ -20,19 +20,19 @@
     @import '@/assets/scss/global.scss';
 
     .config-card { 
-        background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent); 
+        background: linear-gradient(180deg, rgba(255,255,255,0.035), transparent); 
         border: 1px solid rgba(255,255,255,0.02); 
         padding: 10px; 
         border-radius: 8px; 
 
-        .mini-title { font-size: 12px; color: #a0a0a0; font-weight: 600; }
-        .mini-value { font-size: 18px; font-weight: 700; margin-top: 6px; color: #eaeaea; }
-        .mini-sub { font-size: 12px; color: #9aa0a6; margin-top: 6px; }
+        .mini-title { font-size: 14px; color: #a0a0a0; font-weight: 600; }
+        .mini-value { font-size: 20px; font-weight: 700; margin-top: 6px; color: #eaeaea; }
+        .mini-sub { font-size: 14px; color: #9aa0a6; margin-top: 6px; }
     }
 
     .muted {
         color: #a0a0a0;
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.5rem;
     }
 </style>

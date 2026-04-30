@@ -30,7 +30,7 @@ fn format_signup_json(list: Vec<ReadableSignup>) -> String {
     let rows: Vec<String> = list.iter().map(|p| {
         let region = match p.region.as_str() {"NaN" => "__".to_string(), v => v.to_string()}.drain(0..2).collect::<String>();
         format!(
-            "  {{ \"id\": {:<width$}, \"name\": \"{:<width$}\", \"region\": \"{}\" }}",
+            "  {{ \"name\": {:<width$}, \"bp\": {:<width$}, \"region\": \"{}\" }}",
             p.name,
             p.bp,
             region,

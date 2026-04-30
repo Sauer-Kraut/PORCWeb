@@ -15,8 +15,9 @@
     import { accountsStore } from "@/storage/st_accounts";
     import { signupStore } from "@/storage/st_signups";
     import { matchplanStore } from "@/storage/st_matchplan";
-import type { SignUpInfo } from "@/models/SignUpInfo";
-import { showErrorModal } from "@/services/ErrorModalService";
+    import type { SignUpInfo } from "@/models/SignUpInfo";
+    import { showErrorModal } from "@/services/ErrorModalService";
+import { getStringWidth } from "@/util/CalcStringWidth";
 
     const totalPlayers = computed(() => {
         const fromDivs = Blueprint.value.divisions.reduce((acc, d) => acc + (d.players?.length ?? 0), 0);
@@ -209,6 +210,154 @@ import { showErrorModal } from "@/services/ErrorModalService";
             "tag": "lojay"
             }
         ]
+        },
+        {
+        "name": "Diamond",
+        "order": 1,
+        "players": [
+            {
+            "id": "178905571682942976",
+            "tag": "2guib"
+            },
+            {
+            "id": "142689578967498762",
+            "tag": "omelette.du.fromage."
+            },
+            {
+            "id": "281221611271487489",
+            "tag": "delta35"
+            },
+            {
+            "id": "164901822761402368",
+            "tag": "yourneighbornat"
+            },
+            {
+            "id": "836935862842294274",
+            "tag": "hyper3231"
+            },
+            {
+            "id": "491784389341216768",
+            "tag": "abbathorsdagger"
+            }
+        ]
+        },
+        {
+        "name": "Mithril",
+        "order": 2,
+        "players": [
+            {
+            "id": "244833436450291722",
+            "tag": "alonshpo"
+            },
+            {
+            "id": "1278614011226751043",
+            "tag": "rumblenocerous"
+            },
+            {
+            "id": "400798999025680394",
+            "tag": "odwamne"
+            },
+            {
+            "id": "126754956429623298",
+            "tag": ".grand"
+            },
+            {
+            "id": "279991236029317121",
+            "tag": "crwnd"
+            },
+            {
+            "id": "300974296283480065",
+            "tag": "mr_lux43"
+            },
+            {
+            "id": "1329333748151615488",
+            "tag": "thormac48"
+            }
+        ]
+        },
+        {
+        "name": "Adamantium",
+        "order": 3,
+        "players": [
+            {
+            "id": "695132277792964618",
+            "tag": "donk69420"
+            },
+            {
+            "id": "189354759050887168",
+            "tag": "thetrogdor"
+            },
+            {
+            "id": "691615336943845407",
+            "tag": "orangenaln"
+            },
+            {
+            "id": "661914123503927307",
+            "tag": "._thom_."
+            },
+            {
+            "id": "525674055169212426",
+            "tag": "l3mmi05"
+            },
+            {
+            "id": "693603723234115635",
+            "tag": "zukamiforever"
+            }
+        ]
+        },
+        {
+        "name": "Gold",
+        "order": 4,
+        "players": [
+            {
+            "id": "620712303100428288",
+            "tag": "bobomonster315"
+            },
+            {
+            "id": "553364927797264392",
+            "tag": "roaby."
+            },
+            {
+            "id": "764531742450384896",
+            "tag": "_ulul_"
+            }
+        ]
+        },
+        {
+        "name": "Gold II",
+        "order": 4,
+        "players": [
+            {
+            "id": "620712303100428288",
+            "tag": "bobomonster315"
+            },
+            {
+            "id": "553364927797264392",
+            "tag": "roaby."
+            },
+            {
+            "id": "764531742450384896",
+            "tag": "_ulul_"
+            }
+        ]
+        },
+        {
+        "name": "Iron",
+        "order": 5,
+        "players": [
+            {
+            "id": "537310675656245258",
+            "tag": "pentali"
+            },
+            {
+            "id": "848641896817623100",
+            "tag": "samdamusican"
+            },
+            {
+            "id": "545487068873228308",
+            "tag": "lojay"
+            }
+        ]
         }
     ],
     "end_timestamp": null,
@@ -216,6 +365,16 @@ import { showErrorModal } from "@/services/ErrorModalService";
     "players_to_sort": [],
     "season": 0
     });
+
+    const minimization = ref<Record<string, boolean>>({});
+
+    function buildMinimization() {
+        const map: Record<string, boolean> = {};
+        for (let div of Blueprint.value.divisions) {
+            map[div.name] = true;
+        }
+        minimization.value = map;
+    }
 
     const PlanStorage = matchplanStore();
     const accountStorage = accountsStore();
@@ -251,7 +410,7 @@ import { showErrorModal } from "@/services/ErrorModalService";
 
 
     async function setCache() {
-        const seasons = (await (PlanStorage.get_all_season_infos())).sort((a, b) => b.start_timestamp - a.start_timestamp).slice(0, 5);
+        const seasons = (await (PlanStorage.get_all_seasons())).sort((a, b) => b.start_timestamp - a.start_timestamp).slice(0, 5);
 
         let matchplanlist = [];
         for (const [idx, season] of seasons.entries()) {
@@ -281,13 +440,17 @@ import { showErrorModal } from "@/services/ErrorModalService";
         }
 
         try {
-            let playerInfosfut = accountStorage.get_competitors_min(players);
+
+            console.log("Trying to query account infos for players:", players);
+            let playerInfosfut = accountStorage.get_accounts_min(players);
             let signupsfut = signupStorage.get_signups(null);
             let [playerInfos, signups] = await Promise.all([playerInfosfut, signupsfut]);
             accountInfos.value = Object.fromEntries(playerInfos.map(p => [p.id, p]));
             signupInfos.value = Object.fromEntries((signups ?? []).map(s => [s.discord_id, s]));
+            console.log("Player Infos:", accountInfos.value);
         }
         catch (err) {
+            showErrorModal("Failed to query account infos, error: " + err);
             signupInfos.value = Object.fromEntries([]);
         }
     }
@@ -504,9 +667,15 @@ import { showErrorModal } from "@/services/ErrorModalService";
     }
 
 
+    function getSubdivision(name: string): string {
+        return name.trim().split(/\s+/)[1] ?? "I";
+    }
+
+
     onMounted(async () => {
         await setCache();
         await GetBlueprint();
+        buildMinimization();
     });
 </script>
                     
@@ -538,26 +707,27 @@ import { showErrorModal } from "@/services/ErrorModalService";
         <div class="panel-card flex-column">
 
             <!-- Season Info -->
-            <div class="season-info info-card d-flex flex-row gap">
-
-                <!-- Top: Name and date pickers -->
-                <div class="d-flex flex-column gap">
-
-                    <!-- Season Name -->
-                    <div class="info-card m-0">
-                        <div class="date-row mb-4">
-                            <label class="form-label">Season Name</label>
-                            <input class="form-input m-0" v-model="time" placeholder="Season Name" />
-                        </div>
-
-                        <div class="date-row">
-                            <label class="form-label">Pause Date Range</label>
-                            <DatePicker class="range_selector season-date" v-model="time" :range="false" placeholder="Select Pause End" />
-                        </div>
-
-                        <div class="hint muted">Dates are local. Use these to preview the season timeline.</div>
-                    </div>
+            <!-- <div class="season-info panel-card d-flex flex-row gap">
+                
+                    
+                <div class="date-row">
+                    <label class="form-label">Season Name</label>
+                    <input class="form-input m-0" v-model="time" placeholder="Season Name" />
                 </div>
+
+                <div class="date-row pb-1">
+                    <label class="form-label">Season Calendar Period</label>
+                    <DatePicker class="range_selector season-date" v-model="time" :range="true" placeholder="Select Season Period" />
+                    <div class="hint muted pt-1">Dates are local. Use these to preview the season timeline.</div>
+                </div>
+
+                <div class="date-row pb-1">
+                    <label class="form-label">Pause End Date</label>
+                    <DatePicker class="range_selector season-date" v-model="time" :range="false" placeholder="Select Pause End" />
+                    <div class="hint muted pt-1">Dates are local. Use these to preview the season timeline.</div>
+                </div>
+                        
+            </div> -->
 
                 <!-- Middle: season info cards -->
                 <!-- <div class="info-card mt-0 flex-grow-1">
@@ -578,7 +748,7 @@ import { showErrorModal } from "@/services/ErrorModalService";
                 </div> -->
                 
 
-                <!-- Bottom: Action Buttons -->
+                <!-- Bottom: Action Buttons
                 <div class="info-card d-flex flex-column m-0 flex-grow-5">
 
                     <div class="d-flex flex-row w-100">
@@ -595,7 +765,7 @@ import { showErrorModal } from "@/services/ErrorModalService";
                         </div>
                     </div>
 
-                </div>
+                </div> -->
 
 
                 <!-- <div class="info-card d-flex flex-row justify-content-between flex-grow-1">
@@ -603,7 +773,6 @@ import { showErrorModal } from "@/services/ErrorModalService";
                     <button class="btn btn-small">Reset</button>
                 </div> -->
 
-            </div>
 
             <!-- <div class="d-flex flex-row mt-4">
                 <div class="seperator-h me-4"></div>
@@ -615,13 +784,20 @@ import { showErrorModal } from "@/services/ErrorModalService";
             <div class="d-flex flex-column gap">
                 <!-- Tierlist Sorted-->
                 <div class="tierlist d-flex flex-column justify-content-center">
-                    <div class="tier d-flex flex-row align-items-center" v-for="div in Blueprint.divisions" :key="div.order">
-                        <img :src="getDivisionImage(div.name)" class="division-icon" />
-                        <div class="tier-info">
-                            <div class="tier-name">{{ div.name }}</div>
-                            <div class="tier-count muted">{{ div.players.length }} players</div>
+                    <div class="tier d-flex flex-row align-items-center" v-for="div in Blueprint.divisions" :key="div.order" :class="{ 'minimized': minimization[div.name] }">
+
+                        <div class="tier-card flex-column"
+                            @click="minimization[div.name] = !minimization[div.name]"
+                            :class="{ [div.name.toLowerCase()]: true }"
+                        >
+                            <img v-if="getSubdivision(div.name) === 'I'" :src="getDivisionImage(div.name.trim().split(/\s+/)[0])" class="division-icon" />
+                            <div class="tier-info" :class="{'m-0': getSubdivision(div.name) != 'I'}">
+                                <div class="tier-name">{{ div.name }}</div>
+                                <div class="tier-count muted">{{ div.players.length }} players</div>
+                            </div>
                         </div>
-                        <div class="drop-zone d-flex flex-row h-100"
+                            
+                        <div class="drop-zone d-flex flex-row flex-grow-1"
                             :id='`division-drop-${div.name}`'
                             @dragover.prevent="console.log('hi')"
                             @drop="onDropPlayer"
@@ -630,17 +806,19 @@ import { showErrorModal } from "@/services/ErrorModalService";
                                 draggable="true" 
                                 @dragstart="(e) => onDragStart(e, player)" 
                                 :style="draggedPlayer?.id === player.id ? style : {}"
-                                class="player-item m-1">
+                                class="player-item">
 
-                                <div class="icon-box d-flex flex-column position-relative movement-box" :class="[draggedPlayer?.id === player.id ? `${translateMovement(DetermineMovement(player, Blueprint, LatestHoverDivision))}`: `${translateMovement(DetermineMovement(player, Blueprint))}`]">
-                                    <div class="icon icon-chevron-up me-1"></div>
-                                    <div class="icon icon-chevron-up support-chevron me-1"></div>
-                                </div>
-                                <DiscordAvatarComponent :account="accountInfos[player.id]" class="me-2 avatar"/>
-                                {{ filter_str(player.tag, 10) }}
+                                <DiscordAvatarComponent :account="accountInfos[player.id]" class="me-2 avatar" :class="{'extended': draggedPlayer?.id === player.id }"/>
+                                <span class="tag" :class="{ [`w-${Math.floor(getStringWidth(filter_str(player.tag, 10), 1.44))}`]: true, 'extended': draggedPlayer?.id === player.id }">
+                                    {{ filter_str(player.tag, 10) }}
+                                </span>
 
                                 <div class="bp ms-2 ps-2" v-if="signupInfos[player.id] && signupInfos[player.id].bp != 0">
                                     {{ signupInfos[player.id].bp }}
+                                </div>
+                                <div class="icon-box d-flex flex-column position-relative movement-box" :class="[draggedPlayer?.id === player.id ? `${translateMovement(DetermineMovement(player, Blueprint, LatestHoverDivision))}`: `${translateMovement(DetermineMovement(player, Blueprint))}`]">
+                                    <div class="icon icon-chevron-up me-1"></div>
+                                    <div class="icon icon-chevron-up support-chevron me-1"></div>
                                 </div>
                             </div>
 
@@ -724,21 +902,20 @@ import { showErrorModal } from "@/services/ErrorModalService";
         justify-content: space-between;
         gap: 16px;
         background: $darker-bg;
-        border: 1px solid $secondary-border-color;
+        // border: 1px solid $secondary-border-color;
         border-radius: 14px;
-        padding: 14px 18px;
+        padding: 0px 4px;
         backdrop-filter: blur(6px);
     }
 
     .season-left {
         display: flex;
         flex-direction: column;
-        gap: 4px;
     }
 
     .season-title {
         margin: 0;
-        font-size: 18px;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #eaeaea;
     }
@@ -746,7 +923,7 @@ import { showErrorModal } from "@/services/ErrorModalService";
     .season-sub {
         margin: 0;
         color: #a0a0a0;
-        font-size: 13px;
+        font-size: 0.9rem;
     }
 
     .season-center {
@@ -779,7 +956,7 @@ import { showErrorModal } from "@/services/ErrorModalService";
 
     .season-meta {
         display: flex;
-        gap: 12px;
+        gap: 14px;
         align-items: center;
     }
 
@@ -788,7 +965,7 @@ import { showErrorModal } from "@/services/ErrorModalService";
         color: var(--primary);
         padding: 6px 12px;
         border-radius: 999px;
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .graph-card {
@@ -815,7 +992,6 @@ import { showErrorModal } from "@/services/ErrorModalService";
     .date-row {
         display: flex;
         flex-direction: column;
-        gap: 8px;
         margin-bottom: 12px;
     }
 
@@ -921,41 +1097,80 @@ import { showErrorModal } from "@/services/ErrorModalService";
         border: 1px solid $secondary-border-color;
         border-radius: 12px;
 
-        max-width: 952px;
+        transition: all 0.2s ease-in-out;
+
+        * {
+            transition: all 0.2s ease-in-out;
+        }
+
+        // max-width: 952px;
 
         .tier {
             width: 100%;
+            height: 8rem;
             border-bottom: 1px solid $secondary-border-color;
-            padding: 8px;
             display: flex;
             align-items: center;
             gap: 12px;
 
-            .division-icon {
-                width: 4rem;
-                height: 4rem;
-                object-fit: contain;
-                margin: -8px;
-                margin-left: 4px;
-                margin-right: 8px;
-                margin-bottom: 0px;
+            &:first-child {
+                .tier-card {
+                    border-top-left-radius: 12px;
+                }
             }
 
-            .tier-info {
+            &:last-child {
+                .tier-card {
+                    border-bottom-left-radius: 12px;
+                }
+                
+            }
+
+            .tier-card {
+                height: 8rem;
                 display: flex;
-                flex-direction: column;
-                border-right: solid 1px $secondary-border-color;
-                min-width: 7.5rem;
-                padding-right: 4px;
-            }
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                padding: 0 0.5rem;
 
-            .tier-name { font-weight: 700; color: #eaeaea; }
-            .tier-count { color: #a0a0a0; font-size: 12px; }
+                // cursor: pointer;
+
+                @each $div, $color in $division-colors {
+                    &.#{$div} {
+                        background-color: color-mix(in srgb, $color 10%, transparent);
+                        color: $color;
+
+                        box-shadow: -2px 0 0 $color;
+                    }
+                }
+
+                .division-icon {
+                    width: 4rem;
+                    height: 4rem;
+                    object-fit: contain;
+                    margin: 8px;
+                    margin-bottom: -4px;
+                }
+
+                .tier-info {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 7.5rem;
+                    margin-top: 0;
+                    margin-bottom: 1rem;
+                }
+
+                .tier-name { font-weight: 700; margin-bottom: -4px;}
+                .tier-count { color: #a0a0a0; font-size: 12px; }
+            }
 
             .drop-zone {
-                flex-grow: 1;
-                height: 100%;
-                padding: 6px;
+                flex-grow: 1 !important;
+                height: calc(100% - 12px);
+                padding: 4px;
                 padding-left: 12px;
                 border-radius: 8px;
                 transition: background-color 0.15s ease;
@@ -967,10 +1182,11 @@ import { showErrorModal } from "@/services/ErrorModalService";
 
                 gap: 8px;
 
+                border: 2px dashed rgba(0, 0, 0, 0);
+
                 &.hovered {
                     background-color: color-mix(in srgb, var(--primary) 15%, transparent);
                     border: 2px dashed var(--primary);
-                    padding: 4px;
                     padding-right: 6px;
                     padding-left: 12px;
 
@@ -1024,28 +1240,56 @@ import { showErrorModal } from "@/services/ErrorModalService";
             border: 1px solid $border-color;
             border-radius: 8px;
             color: #d2d2d2;
-            font-weight: 600;
+            font-size: 0.9rem;
+            font-weight: 500;
             line-height: 1.35rem;
+            margin: 4px;
 
             cursor: grab;
             user-select: none;
             background-color: $darker-bg;
 
+            transition: filter 0.2s ease;
+
+            .tag {
+                overflow: hidden;
+                transition: all 0.2s ease-in-out !important;
+
+                @for $i from 1 through 200 {
+                    &.w-#{$i} {
+                        width: #{$i}px;
+                    }
+                }
+            }
+
             .bp {
                 border-left: 1px solid $secondary-border-color;
             }
 
+            .avatar {
+                filter: grayscale(0.5);
+            }
+
+            &:hover {
+                .avatar {
+                    filter: grayscale(0) !important;
+                }
+            }
+
             .movement-box {
-                margin-top: 0.4rem;
-                $scaling: 0.7;
+                // display: none !important;
+
+                margin-top: 0.32rem;
+                $scaling: 0.6;
 
                 overflow-x: hidden;
                 transition: width 0.2s;
                 transition: padding 0.2s;
 
-                padding-right: 1.5rem;
+                padding-right: 1rem;
+                margin-left: 0.5rem;
 
-                width: 1rem;
+                width: 0.5rem;
                 height: 1rem;
 
                 &.mov-0 {
@@ -1060,21 +1304,22 @@ import { showErrorModal } from "@/services/ErrorModalService";
 
                 &.up-s .icon-chevron-up {
                     color: rgb(97, 214, 74);
-                    transform: translate(0px, -3px) scale($scaling);
+                    transform: translate(0px, -2px) scale($scaling);
                 }
 
                 &.up-l .icon-chevron-up {
                     color: rgb(45, 244, 27);
-                    transform: translate(0px, 1px) scale($scaling);
+                    transform: translate(0px, 2px) scale($scaling);
 
                     &.support-chevron {
-                        transform: translate(0px, -7px) scale($scaling);
+                        transform: translate(0px, -6px) scale($scaling);
                     }
                 }
 
                 &.down-s .icon-chevron-up {
                     color: orange;
                     rotate: 180deg;
+                    transform: translate(0px, 1px) scale($scaling);
                 }
 
                 &.down-l .icon-chevron-up {
@@ -1103,8 +1348,47 @@ import { showErrorModal } from "@/services/ErrorModalService";
                     transition: all 0.2s;
                 }
             }
-
             
+        }
+    }
+
+    .minimized {
+        .drop-zone {
+            // height: 40px !important;
+        }
+
+        &.tier {
+            height: 60px !important;
+        }
+
+        .tier-card {
+            height: 60px !important;
+
+            .division-icon {
+                width: 4rem;
+                height: 0rem !important;
+                object-fit: contain;
+                margin: 8px;
+                margin-bottom: -4px;
+            }
+
+            .tier-info {
+                margin-top: 8px !important;
+                margin-bottom: 8px !important;
+            }
+        }
+        
+        .player-item {
+            margin-top: 0;
+            margin-bottom: 0;
+
+            .tag:not(.extended) {
+                width: 0px !important;
+            }
+
+            .avatar:not(.extended) {
+                margin-right: 0px !important;
+            }
         }
     }
 

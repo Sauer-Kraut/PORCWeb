@@ -246,7 +246,7 @@ export const accountsStore = defineStore('accounts', {
 
             let accounts = await Promise.all(ids.map(async (a) => await this.get_competitor(a)));
 
-            if (accounts.some((a) => (!a || !a.schedule))) {
+            if (accounts.some((a) => !a)) {
                 let missingIds = ids.filter((id) => !accounts.some((a) => (a?.id ?? '') == id));
                 if (missingIds[0]) {
                     console.warn("missing ids: " + missingIds);

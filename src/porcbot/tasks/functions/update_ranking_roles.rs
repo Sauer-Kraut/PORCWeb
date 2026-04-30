@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use colored::Colorize;
-use serenity::all::{GuildId, RoleId};
+use serenity::all::{EditMember, GuildId, RoleId};
+use futures::stream::{self, StreamExt};
 
 use crate::{liberary::dialogue_lib::{bot_error::BotError, dialogue_builder::storage::{get_dialogues::get_dialogues, store_dialogue::store_dialogue}}, porcbot::config::{get_http, RANKS, SERVER_ID}, AppState};
 use crate::liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
@@ -8,7 +11,11 @@ pub async fn update_ranking_roles(appstate: &AppState, matchplan: MatchPlan) -> 
 
     let guild_id = GuildId::new(SERVER_ID.as_ref().clone());
 
-    let rank_role_names = RANKS.iter().map(|f| f.to_string()).collect::<Vec<String>>();
+    let mut rank_role_names = RANKS.iter().map(|f| f.to_string()).collect::<Vec<String>>();
+    let mut sub_division_role_names = rank_role_names.clone().iter().map(|r| r.to_string() + " I").collect::<Vec<String>>();
+    sub_division_role_names.append(&mut rank_role_names.clone().iter().map(|r| r.to_string() + " II").collect::<Vec<String>>());
+    sub_division_role_names.append(&mut rank_role_names.clone().iter().map(|r| r.to_string() + " III").collect::<Vec<String>>());
+
     let guild_roles = guild_id.roles(get_http()).await?;
 
     let mut rank_roles = Vec::new();
@@ -20,74 +27,87 @@ pub async fn update_ranking_roles(appstate: &AppState, matchplan: MatchPlan) -> 
         }
     }
 
+    for role_name in sub_division_role_names.iter() {
+        if let Some(role) = guild_roles.iter().find(|(_, r)| r.name == *role_name) {
+            rank_roles.push(role);
+        } 
+        // Do nothing if not found, not every division has sub divisions
+    }
+
     let rank_roles_ids = rank_roles.iter().map(|r| *r.0).collect::<Vec<RoleId>>();
 
-    let members = guild_id.members(get_http(), None, None).await?;
+    let mut members = guild_id.members(get_http(), None, None).await?;
 
-    let mut role_remover_tasks = Vec::new();
 
-    for member in members.iter() {
-        
-        for role in &member.roles {
-            if rank_roles.iter().any(|r| *r.0 == *role) {
+    let mut division_map: HashMap<String, String> = HashMap::new();
 
-                role_remover_tasks.push(async {
-                    let res = match member.remove_roles(get_http(), &rank_roles_ids).await {
-                        Ok(_) => Ok(()),
-                        Err(e) => Err(format!("Failed to remove roles from {}: {}", member.user.name, e)),
-                    };
-                    res
-                })
-            }
+    for division in matchplan.divisions.iter() {
+        for player in division.players.iter() {
+            division_map.insert(player.id.clone(), division.name.clone());
         }
     }
 
-    println!("{}", "Finished creating tasks to remove old ranking roles".green());
+    let role_map: HashMap<String, RoleId> = HashMap::from_iter(rank_roles.iter().map(|(id, role)| (role.name.clone(), **id)));
+
+    let mut role_editor_tasks = Vec::new();
+
+    for member in members.iter_mut() {
+
+        let division = division_map.get(&member.user.id.to_string());
+
+        let mut target_role_ids = member.roles.iter().filter(|r| !rank_roles_ids.contains(*r)).map(|r| *r).collect::<Vec<RoleId>>();
+
+        match division {
+            Some(division_unwraped) => {
+                let role = match role_map.get(division_unwraped.split(' ').next().unwrap_or(division_unwraped.as_str())) {
+                    Some(r) => *r,
+                    None => return Err(format!("Role for division '{}' not found", division_unwraped).into()),
+                };
+                target_role_ids.push(role);
+
+                let sub_role = match role_map.get(division_unwraped) {
+                    Some(r) => *r,
+                    None => return Err(format!("Role for division '{}' not found", division_unwraped).into()),
+                };
+
+                if !target_role_ids.contains(&sub_role) {
+                    target_role_ids.push(sub_role);
+                }
+            },
+            None => {},
+        };
+
+        let mut target_sorted = target_role_ids.clone();
+        let mut current_sorted = member.roles.clone();
+
+        target_sorted.sort();
+        current_sorted.sort();
+
+        if target_sorted != current_sorted {
+            role_editor_tasks.push(async move {
+
+                let res = match member.edit(get_http(), EditMember::default()
+                    .roles(target_role_ids)).await {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(format!("Failed to edit roles of {}: {}", member.user.name, e)),
+                };
+                res
+            });
+        }
+    }
+
+    println!("{}", "Finished creating tasks to edit ranking roles".green());
 
     // errors get logged and ignored
-    let remover_taks_results = futures::future::join_all(role_remover_tasks).await;
-    let remover_tasks_errs = remover_taks_results.iter().filter(|res| res.is_err()).collect::<Vec<_>>();
-    for err in remover_tasks_errs {
+    let editor_taks_results = futures::stream::iter(role_editor_tasks).buffer_unordered(5).collect::<Vec<_>>().await;
+    let editor_tasks_errs = editor_taks_results.iter().filter(|res| res.is_err()).collect::<Vec<_>>();
+    for err in editor_tasks_errs {
         if let Err(e) = err {
-            println!("{}\n{}{}", "An error occurred while removing roles: ".red(), e.to_string().bright_red(), " - role removal was therefore skipped".yellow());
+            println!("{}\n{}{}", "An error occurred while editing roles: ".red(), e.to_string().bright_red(), " - role editing was therefore skipped".yellow());
         }
     }
 
-    println!("{}", "Finished removing old ranking roles".green());
-
-    let mut add_role_tasks = Vec::new();
-
-    for member in members.iter().filter(|m| matchplan.players.iter().any(|p| p.id == m.user.id.to_string())) {
-        
-        add_role_tasks.push(async {
-            let division = match matchplan.divisions.iter().find(|d| d.players.iter().any(|p| p.id == member.user.id.to_string())){
-                Some(d) => d.name.clone(),
-                None => return Err(format!("Player {} not found in matchplan", member.user.name).into()),
-            };
-
-            let role = match rank_roles.iter().find(|r| r.1.name == division) {
-                Some(r) => r.0,
-                None => return Err(format!("Role for division '{}' not found", division).into()),
-            };
-
-            let r: Result<_, BotError> = member.add_role(get_http(), role).await.map_err(|e| e.into());
-            r
-        })
-    }
-
-    println!("{}", "Finished creating tasks to add new ranking roles".green());
-
-
-    // errors get logged and ignored
-    let add_taks_results = futures::future::join_all(add_role_tasks).await;
-    let add_tasks_errs = add_taks_results.iter().filter(|res| res.is_err()).collect::<Vec<_>>();
-    for err in add_tasks_errs {
-        if let Err(e) = err {
-            println!("{}\n{}{}", "An error occurred while removing roles: ".red(), e.to_string().bright_red(), " - role removal was therefore skipped".yellow());
-        }
-    }
-
-    println!("{}", "Finished adding new ranking roles".green());
+    println!("{}", "Finished editing ranking roles".green());
     
     Ok(())
 }
