@@ -140,6 +140,8 @@ textarea {
     background: transparent;
     color: #eaeaea;
 
+    font-weight: 600;
+
     &:hover {
         border: 1px solid rgb(160, 160, 160);
     }
@@ -557,4 +559,9 @@ input[type=number] {
     align-self: center;
     width: 1px;
     background-color: rgb(118, 116, 116);
+}
+
+.shiftstone {
+    height: 2rem;
+    width: 2rem;
 }

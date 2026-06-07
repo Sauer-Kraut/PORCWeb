@@ -6,13 +6,14 @@ import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
 import RequestMatchModal from './modals/RequestMatchModal.vue';
 import { filter_str } from '@/util/stringFilter';
-import { Repetition, type Availability, type DailyRepetitionConfig } from '@/models/availability/Availability';
+import { Repetition, type Availability } from '@/models/availability/Availability';
 import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
 import { accountsStore } from '@/storage/st_accounts';
 import { postMatchEvent } from '@/API/match_event/PostMatchEvent';
 import type { PlayerModel } from '@/models/matchplan/PlayerModel';
 import type { Season } from '@/models/matchplan/Season';
 import MatchPopper from './Calender/MatchPopper.vue';
+import { addDays, endOfWeek, startOfWeek } from 'date-fns'
 
 const props = defineProps<{
     schedule: Schedule;
@@ -130,7 +131,7 @@ function splitEvents(events: Availability[]): AvailabilityDisplay[] {
                 }
                 break;
             case Repetition.Daily:
-                for (const day of getRepetitionDays(event.repetition_config)) {
+                for (const day of getRepetitionDays(event.startDate, event.repetition_day_shift)) {
                     splitEvents.push(...splitEventDisplay(getEventOfTheWeek(event, day)));
                 }
                 break;
@@ -236,31 +237,9 @@ function getEventOfTheWeek(event: Availability, day: number): AvailabilityDispla
     }
 }
 
-function getRepetitionDays(repetition: DailyRepetitionConfig): number[] {
-    var days: number[] = [];
-    if (repetition.monday) {
-        days.push(0);
-    }
-    if (repetition.tuesday) {
-        days.push(1);
-    }
-    if (repetition.wednesday) {
-        days.push(2);
-    }
-    if (repetition.thursday) {
-        days.push(3);
-    }
-    if (repetition.friday) {
-        days.push(4);
-    }
-    if (repetition.saturday) {
-        days.push(5);
-    }
-    if (repetition.sunday) {
-        days.push(6);
-    }
-    //console.log('Repetition days', days);
-    return days;
+function getRepetitionDays(anchor: Date, shifts: number[]): number[] {
+    const anchorDayOfWeek = (anchor.getDay() + 6) % 7; // Adjust for week starting on Monday
+    return shifts.map((shift) => (shift + anchorDayOfWeek) % 7);
 }
 
 function getEventStyle(event: AvailabilityDisplay | MatchEvent): { top: string; height: string } {
@@ -325,7 +304,7 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
                     startDate: date,
                     endDate: new Date(date.getTime() + 60 * 60 * 1000),
                     repetition: Repetition.Once,
-                    repetition_config: { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false } as DailyRepetitionConfig,
+                    repetition_day_shift: [] as number[],
                 } as Availability,
                 create: true,
                 async onCancel() {
@@ -436,25 +415,44 @@ async function submitNote() {
 
 
         <div class="calendar-header m-0 ps-0 pe-0">
-            <div class="calendar-header-top row align-items-center mb-3 ps-5 pe-5">
+            <div class="d-flex flex-row calendar-header-top align-items-center">
                 <div class="col-auto day-arrows">
                     <i @click="prevPeriod" class="icon-chevron-left px-2"></i>
+                </div>
+                <div class="period-badge me-2">
+                    {{ startOfWeek(currentWeekStart) < (startOfWeek(new Date())) ?
+                        "Past" :
+                        startOfWeek(currentWeekStart) < (addDays(startOfWeek(new Date()), 1)) ?
+                        "Present" :
+                        "Future"
+                    }}
+                </div>
+                <span class="col-auto">{{ currentWeekStart.toLocaleDateString('en-US', { month: 'long' }) }} {{ currentWeekStart.getDate() }}-{{ addDays(endOfWeek(currentWeekStart), 1).getDate()  }} {{ currentWeekStart.getFullYear() }}</span>
+                <div class="col day-arrows">
                     <i @click="nextPeriod" class="icon-chevron-right px-2"></i>
                 </div>
-                <div class="col">{{ currentWeekStart.toLocaleDateString('en-US', { month: 'long' }) }} {{ currentWeekStart.getFullYear() }}</div>
                 <div class="col-auto">
-                    <div class="btn-group" role="group">
+                    <div class="btn-group me-2" role="group">
                         <input type="radio" class="btn-check" name="viewMode" id="weekView" autocomplete="off" v-model="viewMode" value="week" />
-                        <label class="btn btn-outline-light btn-sm border-flat-r" for="weekView">Week</label>
+                        <label class="mode-btn btn-small btn-outline-light btn-sm border-flat-r" :class="{'selected': (viewMode == 'week')}" for="weekView">Week</label>
 
                         <input type="radio" class="btn-check" name="viewMode" id="dayView" autocomplete="off" v-model="viewMode" value="day" />
-                        <label class="btn btn-outline-light btn-sm border-flat-l" for="dayView">Day</label>
+                        <label class="mode-btn btn-small btn-outline-light btn-sm border-flat-l" :class="{'selected': (viewMode == 'day')}" for="dayView">Day</label>
                     </div>
                 </div>
             </div>
             <div class="calendar-header-days">
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-header-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString(), 'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()) }">
-                    {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} {{ day.getDate() }}
+                <div v-for="(day, index) in displayedDays" :key="day.toDateString()" class="calendar-header-day" 
+                :class="{ 
+                    'current-day': day.toDateString() === new Date().toDateString(), 
+                    'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()),
+                    'unavailable': index >= 6,
+                    'first-un': !(index - 1 >= 6),
+                    'last-un': !(index + 1 >= 6)
+                    }"
+                >
+                    {{ day.toLocaleDateString('en-US', { weekday: 'short' }) }} <br/> 
+                    <span class="day-number">{{ day.getDate() }}</span>
                 </div>
             </div>
         </div>
@@ -464,14 +462,36 @@ async function submitNote() {
 
 
             <div class="calendar-days">
-                <div v-for="day in displayedDays" :key="day.toDateString()" class="calendar-day" :class="{ 'current-day': day.toDateString() === new Date().toDateString(), 'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()) }">
+                <div v-for="(day, dayIndex) in displayedDays" :key="day.toDateString()" class="calendar-day" 
+                :class="{ 
+                    'current-day': day.toDateString() === new Date().toDateString(), 
+                    'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()),
+                    'unavailable': dayIndex >= 6,
+                    'first-un': !(dayIndex - 1 >= 6),
+                    'last-un': !(dayIndex + 1 >= 6)
+                    }"
+                >
 
-                    <div v-for="(hour, index) in hours" 
-                        :key="hour.name" 
-                        class="calendar-hour-day"
-                        :id="`hour-${index}`"
-                        @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)">
+                    <!-- Hours -->
+                    <!-- This is absolute madness -->
+                    <div class="hour-separator-line flex-grow-5"> </div>
+                    <div v-for="(hour, index) in hours.flatMap(h => [h, h]).splice(1, 48)" class="d-flex flex-column"
+                        :style="`z-index: ${(index % 2) * 100 +1}`"
+                        >
+                        <div
+                            v-if="index % 2 === 0"
+                            :key="index" 
+                            class="calendar-hour-day"
+                            :id="`hour-${index}`"
+                            @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)">
+                        </div>
+                        <div v-else-if="!(index === (hours.length * 2 -1)) && dayIndex === 0" class="d-flex flex-row seperator-row no-wrap">
+                            <div class="hour-separator-line sm"></div>
+                            <div class="hour-separator">{{ hour.name }}</div>
+                            <div class="hour-separator-line flex-grow-5"> </div>
+                        </div>
                     </div>
+                    
 
 
                     <!-- Availabilities -->
@@ -525,12 +545,12 @@ async function submitNote() {
 
                     Absolute Programming
              -->
-            <div class="calendar-hours">
+            <!-- <div class="calendar-hours">
                 <div v-for="hour in hours" :key="hour.name" class="calendar-hour" :class="{hide: hour.name == '12 AM', 'current-day-bg': displayedDays[0].toDateString() == new Date().toDateString()}">{{ hour.name }}</div>
             </div>
             <div class="calendar-hours">
                 <div v-for="hour in hours" :key="hour.name" class="calendar-hour-txt" :class="{hide: hour.name == '12 AM'}">{{ hour.name }}</div>
-            </div>
+            </div> -->
         </div>
     </div>
     <!-- <div class="container mt-3 mb-5 px-auto px-md-5 notes-container">
@@ -557,9 +577,10 @@ async function submitNote() {
 <style scoped lang="scss">
 @import '@/assets/scss/styles.scss';
 
-$hour-height: 2.65rem;
+$hour-height: 2.35rem;
 $hours-col: 3rem;
-$border-style: 1px solid rgba(255, 255, 255, 0.2);
+$hour-border-color: $border-color;
+$border-style: 1px solid $hour-border-color;
 
 @media (max-height: 1000px) {
     // SCSS variables cannot be reassigned inside media queries.
@@ -585,6 +606,11 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .calendar-container {
+
+    --day-title-height: 8rem;
+
+
+
     padding: 0rem !important;
     overflow: hidden;
 
@@ -593,28 +619,125 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
     border-left: none;
 
     .calendar-header {
-        margin: 0.25rem;
-        padding: 1rem ($hours-col / 2) 0;
+
+        background: rgb(26, 26, 26) !important;
+        
         .calendar-header-days {
             display: flex;
             .calendar-header-day {
+                display: flex;
+                flex-direction: column;
                 flex: 1;
-                text-align: center;
-                padding-bottom: 1rem;
                 box-sizing: border-box;
+
+                justify-content: center;
+                text-align: center;
+                align-items: center;
+                align-content: center;
+
+                height: var(--day-title-height);
+
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: $weak-text;
+
+                &:not(:last-child) {
+                    border-right: 1px solid rgba(255, 255, 255, 0.2);
+                }
+
+                .day-number {
+                    margin-top: -0.2rem;
+                    color: $text-color;
+                }
+
+                &.unavailable {
+                    background-color: color-mix(in srgb, black 50%, transparent) !important;
+                    .day-number { color: $muted-text}
+
+                    &.first-un {
+                        border-left: 2px orange dashed;
+                    }
+
+                    &.last-un {
+                        border-right: 2px orange dashed;
+                    } 
+                }
+
+                &.current-day {
+                    background-color: color-mix(in srgb, var(--primary) 7%, black 30%, transparent);
+                    .day-number {
+                        color: var(--primary) !important;
+                    }
+                }
+
+                &.past-day {
+                    background-color: color-mix(in srgb, black 30%, transparent);
+                    .day-number {
+                        color: $muted-text !important;
+                    }
+                }
             }
         }
 
         .calendar-header-top {
-            font-size: 1.3rem;
+            height: 3rem;
+
+            font-size: 0.925rem;
+            font-weight: 600;
+
+            color: $text-color;
+
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+            span {
+                font-family: 'Courier New', Courier, monospace;
+            }
         }
 
         .day-arrows {
+            // transform: translateY(0.06rem);
+            color: $muted-text;
+            padding-inline: 0.5rem;
             i {
+                display: flex;
+                width: 10px;
+                padding: 0 !important;
+
+                &::before {
+                    transform: scale(0.7);
+                }
                 cursor: pointer;
                 &:hover {
                     color: rgb(255, 255, 255, 0.8);
                 }
+            }
+        }
+
+        .mode-btn {
+            --btn-color: white;
+
+            height: 1.75rem;
+            padding: 0;
+            padding-inline: 0.5rem;
+            font-size: 0.8rem;
+
+            border-radius: 6px;
+
+            align-items: center;
+            text-align: center;
+            align-content: center;
+
+            color: var(--btn-color);
+            border-color: color-mix(in srgb, var(--btn-color) 60%, transparent);
+
+            transition: 0.1s all;
+
+            &:hover {
+                background-color: color-mix(in srgb, var(--btn-color) 8%, transparent) !important;
+            }
+
+            &.selected {
+                background-color: color-mix(in srgb, var(--btn-color) 17%, transparent) !important;
             }
         }
     }
@@ -641,8 +764,43 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
                 flex-direction: column;
                 overflow: hidden;
 
+                &:first-child {
+                    .calendar-hour-day {
+                        height: calc($hour-height - 1px);
+                        border-top: 0 !important;
+                    }
+                }
+
                 &:last-child {
                     border-right: 0;
+                }
+
+                &.unavailable {
+                    background-color: color-mix(in srgb, black 50%, transparent) !important;
+                    .day-number { color: $muted-text}
+
+                    &.first-un {
+                        border-left: 2px orange dashed;
+                    }
+
+                    &.last-un {
+                        border-right: 2px orange dashed;
+                    } 
+                }
+
+                &.current-day {
+                    background-color: color-mix(in srgb, white 7%, transparent);
+                }
+
+                &.past-day {
+                    background-color: color-mix(in srgb, rgb(255, 255, 255) 3%, transparent);
+                    * {
+                        filter: grayscale(50%);
+                    }
+
+                    .calendar-hour-day:hover {
+                        background: rgba(255, 255, 255, 0.06) !important;
+                    }
                 }
 
                 .calendar-hour-day {
@@ -653,16 +811,7 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
 
                     &:hover {
                         cursor: pointer;
-
-                        &::after {
-                            content: "";
-                            position: absolute;
-                            inset: 0;
-                            border-radius: inherit;
-                            background: rgba(255, 255, 255, 0.094) !important;;
-                            z-index: 2;
-                            pointer-events: none;
-                        }
+                        background: rgba(255, 255, 255, 0.08) !important;
                     }
                 }
             }
@@ -808,50 +957,6 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
             }
         }
     }
-
-    .current-day {
-        &.calendar-header-day {
-            font-weight: bolder;
-            &::after {
-                content: '';
-                display: block;
-                position: relative;
-                width: 100%;
-                top: 1rem - 0.3rem;
-                border-bottom: 0.3rem solid white;
-                margin-bottom: -0.3rem;
-
-                z-index: 10;
-            }
-        }
-
-        &.calendar-day {
-            background-color: color-mix(in srgb, white 7%, transparent);
-        }
-    }
-
-    .past-day {
-        &.calendar-header-day {
-            font-weight: bolder;
-            &::after {
-                content: '';
-                display: block;
-                position: relative;
-                width: 100%;
-                top: 1rem - 0.2rem;
-                border-bottom: 0.2rem solid rgb(72, 72, 72);
-                margin-bottom: -0.2rem;
-            }
-        }
-
-        &.calendar-day {
-            // background-color: color-mix(in srgb, rgb(255, 255, 255) 3%, transparent);
-            * {
-                filter: grayscale(50%);
-            }
-            
-        }
-    }
 }
 
 .notes-container {
@@ -876,5 +981,59 @@ $border-style: 1px solid rgba(255, 255, 255, 0.2);
 .border-flat-l {
     border-top-left-radius: 0px !important;
     border-bottom-left-radius: 0px !important;
+}
+
+
+
+
+
+
+.period-badge {
+    border-radius: 4px;
+    // border: 1px solid $secondary-border-color;
+
+    background-color: color-mix(in srgb, rgb(255, 255, 255) 10%, transparent);
+
+    font-weight: 500;
+    color: $text-color !important;
+
+    font-size: 0.7rem;
+    padding: 0.15rem;
+    padding-inline: 0.4rem;
+}
+
+
+
+
+.seperator-row {
+    height: 1px;
+}
+
+.hour-separator-line {
+    position: relative;
+    height: 0.8px;
+    background-color: $hour-border-color !important;
+
+    &.sm {
+        width: 0.5rem;
+    }
+}
+
+.hour-separator {
+    position: relative;
+    width: 3rem !important;
+
+    padding: 0 !important;
+    padding-left: 0.5rem !important;
+
+    transform: translate(-0%, -0.5rem);
+    z-index: 100 !important;
+    
+    color: rgba(255, 255, 255, 0.386);
+
+    font-size: 0.7rem !important;
+
+    background: rgba(255, 255, 255, 0) !important;
+    padding: 0 8px;
 }
 </style>

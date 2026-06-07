@@ -4,6 +4,7 @@ import FAQView from '@/views/FAQView.vue';
 import RulesView from '@/views/RulesView.vue';
 import MatchPlannerView from '@/views/MatchPlannerView.vue';
 import CallbackCatchView from '@/views/CallbackCatchView.vue';
+import LeaderboardView from '@/views/LeaderboardView.vue';
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import OrganizerView from '@/views/OrganizerView.vue';
 
@@ -37,6 +38,11 @@ const routes: RouteRecordRaw[] = [
         path: '/discord/callback',
         name: 'Callback catch',
         component: CallbackCatchView,
+    },
+    {
+        path: '/leaderboard',
+        name: 'Leaderboard',
+        component: LeaderboardView,
     },
     {
         path: '/organizer',

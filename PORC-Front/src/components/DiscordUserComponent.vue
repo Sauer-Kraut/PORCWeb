@@ -1,34 +1,34 @@
 <script lang="ts" setup>
-import config from '@/config';
-import { showErrorModal } from '@/services/ErrorModalService';
-import { accountsStore } from '@/storage/st_accounts';
-import { onMounted, ref } from 'vue';
-import AccountRoutesSelectorComponent from '@/components/AccountRoutesSelectorComponent.vue';
+    import config from '@/config';
+    import { showErrorModal } from '@/services/ErrorModalService';
+    import { accountsStore } from '@/storage/st_accounts';
+    import { onMounted, ref } from 'vue';
+    import AccountRoutesSelectorComponent from '@/components/AccountRoutesSelectorComponent.vue';
 
-let url = 'default';
-const isLoggedIn = ref(false);
-const discordAuthURL = `${config.getDiscordUrl()}`;
-//console.log(`${config.getDiscordUrl()}`);
+    let url = 'default';
+    const isLoggedIn = ref(false);
+    const discordAuthURL = `${config.getDiscordUrl()}`;
+    //console.log(`${config.getDiscordUrl()}`);
 
-let errorMessage: string = 'This is an error message';
+    let errorMessage: string = 'This is an error message';
 
-async function getUserId() {
-    let accStore = accountsStore();
-    let res = await accStore.get_login_min();
+    async function getUserId() {
+        let accStore = accountsStore();
+        let res = await accStore.get_login_min();
 
-    if (res == null) {
-        isLoggedIn.value = false;
-    } else {
-        isLoggedIn.value = true;
-        const avatar = res.avatar;
-        const id = res.id;
-        url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+        if (res == null) {
+            isLoggedIn.value = false;
+        } else {
+            isLoggedIn.value = true;
+            const avatar = res.avatar;
+            const id = res.id;
+            url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+        }
     }
-}
 
-onMounted(async () => {
-    await getUserId();
-});
+    onMounted(async () => {
+        await getUserId();
+    });
 </script>
 
 <template>

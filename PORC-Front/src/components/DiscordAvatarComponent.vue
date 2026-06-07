@@ -3,14 +3,15 @@
     import { ref, computed, watch, onMounted } from 'vue';
 
     const props = defineProps<{
-        account: PubAccountInfo;
+        account: PubAccountInfo | null;
     }>();
 
-    let avatarUrl = ref<string>(`https://cdn.discordapp.com/avatars/${props.account.id}/${props.account.avatar}.png`);
+
+    let avatarUrl = ref<string>(`https://cdn.discordapp.com/avatars/${props.account?.id}/${props.account?.avatar}.png`);
 
     watch(() => props.account, (newValue) => {
         
-        avatarUrl.value = `https://cdn.discordapp.com/avatars/${newValue.id}/${newValue.avatar}.png`;
+        avatarUrl.value = `https://cdn.discordapp.com/avatars/${newValue?.id}/${newValue?.avatar}.png`;
         
     });
 

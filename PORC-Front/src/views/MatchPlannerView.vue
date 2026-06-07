@@ -3,6 +3,7 @@ import { waitForAppReady } from '@/appReady';
 import CalendarComponent from '@/components/CalendarComponent.vue';
 import MatchScoreComponent from '@/components/MatchScoreComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
+import AccountCard from '@/components/profile/AccountCard.vue';
 import Logo from '@/components/svgs/Logo.vue';
 import type { Availability } from '@/models/availability/Availability';
 import type { MatchEvent } from '@/models/match_event/MatchEvent';
@@ -19,11 +20,31 @@ import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
 import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 import { computed, onMounted, ref, watch } from 'vue';
 
+import { computePosition } from '@floating-ui/vue';
+
+const accountPlate = document.querySelector<HTMLElement>('#account-plate');
+const tooltip = document.querySelector<HTMLElement>('#test-tooltip');
+
+if (accountPlate && tooltip) {
+    computePosition(accountPlate, tooltip).then(({ x, y }) => {
+        Object.assign(tooltip.style, {
+            left: `${x}px`,
+            top: `${y}px`,
+        })
+    });
+}
+
 
 const accStore = accountsStore();
 
 
 const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
+
+const emptySchedule: Schedule = {
+    availabilities: [] as Availability[],
+    matches: [] as MatchEvent[],
+    note: '',
+};
 
 const schedule = computed<Schedule | null>(
     () => {
@@ -236,7 +257,7 @@ async function submitNote() {
                     <div class="col d-flex flex-row calender-container px-0 mt-3 mt-md-0">
                         <CalendarComponent
                             v-if="selectedPlayer?.schedule"
-                            :schedule="selectedPlayer?.schedule ?? schedule"
+                            :schedule="emptySchedule"
                             :players="division?.players || []"
                             :own-calendar="(selectedPlayer?.id ?? userId) === userId"
                             :ownId="userId ?? ''"
@@ -254,31 +275,11 @@ async function submitNote() {
 
                 <div class="d-none d-xxl-flex col-12 col-xxl-3 mt-4 mt-xxl-0 ps-xxl-4"  v-if="division && season_running">     
 
-                    <!-- // <div class="page-header"></div> -->
-
-                    <div class="d-flex flex-column calender-container p-5 pt-3">
-                        <div class="mb-3 d-flex justify-content-center justify-content-xl-start w-fit">
-                            <div v-if="season_running" class="division-title">
-                                <h2 class="mb-0 d-flex align-items-center me-3 no-text-wrap"><img :src="getDivisionImage(stripAfterFirstSpace(division.name))" class="division-icon me-3"/>{{ division.name }}</h2>
-                                <div class="progress" role="progressbar">
-                                    <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-if="season_running" class="matches-container">
-                            <div
-                                v-for="[key, match] in Object.entries(division?.matches || {})"
-                                :key="key"
-                                class="match-score rounded"
-                                :class="{ selected: selectedPlayer?.id === match.p1.id || selectedPlayer?.id === match.p2.id }"
-                            >
-                                <MatchScoreComponent :match="match" :user_id="userId ?? ''" :editMode="true" />
-                            </div>
-                        </div>
-                    </div>
+                   <AccountCard id="account-plate" area-describedby="tooltip"></AccountCard>
                         
                 </div>
+
+                <div id="test-tooltip" role="tooltip">This is a tooltip</div>
 
             </div>
             
@@ -292,6 +293,17 @@ async function submitNote() {
 
 $match-border-width: 2px;
 $tile-bg: rgb(15, 15, 15) !important;
+
+#tooltip {
+    width: max-content;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    color: black;
+    font-weight: bold;
+    padding: 1rem;
+}
 
 .match-planner {
     .part {

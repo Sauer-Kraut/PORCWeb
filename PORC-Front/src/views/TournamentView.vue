@@ -7,7 +7,7 @@
     import DiscordEventComponent from '@/components/LiveEventSection/DiscordEventComponent.vue';
     import PedestalComponent from '@/components/PedestalComponent.vue';
     import SeasonComponent from '@/components/SeasonComponent.vue';
-    import { Repetition } from '@/models/availability/Availability';
+    import { Repetition, type Availability } from '@/models/availability/Availability';
     import type { DiscordEvent } from '@/models/discord/DiscordEvent';
     import type { VideoReference } from '@/models/discord/VideoReference';
     import type { EventCard } from '@/models/EventCard';
@@ -22,6 +22,54 @@
     import { divisionNames } from '@/storage/defaults';
     import type { Matchplan } from '@/models/matchplan/Matchplan';
     import { stripAfterFirstSpace } from '@/util/StripAfterSpace';
+
+
+
+
+
+
+
+
+
+    import { onBeforeUnmount, nextTick } from 'vue';
+    import { computePosition, autoUpdate } from '@floating-ui/dom';
+import { Tooltip } from 'floating-vue';
+import PopoverComponent from '@/components/Popover/PopoverComponent.vue';
+import { InfoPopover } from '@/components/Popover/PopoverDesign/InfoPopover';
+import EditAvailability from '@/components/Calender/Modals/EditAvailability/EditAvailability.vue';
+import { addHours } from 'date-fns';
+
+    const buttonRef = ref<HTMLElement | null>(null);
+    const buttonRef2 = ref<HTMLElement | null>(null);
+    const tooltipRef = ref<HTMLElement | null>(null);
+
+    let cleanup: (() => void) | null = null;
+
+    onMounted(async () => {
+        await nextTick();
+
+        if (!buttonRef.value || !tooltipRef.value) return;
+
+        const update = () => {
+            computePosition(buttonRef.value!, tooltipRef.value!).then(({ x, y }) => {
+                Object.assign(tooltipRef.value!.style, {
+                    position: 'absolute',
+                    left: `${x}px`,
+                    top: `${y}px`,
+                });
+            });
+        };
+
+        cleanup = autoUpdate(buttonRef.value, tooltipRef.value, update);
+    });
+
+    onBeforeUnmount(() => {
+        cleanup?.();
+    });
+
+
+
+
 
     let screenSizeMd = ref(false);
     let screenSizeSm = ref(false)
@@ -770,11 +818,49 @@
         <div class="p-5 col-10 mt-5"></div>
     </div>
     <div class="extender"></div>
+
+    <button class="w-50" ref="buttonRef" id="tooltip-button" area-describedby="tooltip">Tooltip Button</button>
+    <div ref="tooltipRef" id="tooltip" role="tooltip">This is a tooltip</div>
+
+    <div class="p-5 m-5"></div>
+
+    <button class="w-50" ref="buttonRef2" area-describedby="tooltip">Tooltip Button 2</button>
+    <PopoverComponent
+        :anchor="buttonRef2"
+        :update="InfoPopover"
+    >
+        <EditAvailability
+            :availability="{
+                startDate: new Date(),
+                endDate: addHours(new Date(), 1),
+                repetition: Repetition.Daily,
+                repetition_day_shift: []
+            }"
+            :create="false"
+        />
+    </PopoverComponent>
+
+
+    <div class="p-5 m-5"></div>
+
 </template>
 
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 @import '@/assets/scss/global.scss';
+
+#tooltip {
+  width: max-content;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #222;
+  color: white;
+  font-weight: bold;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 90%;
+}
 
 .container-fill {
     min-height: 100vh;

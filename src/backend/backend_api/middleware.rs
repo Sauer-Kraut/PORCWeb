@@ -58,7 +58,7 @@ where
         let fut = self.service.call(req);
 
         Box::pin(async move {
-            let _ = thread::sleep(Duration::from_secs(5)); // FOR TESTING ONLY
+            // let _ = thread::sleep(Duration::from_secs(5)); // FOR TESTING ONLY
             let res = fut.await;
 
             let duration = start.elapsed();

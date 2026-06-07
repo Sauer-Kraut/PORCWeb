@@ -279,6 +279,7 @@ onUnmounted(() => {
                 <div class="routes-container">
                     <router-link to="/" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Tournament</router-link>
                     <router-link to="/match-planner" class="router-link col-12 col-md-2 px-0" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
+                    <router-link to="/leaderboard" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Leaderboard</router-link>
                     <router-link to="/rules" class="router-link col-12 col-md-2 px-0" @click="closeMenu">Rules</router-link>
                     <router-link to="/organizer" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Organizer</router-link>
                     <router-link to="/faq" class="router-link col-12 col-md-2  px-0" @click="closeMenu">FAQ</router-link>
@@ -406,7 +407,7 @@ nav {
     flex-wrap: wrap;
     justify-content: space-between;
     min-height: 100%;
-    max-width: 55rem;
+    max-width: 70rem;
     width: 100%;
 }
 

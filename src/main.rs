@@ -306,7 +306,7 @@ async fn main() -> std::io::Result<()> {
                     Ok(_) => {},
                     Err(err) => println!("{}", format!("An error has occured while refreshing matchplan: {err}").red()),
                 }
-                sleep(Duration::from_secs(120)).await; // waits 5 minutes between each loop
+                sleep(Duration::from_secs(120)).await; // waits 2 minutes between each loop
             }
         });
     });
