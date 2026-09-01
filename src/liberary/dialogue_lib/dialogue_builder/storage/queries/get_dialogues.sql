@@ -8,5 +8,5 @@ SELECT
 
 FROM dialogues d
 WHERE d.last_updated < ($2)::timestamptz AND index != 600 AND index != 400
-ORDER BY d.last_updated desc
+ORDER BY d.last_updated asc
 LIMIT ($1);

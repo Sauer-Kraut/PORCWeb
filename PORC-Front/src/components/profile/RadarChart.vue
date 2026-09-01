@@ -89,7 +89,8 @@ import { rotateVector } from '@/util/VectorUtils';
             <line x1="50" y1="1" x2="50" y2="99" stroke="var(--chart-border-color)" stroke-width="0.5" stroke-dasharray="5 3"/>
             <line y1="50" x1="1" y2="50" x2="99" stroke="var(--chart-border-color)" stroke-width="0.5" stroke-dasharray="5 3"/> -->
             <line v-for="[i, v] of values.entries()" :y1="chartDrawSize / 2" :x1="chartDrawSize / 2" :y2="calcVectors(Array(values.length).fill(maxValue), 48, chartDrawSize / 2)[i].y" :x2="calcVectors(Array(values.length).fill(maxValue), 48, chartDrawSize / 2)[i].x" stroke="var(--chart-border-color)" stroke-width="0.5" stroke-dasharray="5 3"/>
-            <polygon v-for="i of [1, 2, 3, 4]" :points="vectorsToString(calcVectors(Array(values.length).fill(maxValue), 48 * (i / 4), chartDrawSize / 2))" fill="none" stroke="#3f4147" stroke-width="0.5"/>
+            <!-- <polygon :points="vectorsToString(calcVectors(Array(values.length).fill(maxValue), 48, chartDrawSize / 2))" fill="rgba(20, 20, 20, 0.5)" stroke="#3f4147" stroke-width="0.5"/> -->
+            <polygon v-for="i of [1, 2, 3, 4]" :points="vectorsToString(calcVectors(Array(values.length).fill(maxValue), 48 * (i / 4), chartDrawSize / 2))" fill="none" stroke="#3f4147" stroke-width="0.6"/>
             <polygon class="value-polygon glow-layer" filter="url(#glow)" :points="vectorsToString(calcVectors(values, 50, chartDrawSize / 2))" fill="transparent" stroke="var(--chart-color)" stroke-width="1.5"/>
             <polygon class="value-polygon" :points="vectorsToString(calcVectors(values, 50, chartDrawSize / 2))" fill="color-mix(in srgb, var(--chart-color), transparent 60%)" stroke="var(--chart-color)" stroke-width="1.5"/>
             <g class="label-group" :class="{ 'is-visible': isHovering }">
@@ -135,7 +136,8 @@ import { rotateVector } from '@/util/VectorUtils';
         }
 
         .chart-label {
-            font-size: 4.5px;
+            font-size: 5px;
+            font-weight: 700;
             fill: white;
             dominant-baseline: middle;
             pointer-events: none;

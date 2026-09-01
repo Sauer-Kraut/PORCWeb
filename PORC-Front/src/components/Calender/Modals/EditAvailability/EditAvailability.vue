@@ -119,7 +119,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="modal-content  pb-3 rounded">
+    <div class="modal-content pb-3 rounded">
 
         <div class="d-flex flex-row align-items-center mb-3">
             <div class="d-flex flex-column">
@@ -212,6 +212,7 @@ onMounted(async () => {
 
 .modal-content {
     width: 18rem !important;
+    margin: 0.5rem !important;
     padding: 1.25rem !important;
     margin: 0 auto;
 }

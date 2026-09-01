@@ -1,4 +1,4 @@
-use std::{fmt, fs::File, io::Read};
+use std::{fmt, fs::File, io::Read, println};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -39,7 +39,9 @@ pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<Str
             ArgumentType::Float(val) => val.to_string(),
             ArgumentType::Bool(val) => val.to_string(),
             ArgumentType::Timestamptz(val) => format!("'{}'::timestamptz", val.to_string()), // Didnt test this yet, but should work  (::timestamptz doubling shouldnt cause any issues)
-            ArgumentType::JSONB(val) => format!("'{}'::jsonb", val.to_string()), // same as above with doubling
+            ArgumentType::JSONB(val) => format!("'{}'::jsonb", val.to_string().replace("'", "")), // same as above with doubling
+            // lowkey this is a big SQL injection vulnerability, especially given that this is open source
+            // I made it a bit less bad by adding the replace statement, might break something though
             ArgumentType::Null => "null".to_owned()
         };
         
@@ -59,6 +61,7 @@ pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<Str
         query = filled_query;
     }
 
+    // println!("Built query: {}", query);
     Ok(query)
 }
 

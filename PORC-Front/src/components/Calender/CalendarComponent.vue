@@ -2,9 +2,9 @@
 import type { Schedule } from '@/models/schedule/Schedule';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
-import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
+import EditAvailabilityModal from '../modals/EditAvailabilityModal.vue';
 import MatchStatusComponent from '@/components/MatchStatusComponent.vue';
-import RequestMatchModal from './modals/RequestMatchModal.vue';
+import RequestMatchModal from '../modals/RequestMatchModal.vue';
 import { filter_str } from '@/util/stringFilter';
 import { Repetition, type Availability } from '@/models/availability/Availability';
 import { MatchStatus, type MatchEvent } from '@/models/match_event/MatchEvent';
@@ -12,7 +12,7 @@ import { accountsStore } from '@/storage/st_accounts';
 import { postMatchEvent } from '@/API/match_event/PostMatchEvent';
 import type { PlayerModel } from '@/models/matchplan/PlayerModel';
 import type { Season } from '@/models/matchplan/Season';
-import MatchPopper from './Calender/MatchPopper.vue';
+import MatchPopper from './MatchPopper.vue';
 import { addDays, endOfWeek, startOfWeek } from 'date-fns'
 
 const props = defineProps<{
@@ -411,7 +411,7 @@ async function submitNote() {
 </script>
 
 <template>
-    <div class="calendar-container m-0 px-0">
+    <div class="d-flex flex-column calendar-container m-0 px-0">
 
 
         <div class="calendar-header m-0 ps-0 pe-0">
@@ -474,14 +474,20 @@ async function submitNote() {
 
                     <!-- Hours -->
                     <!-- This is absolute madness -->
-                    <div class="hour-separator-line flex-grow-5"> </div>
+                    <div v-if="dayIndex === 0" class="hour-separator-line flex-grow-5"> </div>
                     <div v-for="(hour, index) in hours.flatMap(h => [h, h]).splice(1, 48)" class="d-flex flex-column"
-                        :style="`z-index: ${(index % 2) * 100 +1}`"
+                        :style="{
+                            zIndex: (index % 2) * 100 + 1,
+                            flexGrow: index % 2 === 0 ? 1 : 0
+                        }"
                         >
                         <div
                             v-if="index % 2 === 0"
                             :key="index" 
                             class="calendar-hour-day"
+                            :style="{
+                                borderTop: dayIndex === 0 && index != 0 ? 'none !important' : '1px'
+                            }"
                             :id="`hour-${index}`"
                             @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)">
                         </div>
@@ -577,7 +583,7 @@ async function submitNote() {
 <style scoped lang="scss">
 @import '@/assets/scss/styles.scss';
 
-$hour-height: 2.35rem;
+$hour-height: 2.45rem;
 $hours-col: 3rem;
 $hour-border-color: $border-color;
 $border-style: 1px solid $hour-border-color;
@@ -585,10 +591,8 @@ $border-style: 1px solid $hour-border-color;
 @media (max-height: 1000px) {
     // SCSS variables cannot be reassigned inside media queries.
     // Instead, override the CSS property directly.
-    .calendar-hour,
-    .calendar-hour-day,
-    .calendar-hour-txt {
-        height: 2rem !important;
+    .calendar-hour-day {
+        min-height: 2rem !important; 
         line-height: 2rem !important;
     }
 }
@@ -608,6 +612,7 @@ $border-style: 1px solid $hour-border-color;
 .calendar-container {
 
     --day-title-height: 8rem;
+    height: 100%;
 
 
 
@@ -665,15 +670,21 @@ $border-style: 1px solid $hour-border-color;
 
                 &.current-day {
                     background-color: color-mix(in srgb, var(--primary) 7%, black 30%, transparent);
+                    border-left: 1px solid rgba(255, 255, 255, 0.2);
                     .day-number {
                         color: var(--primary) !important;
                     }
                 }
 
                 &.past-day {
-                    background-color: color-mix(in srgb, black 30%, transparent);
+                    // background-color: color-mix(in srgb, black 30%, transparent);
+                    background-color: color-mix(in srgb, black 50%, transparent) !important;
                     .day-number {
                         color: $muted-text !important;
+                    }
+
+                    &:not(:last-child) {
+                        border-right: 1px solid $border-color;
                     }
                 }
             }
@@ -743,6 +754,8 @@ $border-style: 1px solid $hour-border-color;
     }
 
     .calendar-body {
+        flex-grow: 1;
+
         overflow: hidden !important;
         display: flex;
         // padding: ($hour-height / 2) 0;
@@ -757,19 +770,13 @@ $border-style: 1px solid $hour-border-color;
                 flex: 1;
                 // border-top: $border-style;
                 border-right: $border-style;
+                background-color: color-mix(in srgb, rgb(255, 255, 255) 3%, transparent);
                 // border-bottom: $border-style;
                 box-sizing: border-box;
                 position: relative;
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
-
-                &:first-child {
-                    .calendar-hour-day {
-                        height: calc($hour-height - 1px);
-                        border-top: 0 !important;
-                    }
-                }
 
                 &:last-child {
                     border-right: 0;
@@ -793,7 +800,8 @@ $border-style: 1px solid $hour-border-color;
                 }
 
                 &.past-day {
-                    background-color: color-mix(in srgb, rgb(255, 255, 255) 3%, transparent);
+                    // background-color: color-mix(in srgb, rgb(255, 255, 255) 3%, transparent);
+                    background-color: color-mix(in srgb, black 50%, transparent) !important;
                     * {
                         filter: grayscale(50%);
                     }
@@ -804,10 +812,11 @@ $border-style: 1px solid $hour-border-color;
                 }
 
                 .calendar-hour-day {
+                    flex-grow: 1;
                     box-sizing: border-box;
                     position: relative;
-                    height: $hour-height;
-                    border-top: $border-style;
+                    min-height: $hour-height;
+                    border-top: $border-style !important;
 
                     &:hover {
                         cursor: pointer;
@@ -894,68 +903,6 @@ $border-style: 1px solid $hour-border-color;
                 background-position: -300% 0;
             }
         }
-
-        .calendar-hours {
-            position: absolute;
-            width: $hours-col;
-            flex: none;
-            display: grid;
-            grid-template-rows: repeat(24, 1fr);
-            pointer-events: none;
-
-
-            .calendar-hour {
-                display: flex;
-                text-align: center;
-                justify-content: center;
-
-                // border-radius: 12px;
-                margin-left: 0.5rem;
-
-                font-size: 0.6rem;
-                height: $hour-height;
-                line-height: $hour-height;
-                // top: -$hour-height / 2;
-                position: relative;
-                text-align: right;
-                // padding-right: 0.5rem;
-
-                color: rgba(255, 255, 255, 0);
-                transform: translate(-00%, -50%);
-
-                background-color: rgb(15, 15, 15) !important;
-
-                &.current-day-bg {
-                    background: #1f1f1f !important;
-                }
-            }
-
-            .calendar-hour-txt {
-                display: flex;
-                text-align: center;
-                justify-content: center;
-
-                border-radius: 12px;
-                margin-left: 0.5rem;
-
-                font-size: 0.6rem;
-                height: $hour-height;
-                line-height: $hour-height;
-                // top: -$hour-height / 2;
-                position: relative;
-                text-align: right;
-                // padding-right: 0.5rem;
-
-                color: rgba(255, 255, 255, 0.386);
-                transform: translate(-00%, -50%);
-
-                z-index: 5;
-
-                &.hide {
-                    z-index: -2;
-                }
-            }
-        }
     }
 }
 
@@ -1011,7 +958,8 @@ $border-style: 1px solid $hour-border-color;
 
 .hour-separator-line {
     position: relative;
-    height: 0.8px;
+    max-height: 0.75px;
+    height: 0.75px;
     background-color: $hour-border-color !important;
 
     &.sm {
@@ -1035,5 +983,9 @@ $border-style: 1px solid $hour-border-color;
 
     background: rgba(255, 255, 255, 0) !important;
     padding: 0 8px;
+}
+
+.bt-style {
+    border-top: $border-style !important;
 }
 </style>

@@ -23,7 +23,6 @@ pub async fn get_schedule(account_id: String, pool: PgPool) -> Result<Schedule, 
 
     let availabilities_fut = get_availabilities(account_id.clone(), pool.clone());
     let match_events_fut = get_match_events(account_id, pool.clone());
-    let availabilities_fut = availabilities_fut;
 
     let (match_events_res, availabilities_res) = join!(match_events_fut, availabilities_fut);
 

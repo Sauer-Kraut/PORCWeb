@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { MatchModel } from '@/models/matchplan/MatchModel';
 import type { PlayerPerformance } from '@/models/matchplan/PlayerPerformancModel';
 import { filter_str } from '@/util/stringFilter';
 import { defineProps, onMounted, ref, watch } from 'vue';
@@ -6,10 +7,12 @@ import { defineProps, onMounted, ref, watch } from 'vue';
 const props = defineProps<{
     divisionName: String;
     performances: PlayerPerformance[];
+    matches?: MatchModel[];
+    minimal?: boolean
 }>();
 
 const highlightedPlayerId = defineModel<string>('highlightedPlayerId', { default: '' });
-let highlightPin = ref(false);
+const highlightPin = defineModel<boolean>('highlightPing', { default: false });
 
 const internalPerformances = ref<PlayerPerformance[]>([]);
 
@@ -26,6 +29,7 @@ function unselectPlayer(p: PlayerPerformance) {
 }
 
 function pin_player(p: PlayerPerformance) {
+    if(props.minimal) {return}
     if (highlightedPlayerId.value == p.player.id) {
         highlightPin.value = !highlightPin.value;
     } else {
@@ -57,47 +61,84 @@ function avgAdvantage(player: PlayerPerformance) {
     }
 }
 
+
+interface MatchInfo {
+    win: boolean,
+    opponent: string,
+    score: [number, number]
+}
+
+function getMatches(pId: string): MatchInfo[] {
+    let matchInfos = []
+    for (let match of props.matches ?? []) {
+        if (!((match.p1score ?? 0) == 0 && (match.p2score ?? 0) == 0)){
+            if (match.p1.id == pId) {
+                const info = {
+                    win: ((match.p1score ?? 0) > (match.p2score ?? 0)),
+                    opponent: match.p2.tag,
+                    score: [match.p1score, match.p2score]
+                } as MatchInfo
+                matchInfos.push(info);
+            }
+            if (match.p2.id == pId) {
+                const info = {
+                    win: ((match.p2score ?? 0) > (match.p1score ?? 0)),
+                    opponent: match.p1.tag,
+                    score: [match.p2score, match.p1score]
+                } as MatchInfo
+                matchInfos.push(info);
+            }
+        }
+    }
+    return matchInfos;
+}
+
 onMounted(async () => {
     internalPerformances.value = props.performances;
 });
 </script>
 
 <template>
-    <div class="leaderboard-cont row justify-content-center d-flex">
-            <div class="leaderboard-row head-row row justify-content-center d-flex column-title">
-                <div class="col-4 col-sm-3 column-description">Player</div>
-                <div class="col-2 col-sm-1"></div>
-                <div class="col-4 col-sm-3 column-description">Matches</div>
-                <div class="col-1 add-col"></div>
-                <div class="col-3 add-col column-description" title="This shows the average match score difference over all played sets.">Advantage</div>
-            </div>
-        <div class="d-flex flex-column p-0 m-0" :style="{overflowY: 'scroll', maxHeight: '350px'}">
-            <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row row justify-content-center d-flex content"
+    <div class="leaderboard-cont d-flex flex-column">
+
+
+
+
+        <!-- <div class="leaderboard-row head-row">
+            <span>Player</span>
+            <span>Matches</span>
+            <span title="This shows the average match score difference over all played sets.">Advantage</span>
+        </div> -->
+            
+        <div class="d-flex flex-column p-0 m-0" :style="{overflowY: 'scroll'}">
+            <div v-for="(player, index) in internalPerformances" :key="player.player.id" class="leaderboard-row"
                 @mouseover="selectPlayer(player)"
                 @mouseleave="unselectPlayer(player)"
                 @click="pin_player(player)"
-                :class="{'selected': highlightedPlayerId == player.player.id}"
+                :class="{'pinned': highlightPin && highlightedPlayerId == player.player.id, 'minimal': minimal}"
                 >
-                <div class="col-4 col-sm-3 d-flex justify-content-center">
-                    <div class="d-flex flex-column">
-                        <div :class="[index === 0 ? 'first-place' : index === 1 ? 'second-place' : index === 2 ? 'third-place' : '']">{{ filter_str(player.player.tag, 12) }}</div>
-                        <div class="score-sm">{{ player.wins }}-{{ player.matches - player.wins }}</div>
-                    </div>
+                <span class="row-index">0{{ index +1 }}</span>
+                <div class="d-flex row-name">
+                    <span :class="[index === 0 ? 'pedestal first-place' : index === 1 ? 'pedestal second-place' : index === 2 ? 'pedestal third-place' : '']">{{ filter_str(player.player.tag, 12) }}</span>
                 </div>
-                <div class="col-2 col-sm-1"></div>
-                <div class="col-4 col-sm-3">{{ player.wins }}-{{ player.matches - player.wins }}</div>
-                <div class="col-1 add-col"></div>
-                <div class="col-3 add-col" title="This shows the average match score difference over all played sets."> {{ avgAdvantage(player) }}</div>
+
+                <!-- Max 5 -->
+                <div class="d-flex flex-row gap-2">
+                    <div v-for="(matchInfo, miIndex) of (getMatches(player.player.id) ?? [])" :key="miIndex" class="match-marker" :class="{ win: matchInfo.win }">
+                        {{ matchInfo.win ? 'W' : 'L' }} {{ (matchInfo.score[0] ?? 0) + ':' + (matchInfo.score[1] ?? 0) }} vs {{ filter_str(matchInfo.opponent, 7) }}
+                    </div>
+                    <!-- <div class="match-marker" :class="{win: false}">L 2:4 vs {{ filter_str("Savitarian", 7) }}</div>
+                    <div class="match-marker" :class="{win: true}">W 5:4 vs {{ filter_str("The edj", 7) }}</div>
+                    <div class="match-marker" :class="{win: true}">W 4:2 vs {{ filter_str("Omlette du Fromage", 7) }}</div>
+                    <div class="match-marker" :class="{win: false}">L 6:7 vs {{ filter_str("Atrain", 7) }}</div> -->
+                </div>
+                <span class="row-score">{{ player.wins }}-{{ player.matches - player.wins }}</span>
+                <span class="row-advantage"> {{ avgAdvantage(player) }}</span>
             </div>
         </div>
+
+        <!-- ß-1 class -->
         <div class="ß-1"></div>
-        <div></div>
-        <!-- <div class="col-4">
-            <span class="content header">Score</span>
-            <div v-for="player in props.players" :key="player.player.id" class="player content">
-            <span>{{ player.matches }}</span>
-        </div>
-        </div> -->
     </div>
 </template>
 
@@ -111,166 +152,192 @@ onMounted(async () => {
     padding: 0rem !important;
     padding-inline: 0rem !important;
 
-    text-align: center;
-    flex-wrap: none;
-
-    border-radius: 11.5px;
-    border-width: 1px;
-    border-style: solid;
-
-    // background-color: $dark-bg;
-    border-color: $secondary-border-color;
-
     transition: all 0.6s ease !important;
-}
-
-.leaderboard-row {
-
-    padding-bottom: 0.5rem;
-    padding-top: 0.5rem;
-
-    min-height: 3rem;
-    overflow: hidden;
-    align-items: center;
-    justify-content: center;
-
-    border-top: $border-color solid 1px;
-
-    transition: all 0.1s !important;
-
-    * {
-        text-align: center;
-        height: 1.5rem;
-        .score-sm {
-            display: none;
-        }
-    }
-
-    &.head-row {
-        background-color: rgba(255, 255, 255, 0.0);
-        height: 3.75rem !important;
-    }
-
-    // &:nth-child(2) {
-    //     padding-top: 1rem !important;
-    //     height: 3.5rem !important;
-    // }
-
-    &:not(.head-row) {
-        margin: 0 !important;
-    }
-
-    &:hover:not(.head-row), &.selected {
-        background-color: rgba(255, 255, 255, 0.05);
-        cursor: pointer;
-    }
-}
-
-@media (max-width: 400px) {
-    .column-title {
-        display: none;
-    }
 
     .leaderboard-row {
-        border-top: none;
-        &:not(:nth-child(2)) {
-            border-top: $dark-border solid 1px;
+        display: grid;
+        grid-template-columns: 0.5fr 1.25fr 4fr 0.75fr 0.5fr;
+
+        justify-content: flex-start;
+        align-items: baseline;
+        text-align: start;
+
+        height: 3.5rem;
+        width: auto;
+
+        padding: 0.25rem 1rem !important;
+        margin: 0.25rem 1rem;
+
+        overflow: hidden;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+
+        // border-top: $border-color solid 1px;
+        border-radius: 6px;
+
+        // margin-bottom: 5px;
+        color: $text-color;
+        font-size: 0.925rem;
+        text-wrap: none;
+        clip: auto;
+
+        transition: all 0.1s, height 0s, margin 0s !important;
+
+        * {
+            text-align: start;
+            height: 1.5rem;
         }
 
-        padding-top: 0 !important;
-        > * {
-            display: none;
+        &.head-row {
+            background-color: rgba(255, 255, 255, 0.0);
+            height: 3.75rem !important;
 
-            .score-sm {
-                display: block;
-                font-size: 0.7rem;
-                line-height: 0.8rem;
-            }
+            font-weight: bold;
+            font-size: 1.15rem;
+            color: $secondary-text;
+            text-align: center;
+            border: 0px !important;
+        }
 
-            &:first-child {
-                display: flex;
-                > * {
-                    height: fit-content;
+        &:hover {
+            //background-color: rgba(255, 255, 255, 0.05);
+            background: color-mix(in srgb, white 5%, rgba(255, 255, 255, 0));
+            // color: black;
+            // cursor: pointer;
+
+            // .match-marker {
+            //     --marker-color: black !important;
+            //     background: color-mix(in srgb, var(--marker-color) 10%, transparent);
+            //     border: 1px solid color-mix(in srgb, var(--marker-color) 30%, transparent);
+            // }
+        }
+
+        &.pinned {
+            //background-color: rgba(255, 255, 255, 0.05);
+            background: color-mix(in srgb, var(--primary) 80%, rgb(255, 255, 255));
+            color: black;
+            cursor: pointer;
+
+            height: 3rem;
+            margin: 0.5rem 1rem;
+
+            .match-marker {
+                --marker-color: black !important;
+                background: color-mix(in srgb, var(--marker-color) 10%, transparent);
+                border: 1px solid color-mix(in srgb, var(--marker-color) 30%, transparent);
+
+                &.win {
+                    background: color-mix(in srgb, var(--marker-color) 80%, transparent);
+                    color: var(--primary);
                 }
             }
         }
+
+        &.minimal:not(.pinned) {
+            display: none;
+            pointer-events: none;
+            cursor: default;
+
+            &:hover {
+                background: transparent !important;
+            }
+        }
+
+        &.minimal {
+            transition: none !important;
+        }
+
+        @include media-breakpoint-down(md) {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            :nth-child(3) {
+                display: none !important;
+            }
+
+            // &.head-row {
+            //     :nth-child(n + 2) {
+            //         display: none !important;
+            //     }
+            // }
+        }
+
+        .row-index {
+            font-weight: 600;
+        }
+
+        .row-name {
+            font-weight: 600;
+        }
+
+        .row-score, .row-advantage {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            font-weight: 400;
+            font-family: monospace;
+        }
+
+        .match-marker {
+            --marker-color: rgb(231, 71, 71);
+
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+
+            justify-content: center;
+            text-align: start;
+
+            overflow: hidden;
+
+            width: fit-content;
+            min-width: 3rem;
+            max-width: 9rem;
+
+            height: 1.4rem;
+            padding-inline: 0.4rem;
+
+            font-size: 0.65rem;
+            font-weight: 700;
+            line-height: 1.25rem;
+
+            letter-spacing: 1px;
+
+            background: color-mix(in srgb, var(--marker-color) 5%, transparent);
+            border: 1px solid color-mix(in srgb, var(--marker-color) 10%, transparent);
+            border-radius: 4px;
+            color: var(--marker-color);
+
+            &.win {
+                --marker-color: rgb(100, 206, 111);
+            }
+        }
     }
 }
 
-.column-title {
-    font-weight: bold;
-    font-size: 1.15rem;
-    color: $secondary-text;
-    text-align: center;
-    border: 0px !important;
-}
+.pedestal {
+    // display: flex;
+    // height: 1.5rem !important;
 
-.column-description {
-    padding: 0px !important;
-}
+    // color: black;
+    // font-weight: bold;
+    // border-radius: 8px;
+    // width: fit-content;
+    // padding-left: 0.5rem;
+    // padding-right: 0.5rem;
 
-.titel {
-    margin-top: 0.5rem;
-    margin-bottom: 2rem;
-}
 
-.item {
-    overflow: hidden;
-    clip: auto;
-    flex-wrap: none;
-    display: grid;
-}
+    // &.first-place {
+    //     background-color: $trophy-color-gold;
+    // }
 
-.player {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 5px;
-}
+    // &.second-place {
+    //     background-color: $trophy-color-silver;
+    // }
 
-.content {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 5px;
-    font-size: 0.9rem;
-    text-wrap: none;
-    clip: auto;
-}
-
-.content.header {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.spacer {
-    margin-bottom: 1rem;
-}
-
-.first-place {
-    background-color: $trophy-color-gold;
-    color: black;
-    font-weight: bold;
-    border-radius: 8px;
-    width: fit-content;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-}
-
-.second-place {
-    background-color: $trophy-color-silver;
-    color: black;
-    font-weight: bold;
-    border-radius: 8px;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-}
-
-.third-place {
-    background-color: $trophy-color-bronze;
-    color: black;
-    font-weight: bold;
-    border-radius: 8px;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    // &.third-place {
+    //     background-color: $trophy-color-bronze;
+    // }
 }
 
 @media (max-width: 575px) {

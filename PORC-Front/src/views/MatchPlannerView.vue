@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { waitForAppReady } from '@/appReady';
-import CalendarComponent from '@/components/CalendarComponent.vue';
+import CalendarComponent from '@/components/Calender/CalendarComponent.vue';
 import MatchScoreComponent from '@/components/MatchScoreComponent.vue';
 import PlayerSelector from '@/components/PlayerSelectorComponent.vue';
 import AccountCard from '@/components/profile/AccountCard.vue';
@@ -21,6 +21,9 @@ import { updatePrimaryColor } from '@/util/updatePrimaryColor';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import { computePosition } from '@floating-ui/vue';
+import AccountCardFloating from '@/components/profile/AccountCardFloating.vue';
+import AccountCardSM from '@/components/profile/AccountCardSM.vue';
+import AccountCardSMVertical from '@/components/profile/AccountCardSMVertical.vue';
 
 const accountPlate = document.querySelector<HTMLElement>('#account-plate');
 const tooltip = document.querySelector<HTMLElement>('#test-tooltip');
@@ -201,88 +204,47 @@ async function submitNote() {
 </script>
 
 <template>
-    <div class="justify-content-center match-planner mb-5">
-        <div class="d-flex flex-row justify-content-center mt-5" :class="`division-${division?.name.toLowerCase() || 'iron'}`">
-            <!-- <div class="part part-text">
-                <div class="desptiption">
-                    <label class="description">
-                        This is the <span class="highlight-text">match Planner</span>. Here you are able to set your schedule, request matches with your opponents (if you are participating in a
-                        running season), and accept requests yourself. <br /><br />
-                        To set an availability, simply click on your own calendar. By clicking on an opponents calendar you can challenge them to a match. If you challenge an opponent they will be
-                        <span class="highlight-text">messaged over discord via Porcbot</span>, who will allow them to accept your request in their direct messages or in their own match planner.
-                        <br /><br />
-                        You can also add <span class="highlight-text">a custom note</span> to your schedule to convey any additional information that might be important for planning matches, such as
-                        exceptions, preferences, or a funny quote.
-                    </label>
-                </div>
-            </div> -->
-            <div class="row justify-content-center col-12 col-xl-11 col-xxl-10">
+    <div class="match-planner d-flex flex-row">
 
-                <div class="col row">
-
-                    <div class="d-flex flex-column selector-container col-12 col-md-4 col-lg-3 p-0 py-2 me-4">
-                        <div class="d-flex flex-row m-3 ms-4">
-                            <Logo class="logo ms-1" />
-                            <h3 class="ms-4 bold">
-                                Players
-                            </h3>
-                        </div>
-                        <div class="player-selector" style="overflow-y: auto;">
-                            <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="userId ?? ''" class=""></PlayerSelector>
-                        </div>
-
-                        <div class="note-box mt-auto mb-0 d-none d-md-block">
-                            <div class="container mb-4 notes-container">
-                                <form @submit.prevent="submitNote" v-if="(selectedPlayer?.id ?? userId) === userId">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <label for="noteTextArea" class="form-label fw-bold ms-1">Notes</label>
-                                            <textarea v-model="scheduleNote" class="form-control mb-4" id="noteTextArea"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="w-100 col-md-3">
-                                            <button type="submit" class="btn btn-primary w-100">Save</button>
-                                        </div>
-                                    </div>
-                                </form>
-                                <div v-else>
-                                    <div class="mb-2 fw-bold">Your opponent notes :</div>
-                                    <div class="note-field">{{selectedPlayer?.schedule?.note || ""}}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col d-flex flex-row calender-container px-0 mt-3 mt-md-0">
-                        <CalendarComponent
-                            v-if="selectedPlayer?.schedule"
-                            :schedule="emptySchedule"
-                            :players="division?.players || []"
-                            :own-calendar="(selectedPlayer?.id ?? userId) === userId"
-                            :ownId="userId ?? ''"
-                            :season="season?.name ?? 'default'"
-                            :scheduleUserId="selectedPlayer?.id ?? 'default'"
-                            v-on:reload="reload"
-                            class="calendar-component col-12"
-                            :class="`division-${division?.name.toLowerCase() || 'iron'}`"
-                            :season_info="season ?? undefined"
-                        >
-                        </CalendarComponent>
-                    </div>
-                
-                </div>
-
-                <div class="d-none d-xxl-flex col-12 col-xxl-3 mt-4 mt-xxl-0 ps-xxl-4"  v-if="division && season_running">     
-
-                   <AccountCard id="account-plate" area-describedby="tooltip"></AccountCard>
-                        
-                </div>
-
-                <div id="test-tooltip" role="tooltip">This is a tooltip</div>
-
+        <div class="sidebar d-flex flex-row">
+            <div class="player-selector">
+                <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="userId ?? ''" class=""></PlayerSelector>
             </div>
-            
+            <div class="player-profile d-flex flex-column h-100">
+                <AccountCardFloating v-if="selectedPlayer" :account="selectedPlayer" id="account-plate" class="flex-grow-1" area-describedby="tooltip"></AccountCardFloating>
+
+                <div class="note-box mt-auto mb-0 d-none d-md-block">
+                    <div class="mb-4 notes-box">
+                        <form @submit.prevent="submitNote" v-if="(selectedPlayer?.id ?? userId) === userId">
+                            <textarea v-model="scheduleNote" maxlength="150" class="note-field owned w-100" id="noteTextArea"></textarea>
+                            <button type="submit" class="btn btn-primary btn-small w-100">Save</button>
+                        </form>
+                        <div v-else>
+                            <div class="section-title spaced-text pb-1 ms-1">Your opponent notes</div>
+                            <div class="note-field">{{selectedPlayer?.schedule?.note || ""}}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- <AccountCardSMVertical></AccountCardSMVertical> -->
+            </div>
+        </div>
+
+        <div class="calendar flex-grow-5">
+            <CalendarComponent
+                v-if="selectedPlayer?.schedule"
+                :schedule="emptySchedule"
+                :players="division?.players || []"
+                :own-calendar="(selectedPlayer?.id ?? userId) === userId"
+                :ownId="userId ?? ''"
+                :season="season?.name ?? 'default'"
+                :scheduleUserId="selectedPlayer?.id ?? 'default'"
+                v-on:reload="reload"
+                class="calendar-component col-12"
+                :class="`division-${division?.name.toLowerCase() || 'iron'}`"
+                :season_info="season ?? undefined"
+            >
+            </CalendarComponent>
         </div>
     </div>
 </template>
@@ -294,199 +256,66 @@ async function submitNote() {
 $match-border-width: 2px;
 $tile-bg: rgb(15, 15, 15) !important;
 
-#tooltip {
-    width: max-content;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: white;
-    color: black;
-    font-weight: bold;
-    padding: 1rem;
-}
-
 .match-planner {
-    .part {
-        margin-top: 5rem !important;
-        margin-bottom: 5rem !important;
-    }
+    flex-grow: 1;
+    width: 100vh;
+}
 
-    .page-header {
-        height: 20rem !important;
-        background-image: url('@/assets/images/MatchPlannerHeaderNoPorc.png');
-    }
+.player-profile {
+    background-color: #151515;
+    border: 1px solid $border-color;
+    border-width: 0px 1px 0px 1px;
 
-    .header-text {
-        font-weight: 550 !important;
-    }
+}
 
-    .calendar {
-        
-        @include media-breakpoint-down(xl) {
-            padding: 3rem 5rem;
-        }
+.section-title {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: $muted-text;
+}
 
-        @include media-breakpoint-down(sm) {
-            padding: 2rem 2rem;
-        }
-    }
+.note-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
 
-    .division-title {
-        display: flex;
-        flex-direction: column;
-        width: fit-content;
+    padding: 0 1.25rem;
 
-        .progress {
-            height: 0.5rem;
-        }
-    }
+    width: inherit;
+    min-height: 5.5rem;
+    max-height: 26rem;
+    max-width: 26rem;
 
-    .division-icon {
-        width: 5rem;
-        height: 5rem;
-        object-fit: contain;
-    }
+    .note-field {
+        background-color: $tile-bg;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        padding: 0.75rem;
+        min-height: 6rem;
+        overflow-y: hidden;
 
-    @each $division, $color in $division-colors {
-        .division-#{$division} {
-            .page-header .division {
-                border: $match-border-width solid $color;
-            }
+        font-size: 0.95rem;
+        line-height: 1.5rem;
+        color: $weak-text;
 
-            .match-score.selected {
-                border-color: var(--primary);
-                background: rgba(255, 255, 255, 0.082) !important;
-
-                * {
-                    transition: all 0.4s;
-                    border: none;
-                }
-            }
-
-            .matches {
-                background: linear-gradient(135deg, #343232, 90%, darken($color, 10%));
-            }
-
-            &.division-#{$division} .progress-bar {
-                background-color: $color;
-            }
+        &.owned {
+            min-height: 9rem;
+            color: $text-color !important;
+            padding-bottom: 1.75rem;
         }
     }
 
-    .matches-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, 200px + $match-border-width * 2);
-        grid-gap: 1rem;
-        max-width: 450px;
-        justify-content: start;
-        max-height: 60rem;
-        overflow-y: auto;
-        scrollbar-width: none;
+    .btn {
+        position: absolute !important;
+        bottom: 1.25rem !important;
+        right: 2rem !important;
 
-        .match-score {
-            width: fit-content;
-            border: $match-border-width solid transparent;
-            transition: all 0.4s ease-in-out;
-            margin: 2px;
-        }
+        height: 1.75rem;
+        width: 5rem !important;
 
-        @include media-breakpoint-down(xl) {
-            max-height: 20rem;
-            justify-content: space-between;
-        }
+        padding: 0.2rem !important;
 
-        @include media-breakpoint-down(sm) {
-            padding: 0rem 2rem;
-            justify-content: center;
-        }
+        border-radius: 6px !important;
     }
-}
-
-.player-selector {
-    max-height: 800px;
-
-    @include media-breakpoint-down(xxl) {
-        max-height: 480px;
-    }
-}
-
-.page-header {
-
-    border-radius: 32px;
-
-    // mask-image: linear-gradient(to bottom, rgb(255, 255, 255) 10%, rgba(255, 255, 255, 0.696) 80%, transparent 100%);
-
-    @media (max-width: $leaderboard-breakpoint) {
-        height: 30rem;
-    }
-
-    @media (max-width: 600px) {
-        height: 20rem;
-    }
-}
-
-.calender-container {
-    overflow: hidden;
-    display: inline-block;
-    height: fit-content;
-    border-radius: 16px;
-
-    background-color: $tile-bg;
-    border: 1px solid $border-color !important;
-}
-
-.selector-container {
-    //max-width: 20rem;
-    border-radius: 16px;
-
-    overflow: hidden;
-
-    background-color: $tile-bg;
-    border: 1px solid $border-color !important;
-}
-
-.note-field {
-    border: 1px solid $border-color !important;
-    border-radius: 12px;
-    padding: 1rem;
-}
-
-.titel {
-    justify-content: center;
-    text-align: center;
-    margin: 3rem;
-    font-style: bold;
-    height: fit-content;
-}
-
-.description {
-    text-align: center;
-    justify-content: center;
-    line-height: 1.5;
-    padding: 2rem;
-    padding-top: 1rem !important;
-}
-
-.highlight-text {
-    font-weight: 750;
-}
-
-
-.logo {
-    height: 2.5rem !important;
-    min-width: 2.5rem !important;
-}
-
-.bold {
-    font-weight: 700;
-    margin-top: 0.1rem;
-}
-
-textarea.form-control {
-    min-height: 5rem !important;
-}
-
-.no-text-wrap {
-    text-wrap: nowrap;
 }
 </style>

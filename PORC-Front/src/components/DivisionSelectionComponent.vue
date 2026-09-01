@@ -131,19 +131,22 @@ function toRomanUpToFive(num: number): string {
 <template>
     <div class="overflow-hidden transition flex-shrink-0" :style="{'height': !active() ? '65px !important' : `${subDivision.length > 1 ? (65 + subDivision.length * 27 +4) : (4 * 16)}px !important`}">
         <div class="list-group-item list-group-item-action body-div" :class="{ active: active(), [`division-${divisionName || 'iron'}`]: true }" @click="select">
-            <div class="d-flex flex-column flex-md-row align-items-center">
-                <img :src="getDivisionImage(divisionName)" class="division-icon" />
-                <div class="division-info w-100 d-block d-md-flex">
-                    <h5 class="d-none d-md-flex m-0 ms-2">{{  capitalizeFirst(filter_str(divisionName, 14)) }}</h5>
-                    <div class="progress m-0 mx-md-2" role="progressbar">
-                        <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
+            <div class="d-flex flex-column align-items-center">
+                <div class="d-flex flex-row">
+                    <img :src="getDivisionImage(divisionName)" class="division-icon" />
+                    <div class="division-info w-100 d-block d-md-flex">
+                        <!-- <span class="d-none d-md-flex m-0 ms-2">{{  capitalizeFirst(filter_str(divisionName, 14)) }}</span> -->
                     </div>
                 </div>
+                    
+                <!-- <div class="progress m-0 mx-md-2" role="progressbar">
+                    <div class="progress-bar" :style="{ width: getProgress() + '%' }"></div>
+                </div> -->
             </div>
             
         </div>
         <div class="d-flex flex-row pe-2 pt-2">
-            <div class="d-none d-sm-flex flex-grow-1 indent-bar ms-5 mt-1 mb-1" :style="{maxWidth: '2px !important'}"></div>
+            <div class="d-none d-sm-flex flex-grow-1 indent-bar mt-1 mb-1" :style="{maxWidth: '2px !important'}"></div>
             <div class="d-flex flex-column flex-grow-1 gap-2">
                 <div v-for="[idx, division] of Object.entries(subDivision)" class="sub-division d-flex flex-row align-items-center ms-2" :style="{width: 'calc(100% - 0.75rem)'}" :class="{active: activeSub(division)}" @click="selectedDivision = division">
                     <h5 class="m-0 ms-2" :class="{[`division-${divisionName || 'iron'}-color`]: true}">{{ toRomanUpToFive(Number(idx) + 1) }}</h5>
@@ -193,13 +196,19 @@ $background-color: $darker-bg;
         }
     }
 
+    &:not(.active) {
+        .division-icon {
+            filter: grayscale(1);
+        }
+    }
+
     @include media-breakpoint-down(sm) {
         padding: 0.5rem !important;
     }
 
     .division-icon {
-        width: 3rem;
-        height: 3rem;
+        width: 2.5rem;
+        height: 2.5rem;
         object-fit: contain;
         @include media-breakpoint-down(sm) {
             width: 2.5rem;
@@ -272,6 +281,10 @@ $background-color: $darker-bg;
     height: 3rem;
     width: max-content;
     flex-grow: 1;
+
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
 
     justify-content: space-between;
     align-items: center;

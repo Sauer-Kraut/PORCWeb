@@ -1,9 +1,9 @@
 use std::num::NonZero;
 
 use colored::Colorize;
-use serenity::all::{GuildId, Member, RoleId};
+use serenity::all::{CommandOptionType::User, GuildId, Member, RoleId};
 
-use crate::{liberary::{account_lib::account::{account::Account, discord_user::DiscordUser, storage::create_account::create_account}, dialogue_lib::{bot_error::BotError, dialogue_builder::storage::{get_dialogues::get_dialogues, store_dialogue::store_dialogue}}}, porcbot::config::{get_http, RANKS, SERVER_ID}, AppState};
+use crate::{AppState, liberary::{account_lib::account::{account::Account, discord_user::DiscordUser, storage::create_account::create_account, user_data::account_stats::AccountStats}, dialogue_lib::{bot_error::BotError, dialogue_builder::storage::{get_dialogues::get_dialogues, store_dialogue::store_dialogue}}}, porcbot::config::{RANKS, SERVER_ID, get_http}};
 use crate::liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
 
 pub async fn profile_competitors(appstate: &AppState) -> Result<(), BotError> {
@@ -32,6 +32,14 @@ pub async fn profile_competitors(appstate: &AppState) -> Result<(), BotError> {
                 email: competitor.user.email.clone(),
             },
             schedule: None,
+            customisation: None,
+            stats: AccountStats {
+                wins: 0,
+                matches: 0,
+                win_ratio: None,
+                global_rank: None,
+                division_rank: None,
+            },
         };
 
         // does nothing if an account already exists

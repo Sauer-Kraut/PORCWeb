@@ -14,6 +14,7 @@ use crate::liberary::account_lib::account::pub_account_info::PubAccountInfo;
 use crate::liberary::account_lib::account::storage::create_account::create_account;
 use crate::liberary::account_lib::account::storage::get_account::get_account;
 use crate::liberary::account_lib::account::storage::store_account::store_account;
+use crate::liberary::account_lib::account::user_data::account_stats::AccountStats;
 use crate::liberary::account_lib::login::login::LogIn;
 use crate::liberary::account_lib::login::storage::store_login::store_login;
 use crate::liberary::account_lib::schedule::schedule::Schedule;
@@ -107,7 +108,15 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
             availabilities: vec!(),
             matches: vec!(),
             note: "".to_string(),
-        })
+        }),
+        stats: AccountStats {
+            wins: 0,
+            matches: 0,
+            win_ratio: None,
+            global_rank: None,
+            division_rank: None,
+        },
+        customisation: None,
     };
 
     match create_account(new_account, appstate.pool.clone()).await {

@@ -38,6 +38,8 @@ import PopoverComponent from '@/components/Popover/PopoverComponent.vue';
 import { InfoPopover } from '@/components/Popover/PopoverDesign/InfoPopover';
 import EditAvailability from '@/components/Calender/Modals/EditAvailability/EditAvailability.vue';
 import { addHours } from 'date-fns';
+import { hoverEvaluator } from '@/components/Popover/PopoverDisplayLogic/HoverPopover';
+import ThreeRenderer from '@/components/ThreeRenderer.vue';
 
     const buttonRef = ref<HTMLElement | null>(null);
     const buttonRef2 = ref<HTMLElement | null>(null);
@@ -566,8 +568,10 @@ import { addHours } from 'date-fns';
         </div> -->
         <!-- <div class="col-10 text-1 text-normal"><span>Unleash your full </span><span class="text-highlight">potential</span><span>!</span></div> -->
 
+
+        <!-- :style="{'transform': 'translateY(' + seasonDisplacementY + 'px) '}" -->
         <div class="season-section col-12 col-xxl-9 col-sm-11 p-0 justify-content-center mt-3 z-1"
-            :style="{'transform': 'translateY(' + seasonDisplacementY + 'px) '}"
+            :style="{'transform': 'translateY(' + 0 + 'px) '}"
             id="season">
             <SeasonComponent
 
@@ -593,47 +597,31 @@ import { addHours } from 'date-fns';
                 <h2 class="decor-title text-center justify-content-center w-auto mt-5">Content <span class="text-highlight">Highlights</span></h2>
                 <h3 class="content-subtitle justify-content-center w-auto mt-2">Watch The best PORC has to offer as it happens</h3>
             </div>
-            <div class="col-12 d-flex flex-row flex-md-row justify-content-center align-items-center pt-5 mb5 mb-sm-4">
-                <div class="video me-xxl-3">
-                    <div class="feature-title mb-2">
-                        <span style="display:inline-block; width:9px; height:9px; background: var(--primary); border-radius:50%; transform: translateY(-0.085rem);" class="me-1"></span> 
+            <div class="event-section d-flex flex-row flex-md-row panel-card justify-content-center align-items-center mb-sm-4 p-5" style="padding-top: 2rem !important;">
+                <div class="video me-xxl-5">
+                    <div class="feature-title mb-4">
+                        <span style="display:inline-block; width:8px; height:8px; background: var(--primary); border-radius:50%; transform: translateY(-0.085rem);" class="me-1"></span> 
                         FEAUTURED VIDEO
                     </div>
                     <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="320" :height="200" v-if="screenSizeSm"></YoutubeVideo>
-                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="760" :height="400" v-else-if="screenSizeMd"></YoutubeVideo>
-                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="800" :height="450" v-else></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="700" :height="400" v-else-if="screenSizeMd"></YoutubeVideo>
+                    <YoutubeVideo class="featured-video" :videoId="'7deD4tDVzoE'" maxres :width="700" :height="400" v-else></YoutubeVideo>
                 </div>
-                <div class="seperator-v flex-grow-0 m-5" :style="{height: '320px', width: '1px'}" v-if="!screenSizeSm && !screenSizeMd"></div>
-                <div class="d-flex flex-column pe-3 ms-0 mb-auto" v-if="!screenSizeSm && !screenSizeMd">
-                    <div class="d-flex flex-row mb-2 mx-2">
-                        <h5 class="events-title spaced-text me-5 pe-3">PORC Matches</h5>
-                        <!-- <div class="d-flex flex-row">
-                            <button class="btn btn-sm" :class="{'btn-primary': eventSortPopularity, 'btn-secondary': !eventSortPopularity}" style="border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; border-right: none !important;" @click="eventSortPopularity = !eventSortPopularity">Popularity</button>
-                            <button class="btn btn-sm" :class="{'btn-primary': !eventSortPopularity, 'btn-secondary': eventSortPopularity}" style="border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; border-left: none !important;" @click="eventSortPopularity = !eventSortPopularity">Date</button>
-                        </div> -->
-                        <!-- <select v-model="eventSortPopularity" class="form-select mb-3 soft-options col-auto primary">
-                            <option :value="false">Sort by Date</option>
-                            <option :value="true">Sort by Popularity</option>
-                        </select> -->
-                        <h5 class="sort-option ms-auto primary" @click="selectedSortFeature += 1">Sorted by {{ sortingFeatures[selectedSortFeature % (sortingFeatures.length)] }} ▾</h5>
+                <!-- <div class="seperator-v flex-grow-0 m-5" :style="{height: '320px', width: '1px'}" v-if="!screenSizeSm && !screenSizeMd"></div> -->
+                <div class="d-flex flex-column pe-3 ms-0 mb-auto col-5" :style="{height: '400px !important'}">
+                    <div class="d-flex flex-row mb-4 mx-2">
+                        <div class="events-title spaced-text w-50">
+                            <span style="display:inline-block; width:8px; height:8px; background: var(--primary); border-radius:50%; transform: translateY(-0.085rem);" class="me-1"></span> 
+                            PORC Matches
+                        </div>
+                        <h5 class="sort-option ms-auto primary mb-0" @click="selectedSortFeature += 1">Sorted by {{ sortingFeatures[selectedSortFeature % (sortingFeatures.length)] }} ▾</h5>
                     </div>
-                    <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
+                    <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-0 event-scroll-container pe-2" style="height: 27rem;">
                         <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>
                         <div v-if="discordEvents.length < 1" class="d-flex flex-column flex-grow-1 event-placeholder p-3" style="width: 100%; justify-content: center; align-items: center;"> <span v-for="line in selectedInfoPlaceholder" :key="line">{{ line }}</span> </div>
                     </div>
                 </div>
             </div>
-            <div class="d-flex flex-column pe-3 ms-0 mt-5 pt-4 ms-auto me-auto" v-if="screenSizeMd" style="max-width: 43rem;">
-                    <div class="d-flex flex-row mb-2 mx-2">
-                        <h5 class="events-title spaced-text me-5 pe-3">PORC Matches</h5>
-                        <h5 class="sort-option ms-auto primary" @click="selectedSortFeature += 1">Sorted by {{ sortingFeatures[selectedSortFeature % (sortingFeatures.length)] }} ▾</h5>
-                    </div>
-                    <div class="d-flex flex-column overflow-y-auto gap-3 overflow-x-visible pt-1 event-scroll-container pe-2" style="height: 27rem;">
-                        <DiscordEventComponent v-for="event in discordEvents" :key="event.title" :Event="event"></DiscordEventComponent>
-                        <div v-if="discordEvents.length < 1" class="d-flex flex-column flex-grow-1 event-placeholder p-3" style="width: 100%; justify-content: center; align-items: center;"> <span v-for="line in selectedInfoPlaceholder" :key="line">{{ line }}</span> </div>
-                    </div>
-                </div>
-
             <div class="m-4 p-2" v-if="!screenSizeSm"></div>
             <div class="d-flex flex-column justify-content-center align-items-center col-12 mt-5 mt-xl-5 pt-xl-5 mb-1 pb-3">
                 <VideoCarousel :videos="discordVods" :sectionTitle="'PORC VODs'" :width="240" :gap="40" style="width: 22rem" v-if="screenSizeSm"></VideoCarousel>
@@ -658,7 +646,15 @@ import { addHours } from 'date-fns';
                         id: '306467062530965514',
                         username: 'Sauerkarut',
                         avatar: '7df79ec5c3938cf59cd8cd4a69242ad3',
-                        schedule: null
+                        schedule: null,
+                        customisation: null,
+                        stats: {
+                            wins: 0,
+                            matches: 0,
+                            win_ratio: 0,
+                            global_rank: 0,
+                            division_rank: 0
+                        }
                     }"
                     :rank="1"
                 />
@@ -668,7 +664,15 @@ import { addHours } from 'date-fns';
                         id: '176842075591933952',
                         username: 'Savitarian',
                         avatar: 'a_47ca2c217903435a0cd6b2ce6c6d0fe5',
-                        schedule: null
+                        schedule: null,
+                        customisation: null,
+                        stats: {
+                            wins: 0,
+                            matches: 0,
+                            win_ratio: 0,
+                            global_rank: 0,
+                            division_rank: 0
+                        }
                     }"
                     :rank="2"
                 />
@@ -678,7 +682,15 @@ import { addHours } from 'date-fns';
                         id: '142689578967498762',
                         username: 'Omlette',
                         avatar: 'e368e84d013d70077d9f467dffe95c69',
-                        schedule: null
+                        schedule: null,
+                        customisation: null,
+                        stats: {
+                            wins: 0,
+                            matches: 0,
+                            win_ratio: 0,
+                            global_rank: 0,
+                            division_rank: 0
+                        }
                     }"
                     :rank="3"
                 />
@@ -689,9 +701,11 @@ import { addHours } from 'date-fns';
 
         <div class="row p-4 ,-1 d-none d-lg-block"></div>
 
+        <ThreeRenderer :color="0xab233b"></ThreeRenderer>
+
 
         <section id="sign-up">
-        <div class="col-12 col-sm-11 col-xl-10 col-xxxl-8 justify-content-center registration-section ps-md-4 p-md-4 pe-md-4 ms-auto me-auto mw-30">
+        <div class="col-12 col-lg-11 col-xl-8 col-xxl-7 col-xxxl-5 justify-content-center registration-section ps-md-4 p-md-4 pe-md-4 ms-auto me-auto mw-30">
             <div class="row justify-content-center">
 
                 <!-- Info --> <!-- Hidden on small screens -->
@@ -699,28 +713,28 @@ import { addHours } from 'date-fns';
                     <div class="signup-info d-flex flex-column w-100">
                         <!-- Title -->
                         <h1 class="decor-title m-0 p-0 mt-3">Registration</h1>
-                        <h2 class="content-subtitle left mt-2">Sign up for the next season of PORC</h2>
+                        <span class="content-subtitle left mt-5">Sign up for the next season of PORC. PORC Seasons happen bimonthly and last approximately one month each. One season consists of roughly 4-6 matches per participant, or ca. 1 match per week.</span>
 
                         <!-- Signup Conditions -->
                         <div class="singup-conditions mt-2 mb-2 w-100">
-                            <div class="m-3 mt-5 d-flex text-b align-items-center">
-                                <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
+                            <div class="m-3 mt-5 d-flex condition align-items-center">
+                                <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
                                 <span>On the <a href="https://discord.gg/2n9prYYZjS" target="_blank">PORC Discord server</a></span>
                             </div>
-                            <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 d-flex text-b align-items-center">
-                                <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
-                                Logged in
+                            <!-- <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div> -->
+                            <div class="m-3 d-flex condition align-items-center">
+                                <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
+                                <span>Logged in</span>
                             </div>
-                            <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 d-flex text-b align-items-center">
-                                <div :class="isFormFilledOut || signedup ? 'icon-checkmark' : 'icon-cross'" class=" p-0 pt-1 me-3"></div>
-                                All fields filled out
+                            <!-- <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div> -->
+                            <div class="m-3 d-flex condition align-items-center">
+                                <div :class="isFormFilledOut || signedup ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
+                                <span>Filled out the form</span>
                             </div>
-                            <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div>
-                            <div class="m-3 mb-5 d-flex text-b align-items-center">
-                                <div :class="isScheduleConfigured || signedup ? 'icon-checkmark' : 'icon-cross'" class="p-0 pt-1 me-3"></div>
-                                Configured your schedule
+                            <!-- <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div> -->
+                            <div class="m-3 mb-5 d-flex condition align-items-center">
+                                <div :class="isScheduleConfigured || signedup ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
+                                <span>Configured your schedule</span>
                             </div>
                         </div>
 
@@ -734,7 +748,7 @@ import { addHours } from 'date-fns';
                     <SignUpFormComponent 
                         :season_name="season_name" 
                         @formComplete="handleFormComplete"
-                        class="signup-form mt-md-4 pt-md-1 mb-md-4 ms-auto" 
+                        class="signup-form mt-md-4 mb-md-4 ms-auto" 
                     />
                 </div>
             </div>
@@ -753,22 +767,22 @@ import { addHours } from 'date-fns';
             <EventCarousel
                 :cards="[
                     { 
+                        title: 'NAMC', 
+                        img_name: 'NAMC.png', 
+                        description: 'North America based monthly park competition', 
+                        link: 'https://discord.gg/v8aV8zatHY' 
+                    } as EventCard,
+                    { 
                         title: 'Community Tournaments', 
                         img_name: 'CommunityTournament.png', 
                         description: 'Hub to keep track of all new Rumble events', 
                         link: 'https://discord.gg/6gvjvA84be' 
                     } as EventCard,
                     { 
-                        title: 'Content Contest S2', 
+                        title: 'Content Contest S3', 
                         img_name: 'ContentContest.png', 
                         description: 'Content creation contest', 
                         link: 'https://discord.gg/6gvjvA84be' 
-                    } as EventCard,
-                    { 
-                        title: 'Mothmas', 
-                        img_name: 'Mothmas.png', 
-                        description: 'Cassual make your own rules holiday competition', 
-                        link: 'https://discord.gg/DZcuzn6FzA' 
                     } as EventCard,
                     { 
                         title: 'BRL', 
@@ -783,9 +797,9 @@ import { addHours } from 'date-fns';
                         link: 'https://discord.gg/usQKh5GtfC' 
                     } as EventCard,
                     { 
-                        title: 'NAMC', 
+                        title: 'PFM', 
                         img_name: 'NAMC.png', 
-                        description: 'North America based monthly park competition', 
+                        description: 'Ping For Might, Rumbles main ranked queue', 
                         link: 'https://discord.gg/v8aV8zatHY' 
                     } as EventCard
                 ]"
@@ -828,6 +842,8 @@ import { addHours } from 'date-fns';
     <PopoverComponent
         :anchor="buttonRef2"
         :update="InfoPopover"
+        :display-logic="hoverEvaluator"
+        :fade-in="true"
     >
         <EditAvailability
             :availability="{
@@ -855,7 +871,7 @@ import { addHours } from 'date-fns';
   top: 0;
   left: 0;
   background: #222;
-  color: white;
+  color: whitesmoke;
   font-weight: bold;
   padding: 5px;
   border-radius: 4px;
@@ -1011,6 +1027,10 @@ $hero-content-height: 32rem;
 // Divisions
 
 .season-section{
+    margin-top: 70rem !important;
+    margin-bottom: 50rem !important;
+
+
     border-radius: $border-radius;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.85);
 }
@@ -1036,6 +1056,23 @@ $hero-content-height: 32rem;
     }
 }
 
+
+// Event Section
+
+.event-section {
+    align-self: center;
+    margin-inline: auto;
+    width: fit-content;
+    
+    background-color: $darker-bg;
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.5); // quite aggressive shadow so it sticks out more
+
+    @include media-breakpoint-down(md) {
+        margin-top: 0;
+    }
+}
+
+
 // Registration
 
 .registration-section {
@@ -1048,12 +1085,6 @@ $hero-content-height: 32rem;
     }
 
     align-self: center;
-
-    border: 1px solid $secondary-border-color;
-    border-radius: 16px;
-    background-color: $darker-bg;
-
-    box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
 
     * {
         z-index: 2;
@@ -1088,6 +1119,11 @@ $hero-content-height: 32rem;
 }
 
 .signup-form {
+    border-radius: 12px;
+    
+    background-color: rgb(17, 17, 17);
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
+
     max-width: 440px;
     transform: scale(1.05);
     
@@ -1105,15 +1141,62 @@ $hero-content-height: 32rem;
 
     flex-grow: 1 !important;
 
-    * {
-        //font-size: 1.25rem;
-        color: rgb(255, 255, 255);
+    .condition {
+        overflow: hidden;
+
+        height: 2.5rem;
+
+        background-color: $darker-bg;
+        border: 1px solid $border-color;
+        border-radius: 4px;
+        // padding-left: 1rem;
+
+        font-size: 1.2rem;
+
+        color: rgb(216, 216, 216);
+        font-size: 1.15rem;
         font-weight: 600;
+
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.2); // quite aggressive shadow so it sticks out more
+
+        span {
+            // text-decoration: dashed underline;
+        }
+
+        .mark{
+
+            height: 100%;
+            width: 2rem;
+
+            border: 0;
+
+            margin: -0.25rem;
+            margin-right: 1rem;
+
+            padding-left: 0.8rem;
+            padding-right: 2rem;
+
+            border-radius: 0;
+
+            border-right: 1px solid $border-color;
+
+
+            font-weight: 600;
+            font-size: 1.25rem;
+            line-height: 1.7rem;
+
+            padding-top: 6px;
+        }
+    
+        @include media-breakpoint-down(md) {
+            font-size: 1.2rem;
+        }
     }
 
     a {
-        font-style: oblique;
+        // font-style: oblique;
         color: var(--primary);
+
     }
 }
 
@@ -1122,29 +1205,17 @@ $bad-color: rgb(255, 32, 0);
 $good-color: rgb(34, 197, 94);
 
 .icon-cross {
-    font-weight: 600;
-    font-size: 1.25rem;
     color: $bad-color;
-    line-height: 1.7rem;
-
-    box-shadow: rgba($bad-color, 0.4) 0px 0px 23px;
-    border-radius: 2rem;
+    box-shadow: rgba($bad-color, 0.1) 0px 0px 20px;
+    border: none;
     background-color: rgba($bad-color, 0.1);
-
-    width: fit-content;
 }
 
 .icon-checkmark {
-    font-weight: 600;
-    font-size: 1.25rem;
     color: $good-color;
-    line-height: 1.7rem;
-
-    box-shadow: rgba($good-color, 0.4) 0px 0px 23px;
-    border-radius: 2rem;
+    box-shadow: rgba($good-color, 0.1) 0px 0px 20px;
+    border: none;
     background-color: rgba($good-color, 0.1);
-
-    width: fit-content;
 }
 
 
@@ -1156,14 +1227,6 @@ $good-color: rgb(34, 197, 94);
 
 .text-normal {
     color: #aeaeae;
-}
-
-.text-b {
-    font-size: 1.4rem;
-    
-    @include media-breakpoint-down(md) {
-        font-size: 1.2rem;
-    }
 }
 
 .highlight {
@@ -1275,10 +1338,6 @@ $good-color: rgb(34, 197, 94);
     .col-xxxl-5 {
         width: 42%;
     }
-
-    .col-xxxl-8 {
-        width: calc(800% / 12%);
-    }
 }
 
 .porc-stats {
@@ -1303,26 +1362,30 @@ $good-color: rgb(34, 197, 94);
 
 
 .events-title {
-    color: $muted;
-    font-size: 1rem;
+    color: whitesmoke;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 
 .sort-option {
     cursor: pointer;
-    font-size: 0.96rem;
+    font-size: 0.92rem;
     font-weight: 600;
 }
 
 .feature-title {
     color: var(--primary);
-    font-size: 0.94rem;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 
 .event-scroll-container {
     scrollbar-color: var(--primary) transparent;
     scrollbar-width: thin;
+
+    /* Fade masking effect at the bottom to visually hint at overflow */
+    mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
 
     &::-webkit-scrollbar {
         width: 8px;
@@ -1349,18 +1412,7 @@ $good-color: rgb(34, 197, 94);
 }
 
 .featured-video {
-    &:after {
-        content: "";
-        position: absolute;
-        transform: translateX(-100%);
-        border-radius: 4px;
-        height: 100%;
-        width: 100%;
-        background-color: var(--primary);
-        opacity: 0.04;
-        transition: all 0.1s;
-        pointer-events: none;
-    }
+    box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .content-subtitle {

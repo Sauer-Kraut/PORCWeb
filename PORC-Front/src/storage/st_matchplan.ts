@@ -34,7 +34,10 @@ export const matchplanStore = defineStore('matchplan', {
 
         async init_storage() {
             const data = getInitData();
-            if (data && data.matchplan && data.season) {
+            if (!(data && data.matchplan && data.season)) {
+                await this.get_matchplan();
+            } 
+            else {
                 this.seasonInfos.set(null, { 
                     matchplan: data.matchplan, 
                     season: data.season, 

@@ -238,67 +238,70 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- News Banner -->
-    <div class="d-flex flex-row news-banner justify-content-center ms-auto" v-if="showNews">
-        <div class="col-1"></div>
-        <div class="d-flex news col-10">
-            <span v-if="!isSmallScreen" class="me-2">The next <span class="bolder"> Season of PORC </span> starts in</span> 
-            {{ newsText }}
-            <span class="ms-2 sep" v-if="!signup || signup == null">|</span>
-            <router-link
-                class="link ms-2"
-                :to="{ path: '/', hash: '#sign-up' }"
-                @click="closeMenu"
-                v-if="!signup || signup == null"
-            >
-                Sign Up
-            </router-link>
-        </div>
-
-        <div class="d-flex cross col-1" @click.stop="closeNews">
-            <i class="icon-cross"></i>
-        </div>
-    </div>
-    <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq', displaced: showNews == true }">
-        <!-- Navigation -->
-        <div class="d-flex flex-row justify-content-between col-12 col-md-11 col-xl-10 h-header">
-            <!-- Burger Icon -->
-            <div class="d-flex align-items-center d-md-none w-7" @click="toggleMenu">
-                <div class="burger-icon p-3">
-                    <span class="bar" :class="{ open: isMenuOpen }"></span>
-                    <span class="bar" :class="{ open: isMenuOpen }"></span>
-                    <span class="bar" :class="{ open: isMenuOpen }"></span>
-                </div>
-            </div>
-            <div class="logo d-flex align-items-center justify-content-center w-7">
-                <router-link to="/" class="mx-2"> 
-                    <Logo />
+    <div class="app">
+        <!-- News Banner -->
+        <div class="d-flex flex-row news-banner justify-content-center ms-auto" v-if="showNews">
+            <div class="col-1"></div>
+            <div class="d-flex news col-10">
+                <span v-if="!isSmallScreen" class="me-2">The next <span class="bolder"> Season of PORC </span> starts in</span> 
+                {{ newsText }}
+                <span class="ms-2 sep" v-if="!signup || signup == null">|</span>
+                <router-link
+                    class="link ms-2"
+                    :to="{ path: '/', hash: '#sign-up' }"
+                    @click="closeMenu"
+                    v-if="!signup || signup == null"
+                >
+                    Sign Up
                 </router-link>
             </div>
-            <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center mx-md-4">
-                <div class="routes-container">
-                    <router-link to="/" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Tournament</router-link>
-                    <router-link to="/match-planner" class="router-link col-12 col-md-2 px-0" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
-                    <router-link to="/leaderboard" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Leaderboard</router-link>
-                    <router-link to="/rules" class="router-link col-12 col-md-2 px-0" @click="closeMenu">Rules</router-link>
-                    <router-link to="/organizer" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Organizer</router-link>
-                    <router-link to="/faq" class="router-link col-12 col-md-2  px-0" @click="closeMenu">FAQ</router-link>
-                    <div v-if="isMenuOpen" class="col-12 m-1 d-md-none" />
-                </div>
-            </nav>
-            <div class="d-flex align-items-center w-7 mw-7">
-                <DiscordUserComponent class="container me-1 me-md-3"></DiscordUserComponent>
+
+            <div class="d-flex cross col-1" @click.stop="closeNews">
+                <i class="icon-cross"></i>
             </div>
         </div>
 
-        <!-- Discord User Component -->
-    </header>
+        <header :class="{ fixed: $route.path === '/rules' || $route.path === '/faq', displaced: showNews == true }">
+            <!-- Navigation -->
+            <div class="d-flex flex-row justify-content-between col-12 col-md-11 col-xl-10 h-header">
+                <!-- Burger Icon -->
+                <div class="d-flex align-items-center d-md-none w-7" @click="toggleMenu">
+                    <div class="burger-icon p-3">
+                        <span class="bar" :class="{ open: isMenuOpen }"></span>
+                        <span class="bar" :class="{ open: isMenuOpen }"></span>
+                        <span class="bar" :class="{ open: isMenuOpen }"></span>
+                    </div>
+                </div>
+                <div class="logo d-flex align-items-center justify-content-center w-7">
+                    <router-link to="/" class="mx-2"> 
+                        <Logo />
+                    </router-link>
+                </div>
+                <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center mx-md-4">
+                    <div class="routes-container">
+                        <router-link to="/" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Tournament</router-link>
+                        <router-link to="/match-planner" class="router-link col-12 col-md-2 px-0" v-if="isLoggedIn" @click="closeMenu">Match Planner</router-link>
+                        <router-link to="/leaderboard" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Leaderboard</router-link>
+                        <router-link to="/rules" class="router-link col-12 col-md-2 px-0" @click="closeMenu">Rules</router-link>
+                        <!-- <router-link to="/organizer" class="router-link col-12 col-md-2  px-0" @click="closeMenu">Organizer</router-link> -->
+                        <router-link to="/faq" class="router-link col-12 col-md-2  px-0" @click="closeMenu">FAQ</router-link>
+                        <div v-if="isMenuOpen" class="col-12 m-1 d-md-none" />
+                    </div>
+                </nav>
+                <div class="d-flex align-items-center w-7 mw-7">
+                    <DiscordUserComponent class="container me-1 me-md-3"></DiscordUserComponent>
+                </div>
+            </div>
 
-    <div class="main row justify-content-center h-100 backgorund">
-        <main class="col-12 p-0 row justify-content-center" data-bs-theme="dark">
-            <router-view></router-view>
-            <ModalsContainer />
-        </main>
+            <!-- Discord User Component -->
+        </header>
+
+        <div class="main row justify-content-center h-100 backgorund p-0">
+            <main class="col-12 p-0 row justify-content-center" data-bs-theme="dark">
+                <router-view></router-view>
+                <ModalsContainer />
+            </main>
+        </div>
     </div>
 </template>
 
@@ -306,6 +309,13 @@ onUnmounted(() => {
 @import '@/assets/scss/styles.scss';
 
 $header-color: rgb(17, 16, 16);
+
+.app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-width: 100vw;
+}
 
 body {
     background-color: $background-color !important;
@@ -350,9 +360,12 @@ header {
     }
 }
 
-main {
+.main {
+    position: relative;
+
     min-height: 100%;
-    width: 100vw !important;
+    min-width: 100vw !important;
+    flex-grow: 1 !important;
     overflow-x: hidden !important;
 
     //background: #201f27;

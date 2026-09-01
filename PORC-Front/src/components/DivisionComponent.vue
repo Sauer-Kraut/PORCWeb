@@ -1,10 +1,15 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import LeaderbordComponent from './LeaderbordComponent.vue';
 import MatchScoreComponent from './MatchScoreComponent.vue';
 import type { DivisionModel } from '@/models/matchplan/DivisionModel';
 import { matchplanStore } from '@/storage/st_matchplan';
 import type { DivisionRanking, PlayerPerformance } from '@/models/matchplan/PlayerPerformancModel';
+import type { Boundary } from '@floating-ui/vue';
+import DiscordAvatarComponent from './DiscordAvatarComponent.vue';
+import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo.ts';
+import { accountsStore } from '@/storage/st_accounts.ts';
+import type { PlayerModel } from '@/models/matchplan/PlayerModel.ts';
 
 const props = defineProps<{
     season: string;
@@ -13,9 +18,11 @@ const props = defineProps<{
     selectorHeight: number;
     allowEditSeason: boolean;
     placeholder?: boolean; // Optional prop to control placeholder visibility
+    PopoverBoundary?: HTMLElement;
 }>();
 
 const highlightedPlayerId = defineModel<string>('highlightedPlayerId', { default: '' });
+const highlightPin = defineModel<boolean>('highlightPing', { default: false });
 
 const placeholders = [
     "Shh... The scores are still taking their beauty sleep. If you keep being this loud you'll wake them up! (✧ω✧)",
@@ -53,20 +60,10 @@ function setDivisionHeight() {
 // I tried a lot of shit, but it looks like the only way this wont look awful is by setting the transfomation manually
 // I would have loved to scroll instead, but CSS wont allow for something to have both overflow visual and scroll
 
-const matchesExtended = ref(true); // Reactive variable to track if matches are extended or not
-const matchesTransform = ref('translate(0rem, 0rem)'); // Reactive variable to store the calculated height
+const matchesExtended = ref(false); // Reactive variable to track if matches are extended or not
+const matchesTransform = ref('translate(0rem, 100%)'); // Reactive variable to store the calculated height
 
 function toggleMatchesExtended() {
-    if (window.innerWidth > 1600) {
-        return; // Do not toggle if the window width is less than 1600px
-    }
-
-    if (matchesExtended.value) {
-        matchesTransform.value = 'translate(0rem, calc(-100% - 5rem))'; // Set the height to 0rem when collapsed
-    } else {
-        matchesTransform.value = 'translate(0rem, 0rem)'; // Set the height to the full height when expanded
-    }
-
     matchesExtended.value = !matchesExtended.value; // Toggle the state
 }
 
@@ -97,6 +94,67 @@ async function reload() {
     await getPlayerRanking();
 }
 
+function selectPlayer(pId: string) {
+    if (!highlightPin.value) {
+        highlightedPlayerId.value = pId;
+    }
+}
+
+function unselectPlayer(pId: string) {
+    if (highlightedPlayerId.value == pId && !highlightPin.value) {
+        highlightedPlayerId.value = '';
+    }
+}
+
+function pin_player(pId: string) {
+    if (highlightedPlayerId.value == pId) {
+        highlightPin.value = !highlightPin.value;
+    } else {
+        highlightedPlayerId.value = pId;
+        highlightPin.value = true;
+    }
+}
+
+function getPlayerScore(id: string): [number, number, number] {
+    const score: [number, number, number] = [0, 0, 0];
+
+    for (const match of Object.values(props.division.matches ?? {})) {
+        if (match == null) {
+            continue;
+        }
+        else {
+            if (match.p1.id == id || match.p2.id == id) {
+                const i = 
+                    (match.p1.id == id && (match.p1score ?? 0) > (match.p2score ?? 0)) || 
+                    (match.p2.id == id && (match.p1score ?? 0) < (match.p2score ?? 0)) ? 0 : 
+                    (match.p1score) ? 1 : 2;
+                    
+                score[i] += 1;
+            }
+        }
+    }
+
+    return score;
+}
+
+const playerAccounts = ref<Map<string, PubAccountInfo>>(new Map());
+const accStorage = accountsStore();
+
+const accPlaceholder = {
+    username: 'Loading...',
+} as PubAccountInfo;
+
+watch(
+    () => [props.division.players],
+    async () => {
+        const accounts = await accStorage.get_accounts_min(props.division.players.map((p) => p.id));
+        playerAccounts.value = new Map(
+            accounts.map((account) => [account.id, account])
+        );
+    },
+    { immediate: true },
+);
+
 watch(
     () => props.selectorHeight,
     (newHeight) => {
@@ -118,6 +176,7 @@ watch(
 watch(
     () => props.division,
     async (newDivision) => {
+        highlightPin.value = false;
         setPlaceholder();
         await getPlayerRanking();
         // Perform any updates needed when the division changes
@@ -127,6 +186,10 @@ watch(
 
 onMounted(async () => {
     setDivisionHeight();
+    const accounts = await accStorage.get_accounts_min(props.division.players.map((p) => p.id));
+    playerAccounts.value = new Map(
+        accounts.map((account) => [account.id, account])
+    );
 
     setTimeout(async () => {
         setDivisionHeight();
@@ -139,28 +202,70 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="division h-100 w-100">
-        <div class="info-container w-100 py-3" v-if="division?.players.length && !props.placeholder">
-            <div class="col-8 col-xxl-7 col-xml-11 item-container d-flex flex-column align-items-center match-container" :style="{ transform: matchesTransform}">
-                <div class="scroll-container flex-grow-1">
-                    <div class="transition-width matches">
-                        <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="w-auto">
-                            <MatchScoreComponent :match="match" :user_id="props.UserId" :editMode="allowEditSeason" v-on:reload="reload" class="match" :class="{'match-highlight': match.p1.id == highlightedPlayerId || match.p2.id == highlightedPlayerId}"/>
-                        </div>
+    <div class="d-flex division h-100 w-100 flex-grow-1 p-0 overflow-hidden">
+        <div class="d-flex flex-column info-container w-100" v-if="division?.players.length && !props.placeholder">
+
+            <div class="d-flex flex-row players">
+                <div v-for="p of performances" 
+                class="player"
+                @mouseover="selectPlayer(p.player.id)"
+                @mouseleave="unselectPlayer(p.player.id)"
+                @click="pin_player(p.player.id)"
+                :class="{'pinned': highlightPin && highlightedPlayerId == p.player.id}"
+                >
+                    <DiscordAvatarComponent class="avatar" :account="playerAccounts.get(p.player.id) || accPlaceholder"></DiscordAvatarComponent>
+                    <div class="tag ms-2">{{ p.player.tag }}</div>
+                    <div class="score ms-2">{{ getPlayerScore(p.player.id)[0] }}-{{ getPlayerScore(p.player.id)[1] }}</div>
+                </div>
+                <div class="ms-auto toggle-arrow" @click="toggleMatchesExtended" :class="{toggled: matchesExtended}"><i class="icon-chevron-up"></i></div>
+            </div>
+
+
+            <div 
+                class="leaderboard-scroll"
+                :class="{'empty': !matchesExtended && !highlightPin, extended: matchesExtended}"
+                :style="{ '--extended-height': `${performances.length * 4}rem` }"
+            >
+                <div class="
+                    leaderboard-container
+                    d-flex flex-column w-100" 
+                    :style="{ transform: matchesTransform }">
+                    <LeaderbordComponent 
+                        class="leaderbord" 
+                        v-model:highlightedPlayerId="highlightedPlayerId" 
+                        v-model:highlightPing="highlightPin" 
+                        :performances="performances" 
+                        :divisionName="division?.name || 'Unnamed Division'" 
+                        :minimal="!matchesExtended"
+                        :matches="Object.values(division.matches)"
+                    />
+                </div>
+            </div>
+
+
+            <div class="scroll-container flex-grow-1">
+                <div class="matches">
+                    <div v-for="[key, match] in Object.entries(division?.matches || {})" :key="key" class="w-auto">
+                        <MatchScoreComponent 
+                            :match="match" :user_id="props.UserId" 
+                            :editMode="allowEditSeason" 
+                            :PopoverBoundary="PopoverBoundary" 
+                            v-on:reload="reload" 
+                            class="match" 
+                            :class="{'match-highlight': match.p1.id == highlightedPlayerId || match.p2.id == highlightedPlayerId}"
+                        />
                     </div>
                 </div>
-                <div class="toggle-arrow mt-2" @click="toggleMatchesExtended"><i class="icon-chevron-down"></i></div>
             </div>
-            <div class="col-4 col-xxl-4 col-xml-11 col-10 justify-content-center transition-width item-container d-flex h-100 leaderboard-container" :style="{ transform: matchesTransform }">
-                <div class="leaderboard-ref d-flex flex-column align-items-center" ref="leaderboardRef">
-                    <div class="toggle-arrow mb-2" @click="toggleMatchesExtended"><i class="icon-chevron-up"></i></div>
-                    <LeaderbordComponent class="leaderbord" v-model:highlightedPlayerId="highlightedPlayerId" :performances="performances" :divisionName="division?.name || 'Unnamed Division'" />
-                </div>
-            </div>
+
+
+
         </div>
+
         <div v-else class="placeholder">
             <h2 class="text-highlight transition-0">{{ placeholder }}</h2>
         </div>
+
     </div>
 </template>
 
@@ -169,51 +274,44 @@ onMounted(async () => {
 
 // primary container
 .division {
-    width: 100%;
-    height: fit-content; // makes the division height equal to the leaderbord height
-
-    display: flex;
-    align-items: flex-start;
-
-    padding-top: 0;
-    // padding-left: 1rem;
-    // padding-right: 1rem;
-    padding-bottom: 0rem;
-
-    overflow-x: hidden;
-    overflow-y: hidden;
-    scrollbar-width: none;
-
+    justify-content: flex-start;
     transition: all 0.7s ease-in-out;
 
     * {
         transition: all 0.7s ease-in-out;
     }
 
-    @media (max-width: $leaderboard-breakpoint) {
+    @include media-breakpoint-down(xl) {
         overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
     }
 }
 
 // holds all the content in case division is active
 .info-container {
+    --division-transition: height 0.7s ease-in-out, transform 0.7s ease-in-out;
+    @include media-breakpoint-up(xl) { --division-transition: height 0.7s ease-in-out, width 0s, transform 0s ease-in-out;}
+
+    position: relative;
+
     height: 100%; // will imediatly be changed to the height of the leaderbord, avoids weird loading transition on page load though
     width: 100%;
     overflow-y: hidden;
     overflow-x: hidden;
     scrollbar-width: none; /* For Firefox */
-    justify-content: space-around;
+    justify-content: flex-start;
 
     display: flex;
-    flex-direction: row; /* Align items in a row */
-    flex-wrap: wrap;
 
-    @media (max-width: $leaderboard-breakpoint) {
+    * {
+        transition: var(--division-transition);
+    }
+
+    @include media-breakpoint-down(xl) {
         overflow: visible !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
     }
 
 
-    @include media-breakpoint-down(md) {
+    @include media-breakpoint-down(xl) {
         padding: 0 1rem;
         > * {
             width: 100% !important;
@@ -221,35 +319,62 @@ onMounted(async () => {
     }
 }
 
-// holds the matches
-.match-container {
-    max-height: calc(100% - 5rem); /* I know that this sucks ass but Im sooo tierd */
-    margin-top: 2rem;
-    margin-bottom: 2.5rem;
-
-    transition: all 0.6s ease-in-out;
-}
-
 // holds the leaderboard
-.leaderboard-container {
-    height: fit-content !important;
-    transition: all 0.65s ease-in-out !important;
+.leaderboard-scroll {
+    --extended-height: 20rem;
+    // position: absolute;
+    // z-index: 50;
+    // top: 4rem;
+    width: 100%;
 
-    //min-width: 22rem;
-    margin: 2.5rem;
-    margin-top: 2rem;
-    margin-inline: 0rem;
-}
+    min-height: 0rem !important;
+    overflow-y: scroll;
+    overflow-x: hidden;
 
-.item-container {
-    transition: all 0.7s ease-in-out !important;
+    
 
-    @media (max-width: $leaderboard-breakpoint) {
-        margin-bottom: 5rem;
+    transition: all 0.35s ease-in-out;
+    border-bottom: 1px solid $border-color;
+
+    &.empty {
+        height: 0rem;
     }
 
-    @media (min-width: $leaderboard-breakpoint) {
-        transform: none !important; /* In order to toggle leaderbord and matches overflow will be hidden*/
+    &:not(.empty) {
+        height: 4rem;
+        min-height: 4rem !important;
+        overflow-y: hidden;
+    }
+
+    &.extended {
+        height: var(--extended-height) !important;
+        min-height: var(--extended-height) !important;
+        overflow-y: hidden !important;
+    }
+}
+
+
+.leaderboard-container {
+    justify-content: flex-start;
+
+    background-color: color-mix(in srgb, $darker-bg 80%, black);
+
+    border-left: 1px solid border-color;
+
+    transition:
+        width 0.5s ease,
+        var(--division-transition);
+
+    @include media-breakpoint-up(xl) {
+        transform: translate(0, 0) !important;
+    }
+
+    @include media-breakpoint-down(xl) {
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        width: 100% !important;
     }
 }
 
@@ -258,15 +383,14 @@ onMounted(async () => {
     overflow-y: scroll !important;
     overflow-x: hidden;
     scrollbar-width: none; /* For Firefox */
-    max-height: 100%;
-    height: fit-content;
+
+    height:max-content;
     width: 100%;
 
-    padding: 1.5rem;
+    // border-radius: 12px;
+    // border: solid 1px $secondary-border-color;
 
-    border-radius: 12px;
-    border: solid 1px $secondary-border-color;
-    // box-shadow: inset 0px 0px 6px rgba(145, 64, 170, 0.15);
+    //box-shadow: inset 1px 1px 10px color-mix(in srgb, transparent, var(--primary) 10%);
     // TODO: meant to highlight important part, but looks pretty ass as of now
     // maybe have it be the division color?
 
@@ -278,17 +402,98 @@ onMounted(async () => {
 // container of all match scores, will overflow if too many matches are present
 .matches {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 200px);
-    grid-gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 20%));
+    grid-gap: 2.5rem;
+    
     justify-content: space-between !important; /* Align items to the left */
-    width: 100%;
-    height: fit-content;
 
-    @include media-breakpoint-down(sm) {
-        display: flex;
-        flex-wrap: wrap;
+    width: 100%;
+    // height: 100%;
+
+    padding: 1rem;
+    padding-bottom: 2.5rem;
+
+    @include media-breakpoint-up(xxxl) {
+        grid-template-columns: repeat(auto-fill, 17%);
+        grid-gap: 3rem;
+    }
+
+
+    @include media-breakpoint-down(lg) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 45%);
+
+        grid-gap: 1rem;
+    }
+
+    @include media-breakpoint-down(md) {
+        grid-template-columns: repeat(auto-fill, 100%);
     }
 }
+
+
+// player quick selection
+.players {
+    min-height: 4rem !important;
+    height: 4rem;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding-inline: 1rem;
+
+    border-bottom: 1px solid $border-color;
+
+    justify-content: flex-start;
+    align-items: center;
+
+    gap: 2rem;
+
+    .player {
+        display: flex;
+        flex-direction: row;
+
+        align-items: center;
+
+        height: 2.5rem;
+        min-width: 7rem;
+
+        padding: 0.25rem 0.5rem;
+
+        border: 1px solid $border-color;
+        border-radius: 4px;
+
+        color: $text-color;
+
+        font-size: 0.9rem;
+
+        &.pinned {
+            background-color: color-mix(in srgb, var(--primary) 80%, rgb(255, 255, 255)) !important;
+            color: black;
+        }
+
+        .avatar {
+            height: 1.75rem;
+            width: 1.75rem;
+            border-radius: 50%;
+        }
+
+        .tag {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .score {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            font-weight: 400;
+            font-family: monospace;
+        }
+
+        &:hover {
+            background: color-mix(in srgb, white 7%, rgba(255, 255, 255, 0));
+        }
+    }
+}
+
+
 
 // leaderbord container
 .leaderbord {
@@ -298,12 +503,13 @@ onMounted(async () => {
     flex-basis: auto; /* Allow it to take its intrinsic size */
 }
 
-.leaderboard-ref {
-    height: fit-content;
-}
-
 .toggle-arrow {
-    padding: 0.5rem;
+    position: absolute;
+    // top: 90%;
+    right: 2rem;
+
+    padding: 0.35rem;
+
     height: 2rem;
     width: 2rem;
     border-radius: 2rem;
@@ -311,13 +517,22 @@ onMounted(async () => {
     justify-content: center;
     align-self: center;
     cursor: pointer;
+
+    transition: all 0.2s ease-in-out;
+
     &:hover {
         background-color: rgba(255, 255, 255, 0.2);
     }
 
-    @media (min-width: $leaderboard-breakpoint) {
-        display: none;
+    transform: rotate(-90deg);
+
+    &.toggled {
+        transform: rotate(-180deg);
     }
+
+    // @include media-breakpoint-up(xl) {
+    //     display: none;
+    // }
 }
 
 .placeholder {
@@ -335,79 +550,6 @@ onMounted(async () => {
     cursor: default;
 }
 
-// at 1949px matches and leaderbord start to stack on top of each other
-@media (max-width: $leaderboard-breakpoint) {
-    .col-xml-11 {
-        width: 92.6%;
-    }
-}
-
-.col-05 {
-    width: 20px !important;
-    height: 40px !important;
-}
-
-.transition-width {
-    transition: width 0.5s ease;
-}
-
-.col-12-cust {
-    width: 99%;
-}
-
-@media (min-width: 1599px) {
-    .row {
-        align-items: flex-start;
-    }
-}
-
-@media (max-width: 1599px) {
-    .matches {
-        justify-content: center !important; /* Align items to the left */
-    }
-
-    .conditional-break {
-        display: block !important;
-        height: 0;
-    }
-
-    .anti-conditional-break {
-        display: none !important;
-    }
-}
-
-@media (max-width: 799px) {
-    .col-sm-0-cust {
-        width: 0rem !important;
-        padding: 0rem !important;
-        margin: 0rem !important;
-        overflow: hidden !important;
-    }
-
-    .conditional-break {
-        display: none !important;
-    }
-}
-
-.conditional-break {
-    display: none;
-}
-
-.compressed {
-    padding-top: 16px !important;
-    padding-left: 0rem !important;
-    padding-right: 0rem !important;
-    transition: width 0.5s ease !important; /* Smooth opacity transition */
-    width: 0px !important;
-    height: 0px !important;
-    overflow: hidden !important;
-    overflow: hidden;
-}
-
-.displayed {
-    transition: width 0.5s ease !important; /* Smooth opacity transition */
-    overflow: hidden;
-}
 .transition-0 {
     transition: 0.1s !important;
 }

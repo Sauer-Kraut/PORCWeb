@@ -17,6 +17,9 @@ struct QueryStruct {
     start_timestamp: DateTime<Utc>,
 }
 
+// Lord have mercy on our souls
+// Someone please make this less terrible
+
 pub async fn get_match_events_from_ids(match_event_ids: Vec<i32>, pool: PgPool) -> Result<Vec<MatchEvent>, Box<dyn std::error::Error>> {
     let query_path = "src/liberary/account_lib/match_event/storage/queries/get_match_event_from_id.sql";
 

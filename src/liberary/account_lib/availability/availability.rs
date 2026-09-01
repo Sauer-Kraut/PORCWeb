@@ -18,14 +18,14 @@ pub enum Repetition {
 }
 
 impl Repetition {
-    pub fn from_type_code(code: i16) -> Result<Self, String> {
+    pub fn from_type_code(code: i16) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         match code {
             0 => Ok(Repetition::Once),
             1 => Ok(Repetition::Daily),
             2 => Ok(Repetition::Weekly),
             3 => Ok(Repetition::Monthly),
             4 => Ok(Repetition::Yearly),
-            _ => Err(format!("Invalid repetition type code: {}", code)),
+            _ => Err(format!("Invalid repetition type code: {}", code).into()),
         }
     }
 

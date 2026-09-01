@@ -154,98 +154,92 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="justify-content-center">
-        <div class="inner-container">
-            <div class="col-10 d-flex flex-column">
-                <h1 class="decor-title mb-2 no-wrap" v-if="signup == null">Sign Up</h1>
-                <h1 class="decor-title mb-2 no-wrap" v-else>Signed Up</h1>
+    <div class="inner-container">
+        <div class="col-10 d-flex flex-column">
+            <h5 class="modal-title mb-2 no-wrap" v-if="signup == null">Sign Up</h5>
+            <!-- <h1 class="decor-title mb-2 no-wrap" v-else>Signed Up</h1> -->
 
-                <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
-                <!-- TODO: for the love of god make this automatic-->
-                <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+            <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">{{ formatDate(termDate) }}</span></h3>
+        </div>
+        <div class="form-container row">
+            <form class="col-12" v-if="!signup">
+                <fieldset :disabled="!(!isLoggedIn || !signup || user_id == '0')">
 
-                <h3 class="content-subtitle"><span class="bold">Next season</span>, starting <span class="bold">{{ formatDate(termDate) }}</span></h3>
-            </div>
-            <div class="form-container row">
-                <form class="col-12" v-if="!signup">
-                    <fieldset :disabled="!(!isLoggedIn || !signup || user_id == '0')">
+                    <div class="p-2"></div>
 
-                        <div class="p-2"></div>
-
-                        <div c-lass="col-12">
-                            <div class="row d-flex mb-4">
-                                <h5 class="content-subtitle bold m-0">User Info</h5>
-                                <div class="seperator-h ms-2 me-4"></div>
+                    <div c-lass="col-12">
+                        <div class="row d-flex mb-4">
+                            <h5 class="content-subtitle bold m-0">User Info</h5>
+                            <div class="seperator-h ms-2 me-4"></div>
+                        </div>
+                        <label for="disabledTextInput" class="form-label">Discord username</label>
+                        <input type="text" id="disabledTextInput" class="form-input" placeholder="username" v-model="username" />
+                        <div class="row d-flex justify-content-space-between">
+                            <div class="col-5">
+                                <label for="disabledTextInput" class="form-label">BP</label>
+                                <input type="number" step="1000" min="0" id="disabledTextInput" class="form-input" placeholder="00000" v-model="BP" />
                             </div>
-                            <label for="disabledTextInput" class="form-label">Discord username</label>
-                            <input type="text" id="disabledTextInput" class="form-input" placeholder="username" v-model="username" />
-                            <div class="row d-flex justify-content-space-between">
-                                <div class="col-5">
-                                    <label for="disabledTextInput" class="form-label">BP</label>
-                                    <input type="number" step="1000" min="0" id="disabledTextInput" class="form-input" placeholder="00000" v-model="BP" />
-                                </div>
-                                <div class="col-6">
-                                    <label for="disabledSelect" class="form-label">Region</label>
-                                    <select id="disabledSelect" class="form-select form-input" v-model="region" placeholder="Select a region">
-                                        <option>Europe</option>
-                                        <option>US East</option>
-                                        <option>US West</option>
-                                        <option>Austrailia</option>
-                                        <option>Japan</option>
-                                        <option>Asia</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mb-3 mt-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck" v-model="isOnDiscord" />
-                                    <label class="form-label" for="disabledFieldsetCheck"> I am on the PORC discord server </label>
-                                </div>
-                            </div>
-                            <div class="p-2"></div>
-                            <div class="d-flex flex-row justify-content-between align-items-center">
-                                <button type="button" class="btn btn-primary col-auto button" @click="confirmInput">Submit</button>
-                                <a v-if="!isLoggedIn" class="col-auto btn btn-secondary me-2" :href="discordAuthURL">Log in</a>
+                            <div class="col-6">
+                                <label for="disabledSelect" class="form-label">Region</label>
+                                <select id="disabledSelect" class="form-select form-input" v-model="region" placeholder="Select a region">
+                                    <option>Europe</option>
+                                    <option>US East</option>
+                                    <option>US West</option>
+                                    <option>Austrailia</option>
+                                    <option>Japan</option>
+                                    <option>Asia</option>
+                                </select>
                             </div>
                         </div>
-                    </fieldset>
-                </form>
-                <!-- Alternative card for existing signup -->
-                <div v-else class="col-12">
-
-                    <fieldset>
-
-                        <div class="p-2"></div>
-
-                        <div c-lass="col-12">
-                            <div class="row d-flex mb-3">
-                                <h5 class="content-subtitle bold m-0">Submitted Info</h5>
-                                <div class="seperator-h ms-2 me-4"></div>
-                            </div>
-                            
-                            <label for="disabledTextInput" class="form-label">Discord username</label>
-                            <div class="submitted-field col-7">{{ signup.username }}</div>
-
-                            <div class="row d-flex justify-content-space-between">
-                                <div class="col-5">
-                                    <label for="disabledTextInput" class="form-label">BP</label>
-                                    <div class="submitted-field col-12">{{ signup.bp }}</div>
-                                </div>
-                                <div class="col-6">
-                                    <label for="disabledTextInput" class="form-label">Region</label>
-                                    <div class="submitted-field col-12">{{ signup.region }}</div>
-                                </div>
-                            </div>
-                            <div class="mb-3 mt-2 pt-1 ps-1">
-                                Signed up at {{ new Date(signup.date * 1000).toLocaleString() }}
-                            </div>
-                            <div class="p-2"></div>
-                            <div class="d-flex flex-row justify-content-between align-items-center ps-1 pe-1">
-                                <a type="button" class="btn btn-danger-sec col-auto button" :href="'https://discord.gg/2n9prYYZjS'" @click="confirmInput">Request Withdrawl</a>
+                        <div class="mb-3 mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck" v-model="isOnDiscord" />
+                                <label class="form-label" for="disabledFieldsetCheck"> I am on the PORC discord server </label>
                             </div>
                         </div>
-                    </fieldset>
-                </div>
+                        <div class="p-2"></div>
+                        <div class="d-flex flex-row justify-content-between align-items-center">
+                            <button type="button" class="btn btn-primary col-auto button" @click="confirmInput">Submit</button>
+                            <a v-if="!isLoggedIn" class="col-auto btn btn-secondary me-2" :href="discordAuthURL">Log in</a>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+            <!-- Alternative card for existing signup -->
+            <div v-else class="col-12">
+
+                <fieldset>
+
+                    <div class="p-2"></div>
+
+                    <div c-lass="col-12">
+                        <div class="row d-flex mb-3">
+                            <h5 class="content-subtitle bold m-0">Submitted Info</h5>
+                            <div class="seperator-h ms-2 me-4"></div>
+                        </div>
+                        
+                        <label for="disabledTextInput" class="form-label">Discord username</label>
+                        <div class="submitted-field col-7">{{ signup.username }}</div>
+
+                        <div class="row d-flex justify-content-space-between">
+                            <div class="col-5">
+                                <label for="disabledTextInput" class="form-label">BP</label>
+                                <div class="submitted-field col-12">{{ signup.bp }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label for="disabledTextInput" class="form-label">Region</label>
+                                <div class="submitted-field col-12">{{ signup.region }}</div>
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-2 pt-1 ps-1">
+                            Signed up at {{ new Date(signup.date * 1000).toLocaleString() }}
+                        </div>
+                        <div class="p-2"></div>
+                        <div class="d-flex flex-row justify-content-between align-items-center ps-1 pe-1">
+                            <a type="button" class="btn btn-danger-sec col-auto button" :href="'https://discord.gg/2n9prYYZjS'" @click="confirmInput">Request Withdrawl</a>
+                        </div>
+                    </div>
+                </fieldset>
             </div>
         </div>
     </div>
@@ -265,7 +259,7 @@ onMounted(async () => {
     border: 1px solid $border-color;
     border-radius: 16px;
     background-color: #0000001d;
-    padding: 20px;
+    padding: 1.5rem;
 
     // box-shadow: rgba(0, 0, 0, 0.7) 0 0 40px;
 }

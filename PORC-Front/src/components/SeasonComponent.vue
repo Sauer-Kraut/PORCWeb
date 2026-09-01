@@ -88,7 +88,7 @@
 
     let groupedDivisions: DivisionModel[][] = [];
 
-
+    const PopoverContainer = ref<HTMLElement | null>(null);
 
     // Reactive variable for dynamic height
     const selectorRef = ref<HTMLElement | null>(null);
@@ -165,7 +165,7 @@
 </script>
 
 <template>
-    <div class="season-component-container">
+    <div class="season-component-container" ref="PopoverContainer">
         <div class="season-header row">
             <Logo class="header-img col-auto" :primaryColor="'rgb(26, 23, 23)'"></Logo>
 
@@ -211,7 +211,7 @@
                         class="selector" :style="{ 'max-width': '100%', 'opacity': opacity}" 
                     />
             </div>
-            <div class="col col-ms-12 division-container">
+            <div class="col col-ms-12 division-container d-flex flex-column">
                 <DivisionComponent v-if="selectedDivision" 
                     :selector-height="selectorHeight" 
                     :placeholder="hide_progress" 
@@ -219,9 +219,11 @@
                     :division="selectedDivision" 
                     :UserId="observer_id" 
                     :allowEditSeason="allowEditSeason" 
+                    :-popover-boundary="PopoverContainer ?? undefined"
                     class="division" 
-                    :style="{ maxHeight: selectorHeight + 'px'}"/>
+                    />
             </div>
+            <!-- :style="{ maxHeight: selectorHeight + 'px'}" -->
         </div>
     </div>
 </template>
@@ -230,10 +232,10 @@
     @import '@/assets/scss/styles.scss';
 
     $background-color: $darker-bg;
-    $border-color: $secondary-border-color;
+    $border-color: $border-color;
 
-    $header-height: 5rem;
-    $body-height: 30rem;
+    $header-height: 5.5rem;
+    $body-height: 50rem;
 
     .season-component-container {
         display: flex;
@@ -241,7 +243,11 @@
         height: calc($body-height + $header-height) !important;
         padding: 0rem !important;
 
-        border-radius: 16px;
+        border-radius: 8px;
+        border: 1px solid $border-color;
+        // border: 1px solid color-mix(in srgb, $secondary-border-color 60%, transparent); 
+
+        overflow: hidden;
 
         box-shadow: 0 0 35px rgba(0, 0, 0, 0.644); // quite aggressive shadow so it sticks out more
 
@@ -255,10 +261,10 @@
         height: $header-height;
         width: 100%;
 
-        border: 1px solid $border-color;
+        // border: 1px solid $border-color;
 
-        border-top-left-radius: 16px;
-        border-top-right-radius: 16px;
+        // border-top-left-radius: 16px;
+        // border-top-right-radius: 16px;
 
         margin: 0 !important;
         padding: 0 !important;
@@ -267,12 +273,12 @@
     }
 
     .header-img {
-        padding: 0.5rem !important;
+        padding: 0.4rem !important;
 
         margin: 0.5rem;
-        margin-left: 1rem;
-        width: 3.5rem;
-        height: 3.5rem;
+        margin-left: 1.25rem;
+        width: 3rem;
+        height: 3rem;
         object-fit: cover;
 
         border-radius: 16px;
@@ -292,7 +298,7 @@
     }
 
     .header-title {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 600;
         color: #ffffff;
         margin-left: 0.5rem;
@@ -306,6 +312,7 @@
     }
 
     .header-subtitle {
+        font-size: 0.925rem;
         color: #979797 !important;
         margin-left: 0.5rem;
         align-self: center;
@@ -332,9 +339,8 @@
         
         transition: all 0.2s !important;
 
-        border-color: white;
         background-color: rgb(26, 23, 23) !important;
-        border-width: 1px;
+        border: 1px solid white;
 
         font-weight: 600;
 
@@ -382,15 +388,15 @@
 
         border-right: 1px solid $border-color;
 
-        border: 1px solid $border-color;
-        // border-top-left-radius: 16px;
-        border-bottom-left-radius: 16px;
+        border-top: 1px solid $border-color;
+        // // border-top-left-radius: 16px;
+        // border-bottom-left-radius: 16px;
 
         // background-color: rgb(27, 29, 30);
         transition: all 0.6s ease !important;
 
         @include media-breakpoint-up(md) {
-            width: 14rem;
+            width: 5rem;
         }
 
         * {
@@ -402,7 +408,7 @@
         height: 100%;
         overflow: hidden;
         background-color: $background-color;
-        border: 1px solid $border-color;
+        border-top: 1px solid $border-color;
         border-left: 0px;
         border-bottom-right-radius: 16px;
     }

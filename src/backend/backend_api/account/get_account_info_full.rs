@@ -35,17 +35,23 @@ pub async fn get_account_info_full_request(query: web::Query<RecvPackage>, appst
     let mut account_info_handles = vec!();
     let mut account_infos = vec!();
 
-    for user_id in query_ids.clone() {
+    for user_id in query_ids {
 
         account_info_handles.push(get_account_full(user_id, appstate.pool.clone()));
     }
 
     let mut match_event_ids = vec!();
+    let mut event_map = HashMap::new();
         
     for account_info in join_all(account_info_handles).await {
 
         match account_info {
-            Ok(value) => {
+            Ok((value, match_events)) => {
+
+                for match_event in match_events.iter() {
+
+                    let _ = event_map.insert(match_event.id.unwrap(), match_event.clone());
+                }
                 
                 for id in value.clone().schedule.unwrap_or(Schedule{ availabilities: vec!(), matches: vec!(), note: "".to_string() }).matches.iter() {
 
@@ -59,14 +65,6 @@ pub async fn get_account_info_full_request(query: web::Query<RecvPackage>, appst
             Err(_e) => {} // ignoring error, since finding nothing also returns an error 
             // TODO: make better by making get_account option for that error specifically
         }
-    }
-
-    let match_events = get_match_events_from_ids(match_event_ids.clone(), appstate.pool.clone()).await?;
-    let mut event_map = HashMap::new();
-
-    for (index, match_event) in match_events.iter().enumerate() {
-
-        let _ = event_map.insert(*(match_event_ids.get(index).unwrap()), match_event.clone());
     }
 
     if account_infos.is_empty() {

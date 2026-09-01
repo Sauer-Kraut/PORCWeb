@@ -2,8 +2,8 @@
     import type { DiscordEvent } from '@/models/discord/DiscordEvent';
     import { divisionNames } from '@/storage/defaults';
     import { formatTimeDiff } from '@/util/FormatTime';
-import { getDivisionImage } from '@/util/ImageHelper';
-import { filter_str } from '@/util/stringFilter';
+    import { getDivisionImage } from '@/util/ImageHelper';
+    import { filter_str } from '@/util/stringFilter';
     import { ref, computed, watch, onMounted } from 'vue';
 
     const props = defineProps<{
@@ -32,7 +32,7 @@ import { filter_str } from '@/util/stringFilter';
                 return division;
             }
         }
-        return "meteorite";
+        return "stone";
     }
 
     function getPlayers(): [string, string] {
@@ -90,13 +90,13 @@ import { filter_str } from '@/util/stringFilter';
             </div>
         </div>
 
-        <div class="d-flex flex-column flex-grow-1 ms-3">
+        <div class="d-flex flex-column justify-content-center flex-grow-1 ms-3">
 
             <!-- Event Content-->
-            <div class="d-flex flex-row event-content">
-                <h4 class="event-title">
+            <div class="d-flex flex-row event-content mt-1">
+                <h4 class="event-title mb-1">
                     {{ filter_str(getPlayers()[0], 11) }}
-                    <span class="mx-3">vs.</span>
+                    <span class="mx-1 spliter">vs.</span>
                     {{ filter_str(getPlayers()[1], 11) }}
                 </h4>
 
@@ -109,21 +109,21 @@ import { filter_str } from '@/util/stringFilter';
             </div>
 
             <!-- Event Details -->
-            <div class="d-flex flex-row event-details mb-1">
-                <div class="event-time d-flex flex-row me-2">
-                    <div class="icon-container me-2" style="transform: translateY(-0.07rem)">
+            <div class="d-flex flex-row event-details mb-0">
+                <div class="event-time d-flex flex-row me-1">
+                    <!-- <div class="icon-container me-2" style="transform: translateY(-0.07rem)">
                         <i class="icon icon-calender"></i>
-                    </div>
+                    </div> -->
                     <!-- Jan 26. Friday, 6PM -->
                     {{ formattedDate }}
                 </div>
-                <div class="event-time d-flex flex-row ms-4">
-                    <div class="icon-container me-2" style="transform: translateY(-0.06rem)">
+                <div class="event-time d-flex flex-row ms-3">
+                    <!-- <div class="icon-container me-2" style="transform: translateY(-0.06rem)">
                         <i class="icon icon-globe"></i>
-                    </div>
+                    </div> -->
                     {{ event.place }}
                 </div>
-                <div class="event-time d-flex flex-row ms-4">
+                <div class="event-time d-flex flex-row ms-3">
                     <div class="icon-container me-2" style="transform: translateY(-0.04rem)">
                         <i class="icon icon-group"></i>
                     </div>
@@ -142,15 +142,20 @@ import { filter_str } from '@/util/stringFilter';
     .discord-event {
         scale: 1;
 
+        display: flex;
+        justify-content: center;
+
         border: 1px solid $border-color;
-        border-radius: $border-radius;
+        border-radius: 8px;
+
+        background-color: rgba(255, 255, 255, 0.01);
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.272);
 
-        width: 40rem;
-        height: 5rem;
+        min-width: 30rem;
+        height: 4rem;
         margin: 0 0.4rem;
 
-        padding-top: 0.75rem !important;
+        // padding-top: 0.75rem !important;
 
         // background-color: $dark-bg;
         text-decoration: none;
@@ -160,7 +165,10 @@ import { filter_str } from '@/util/stringFilter';
 
         &:hover {
             background-color: rgba(255, 255, 255, 0.06);
-            scale: 1.01;
+            scale: 1.0;
+
+            transform: translate(4px, 0px);
+            border-left: 4px solid var(--primary);
 
             border-color: var(--primary);
 
@@ -175,12 +183,12 @@ import { filter_str } from '@/util/stringFilter';
 
 
         .event-details {
-            font-size: 0.94rem;
+            font-size: 0.9rem;
             margin-left: 0.1rem;
             color: $muted;
 
             .event-location {
-                font-weight: 600;
+                font-weight: 500;
                 line-height: 1.4rem;
                 font-style: italic;
 
@@ -192,7 +200,7 @@ import { filter_str } from '@/util/stringFilter';
             }
 
             .event-time {
-                font-weight: 600;
+                font-weight: 500;
 
                 .icon-container {
                     margin-top: 0.275rem;
@@ -217,54 +225,58 @@ import { filter_str } from '@/util/stringFilter';
             }
         }
 
-        // .event-live {
-        //     font-size: 0.94rem;
-
-        //     border-radius: 12px;
-        //     padding: 0rem 0.5rem;
-
-        //     height: 1.45rem;
-
-        //     font-weight: 600;
-        //     color: black;
-        //     background-color: var(--primary);
-        // }
-
         .event-upcoming {
+            position: absolute;
+            top: 0.5rem;
+            right: 0rem;
+
             font-size: 0.94rem;
             color: $muted;
             font-weight: 600;
+            
+            padding: 0.25rem;
+            padding-inline: 0.5rem;
+
+            background-color: rgba(255, 255, 255, 0.03);
+
+            border: 1px solid $border-color;
+            border-radius: 6px;
         }
 
-            .division-logo {
-                width: 5rem;
-                height: 5rem;
+        .division-logo {
+            width: 4rem;
+            height: 4rem;
 
-                padding: 0.25rem !important;
+            padding: 0.25rem !important;
 
-                margin: -0.9rem;
-                margin-left: -0.2rem !important;
-                margin-right: -0.5rem !important;
+            transform: translate(0, -3px);
+            margin-left: -0.2rem !important;
+            margin-right: -0.5rem !important;
 
-                line-height: -2rem;
+            line-height: -2rem;
 
-                img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: contain;
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
 
-                    filter: grayscale(0.2) brightness(0.7);
-                    transition: all 0.15s;
-                }
+                filter: grayscale(0.2) brightness(0.7);
+                transition: all 0.15s;
             }
+        }
 
 
         .event-content {
 
             .event-title {
-                font-size: 1.4rem;
+                font-size: 1.1rem;
                 font-weight: 600;
                 color: rgb(255, 255, 255);
+
+                .spliter {
+                    font-size: 0.9rem;
+                    color: $muted;
+                }
             }
         }
 

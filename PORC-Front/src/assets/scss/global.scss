@@ -46,13 +46,14 @@ body {
 textarea:focus,
 .form-select:focus,
 select:focus {
-    border-color: color-mix(in srgb, var(--primary) 50%, white 50%) !important;
+    border-color: color-mix(in srgb, var(--primary) 50%, whitesmoke 50%) !important;
     box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--primary) 25%, transparent) !important;
     outline: 0 !important;
 }
 
 textarea {
     background-color: transparent!important;
+    resize: none !important;
 }
 
 
@@ -66,8 +67,8 @@ textarea {
 
 .btn-primary {
     border: 1px solid var(--primary) !important;
-    background-color: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
-    border-color: color-mix(in srgb, var(--primary) 97%, white 3%) !important;
+    background-color: color-mix(in srgb, var(--primary) 97%, whitesmoke 3%) !important;
+    border-color: color-mix(in srgb, var(--primary) 97%, whitesmoke 3%) !important;
 
     color: black !important;
     
@@ -113,11 +114,11 @@ textarea {
 }
 
 .btn-secondary {
-    border: 1px solid white !important;
-    background-color: transparentize($color: white, $amount: 1) !important;
+    border: 1px solid whitesmoke !important;
+    background-color: transparentize($color: whitesmoke, $amount: 1) !important;
 
     &:hover {
-        background-color: transparentize($color: white, $amount: 0.8) !important;
+        background-color: transparentize($color: whitesmoke, $amount: 0.8) !important;
     }
 }
 
@@ -192,7 +193,7 @@ textarea {
     max-width: 100% !important;
     height: 2.5rem !important;
     background-color: rgba(255, 255, 255, 0.02) !important;
-    color: white !important;
+    color: whitesmoke !important;
 
 
     border-radius: 4px !important;
@@ -219,6 +220,11 @@ textarea:disabled {
     border-color: #666 !important;       /* muted border */
     opacity: 1 !important;               /* prevent default opacity */
     cursor: not-allowed !important;      /* show disabled cursor */
+}
+
+textarea {
+    border-radius: 8px !important;
+    border: 1px solid $border-color !important;
 }
 
 
@@ -277,7 +283,7 @@ input[type=number] {
 }
 
 .secondary {
-    color: white !important;
+    color: whitesmoke !important;
 }
 
 .danger {
@@ -309,7 +315,7 @@ input[type=number] {
     font-weight: 700 !important;
     margin-bottom: 0 !important;
 
-    color: white !important;
+    color: whitesmoke !important;
 }
 
 .decor-title {
@@ -317,7 +323,7 @@ input[type=number] {
     font-weight: 700;
     margin-bottom: 0;
 
-    color: white;
+    color: whitesmoke;
 
     @include media-breakpoint-down(md) {
         font-size: 2.5rem;
@@ -349,12 +355,13 @@ input[type=number] {
     font-weight: 600 !important;
     margin-bottom: 0 !important;
 
-    color: white;
+    color: whitesmoke;
 }
 
 .content-subtitle {
-    font-size: 1.15rem !important;
-    font-weight: 500 !important;
+    font-size: 1.1rem !important;
+    font-weight: 400 !important;
+    letter-spacing: 1px;
 
     color: $muted-text !important;
 }
@@ -369,7 +376,7 @@ input[type=number] {
 .modal-title {
     font-size: 2rem !important;
     font-weight: 600 !important;
-    color: white !important;
+    color: whitesmoke !important;
 }
 
 .spaced-text {

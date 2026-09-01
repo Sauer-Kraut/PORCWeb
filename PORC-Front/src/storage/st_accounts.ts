@@ -8,8 +8,12 @@ import type { MatchEvent } from '@/models/match_event/MatchEvent';
 import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
 import { getCookieValue } from '@/util/GetCookieValue';
 import {defineStore} from 'pinia';
-import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 import { createFetching, isFetching, type Fetching } from './fetching';
+import { postAccountCustomisation } from '@/API/account/PostCustomisation';
+import { postRadarChart } from '@/API/account/PostRadarChart';
+import type { AccountCustomisation } from '@/models/pub_account_info/account_cust/AccountCustomisation';
+import type { RadarChart } from '@/models/pub_account_info/account_cust/radar_chart/RadarChart';
+import { getGlobalRankings } from '@/API/account/GetGlobalRankings';
 
 export const accountsStore = defineStore('accounts', {
     state: (): {loggedInId: string | null | Fetching<PubAccountInfo> | undefined, competiros: Map<string | null, PubAccountInfo | Fetching<PubAccountInfo>>} => ({
@@ -25,6 +29,13 @@ export const accountsStore = defineStore('accounts', {
             const cookieId = getCookieValue("user_id");
             if (cookieId != null) {
                 this.loggedInId = cookieId;
+            }
+
+            let ranking = await getGlobalRankings();
+            for (let acc of ranking) {
+                if (this.competiros.get(acc.id) == undefined) {
+                    await this.set_competitor(acc.id, acc);
+                }
             }
         },
 
@@ -115,6 +126,22 @@ export const accountsStore = defineStore('accounts', {
             }
             else {
                 throw new Error("Tried to post account while account was not fully loaded")
+            }
+        },
+
+        async post_cust() {
+
+            let account = await this.get_login_min();
+            if (account && account.customisation) {
+                await postAccountCustomisation(account.customisation);
+            }
+        },
+
+        async post_radar_chart() {
+
+            let account = await this.get_login_min();
+            if (account && account.customisation?.radar_chart) {
+                await postRadarChart(account.customisation.radar_chart);
             }
         },
 
@@ -414,6 +441,35 @@ export const accountsStore = defineStore('accounts', {
         },
 
 
+        async self_update_customisation(cust: AccountCustomisation) {
+            let account = await this.get_login_full();
+
+            if (account) {
+                account.customisation = cust;
+                await this.set_competitor(null, account);
+                await this.post_cust();
+            }
+            else {
+                throw new Error("cant update customisation while account isnt fully loaded");
+            }
+        },
+
+
+        // could cause issues when the first thing people do is tamper with their radar chart before their cust has been created
+        async self_update_radar_chart(radar: RadarChart) {
+            let account = await this.get_login_full();
+
+            if (account && account.customisation) {
+                account.customisation.radar_chart = radar;
+                await this.set_competitor(null, account);
+                await this.post_cust();
+            }
+            else {
+                throw new Error("cant update customisation while account isnt fully loaded");
+            }
+        },
+
+
         async refresh_accounts(ids: (string | null)[]) {
             const fitIds = await Promise.all(ids.map(async (id) => await this.map_id(id)));
 
@@ -427,6 +483,18 @@ export const accountsStore = defineStore('accounts', {
             }
 
             let res = await this.get_accounts_full(fitIds.filter((id) => typeof id === 'string'));
+        },
+
+        get_ranking(): PubAccountInfo[] {
+            let ranked = [];
+            for (let key of this.competiros.keys()) {
+                let entry = this.get_competitor_entry(key)[0];
+                if (entry != null && entry.stats.global_rank != null) {
+                    ranked.push(entry);
+                }
+            }
+            ranked.sort((a, b) => (a.stats.global_rank ?? 0) - (b.stats.global_rank ?? 0));
+            return ranked;
         }
     }
 })

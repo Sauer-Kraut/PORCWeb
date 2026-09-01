@@ -44,6 +44,9 @@ use tokio::time::{sleep, Duration};
 
 use dotenvy::dotenv;
 
+use crate::backend::backend_api::account::get_global_rankings::get_global_ranking_request;
+use crate::backend::backend_api::account::post_account_cust::post_account_customisation_request;
+use crate::backend::backend_api::account::post_account_radar_chart::post_account_radar_chart_request;
 use crate::backend::backend_api::discord::get_discord_events::get_discord_events_reqeust;
 use crate::backend::backend_api::discord::get_discord_vods::get_discord_vods_reqeust;
 use crate::liberary::discord_lib::discord_event::discord_event::DiscordEvent;
@@ -348,11 +351,20 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/api/account/full")
             .route(web::get().to(get_account_info_full_request)))
 
+            .service(web::resource("/api/account/rankings")
+            .route(web::get().to(get_global_ranking_request)))
+
             .service(web::resource("/api/account/login")
             .route(web::get().to(get_login_request)))
 
             .service(web::resource("/api/account/update")
             .route(web::post().to(post_account_info_request)))
+
+            .service(web::resource("/api/account/cust/update")
+            .route(web::post().to(post_account_customisation_request)))
+
+            .service(web::resource("/api/account/radar/update")
+            .route(web::post().to(post_account_radar_chart_request)))
 
             // /api/matchplan
 

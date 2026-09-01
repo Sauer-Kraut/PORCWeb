@@ -11,6 +11,7 @@
 
     const props = defineProps<Props>()
     const isPlaying = ref(false)
+    const active = ref(false)
 
     const QUALITIES = [
         "sddefault.jpg",
@@ -45,6 +46,7 @@
     const iframeUrl = `https://www.youtube-nocookie.com/embed/${props.videoId}?autoplay=1`
 
     function playVideo() {
+        active.value = true;
         if (!props.noplay) isPlaying.value = true;
     }
 
@@ -71,19 +73,23 @@
         draggable="false"
     >
         <template v-if="!isPlaying">
-            <img :src="thumbnailUrl" :alt="'Video Preview ' + props.videoId" class="thumbnail" draggable="false" @dragstart.prevent />
-            <div class="play-overlay" v-if="!noplay">
-                <div class="triangle"></div>
+            <div class="thumbnail-container" :class="{active: active}">
+                <img :src="thumbnailUrl" :alt="'Video Preview ' + props.videoId" class="thumbnail" draggable="false" @dragstart.prevent />
             </div>
-            <a
-                v-else
-                class="d-flex flex-grow-1 h-100 link-overlay"
-                href="#"
-                draggable="false"
-                @dragstart.prevent
-                @click.prevent="onOverlayClick"
-                :aria-label="`Open video ${props.videoId}`"
-            ></a>
+            <div class="overlay-container">
+                <div class="play-overlay" v-if="!noplay">
+                    <div class="triangle"></div>
+                </div>
+                    <a
+                    v-else
+                    class="d-flex flex-grow-1 h-100 link-overlay"
+                    href="#"
+                    draggable="false"
+                    @dragstart.prevent
+                    @click.prevent="onOverlayClick"
+                    :aria-label="`Open video ${props.videoId}`"
+                ></a>
+            </div>
         </template>
 
         <template v-else>
@@ -107,44 +113,90 @@
     -webkit-user-drag: none;
     user-select: none;
 
-    .thumbnail {
+    .thumbnail-container {
         width: 100%;
         height: 100%;
-        object-fit: cover;
         border-radius: 8px;
-        -webkit-user-drag: none;
-        user-select: none;
+
+        .thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+
+        &:not(.active) {
+            &::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+
+                z-index: 1;
+
+                // transform: translateX(-100%);
+                border-radius: 4px;
+                height: 100%;
+                width: 100%;
+                background: black;
+                opacity: 0.25;
+                transition: all 0.1s;
+                pointer-events: none;
+            }
+        }
+        
     }
 
-    .play-overlay {
+    .overlay-container {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background: rgba(0,0,0,0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        transition: transform 0.2s, background 0.2s;
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+
+        transition: background-color 0.3s ease;
 
         &:hover {
-            background: rgba(0,0,0,0.8);
-            transform: translate(-50%, -50%) scale(1.1);
+            .play-overlay {
+                background: rgba(0, 0, 0, 0.8);
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+
+            background-color: rgba(0, 0, 0, 0.2);
         }
 
-        .triangle {
-            width: 0;
-            height: 0;
-            border-left: 20px solid white;
-            border-top: 12px solid transparent;
-            border-bottom: 12px solid transparent;
-            margin-left: 2px;
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+
+            z-index: 10;
+
+            transform: translate(-50%, -50%);
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transition: transform 0.2s, background 0.2s;
+
+            .triangle {
+                width: 0;
+                height: 0;
+                border-left: 20px solid white;
+                border-top: 12px solid transparent;
+                border-bottom: 12px solid transparent;
+                margin-left: 2px;
+            }
         }
     }
+    
 
     .link-overlay {
         position: absolute;
