@@ -1,7 +1,7 @@
 <script setup lang="ts">
-    import { onBeforeUnmount, nextTick, onMounted, ref } from 'vue';
-    import { computePosition, autoUpdate } from '@floating-ui/dom';
-    import { arrow, type Boundary } from '@floating-ui/vue';
+    import { onBeforeUnmount, nextTick, onMounted, ref, watch } from 'vue';
+    import { autoUpdate } from '@floating-ui/dom';
+    import type { Rect } from '@floating-ui/vue';
     import type { TooltipCommand, TooltipContext, TooltipEvent } from './PopoverEvaluator';
 
     const props = defineProps<{
@@ -10,7 +10,7 @@
             tooltip: HTMLElement,
             arrow: HTMLElement,
             strategy?: "fixed" | "absolute",
-            popoverBoundary?: Boundary,
+            popoverBoundary?: Rect,
             boundaryPadding?: number,
             popover_offset?: number,
         ) => void | Promise<void>;
@@ -35,9 +35,15 @@
 
     const hidden = ref(true);
 
-    const hideDelay = props.hideDelay ?? 0; // ms
+    const hideDelay = props.hideDelay ?? 0;
     const hideTimeout = ref<number | null>(null);
-
+    let cleanupPositioning: (() => void) | null = null;
+    let attachedAnchor: HTMLElement | null = null;
+    let anchorMouseEnterListener: (() => void) | null = null;
+    let anchorMouseLeaveListener: (() => void) | null = null;
+    let tooltipMouseEnterListener: (() => void) | null = null;
+    let tooltipMouseLeaveListener: (() => void) | null = null;
+    let documentClickListener: ((event: MouseEvent) => void) | null = null;
 
     function extendBoundaryDown(el: HTMLElement, extraPx: number) {
         const rect = el.getBoundingClientRect();
@@ -51,54 +57,59 @@
 
     function showTooltip() {
         if (tooltipRef.value && props.anchor && arrowRef.value) {
-            if (hideTimeout.value) {
+            if (hideTimeout.value !== null) {
                 clearTimeout(hideTimeout.value);
                 hideTimeout.value = null;
             }
 
             hidden.value = false;
-            props.update(props.anchor, tooltipRef.value, arrowRef.value, 'fixed', props.popoverBoundary ? extendBoundaryDown(props.popoverBoundary, 100): undefined, undefined, props.offset);
+            updatePosition(props.anchor);
         }
     }
 
-    const slotKey = ref(0);
-    
     function hideTooltip() {
-        if (tooltipRef.value) {
-            hideTimeout.value = window.setTimeout(() => {
-                if (tooltipRef.value) {
-                    hidden.value = true;
-                }
-                slotKey.value++;
-            }, hideDelay);
+        if (hideTimeout.value !== null) {
+            clearTimeout(hideTimeout.value);
         }
+
+        hideTimeout.value = window.setTimeout(() => {
+            hidden.value = true;
+            hideTimeout.value = null;
+        }, hideDelay);
     }
-    
-    function init() {
-        props.anchor?.addEventListener("mouseenter", () =>
-            handleEvent({ type: "anchor-mouseenter" })
-        );
 
-        props.anchor?.addEventListener("mouseleave", () =>
-            handleEvent({ type: "anchor-mouseleave" })
-        );
+    function updatePosition(anchor: HTMLElement) {
+        if (!tooltipRef.value || !arrowRef.value) return;
 
-        tooltipRef.value?.addEventListener("mouseenter", () =>
-            handleEvent({ type: "tooltip-mouseenter" })
-        );
-
-        tooltipRef.value?.addEventListener("mouseleave", () =>
-            handleEvent({ type: "tooltip-mouseleave" })
-        );
-
-        document.addEventListener("click", e =>
-            handleEvent({
-                type: "click",
-                target: e.target,
-            })
+        void props.update(
+            anchor,
+            tooltipRef.value,
+            arrowRef.value,
+            props.parent ? 'absolute' : 'fixed',
+            props.popoverBoundary ? extendBoundaryDown(props.popoverBoundary, 100) : undefined,
+            undefined,
+            props.offset,
         );
     }
 
+    function attachAnchorListeners(anchor: HTMLElement | null) {
+        detachAnchorListeners();
+        if (!anchor) return;
+
+        anchorMouseEnterListener = () => handleEvent({ type: "anchor-mouseenter" });
+        anchorMouseLeaveListener = () => handleEvent({ type: "anchor-mouseleave" });
+        anchor.addEventListener('mouseenter', anchorMouseEnterListener);
+        anchor.addEventListener('mouseleave', anchorMouseLeaveListener);
+        attachedAnchor = anchor;
+    }
+
+    function detachAnchorListeners() {
+        if (attachedAnchor && anchorMouseEnterListener) attachedAnchor.removeEventListener('mouseenter', anchorMouseEnterListener);
+        if (attachedAnchor && anchorMouseLeaveListener) attachedAnchor.removeEventListener('mouseleave', anchorMouseLeaveListener);
+        attachedAnchor = null;
+        anchorMouseEnterListener = null;
+        anchorMouseLeaveListener = null;
+    }
 
     function handleEvent(event: TooltipEvent) {
         if (!props.anchor || !tooltipRef.value || !arrowRef.value) return;
@@ -128,28 +139,51 @@
     }
     
 
-    let cleanup: (() => void) | null = null;
+    function setupPositioning(anchor: HTMLElement | null) {
+        cleanupPositioning?.();
+        cleanupPositioning = null;
+        if (!anchor || !tooltipRef.value || !arrowRef.value) return;
+
+        const tooltip = tooltipRef.value;
+        cleanupPositioning = autoUpdate(anchor, tooltip, () => updatePosition(anchor));
+        if (!hidden.value) updatePosition(anchor);
+    }
 
     onMounted(async () => {
         await nextTick();
 
-        if (!props.anchor || !tooltipRef.value || !arrowRef.value) return;
-        else {
-            const tooltip = tooltipRef.value;
-            const anchor = props.anchor;
-            const arrow = arrowRef.value;
-            cleanup = autoUpdate(
-                props.anchor,
-                tooltip,
-                () => props.update(anchor, tooltip, arrow, ((parent ?? null) != null)? "absolute": "fixed", props.popoverBoundary ? extendBoundaryDown(props.popoverBoundary, 100): undefined, undefined, props.offset)
-            );
+        tooltipMouseEnterListener = () => handleEvent({ type: 'tooltip-mouseenter' });
+        tooltipMouseLeaveListener = () => handleEvent({ type: 'tooltip-mouseleave' });
+        documentClickListener = (event) => handleEvent({ type: 'click', target: event.target });
+        tooltipRef.value?.addEventListener('mouseenter', tooltipMouseEnterListener);
+        tooltipRef.value?.addEventListener('mouseleave', tooltipMouseLeaveListener);
+        document.addEventListener('click', documentClickListener);
 
-            init();
-        }
+        attachAnchorListeners(props.anchor);
+        setupPositioning(props.anchor);
+    });
+
+    watch(
+        () => props.anchor,
+        async (anchor) => {
+            await nextTick();
+            attachAnchorListeners(anchor);
+            setupPositioning(anchor);
+        },
+    );
+
+    defineExpose({
+        open: showTooltip,
+        close: hideTooltip,
     });
 
     onBeforeUnmount(() => {
-        cleanup?.();
+        cleanupPositioning?.();
+        detachAnchorListeners();
+        if (tooltipMouseEnterListener) tooltipRef.value?.removeEventListener('mouseenter', tooltipMouseEnterListener);
+        if (tooltipMouseLeaveListener) tooltipRef.value?.removeEventListener('mouseleave', tooltipMouseLeaveListener);
+        if (documentClickListener) document.removeEventListener('click', documentClickListener);
+        if (hideTimeout.value !== null) clearTimeout(hideTimeout.value);
     });
 </script>
 
@@ -158,9 +192,9 @@
         <div ref="tooltipRef" class="popover"
         v-bind="$attrs"
         :class="{
-            'hidden': hidden, 
-            'parented': ((parent ?? null) != null),
-            'fade-in': ((fadeIn ?? false) == true)    
+            'hidden': hidden,
+            'parented': props.parent != null,
+            'fade-in': props.fadeIn === true
         }"
         >
         <!-- @mouseenter="showTooltip"

@@ -1,20 +1,21 @@
 <script lang="ts" setup>
-import type { Schedule } from '@/logic/models/account/schedule/Schedule.ts';
-import { computed, onMounted, ref, watch } from 'vue';
-import { useModal } from 'vue-final-modal';
-import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
-import AvailabilityScopeModal from './modals/AvailabilityScopeModal.vue';
-import MatchStatusComponent from '@/vue/pages/matchplanner/components/player_selector/match_status/MatchStatusComponent.vue';
-import RequestMatchModal from './modals/RequestMatchModal.vue';
-import { filter_str } from '@/logic/util/formating/stringFilter.ts';
 import { Repetition, type Availability } from '@/logic/models/account/schedule/availability/Availability';
 import { MatchStatus, type MatchEvent } from '@/logic/models/account/schedule/match_event/MatchEvent';
-import { accountsStore } from '@/logic/storage/st_accounts.ts';
-import { postMatchEvent } from '@/API/match_event/PostMatchEvent';
+import type { Schedule } from '@/logic/models/account/schedule/Schedule.ts';
 import type { Player } from '@/logic/models/matchplan/player/Player.ts';
 import type { Season } from '@/logic/models/season/Season.ts';
+import { accountsStore } from '@/logic/storage/st_accounts.ts';
+import PopoverComponent from '@/vue/global/system/Popover/PopoverComponent.vue';
+import { InfoPopover } from '@/vue/global/system/Popover/PopoverDesign/InfoPopover';
+import { clickEvaluator } from '@/vue/global/system/Popover/PopoverDisplayLogic/ClickPopover';
+import MatchStatusComponent from '@/vue/pages/matchplanner/components/player_selector/match_status/MatchStatusComponent.vue';
+import { addDays, endOfWeek, startOfWeek } from 'date-fns';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { useModal } from 'vue-final-modal';
+import ConfirmDeleteAvailabilityModal from './modals/ConfirmDeleteAvailabilityModal.vue';
+import EditAvailability from './modals/EditAvailability/EditAvailability.vue';
 import MatchPopper from './modals/MatchPopper.vue';
-import { addDays, endOfWeek, startOfWeek } from 'date-fns'
+import RequestMatchPopover from './popovers/RequestMatchPopover.vue';
 
 const props = defineProps<{
     schedule: Schedule;
@@ -29,13 +30,43 @@ const props = defineProps<{
 const compStore = accountsStore();
 const emit = defineEmits(['reload']);
 
+type CalendarPopoverContent =
+    | { kind: 'availability-editor'; availability: Availability }
+    | { kind: 'availability-create'; availability: Availability }
+    | { kind: 'match-request'; match: MatchEvent; opponentUsername: string };
+type CalendarPopover = CalendarPopoverContent & { key: number; anchor: HTMLElement };
+
+const activePopover = ref<CalendarPopover | null>(null);
+const activePopoverAnchor = computed(() => activePopover.value?.anchor ?? null);
+const calendarPopoverRef = ref<{ open: () => void; close: () => void } | null>(null);
+let popoverKey = 0;
+
+function openCalendarPopover(event: Event, content: CalendarPopoverContent): void {
+    const anchor = event.currentTarget;
+    if (!(anchor instanceof HTMLElement)) return;
+    event.stopPropagation();
+    if (activePopover.value?.anchor === anchor && activePopover.value.kind === content.kind) {
+        closeCalendarPopover();
+        return;
+    }
+
+    activePopover.value = { ...content, key: ++popoverKey, anchor };
+    void nextTick(() => calendarPopoverRef.value?.open());
+}
+
+function closeCalendarPopover(): void {
+    activePopover.value = null;
+    calendarPopoverRef.value?.close();
+}
+
 
 // Watch for changes in the schedule prop
 watch(
     () => props.schedule,
     (newSchedule) => {
         //console.log('new schedule: ', newSchedule, newSchedule.availabilities);
-        availabilities.value = splitEvents(getAvailabilitySources(newSchedule.availabilities));
+        closeCalendarPopover();
+        availabilities.value = splitEvents(newSchedule.availabilities);
         matches.value = newSchedule.matches;
     },
     { deep: true },
@@ -51,10 +82,7 @@ const hours = Array.from({ length: 24 }, (_, i) => {
 const currentWeekStart = ref(getMonday(new Date()));
 const currentDay = ref(new Date());
 
-const temporaryMockAvailabilities = ref(
-    import.meta.env.DEV && props.ownCalendar ? createTemporaryMockAvailabilities() : [],
-);
-const availabilities = ref(splitEvents(getAvailabilitySources(props.schedule.availabilities)));
+const availabilities = ref(splitEvents(props.schedule.availabilities));
 const matches = ref(props.schedule.matches);
 
 onMounted(() => {
@@ -80,6 +108,7 @@ const displayedDays = computed(() => {
 });
 
 const prevPeriod = () => {
+    closeCalendarPopover();
     if (viewMode.value === 'week') {
         currentWeekStart.value.setDate(currentWeekStart.value.getDate() - 7);
         currentWeekStart.value = getMonday(currentWeekStart.value);
@@ -89,10 +118,11 @@ const prevPeriod = () => {
         currentDay.value = new Date(currentDay.value);
         currentWeekStart.value = getMonday(currentDay.value);
     }
-    availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
+    availabilities.value = splitEvents(props.schedule.availabilities);
 };
 
 function nextPeriod(): void {
+    closeCalendarPopover();
     if (viewMode.value === 'week') {
         currentWeekStart.value.setDate(currentWeekStart.value.getDate() + 7);
         currentWeekStart.value = getMonday(currentWeekStart.value);
@@ -102,7 +132,7 @@ function nextPeriod(): void {
         currentDay.value = new Date(currentDay.value);
         currentWeekStart.value = getMonday(currentDay.value);
     }
-    availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
+    availabilities.value = splitEvents(props.schedule.availabilities);
 }
 
 function getMonday(date: Date): Date {
@@ -112,35 +142,12 @@ function getMonday(date: Date): Date {
     return new Date(newDate.setDate(diff));
 }
 
-type AvailabilityDisplay = { startDate: Date; endDate: Date; event: Availability; occurrenceStartDate: Date };
-
-function createTemporaryMockAvailabilities(): Availability[] {
-    const dailyStart = new Date(currentWeekStart.value);
-    dailyStart.setHours(17, 0, 0, 0);
-
-    const weeklyStart = new Date(currentWeekStart.value);
-    weeklyStart.setDate(weeklyStart.getDate() + 2);
-    weeklyStart.setHours(20, 0, 0, 0);
-
-    return [
-        {
-            startDate: dailyStart,
-            endDate: new Date(dailyStart.getTime() + 60 * 60 * 1000),
-            repetition: Repetition.Daily,
-            repetition_day_shift: [0, 1, 2, 3, 4, 5, 6],
-        },
-        {
-            startDate: weeklyStart,
-            endDate: new Date(weeklyStart.getTime() + 60 * 60 * 1000),
-            repetition: Repetition.Weekly,
-            repetition_day_shift: [],
-        },
-    ];
-}
-
-function getAvailabilitySources(scheduleAvailabilities: Availability[]): Availability[] {
-    return [...scheduleAvailabilities, ...temporaryMockAvailabilities.value];
-}
+type AvailabilityDisplay = {
+    startDate: Date;
+    endDate: Date;
+    event: Availability;
+    isMasked?: boolean;
+};
 
 function splitEvents(events: Availability[]): AvailabilityDisplay[] {
     const splitEvents: AvailabilityDisplay[] = [];
@@ -157,7 +164,6 @@ function splitEvents(events: Availability[]): AvailabilityDisplay[] {
                         startDate: new Date(start),
                         endDate: new Date(segmentEnd),
                         event: event,
-                        occurrenceStartDate: new Date(event.startDate),
                     });
                     nextDay.setHours(24, 0, 0, 0);
                     start = nextDay;
@@ -174,7 +180,8 @@ function splitEvents(events: Availability[]): AvailabilityDisplay[] {
                 break;
         }
     });
-    return splitEvents;
+    //TODO implement the masking of recurring events
+    return splitEvents.map((display) => ({ ...display, isMasked: false }));
 }
 
 function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
@@ -198,7 +205,6 @@ function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
             startDate: new Date(event.startDate),
             endDate: dayEnd,
             event: event.event,
-            occurrenceStartDate: new Date(event.occurrenceStartDate),
         });
 
         start += 1;
@@ -211,7 +217,6 @@ function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
                 startDate: dayStart,
                 endDate: dayEnd,
                 event: event.event,
-                occurrenceStartDate: new Date(event.occurrenceStartDate),
             });
             start += 1;
         }
@@ -221,14 +226,12 @@ function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
             startDate: dayStart,
             endDate: new Date(event.endDate),
             event: event.event,
-            occurrenceStartDate: new Date(event.occurrenceStartDate),
         });
     } else {
         splitEvents.push({
             startDate: new Date(event.startDate),
             endDate: new Date(event.endDate),
             event: event.event,
-            occurrenceStartDate: new Date(event.occurrenceStartDate),
         });
     }
 
@@ -257,7 +260,6 @@ function getEventOfTheWeek(event: Availability, day: number): AvailabilityDispla
             startDate: currentWeekEventStart,
             endDate: currentWeekEventEnd,
             event: event,
-            occurrenceStartDate: new Date(currentWeekEventStart),
         };
     } else {
         const currentWeekEventStart = new Date(currentWeekEventDate);
@@ -271,7 +273,6 @@ function getEventOfTheWeek(event: Availability, day: number): AvailabilityDispla
             startDate: currentWeekEventStart,
             endDate: currentWeekEventEnd,
             event: event,
-            occurrenceStartDate: new Date(currentWeekEventStart),
         };
     }
 }
@@ -330,210 +331,116 @@ function matchTooltipTheme(match: MatchEvent): string {
     return match.status === MatchStatus.Requested ? 'match-request-tooltip' : 'match-tooltip';
 }
 
-async function createEvent(type: 'availability' | 'match', day: Date, hour: Date) {
+function createEvent(event: MouseEvent, type: 'availability' | 'match', day: Date, hour: Date): void {
     const date = new Date(day);
     date.setHours(hour.getHours(), hour.getMinutes(), hour.getSeconds(), hour.getMilliseconds());
-    console.log('Create event', type, date);
-    if (type == 'availability') {
-        const { open, close } = useModal({
-            component: EditAvailabilityModal,
-            attrs: {
-                title: 'Add avaliability',
-                availability: {
-                    startDate: date,
-                    endDate: new Date(date.getTime() + 60 * 60 * 1000),
-                    repetition: Repetition.Once,
-                    repetition_day_shift: [] as number[],
-                } as Availability,
-                create: true,
-                async onCancel() {
-                    close();
-                },
-                async onSubmitAvailability(data: Availability) {
-                    //console.log('submiting something', data);
-                    close();
-                    let set_res = await compStore.self_edit_availabilities_local([data], []);
-
-                    let store_res = await compStore.post_account();
-
-                    emit('reload');
-                },
+    if (type === 'availability') {
+        openCalendarPopover(event, {
+            kind: 'availability-create',
+            availability: {
+                startDate: date,
+                endDate: new Date(date.getTime() + 60 * 60 * 1000),
+                repetition: Repetition.Once,
+                repetition_day_shift: [],
             },
         });
-        open();
-    } else {
-        if (!(day < new Date() && !(day.toDateString() === new Date().toDateString()))) {
-            const { open, close } = useModal({
-                component: RequestMatchModal,
-                attrs: {
-                    title: 'Request Match',
-                    match: {
-                        startDate: date,
-                        initiatorId: props.ownId,
-                        opponentId: props.scheduleUserId,
-                        status: MatchStatus.Requested,
-                        season: props.season,
-                    } as MatchEvent,
-                    opponentUsername: getPlayer(props.scheduleUserId).tag,
-                    async onCancel() {
-                        close();
-                    },
-                    async onSubmitMatch(data: MatchEvent) {
-                        //console.log('submiting something', data);
-                        close();
-                        let set_res = await compStore.create_match_event_local(data);
-
-
-                        let store_res = await compStore.post_match_event(data);
-                        emit('reload');
-                    },
-                },
-            });
-            open();
-        }
-            
+        return;
     }
-}
 
-type AvailabilityScope = 'occurrence' | 'series';
-type AvailabilityAction = 'edit' | 'delete';
+    if (day < new Date() && day.toDateString() !== new Date().toDateString()) return;
+
+    openCalendarPopover(event, {
+        kind: 'match-request',
+        match: {
+            startDate: date,
+            initiatorId: props.ownId,
+            opponentId: props.scheduleUserId,
+            status: MatchStatus.Requested,
+            season: props.season,
+        } as MatchEvent,
+        opponentUsername: getPlayer(props.scheduleUserId).tag,
+    });
+}
 
 function isRecurringAvailability(availability: Availability): boolean {
     return availability.repetition === Repetition.Daily || availability.repetition === Repetition.Weekly;
 }
 
-function getOccurrenceAvailability(availability: Availability, occurrenceStartDate: Date): Availability {
-    const duration = availability.endDate.getTime() - availability.startDate.getTime();
-    return {
-        startDate: new Date(occurrenceStartDate),
-        endDate: new Date(occurrenceStartDate.getTime() + duration),
-        repetition: Repetition.Once,
-        repetition_day_shift: [],
-    };
+function editAvailability(availability: Availability, event: Event): void {
+    if (!props.ownCalendar) return;
+    openCalendarPopover(event, {
+        kind: 'availability-editor',
+        availability,
+    });
 }
 
-function showAvailabilityScope(
-    action: AvailabilityAction,
-    availability: Availability,
-    occurrenceStartDate: Date,
-): void {
+function deleteAvailability(availability: Availability): void {
+    if (!props.ownCalendar) return;
+    if (isRecurringAvailability(availability)) {
+        confirmDeleteAvailabilitySeries(availability);
+        return;
+    }
+
+    closeCalendarPopover();
+    void deleteAvailabilitySeries(availability);
+}
+
+function toggleAvailabilityMask(display: AvailabilityDisplay): void {
+    if (!isRecurringAvailability(display.event)) return;
+    console.log('Toggle masked availability occurrence: ', display.event);
+    display.isMasked = !display.isMasked;
+}
+
+function confirmDeleteAvailabilitySeries(availability: Availability): void {
+    closeCalendarPopover();
     const { open, close } = useModal({
-        component: AvailabilityScopeModal,
+        component: ConfirmDeleteAvailabilityModal,
         attrs: {
-            title: action === 'edit' ? 'Edit recurring availability' : 'Delete recurring availability',
-            action,
-            occurrenceDate: occurrenceStartDate,
             onCancel() {
                 close();
             },
-            onSelectScope(scope: AvailabilityScope) {
+            async onConfirm() {
                 close();
-                if (action === 'edit') {
-                    openEditAvailability(availability, occurrenceStartDate, scope === 'occurrence');
-                } else if (scope === 'occurrence') {
-                    void saveAvailabilityOccurrence(availability, occurrenceStartDate, null);
-                } else {
-                    void deleteAvailabilitySeries(availability);
-                }
+                await deleteAvailabilitySeries(availability);
             },
         },
     });
     open();
 }
 
-function editAvailability(availability: Availability, display: AvailabilityDisplay): void {
-    if (!props.ownCalendar) return;
-    if (isRecurringAvailability(availability)) {
-        showAvailabilityScope('edit', availability, display.occurrenceStartDate);
-        return;
-    }
+async function submitAvailabilityEdit(data: Availability): Promise<void> {
+    const popover = activePopover.value;
+    if (popover?.kind !== 'availability-editor') return;
 
-    openEditAvailability(availability, availability.startDate, false);
+    const { availability } = popover;
+    closeCalendarPopover();
+    await saveAvailabilitySeries(data, availability);
 }
 
-function openEditAvailability(
-    availability: Availability,
-    occurrenceStartDate: Date,
-    editOccurrence: boolean,
-): void {
-    const { open, close } = useModal({
-        component: EditAvailabilityModal,
-        attrs: {
-            title: 'Edit availability',
-            availability: editOccurrence
-                ? getOccurrenceAvailability(availability, occurrenceStartDate)
-                : availability,
-            async onCancel() {
-                close();
-            },
-            create: false,
-            editOccurrence,
-            async onSubmitAvailability(data: Availability) {
-                close();
-                if (editOccurrence) {
-                    await saveAvailabilityOccurrence(availability, occurrenceStartDate, data);
-                } else {
-                    await saveAvailabilitySeries(data, availability);
-                }
-            },
-            async onDelete() {
-                close();
-                if (editOccurrence) {
-                    await saveAvailabilityOccurrence(availability, occurrenceStartDate, null);
-                } else {
-                    await deleteAvailabilitySeries(availability);
-                }
-            },
-        },
-    });
-    open();
+async function submitAvailabilityCreate(data: Availability): Promise<void> {
+    closeCalendarPopover();
+    await compStore.self_edit_availabilities_local([data], []);
+    await compStore.post_account();
+    emit('reload');
 }
 
-// API integration point for editing or excluding a single recurrence occurrence.
-async function saveAvailabilityOccurrence(
-    availability: Availability,
-    occurrenceStartDate: Date,
-    replacement: Availability | null,
-): Promise<void> {
-    void availability;
-    void occurrenceStartDate;
-    void replacement;
+async function submitMatchRequest(data: MatchEvent): Promise<void> {
+    closeCalendarPopover();
+    await compStore.create_match_event_local(data);
+    await compStore.post_match_event(data);
+    emit('reload');
 }
 
 async function saveAvailabilitySeries(updated: Availability, original: Availability): Promise<void> {
-    const mockIndex = temporaryMockAvailabilities.value.indexOf(original);
-    if (mockIndex !== -1) {
-        temporaryMockAvailabilities.value.splice(mockIndex, 1, updated);
-        availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
-        return;
-    }
-
     await compStore.self_edit_availabilities_local([updated], [original]);
     await compStore.post_account();
     emit('reload');
 }
 
 async function deleteAvailabilitySeries(availability: Availability): Promise<void> {
-    const mockIndex = temporaryMockAvailabilities.value.indexOf(availability);
-    if (mockIndex !== -1) {
-        temporaryMockAvailabilities.value.splice(mockIndex, 1);
-        availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
-        return;
-    }
-
     await compStore.self_edit_availabilities_local([], [availability]);
     await compStore.post_account();
     emit('reload');
-}
-
-function deleteAvailability(availability: Availability, display: AvailabilityDisplay): void {
-    if (!props.ownCalendar) return;
-    if (isRecurringAvailability(availability)) {
-        showAvailabilityScope('delete', availability, display.occurrenceStartDate);
-        return;
-    }
-
-    void deleteAvailabilitySeries(availability);
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
@@ -628,7 +535,7 @@ async function submitNote() {
                                 borderTop: dayIndex === 0 && index != 0 ? 'none !important' : '1px'
                             }"
                             :id="`hour-${index}`"
-                            @click="createEvent(ownCalendar ? 'availability' : 'match', day, hour.date)">
+                            @click="createEvent($event, ownCalendar ? 'availability' : 'match', day, hour.date)">
                         </div>
                         <div v-else-if="!(index === (hours.length * 2 -1)) && dayIndex === 0" class="d-flex flex-row seperator-row no-wrap">
                             <div class="hour-separator-line sm"></div>
@@ -642,21 +549,43 @@ async function submitNote() {
                     <!-- Availabilities -->
                     <div
                         class="event availability"
-                        :class="{ own: ownCalendar }"
-                        v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
+                        :class="{ own: ownCalendar, 'masked-occurrence': availability.isMasked }"
+                        v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString() && (ownCalendar || !e.isMasked))"
                         :key="availability.startDate.toISOString()"
                         :style="getEventStyle(availability)"
-                        @click.stop="ownCalendar && editAvailability(availability.event, availability)"
+                        @click.stop="ownCalendar && editAvailability(availability.event, $event)"
                     >
-                        <div class="cross" v-if="ownCalendar" @click.stop="deleteAvailability(availability.event, availability)">
-                            <i class="icon-cross"></i>
+                        <div class="availability-actions" v-if="ownCalendar">
+                            <button
+                                v-if="isRecurringAvailability(availability.event)"
+                                type="button"
+                                class="availability-action mask-action"
+                                :aria-label="availability.isMasked ? 'Show this occurrence' : 'Mask this occurrence'"
+                                :title="availability.isMasked ? 'Show this occurrence' : 'Mask this occurrence'"
+                                @click.stop="toggleAvailabilityMask(availability)"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                    <path v-if="availability.isMasked" d="M4 20 20 4" />
+                                </svg>
+                            </button>
+                            <button
+                                type="button"
+                                class="availability-action delete-action"
+                                aria-label="Delete availability"
+                                title="Delete availability"
+                                @click.stop="deleteAvailability(availability.event)"
+                            >
+                                <i class="icon-cross"></i>
+                            </button>
                         </div>
                         <div
                             v-if="!ownCalendar"
                             v-for="hour in getHoursInRange(availability.startDate, availability.endDate)"
                             :key="hour.toDateString()"
                             class="event-overlay"
-                            @click.stop="createEvent('match', day, hour)"
+                            @click.stop="createEvent($event, 'match', day, hour)"
                             :style="getHourStyle(hour, availability.startDate, availability.endDate)"
                         ></div>
                     </div>
@@ -698,6 +627,45 @@ async function submitNote() {
             </div> -->
         </div>
     </div>
+    <PopoverComponent
+        v-if="activePopover"
+        ref="calendarPopoverRef"
+        :anchor="activePopoverAnchor"
+        :update="InfoPopover"
+        :display-logic="clickEvaluator"
+        :fade-in="true"
+        :hide-delay="250"
+        :offset="14"
+    >
+        <EditAvailability
+            v-if="activePopover.kind === 'availability-editor'"
+            :key="`availability-editor-${activePopover.key}`"
+            :availability="activePopover.availability"
+            :create="false"
+            title="Edit availability"
+            @submit-availability="submitAvailabilityEdit"
+            @cancel="closeCalendarPopover"
+            @delete="deleteAvailability(activePopover.availability)"
+        />
+        <EditAvailability
+            v-else-if="activePopover.kind === 'availability-create'"
+            :key="`availability-create-${activePopover.key}`"
+            :availability="activePopover.availability"
+            :create="true"
+            title="Add availability"
+            @submit-availability="submitAvailabilityCreate"
+            @cancel="closeCalendarPopover"
+        />
+        <RequestMatchPopover
+            v-else-if="activePopover.kind === 'match-request'"
+            :key="`match-request-${activePopover.key}`"
+            title="Request a match"
+            :match="activePopover.match"
+            :opponent-username="activePopover.opponentUsername"
+            @submit-match="submitMatchRequest"
+            @cancel="closeCalendarPopover"
+        />
+    </PopoverComponent>
     <!-- <div class="container mt-3 mb-5 px-auto px-md-5 notes-container">
         <form @submit.prevent="submitNote" v-if="ownCalendar">
             <div class="row">
@@ -980,18 +948,74 @@ $border-style: 1px solid $hour-border-color;
                     background-color: var(--primary);
                     color: white;
 
-                    .cross {
+                    &.masked-occurrence {
+                        filter: grayscale(0.85);
+                        opacity: 0.6;
+
+                        &::after {
+                            content: '';
+                            position: absolute;
+                            z-index: 1;
+                            inset: 0;
+                            border-radius: inherit;
+                            background: repeating-linear-gradient(
+                                135deg,
+                                rgba(255, 255, 255, 0.45) 0,
+                                rgba(255, 255, 255, 0.45) 3px,
+                                transparent 3px,
+                                transparent 9px
+                            );
+                            pointer-events: none;
+                        }
+                    }
+
+                    .availability-actions {
                         position: absolute;
                         top: 5px;
                         right: 5px;
+                        z-index: 2;
                         display: none;
+                        align-items: center;
+                        gap: 0.25rem;
+                    }
+
+                    .availability-action {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 1.5rem;
+                        height: 1.5rem;
+                        padding: 0;
+                        border: 0;
+                        border-radius: 50%;
+                        background: rgba(0, 0, 0, 0.45);
+                        color: white;
+                        cursor: pointer;
+
+                        &:hover {
+                            background: rgba(0, 0, 0, 0.75);
+                        }
+
+                        svg {
+                            width: 1rem;
+                            height: 1rem;
+                            fill: none;
+                            stroke: currentColor;
+                            stroke-width: 1.8;
+                            stroke-linecap: round;
+                            stroke-linejoin: round;
+                        }
+
+                        .icon-cross {
+                            font-size: 0.8rem;
+                        }
                     }
 
                     &.own:hover {
                         background-color: color-mix(in srgb, var(--primary), white 10%);
                         cursor: pointer;
-                        .cross {
-                            display: block;
+                        .availability-actions {
+                            display: flex;
                         }
                     }
                 }

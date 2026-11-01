@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { VueFinalModal } from 'vue-final-modal';
+import { ref } from 'vue';
 import DatePicker from '@vuepic/vue-datepicker';
 import { filter_str } from '@/logic/util/formating/stringFilter';
 import { MatchStatus, type MatchEvent } from '@/logic/models/account/schedule/match_event/MatchEvent';
@@ -11,7 +10,10 @@ const props = defineProps<{
     opponentUsername: string;
 }>();
 
-const emit = defineEmits(['submitMatch', 'cancel']);
+const emit = defineEmits<{
+    (event: 'submitMatch', match: MatchEvent): void;
+    (event: 'cancel'): void;
+}>();
 
 // const avaliability = ref(props.avaliability);
 
@@ -41,14 +43,12 @@ function createMatch(): MatchEvent {
         status: MatchStatus.Requested,
         season: props.match.season,
     } as MatchEvent;
-    console.log('Creating match: ', res);
     return res;
 }
 </script>
 
 <template>
-    <VueFinalModal class="confirm-modal" content-class="row justify-content-center w-100" overlay-transition="vfm-fade" content-transition="vfm-fade">
-        <div class="porc-modal-content col-xl-2 col-md-6 col-11 p-4 rounded">
+    <div class="request-match-content p-4">
             <div>
                 <h3 class="mb-3 content-title text-center">{{ title }}</h3>
                 <h4 class="content-subtitle align-self-center justify-contents-center text-center">Request a Match</h4>
@@ -66,24 +66,24 @@ function createMatch(): MatchEvent {
                 <div class="s-spacer"></div>
                 <div class="xs-spacer"></div>
                 <div class="row justify-content-center mt-3">
-                    <div class="col-md-6">
-                        <button @click="emit('cancel')" class="btn btn-outline-primary w-100">Cancel</button>
+                    <div class="col-6">
+                        <button type="button" @click="emit('cancel')" class="btn-small btn-secondary w-100">Cancel</button>
                     </div>
-                    <div class="col-md-6 mt-2 mt-md-0">
-                        <button @click="submit" class="btn btn-primary w-100">Confirm</button>
+                    <div class="col-6">
+                        <button type="button" @click="submit" class="btn-small btn-primary w-100">Confirm</button>
                     </div>
                 </div>
             </div>
-        </div>
-    </VueFinalModal>
+    </div>
 </template>
 
 <style scoped>
 @import '@/assets/scss/styles.scss';
 @import '@/assets/scss/global.scss';
 
-.porc-modal-content {
-    width: 21rem !important;
+.request-match-content {
+    width: 21rem;
+    max-width: calc(100vw - 2rem);
 }
 
 .bar {

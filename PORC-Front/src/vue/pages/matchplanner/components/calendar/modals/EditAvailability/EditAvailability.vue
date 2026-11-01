@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { VueFinalModal } from 'vue-final-modal';
+import { computed, onMounted, ref } from 'vue';
 import DatePicker from '@vuepic/vue-datepicker';
-import { Repetition, type Availability } from '@/logic/models/account/schedule/availability/Availability';
+import type { Availability } from '@/logic/models/account/schedule/availability/Availability';
 import { convertFromRepetition, convertTimeRangeToDates, convertToDailyRepetitionConfig, convertToRepetition } from './UIConversions';
-import DiscordUserComponent from '@/vue/global/nav/DiscordUserComponent.vue';
 import { accountsStore } from '@/logic/storage/st_accounts';
 import DiscordAvatarComponent from '@/vue/global/account/avatar/DiscordAvatarComponent.vue';
 import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
-import { appReady, waitForAppReady } from '@/appReady';
+import { waitForAppReady } from '@/appReady';
 import { addDays } from 'date-fns';
 import { TIMEZONE_OPTIONS } from '@/logic/util/Timezones';
 
@@ -18,7 +16,11 @@ const props = defineProps<{
     create: boolean;
 }>();
 
-const emit = defineEmits(['submitAvailability', 'cancel', 'delete']);
+const emit = defineEmits<{
+    (event: 'submitAvailability', availability: Availability): void;
+    (event: 'cancel'): void;
+    (event: 'delete'): void;
+}>();
 
 function submit() {
     emit('submitAvailability', createAvailability());
@@ -48,28 +50,26 @@ const repConfig = ref<{day: string, selected: boolean}[]>([
     { day: 'Sun', selected: daysOfWeek.value.includes('Sun') },
 ]);
 
-const daysSelectionToggle = ref(false);
-
 const crossDay = computed(() => {
     return (time.value[0].hours * 60 * 60 + time.value[0].minutes * 60 + time.value[0].seconds) > (time.value[1].hours * 60 * 60 + time.value[1].minutes * 60 + time.value[1].seconds);
 });
 
 const dayLabel = computed(() => {
+    const anchor = startDate.value;
     return !crossDay.value ? 
-    `${startDate.value.toLocaleString('en-US', { weekday: 'short' })} ${startDate.value.getDate()}` :
-    `${startDate.value.toLocaleString('en-US', { weekday: 'short' })} - ${addDays(startDate.value, 1).toLocaleString('en-US', { weekday: 'short' })}`;
+    `${anchor.toLocaleString('en-US', { weekday: 'short' })} ${anchor.getDate()}` :
+    `${anchor.toLocaleString('en-US', { weekday: 'short' })} - ${addDays(anchor, 1).toLocaleString('en-US', { weekday: 'short' })}`;
 });
 
 
 function createAvailability(): Availability {
-    const [startDate, endDate] = convertTimeRangeToDates(props.availability.startDate, time.value);
+    const [availabilityStartDate, availabilityEndDate] = convertTimeRangeToDates(startDate.value, time.value);
     const selectedDays = repConfig.value.filter(day => day.selected).map(day => day.day);
-    const repetitionConfig = convertToRepetition(repetition.value, selectedDays);
 
     return {
-        startDate,
-        endDate,
-        repetition: repetitionConfig,
+        startDate: availabilityStartDate,
+        endDate: availabilityEndDate,
+        repetition: convertToRepetition(repetition.value, selectedDays),
         repetition_day_shift: convertToDailyRepetitionConfig(props.availability.startDate, selectedDays),
     };
 }
@@ -80,37 +80,7 @@ const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const selectedTimezone = ref(localTimezone);
 
 
-watch(
-    () => daysOfWeek.value,
-    (Selection) => {
-        if (repetition.value == 'Daily') {
-            daysSelectionToggle.value = true;
-        } else {
-            daysSelectionToggle.value = false;
-        }
-    },
-    { deep: true },
-);
-
-watch(
-    () => repetition.value,
-    (newRepetition) => {
-        if (newRepetition == 'Daily') {
-            daysSelectionToggle.value = true;
-        } else {
-            daysSelectionToggle.value = false;
-        }
-    },
-    { deep: true },
-);
-
 onMounted(async () => {
-    if (repetition.value == 'Daily') {
-        daysSelectionToggle.value = true;
-    } else {
-        daysSelectionToggle.value = false;
-    }
-
     await waitForAppReady();
     const usrStorage = accountsStore();
     user.value = await usrStorage.get_login_min();
@@ -119,11 +89,11 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="modal-content pb-3 rounded">
+    <div class="availability-editor-content pb-3 rounded">
 
         <div class="d-flex flex-row align-items-center mb-3">
             <div class="d-flex flex-column">
-                <h5 class="bold mb-1">Edit Availability</h5>
+                <h5 class="bold mb-1">{{ title ?? (create ? 'Add Availability' : 'Edit Availability') }}</h5>
                 <h6 class="detail-title text-muted">Configure your Availability</h6>
             </div>
 
@@ -210,11 +180,11 @@ onMounted(async () => {
 @import '@/assets/scss/styles.scss';
 @import '@/assets/scss/global.scss';
 
-.modal-content {
+.availability-editor-content {
     width: 18rem !important;
-    margin: 0.5rem !important;
     padding: 1.25rem !important;
-    margin: 0 auto;
+    margin: 0;
+    background: transparent;
 }
 
 /* Let the date picker grow to fill the container alongside the day label */

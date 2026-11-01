@@ -225,7 +225,7 @@ async function submitNote() {
         <div class="calendar flex-grow-5">
             <CalendarComponent
                 v-if="selectedPlayer?.schedule"
-                :schedule="emptySchedule"
+                :schedule="schedule ?? emptySchedule"
                 :players="division?.players || []"
                 :own-calendar="(selectedPlayer?.id ?? userId) === userId"
                 :ownId="userId ?? ''"
