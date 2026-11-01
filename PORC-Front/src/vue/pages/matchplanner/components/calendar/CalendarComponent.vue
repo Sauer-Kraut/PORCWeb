@@ -3,6 +3,7 @@ import type { Schedule } from '@/logic/models/account/schedule/Schedule.ts';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
 import EditAvailabilityModal from './modals/EditAvailabilityModal.vue';
+import AvailabilityScopeModal from './modals/AvailabilityScopeModal.vue';
 import MatchStatusComponent from '@/vue/pages/matchplanner/components/player_selector/match_status/MatchStatusComponent.vue';
 import RequestMatchModal from './modals/RequestMatchModal.vue';
 import { filter_str } from '@/logic/util/formating/stringFilter.ts';
@@ -34,7 +35,7 @@ watch(
     () => props.schedule,
     (newSchedule) => {
         //console.log('new schedule: ', newSchedule, newSchedule.availabilities);
-        availabilities.value = splitEvents(newSchedule.availabilities);
+        availabilities.value = splitEvents(getAvailabilitySources(newSchedule.availabilities));
         matches.value = newSchedule.matches;
     },
     { deep: true },
@@ -50,7 +51,10 @@ const hours = Array.from({ length: 24 }, (_, i) => {
 const currentWeekStart = ref(getMonday(new Date()));
 const currentDay = ref(new Date());
 
-const availabilities = ref(splitEvents(props.schedule.availabilities));
+const temporaryMockAvailabilities = ref(
+    import.meta.env.DEV && props.ownCalendar ? createTemporaryMockAvailabilities() : [],
+);
+const availabilities = ref(splitEvents(getAvailabilitySources(props.schedule.availabilities)));
 const matches = ref(props.schedule.matches);
 
 onMounted(() => {
@@ -85,7 +89,7 @@ const prevPeriod = () => {
         currentDay.value = new Date(currentDay.value);
         currentWeekStart.value = getMonday(currentDay.value);
     }
-    availabilities.value = splitEvents(props.schedule.availabilities);
+    availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
 };
 
 function nextPeriod(): void {
@@ -98,7 +102,7 @@ function nextPeriod(): void {
         currentDay.value = new Date(currentDay.value);
         currentWeekStart.value = getMonday(currentDay.value);
     }
-    availabilities.value = splitEvents(props.schedule.availabilities);
+    availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
 }
 
 function getMonday(date: Date): Date {
@@ -108,7 +112,35 @@ function getMonday(date: Date): Date {
     return new Date(newDate.setDate(diff));
 }
 
-type AvailabilityDisplay = { startDate: Date; endDate: Date; event: Availability };
+type AvailabilityDisplay = { startDate: Date; endDate: Date; event: Availability; occurrenceStartDate: Date };
+
+function createTemporaryMockAvailabilities(): Availability[] {
+    const dailyStart = new Date(currentWeekStart.value);
+    dailyStart.setHours(17, 0, 0, 0);
+
+    const weeklyStart = new Date(currentWeekStart.value);
+    weeklyStart.setDate(weeklyStart.getDate() + 2);
+    weeklyStart.setHours(20, 0, 0, 0);
+
+    return [
+        {
+            startDate: dailyStart,
+            endDate: new Date(dailyStart.getTime() + 60 * 60 * 1000),
+            repetition: Repetition.Daily,
+            repetition_day_shift: [0, 1, 2, 3, 4, 5, 6],
+        },
+        {
+            startDate: weeklyStart,
+            endDate: new Date(weeklyStart.getTime() + 60 * 60 * 1000),
+            repetition: Repetition.Weekly,
+            repetition_day_shift: [],
+        },
+    ];
+}
+
+function getAvailabilitySources(scheduleAvailabilities: Availability[]): Availability[] {
+    return [...scheduleAvailabilities, ...temporaryMockAvailabilities.value];
+}
 
 function splitEvents(events: Availability[]): AvailabilityDisplay[] {
     const splitEvents: AvailabilityDisplay[] = [];
@@ -125,6 +157,7 @@ function splitEvents(events: Availability[]): AvailabilityDisplay[] {
                         startDate: new Date(start),
                         endDate: new Date(segmentEnd),
                         event: event,
+                        occurrenceStartDate: new Date(event.startDate),
                     });
                     nextDay.setHours(24, 0, 0, 0);
                     start = nextDay;
@@ -165,6 +198,7 @@ function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
             startDate: new Date(event.startDate),
             endDate: dayEnd,
             event: event.event,
+            occurrenceStartDate: new Date(event.occurrenceStartDate),
         });
 
         start += 1;
@@ -177,6 +211,7 @@ function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
                 startDate: dayStart,
                 endDate: dayEnd,
                 event: event.event,
+                occurrenceStartDate: new Date(event.occurrenceStartDate),
             });
             start += 1;
         }
@@ -186,12 +221,14 @@ function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
             startDate: dayStart,
             endDate: new Date(event.endDate),
             event: event.event,
+            occurrenceStartDate: new Date(event.occurrenceStartDate),
         });
     } else {
         splitEvents.push({
             startDate: new Date(event.startDate),
             endDate: new Date(event.endDate),
             event: event.event,
+            occurrenceStartDate: new Date(event.occurrenceStartDate),
         });
     }
 
@@ -220,6 +257,7 @@ function getEventOfTheWeek(event: Availability, day: number): AvailabilityDispla
             startDate: currentWeekEventStart,
             endDate: currentWeekEventEnd,
             event: event,
+            occurrenceStartDate: new Date(currentWeekEventStart),
         };
     } else {
         const currentWeekEventStart = new Date(currentWeekEventDate);
@@ -233,6 +271,7 @@ function getEventOfTheWeek(event: Availability, day: number): AvailabilityDispla
             startDate: currentWeekEventStart,
             endDate: currentWeekEventEnd,
             event: event,
+            occurrenceStartDate: new Date(currentWeekEventStart),
         };
     }
 }
@@ -294,7 +333,7 @@ function matchTooltipTheme(match: MatchEvent): string {
 async function createEvent(type: 'availability' | 'match', day: Date, hour: Date) {
     const date = new Date(day);
     date.setHours(hour.getHours(), hour.getMinutes(), hour.getSeconds(), hour.getMilliseconds());
-    //console.log('Create event', type, date);
+    console.log('Create event', type, date);
     if (type == 'availability') {
         const { open, close } = useModal({
             component: EditAvailabilityModal,
@@ -356,45 +395,145 @@ async function createEvent(type: 'availability' | 'match', day: Date, hour: Date
     }
 }
 
-function editAvailability(availability: Availability) {
-    if (!props.ownCalendar) return;
-    //console.log('editAvaliability', availability);
+type AvailabilityScope = 'occurrence' | 'series';
+type AvailabilityAction = 'edit' | 'delete';
+
+function isRecurringAvailability(availability: Availability): boolean {
+    return availability.repetition === Repetition.Daily || availability.repetition === Repetition.Weekly;
+}
+
+function getOccurrenceAvailability(availability: Availability, occurrenceStartDate: Date): Availability {
+    const duration = availability.endDate.getTime() - availability.startDate.getTime();
+    return {
+        startDate: new Date(occurrenceStartDate),
+        endDate: new Date(occurrenceStartDate.getTime() + duration),
+        repetition: Repetition.Once,
+        repetition_day_shift: [],
+    };
+}
+
+function showAvailabilityScope(
+    action: AvailabilityAction,
+    availability: Availability,
+    occurrenceStartDate: Date,
+): void {
     const { open, close } = useModal({
-        component: EditAvailabilityModal,
+        component: AvailabilityScopeModal,
         attrs: {
-            title: 'Edit avaliability',
-            availability: availability,
-            async onCancel() {
+            title: action === 'edit' ? 'Edit recurring availability' : 'Delete recurring availability',
+            action,
+            occurrenceDate: occurrenceStartDate,
+            onCancel() {
                 close();
             },
-            create: false,
-            async onSubmitAvailability(data: Availability) {
-                //console.log('submiting something', data);
+            onSelectScope(scope: AvailabilityScope) {
                 close();
-                let set_res = await compStore.self_edit_availabilities_local([data], [availability]);
-
-
-                let store_res = await compStore.post_account();
-                emit('reload');
-            },
-            async onDelete() {
-                //console.log('deleting something');
-                close();
-                let set_res = await compStore.self_edit_availabilities_local([], [availability]);
-
-                let store_res = await compStore.post_account();
-                emit('reload');
+                if (action === 'edit') {
+                    openEditAvailability(availability, occurrenceStartDate, scope === 'occurrence');
+                } else if (scope === 'occurrence') {
+                    void saveAvailabilityOccurrence(availability, occurrenceStartDate, null);
+                } else {
+                    void deleteAvailabilitySeries(availability);
+                }
             },
         },
     });
     open();
 }
 
-async function deleteAvailability(availability: Availability) {
-    let set_res = await compStore.self_edit_availabilities_local([], [availability]);
+function editAvailability(availability: Availability, display: AvailabilityDisplay): void {
+    if (!props.ownCalendar) return;
+    if (isRecurringAvailability(availability)) {
+        showAvailabilityScope('edit', availability, display.occurrenceStartDate);
+        return;
+    }
 
-    let store_res = await compStore.post_account();
+    openEditAvailability(availability, availability.startDate, false);
+}
+
+function openEditAvailability(
+    availability: Availability,
+    occurrenceStartDate: Date,
+    editOccurrence: boolean,
+): void {
+    const { open, close } = useModal({
+        component: EditAvailabilityModal,
+        attrs: {
+            title: 'Edit availability',
+            availability: editOccurrence
+                ? getOccurrenceAvailability(availability, occurrenceStartDate)
+                : availability,
+            async onCancel() {
+                close();
+            },
+            create: false,
+            editOccurrence,
+            async onSubmitAvailability(data: Availability) {
+                close();
+                if (editOccurrence) {
+                    await saveAvailabilityOccurrence(availability, occurrenceStartDate, data);
+                } else {
+                    await saveAvailabilitySeries(data, availability);
+                }
+            },
+            async onDelete() {
+                close();
+                if (editOccurrence) {
+                    await saveAvailabilityOccurrence(availability, occurrenceStartDate, null);
+                } else {
+                    await deleteAvailabilitySeries(availability);
+                }
+            },
+        },
+    });
+    open();
+}
+
+// API integration point for editing or excluding a single recurrence occurrence.
+async function saveAvailabilityOccurrence(
+    availability: Availability,
+    occurrenceStartDate: Date,
+    replacement: Availability | null,
+): Promise<void> {
+    void availability;
+    void occurrenceStartDate;
+    void replacement;
+}
+
+async function saveAvailabilitySeries(updated: Availability, original: Availability): Promise<void> {
+    const mockIndex = temporaryMockAvailabilities.value.indexOf(original);
+    if (mockIndex !== -1) {
+        temporaryMockAvailabilities.value.splice(mockIndex, 1, updated);
+        availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
+        return;
+    }
+
+    await compStore.self_edit_availabilities_local([updated], [original]);
+    await compStore.post_account();
     emit('reload');
+}
+
+async function deleteAvailabilitySeries(availability: Availability): Promise<void> {
+    const mockIndex = temporaryMockAvailabilities.value.indexOf(availability);
+    if (mockIndex !== -1) {
+        temporaryMockAvailabilities.value.splice(mockIndex, 1);
+        availabilities.value = splitEvents(getAvailabilitySources(props.schedule.availabilities));
+        return;
+    }
+
+    await compStore.self_edit_availabilities_local([], [availability]);
+    await compStore.post_account();
+    emit('reload');
+}
+
+function deleteAvailability(availability: Availability, display: AvailabilityDisplay): void {
+    if (!props.ownCalendar) return;
+    if (isRecurringAvailability(availability)) {
+        showAvailabilityScope('delete', availability, display.occurrenceStartDate);
+        return;
+    }
+
+    void deleteAvailabilitySeries(availability);
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
@@ -507,9 +646,9 @@ async function submitNote() {
                         v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString())"
                         :key="availability.startDate.toISOString()"
                         :style="getEventStyle(availability)"
-                        @click.stop="ownCalendar && editAvailability(availability.event)"
+                        @click.stop="ownCalendar && editAvailability(availability.event, availability)"
                     >
-                        <div class="cross" v-if="ownCalendar" @click.stop="deleteAvailability(availability.event)">
+                        <div class="cross" v-if="ownCalendar" @click.stop="deleteAvailability(availability.event, availability)">
                             <i class="icon-cross"></i>
                         </div>
                         <div

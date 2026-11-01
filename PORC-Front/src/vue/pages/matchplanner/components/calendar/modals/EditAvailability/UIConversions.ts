@@ -48,19 +48,14 @@ export function convertFromRepetition(repetition: Repetition, anchor: Date, repe
 }
 
 export function convertTimeRangeToDates(anchor: Date, timeRange: { hours: number; minutes: number; seconds: number }[]): Date[] {
-    const startDate = new Date(
-        anchor.getFullYear(),
-        anchor.getMonth(),
-        anchor.getDate(),
-        timeRange[0].hours,
-        timeRange[0].minutes,
-        timeRange[0].seconds,
-    );
-    const endDate = new Date(
-        anchor.getDate(),
-        timeRange[1].hours,
-        timeRange[1].minutes,
-        timeRange[1].seconds,
-    );
+    const startDate = new Date(anchor);
+    startDate.setHours(timeRange[0].hours, timeRange[0].minutes, timeRange[0].seconds, 0);
+
+    const endDate = new Date(anchor);
+    endDate.setHours(timeRange[1].hours, timeRange[1].minutes, timeRange[1].seconds, 0);
+    if (endDate <= startDate) {
+        endDate.setDate(endDate.getDate() + 1);
+    }
+
     return [startDate, endDate];
 }

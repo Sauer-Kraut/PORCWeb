@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 import DatePicker from '@vuepic/vue-datepicker';
 import { Repetition, type Availability } from '@/logic/models/account/schedule/availability/Availability';
@@ -9,6 +9,7 @@ const props = defineProps<{
     title?: string;
     availability: Availability;
     create: boolean;
+    editOccurrence?: boolean;
 }>();
 
 const emit = defineEmits(['submitAvailability', 'cancel', 'delete']);
@@ -24,10 +25,10 @@ function remove() {
 }
 
 const startDate = ref(props.availability.startDate);
-const endDate = ref(props.availability.endDate);
+const occurrenceDate = ref(new Date(props.availability.startDate));
 const time = ref([
     { hours: startDate.value.getHours(), minutes: startDate.value.getMinutes(), seconds: startDate.value.getSeconds() },
-    { hours: endDate.value.getHours(), minutes: endDate.value.getMinutes(), seconds: endDate.value.getSeconds() },
+    { hours: props.availability.endDate.getHours(), minutes: props.availability.endDate.getMinutes(), seconds: props.availability.endDate.getSeconds() },
 ]); // Initialize with the current date and one hour later
 
 const initRepetitionData = convertFromRepetition(props.availability.repetition, props.availability.startDate, props.availability.repetition_day_shift);
@@ -44,19 +45,23 @@ const repConfig = ref<{day: string, selected: boolean}[]>([
 ]);
 
 const daysSelectionToggle = ref(false);
-const dayLabel = ref(`${startDate.value.toLocaleString('en-US', { weekday: 'short' })} ${startDate.value.getDate()}`);
+const dayLabel = computed(() => {
+    const date = props.editOccurrence ? occurrenceDate.value : startDate.value;
+    return `${date.toLocaleString('en-US', { weekday: 'short' })} ${date.getDate()}`;
+});
 
 
 function createAvailability(): Availability {
-    const [startDate, endDate] = convertTimeRangeToDates(time.value);
+    const anchor = props.editOccurrence ? occurrenceDate.value : startDate.value;
+    const [startDateNew, endDateNew] = convertTimeRangeToDates(anchor, time.value);
     const selectedDays = repConfig.value.filter(day => day.selected).map(day => day.day);
-    const repetitionConfig = convertToRepetition(repetition.value, selectedDays);
+    const repetitionConfig = props.editOccurrence ? Repetition.Once : convertToRepetition(repetition.value, selectedDays);
 
     return {
-        startDate,
-        endDate,
+        startDate: startDateNew,
+        endDate: endDateNew,
         repetition: repetitionConfig,
-        repetition_day_shift: convertToDailyRepetitionConfig(props.availability.startDate, selectedDays),
+        repetition_day_shift: props.editOccurrence ? [] : convertToDailyRepetitionConfig(props.availability.startDate, selectedDays),
     };
 }
 
@@ -105,19 +110,30 @@ onMounted(() => {
 
                     <div class="d-flex flex-row justify-content-between">
 
-                        <div class="form-group d-flex align-items-center col-8">
+                        <div class="form-group d-flex align-items-center" :class="editOccurrence ? 'col-12' : 'col-8'">
                             <div class="dark-grey-box">{{ dayLabel }}</div>
                             <DatePicker class="range_selector" v-model="time" time-picker is-range :range="{ disableTimeRangeValidation: false }" placeholder="Select Time" />
                         </div>
 
-                        <select id="disabledSelect" class="form-select repetition_selector" v-model="repetition">
+                        <select v-if="!editOccurrence" id="disabledSelect" class="form-select repetition_selector" v-model="repetition">
                             <option>Once</option>
                             <option>Daily</option>
                             <option>Weekly</option>
                         </select>
                     </div>
 
-                    <div class="d-flex flex-row mt-3" v-if="repetition == 'Daily'">
+                    <div v-if="editOccurrence" class="form-group mt-3">
+                        <label class="form-label small text-muted mb-1">Occurrence date</label>
+                        <DatePicker
+                            v-model="occurrenceDate"
+                            :enable-time-picker="false"
+                            :clearable="false"
+                            class="occurrence-date-picker"
+                            aria-label="Occurrence date"
+                        />
+                    </div>
+
+                    <div class="d-flex flex-row mt-3" v-if="!editOccurrence && repetition == 'Daily'">
                         <div v-for="day in repConfig" :key="day.day" class="btn btn-outline-primary custom-btn" :class="{ active: day.selected }" @click="day.selected = !day.selected">
                             {{ day.day }}
                         </div>
@@ -189,6 +205,10 @@ onMounted(() => {
     border: none; /* Remove default border */
     border-radius: 0; /* Remove default border radius */
     margin-left: -10px; /* Make the DatePicker overlap the grey box */
+}
+
+.occurrence-date-picker {
+    width: 100%;
 }
 
 .repetition_selector {
