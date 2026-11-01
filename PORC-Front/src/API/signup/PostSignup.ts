@@ -1,5 +1,5 @@
 import config from '@/config';
-import type { SignUpInfo } from '@/models/SignUpInfo';
+import type { SignUpInfo } from '@/logic/models/signup/SignUpInfo';
 
 export async function postSignup(signup: SignUpInfo) {
     //console.log('Trying to get Logged in status');

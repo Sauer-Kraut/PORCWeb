@@ -1,5 +1,5 @@
 import config from '@/config';
-import type { Season } from '@/models/matchplan/Season';
+import type { Season } from '@/logic/models/season/Season';
 
 export async function getSeasons(): Promise<Season[]> {
     //console.log('Trying to get Logged in status');

@@ -1,6 +1,6 @@
 import config from '@/config';
 import { getClientId } from '../GetClientId';
-import { matchEventToRecv, type MatchEvent } from '@/models/match_event/MatchEvent';
+import { matchEventToRecv, type MatchEvent } from '@/logic/models/account/schedule/match_event/MatchEvent';
 
 export async function postMatchEvent(match: MatchEvent) {
     //console.log('Trying to get Logged in status');

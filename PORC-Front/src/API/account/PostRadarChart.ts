@@ -1,8 +1,8 @@
 import config from '@/config';
 import { getClientId } from '../GetClientId';
-import { pubAccountInfoToRecv, type PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
-import type { AccountCustomisation } from '@/models/pub_account_info/account_cust/AccountCustomisation';
-import type { RadarChart } from '@/models/pub_account_info/account_cust/radar_chart/RadarChart';
+import { pubAccountInfoToRecv, type PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
+import type { AccountCustomisation } from '@/logic/models/account/account_cust/AccountCustomisation';
+import type { RadarChart } from '@/logic/models/account/account_cust/radar_chart/RadarChart';
 
 export async function postRadarChart(chart: RadarChart) {
     //console.log('Trying to get Logged in status');

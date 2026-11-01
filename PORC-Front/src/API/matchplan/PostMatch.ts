@@ -1,8 +1,8 @@
 import config from '@/config';
 import { getClientId } from '../GetClientId';
-import type { MatchModel } from '@/models/matchplan/MatchModel';
+import type { Match } from '@/logic/models/matchplan/match/Match';
 
-export async function postMatch(match: MatchModel){
+export async function postMatch(match: Match){
     //console.log('Trying to get Logged in status');
 
     const clinet_id = getClientId();

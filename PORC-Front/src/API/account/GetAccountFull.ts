@@ -1,8 +1,8 @@
 import config from '@/config';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/models/pub_account_info/PubAccountInfoRecv';
-import type { MatchEventRecv } from '@/models/match_event/MatchEventRecv';
-import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/logic/models/account/PubAccountInfoRecv';
+import type { MatchEventRecv } from '@/logic/models/account/schedule/match_event/MatchEventRecv';
+import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
 
 // Retrieves accounts with schedule, is slower than simple fetch in return
 export async function getAccountFull(ids: string[]): Promise<PubAccountInfo[]> {
@@ -27,7 +27,7 @@ export async function getAccountFull(ids: string[]): Promise<PubAccountInfo[]> {
                 ([k, v]) => [Number(k), v as MatchEventRecv]
             )
         );
-        console.log('Match events received: ', match_event_map);
+        // console.log('Match events received: ', match_event_map);
 
         let accounts = [] as PubAccountInfo[];
         for (let a of accounts_recv) {

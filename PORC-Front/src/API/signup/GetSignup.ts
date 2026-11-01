@@ -1,7 +1,7 @@
 import config from '@/config';
 import { getClientId } from '../GetClientId';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import type { SignUpInfo } from '@/models/SignUpInfo';
+import type { SignUpInfo } from '@/logic/models/signup/SignUpInfo';
 
 export async function getSignups(season: string | null): Promise<SignUpInfo[]> {
     //console.log('Trying to get Logged in status');

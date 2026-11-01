@@ -1,8 +1,8 @@
 import config from '@/config';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/models/pub_account_info/PubAccountInfoRecv';
-import type { MatchEventRecv } from '@/models/match_event/MatchEventRecv';
-import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/logic/models/account/PubAccountInfoRecv';
+import type { MatchEventRecv } from '@/logic/models/account/schedule/match_event/MatchEventRecv';
+import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
 
 // Retrieves global ranking of previous 3 seasons
 export async function getGlobalRankings(): Promise<PubAccountInfo[]> {

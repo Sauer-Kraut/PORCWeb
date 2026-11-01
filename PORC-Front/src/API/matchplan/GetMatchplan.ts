@@ -1,9 +1,9 @@
 import config from '@/config';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import type { Matchplan } from '@/models/matchplan/Matchplan';
+import type { Matchplan } from '@/logic/models/matchplan/Matchplan';
 
 export async function getMatchplan(season: string | null): Promise<Matchplan> {
-    console.log('Fetching matchplan');
+    // console.log('Fetching matchplan');
 
         let url = `${config.getBackendUrl()}/api/matchplan`;
         let constructed_url: string;
@@ -26,7 +26,7 @@ export async function getMatchplan(season: string | null): Promise<Matchplan> {
         else {
             const jsonData = await response.json();
             const matchplan = jsonData.plan as Matchplan;
-            console.log('Matchplan received: ', matchplan);
+            // console.log('Matchplan received: ', matchplan);
             return matchplan;
         }
     

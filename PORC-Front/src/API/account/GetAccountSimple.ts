@@ -1,8 +1,8 @@
 import config from '@/config';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/models/pub_account_info/PubAccountInfoRecv';
-import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
-import type { MatchEventRecv } from '@/models/match_event/MatchEventRecv';
+import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/logic/models/account/PubAccountInfoRecv';
+import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
+import type { MatchEventRecv } from '@/logic/models/account/schedule/match_event/MatchEventRecv';
 
 // Retrieves accounts without schedule, is faster than full fetch in return
 export async function getAccountSimple(ids: string[]): Promise<PubAccountInfo[]> {

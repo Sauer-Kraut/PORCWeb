@@ -6,13 +6,16 @@ interface BackendConfig {
 
 interface PorcConfigOptions {
     backend: BackendConfig;
+    debug: boolean;
 }
 
 class PorcConfig {
     backend: BackendConfig;
+    debug: boolean;
 
     constructor(options: PorcConfigOptions) {
         this.backend = options.backend;
+        this.debug = options.debug;
     }
 
     getBackendUrl(): string {
@@ -21,6 +24,10 @@ class PorcConfig {
 
     getDiscordUrl(): string{
         return `${this.backend.discord_auth_url || ''}`;
+    }
+
+    getDebug(): boolean {
+        return this.debug;
     }
 }
 
@@ -31,6 +38,7 @@ const defaultConfig: PorcConfigOptions = {
         port: import.meta.env.VITE_BACKEND_PORT,
         discord_auth_url: import.meta.env.VITE_BACKEND_DISCORD_AUTH_URL,
     },
+    debug: import.meta.env.VITE_DEBUG === 'true',
 };
 
 const config = new PorcConfig(defaultConfig);

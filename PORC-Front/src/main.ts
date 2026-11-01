@@ -1,6 +1,5 @@
 import { createApp, Transition } from 'vue';
 import App from './App.vue';
-import router from './router';
 import { createVfm } from 'vue-final-modal';
 import FloatingVue, { PopperWrapper } from 'floating-vue';
 import './assets/icons/style.css';
@@ -12,7 +11,8 @@ import './assets/scss/styles.scss';
 import './assets/scss/pages.scss';
 import './assets/scss/global.scss';
 import { createPinia } from 'pinia';
-import { showErrorModal } from './services/ErrorModalService';
+import { showErrorModal } from './logic/services/ErrorModalService.ts';
+import router from './logic/router/index.ts';
 
 const app = createApp(App);
 

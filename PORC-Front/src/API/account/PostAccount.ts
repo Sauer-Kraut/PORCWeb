@@ -1,6 +1,6 @@
 import config from '@/config';
 import { getClientId } from '../GetClientId';
-import { pubAccountInfoToRecv, type PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
+import { pubAccountInfoToRecv, type PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
 
 export async function postAccount(account: PubAccountInfo) {
     //console.log('Trying to get Logged in status');

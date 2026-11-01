@@ -6,6 +6,11 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
     "paths": {
+      "@/models/pub_account_info/*": ["./src/logic/models/account/*"],
+      "@/models/availability/*": ["./src/logic/models/account/schedule/availability/*"],
+      "@/models/match_event/*": ["./src/logic/models/account/schedule/match_event/*"],
+      "@/models/matchplan/*": ["./src/logic/models/matchplan/*"],
+      "@/models/*": ["./src/logic/models/*"],
       "@/*": ["./src/*"]
     }
   }

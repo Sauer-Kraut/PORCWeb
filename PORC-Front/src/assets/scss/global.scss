@@ -554,7 +554,7 @@ input[type=number] {
 
 .seperator-h {
     width: auto;
-    flex-grow: 1;
+    height: 100%;
     align-self: center;
     height: 1px;
     background-color: rgb(118, 116, 116);
@@ -562,7 +562,7 @@ input[type=number] {
 
 .seperator-v {
     height: auto;
-    flex-grow: 1;
+    width: 100%;
     align-self: center;
     width: 1px;
     background-color: rgb(118, 116, 116);

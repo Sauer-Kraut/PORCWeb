@@ -1,0 +1,66 @@
+<script lang="ts" setup>
+import { MatchStatus, type MatchEvent, ObservedMatchStatus} from '@/logic/models/account/schedule/match_event/MatchEvent';
+import type { Season } from '@/logic/models/season/Season';
+import { computed } from 'vue';
+
+const props = defineProps<{
+    status: string;
+    matches: MatchEvent[];
+    player_id?: string;
+    observer_id: string;
+    season?: Season;
+}>();
+
+const status = computed(() => {
+    if (props.player_id === props.observer_id) {
+        return ObservedMatchStatus.IsSelf;
+    }
+
+    const involvedMatches = props.matches.filter((match) => (match.initiatorId === props.observer_id || match.opponentId === props.observer_id) && match.endDate > new Date((props.season?.start_timestamp ?? 10000000000000) * 1000));
+    if (involvedMatches.length === 0) {
+        return ObservedMatchStatus.Unplaned;
+    } else {
+        for (const match of involvedMatches) {
+            if (match.status === MatchStatus.Finished) {
+                return ObservedMatchStatus.Finished;
+            }
+        }
+        for (const match of involvedMatches) {
+            if (match.status === MatchStatus.Confirmed) {
+                return ObservedMatchStatus.Confirmed;
+            }
+        }
+        for (const match of involvedMatches) {
+            if (match.status === MatchStatus.Requested) {
+                if (match.initiatorId === props.observer_id) {
+                    return ObservedMatchStatus.HasRequested;
+                } else {
+                    return ObservedMatchStatus.HasBeenRequested;
+                }
+            }
+        }
+        for (const match of involvedMatches) {
+            if (match.status === MatchStatus.Declined) {
+                return ObservedMatchStatus.Declined;
+            }
+        }
+    }
+});
+</script>
+
+<template>
+    <div v-if="status == 'HasRequested'" class="">Requested</div>
+    <div v-else-if="status == 'Finished'" class="">Finished</div>
+    <div v-else-if="status == 'Declined'" class="">Declined</div>
+    <div v-else-if="status == 'HasBeenRequested'" class="">Inbound Request</div>
+    <div v-else-if="status == 'Confirmed'" class="">Confirmed</div>
+    <div v-else-if="status == 'IsSelf'" class="">Self</div>
+    <div v-else-if="status == 'Unplaned'" class="">Unplanned</div>
+</template>
+
+<style lang="scss" scoped>
+.icon {
+    height: fit-content;
+    width: fit-content;
+}
+</style>

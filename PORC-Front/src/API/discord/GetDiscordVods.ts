@@ -1,6 +1,6 @@
 import config from '@/config';
-import type { VideoReference } from '@/models/discord/VideoReference';
-import { videoReferenceFromRecv, type VideoReferenceRecv } from '@/models/discord/VideoReferenceRecv';
+import type { VideoReference } from '@/logic/models/discord/VideoReference';
+import { videoReferenceFromRecv, type VideoReferenceRecv } from '@/logic/models/discord/VideoReferenceRecv';
 
 export async function getDiscordVods(): Promise<VideoReference[]> {
     //console.log('Trying to get Logged in status');

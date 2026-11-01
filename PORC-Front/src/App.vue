@@ -1,19 +1,19 @@
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { ModalsContainer } from 'vue-final-modal';
-import DiscordUserComponent from './components/DiscordUserComponent.vue';
-import { matchplanStore } from './storage/st_matchplan';
-import type { DivisionModel } from './models/matchplan/DivisionModel';
-import type { PlayerModel } from './models/matchplan/PlayerModel';
-import type { PubAccountInfo } from './models/pub_account_info/PubAccountInfo';
-import { accountsStore } from './storage/st_accounts';
-import Logo from './components/svgs/Logo.vue';
+import DiscordUserComponent from './vue/global/nav/DiscordUserComponent.vue';
+import { matchplanStore } from './logic/storage/st_matchplan.ts';
+import type { Division } from './logic/models/matchplan/division/Division.ts';
+import type { Player } from './logic/models/matchplan/player/Player.ts';
+import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo.ts';
+import { accountsStore } from './logic/storage/st_accounts.ts';
+import LogoComponent from './vue/global/assets/LogoComponent.vue';
 import { appReady } from './appReady';
-import { signupStore } from './storage/st_signups';
-import type { SignUpInfo } from './models/SignUpInfo';
-import type { Matchplan } from './models/matchplan/Matchplan';
-import { getInitData } from './util/GetInitData';
-import { discordInfoStore } from './storage/st_discord';
+import { signupStore } from './logic/storage/st_signups.ts';
+import type { SignUpInfo } from './logic/models/signup/SignUpInfo.ts';
+import type { Matchplan } from '@/models/matchplan/Matchplan.ts';
+import { getInitData } from './logic/util/resources/get/GetInitData.ts';
+import { discordInfoStore } from './logic/storage/st_discord.ts';
 
 
 const st_plan = matchplanStore();
@@ -47,7 +47,7 @@ async function getUserId() {
 const playerinfos = ref<PubAccountInfo[]>([]);
 
 const matchplan = ref<Matchplan>();
-const division = ref<DivisionModel>();
+const division = ref<Division>();
 const season_name = ref('default');
 
 async function getMatchPlan() {
@@ -56,7 +56,7 @@ async function getMatchPlan() {
     await st_plan.get_all_seasons();
 
     matchplan.value = plan;
-    division.value = plan.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === user_id.value));
+    division.value = plan.divisions.find((d: Division) => d.players.some((p: Player) => p.id === user_id.value));
     season_name.value = String(plan.season);
     console.log('matchplan: ', plan);
 }
@@ -64,19 +64,19 @@ async function getMatchPlan() {
 watch( 
     () => user_id.value,
     (newId) => {
-        division.value = matchplan.value?.divisions.find((d: DivisionModel) => d.players.some((p: PlayerModel) => p.id === newId));
+        division.value = matchplan.value?.divisions.find((d: Division) => d.players.some((p: Player) => p.id === newId));
     }
 );
 
-const opponents = ref<PlayerModel[]>([]);
-const participants = ref<PlayerModel[]>([]);
+const opponents = ref<Player[]>([]);
+const participants = ref<Player[]>([]);
 
-function find_opponents(): PlayerModel[] {
-    return division.value?.players.filter((player: PlayerModel) => player.id !== user_id.value) ?? [];
+function find_opponents(): Player[] {
+    return division.value?.players.filter((player: Player) => player.id !== user_id.value) ?? [];
 }
 
-function find_user(): PlayerModel[] {
-    return division.value?.players.filter((player: PlayerModel) => player.id === user_id.value) ?? [];
+function find_user(): Player[] {
+    return division.value?.players.filter((player: Player) => player.id === user_id.value) ?? [];
 }
 
 function getPlayerIds(): string[] {
@@ -274,7 +274,7 @@ onUnmounted(() => {
                 </div>
                 <div class="logo d-flex align-items-center justify-content-center w-7">
                     <router-link to="/" class="mx-2"> 
-                        <Logo />
+                        <LogoComponent />
                     </router-link>
                 </div>
                 <nav :class="{ 'd-none d-md-flex': !isMenuOpen }" class="col-12 col-md row px-0 justify-content-center text-center mx-md-4">

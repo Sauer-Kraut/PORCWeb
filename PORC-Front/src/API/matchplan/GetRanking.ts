@@ -1,6 +1,6 @@
 import config from '@/config';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import type { DivisionRanking } from '@/models/matchplan/PlayerPerformancModel';
+import type { DivisionRanking } from '@/logic/models/matchplan/player_performance/PlayerPerformance';
 
 export async function getRanking(season: string | null): Promise<DivisionRanking[]> {
     //console.log('Trying to get Logged in status');

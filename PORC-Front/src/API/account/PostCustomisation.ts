@@ -1,7 +1,7 @@
 import config from '@/config';
 import { getClientId } from '../GetClientId';
-import { pubAccountInfoToRecv, type PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
-import type { AccountCustomisation } from '@/models/pub_account_info/account_cust/AccountCustomisation';
+import { pubAccountInfoToRecv, type PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
+import type { AccountCustomisation } from '@/logic/models/account/account_cust/AccountCustomisation';
 
 export async function postAccountCustomisation(cust: AccountCustomisation) {
     //console.log('Trying to get Logged in status');

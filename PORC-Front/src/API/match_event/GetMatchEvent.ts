@@ -1,6 +1,6 @@
 import config from '@/config';
-import type { MatchEvent } from '@/models/match_event/MatchEvent';
-import { matchEventFromRecv, type MatchEventRecv } from '@/models/match_event/MatchEventRecv';
+import type { MatchEvent } from '@/logic/models/account/schedule/match_event/MatchEvent';
+import { matchEventFromRecv, type MatchEventRecv } from '@/logic/models/account/schedule/match_event/MatchEventRecv';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
 
 export async function getMatchEvent(ids: number[]): Promise<MatchEvent[] | string> {

@@ -1,9 +1,9 @@
 import config from '@/config';
-import type { MatchEvent } from '@/models/match_event/MatchEvent';
-import { matchEventFromRecv, type MatchEventRecv } from '@/models/match_event/MatchEventRecv';
+import type { MatchEvent } from '@/logic/models/account/schedule/match_event/MatchEvent';
+import { matchEventFromRecv, type MatchEventRecv } from '@/logic/models/account/schedule/match_event/MatchEventRecv';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import type { DiscordEvent } from '@/models/discord/DiscordEvent';
-import { discordEventFromRecv, type DiscordEventRecv } from '@/models/discord/DiscordEventRecv';
+import type { DiscordEvent } from '@/logic/models/discord/DiscordEvent';
+import { discordEventFromRecv, type DiscordEventRecv } from '@/logic/models/discord/DiscordEventRecv';
 
 export async function getDiscordEvents(): Promise<DiscordEvent[]> {
     //console.log('Trying to get Logged in status');

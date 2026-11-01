@@ -1,9 +1,9 @@
 import config from '@/config';
 import { getClientId } from '../GetClientId';
 import { appendURLQueryParam } from '../AppendURLQueryParam';
-import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/models/pub_account_info/PubAccountInfoRecv';
-import type { PubAccountInfo } from '@/models/pub_account_info/PubAccountInfo';
-import { setCookie } from '@/util/SetCookieValue';
+import { PubAccountInfoFromRecv, type PubAccountInfoRecv } from '@/logic/models/account/PubAccountInfoRecv';
+import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
+import { setCookie } from '@/logic/util/resources/set/SetCookieValue';
 
 export async function getLogin(): Promise<PubAccountInfo | null> {
     console.log('Trying to get Logged in status');
