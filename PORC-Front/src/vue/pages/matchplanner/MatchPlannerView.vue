@@ -1,29 +1,21 @@
 <script lang="ts" setup>
 import { waitForAppReady } from '@/appReady';
-import CalendarComponent from '@/vue/pages/matchplanner/components/calendar/CalendarComponent.vue';
-import MatchScoreComponent from '@/vue/pages/homepage/components/season_component/division_component/MatchScoreComponent.vue';
-import PlayerSelector from '@/vue/pages/matchplanner/components/player_selector/PlayerSelectorComponent.vue';
-import AccountCard from '@/vue/global/account/profile/md/AccountCard.vue';
-import Logo from '@/vue/global/assets/LogoComponent.vue';
+import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
 import type { Availability } from '@/logic/models/account/schedule/availability/Availability';
 import type { MatchEvent } from '@/logic/models/account/schedule/match_event/MatchEvent';
+import type { Schedule } from '@/logic/models/account/schedule/Schedule';
 import type { Division } from '@/logic/models/matchplan/division/Division';
 import type { Player } from '@/logic/models/matchplan/player/Player';
 import type { Season } from '@/logic/models/season/Season';
-import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo';
-import type { Schedule } from '@/logic/models/account/schedule/Schedule';
 import { accountsStore } from '@/logic/storage/st_accounts';
 import { matchplanStore } from '@/logic/storage/st_matchplan';
-import { signupStore } from '@/logic/storage/st_signups';
-import { getDivisionImage } from '@/logic/util/resources/get/ImageHelper';
-import { stripAfterFirstSpace } from '@/logic/util/formating/StripAfterSpace';
 import { setPrimaryColor } from '@/logic/util/resources/set/SetPrimaryColor';
+import CalendarComponent from '@/vue/pages/matchplanner/components/calendar/CalendarComponent.vue';
+import PlayerSelector from '@/vue/pages/matchplanner/components/player_selector/PlayerSelectorComponent.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 
-import { computePosition } from '@floating-ui/vue';
 import AccountCardFloating from '@/vue/global/account/profile/lg/AccountCardLG.vue';
-import AccountCardSM from '@/vue/global/account/profile/legacy/AccountCardSM.vue';
-import AccountCardSMVertical from '@/vue/global/account/profile/sm/AccountCardSMVertical.vue';
+import { computePosition } from '@floating-ui/vue';
 
 const accountPlate = document.querySelector<HTMLElement>('#account-plate');
 const tooltip = document.querySelector<HTMLElement>('#test-tooltip');
@@ -234,7 +226,7 @@ async function submitNote() {
         <div class="calendar flex-grow-5">
             <CalendarComponent
                 v-if="selectedPlayer?.schedule"
-                :schedule="emptySchedule"
+                :schedule="schedule ?? emptySchedule"
                 :players="division?.players || []"
                 :own-calendar="(selectedPlayer?.id ?? userId) === userId"
                 :ownId="userId ?? ''"

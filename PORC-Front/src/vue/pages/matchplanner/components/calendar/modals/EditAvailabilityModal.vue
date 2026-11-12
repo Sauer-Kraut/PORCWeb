@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 import DatePicker from '@vuepic/vue-datepicker';
-import { Repetition, type Availability } from '@/logic/models/account/schedule/availability/Availability';
+import type { Availability } from '@/logic/models/account/schedule/availability/Availability';
 import { convertFromRepetition, convertTimeRangeToDates, convertToDailyRepetitionConfig, convertToRepetition } from './EditAvailability/UIConversions';
 
 const props = defineProps<{
@@ -24,10 +24,9 @@ function remove() {
 }
 
 const startDate = ref(props.availability.startDate);
-const endDate = ref(props.availability.endDate);
 const time = ref([
     { hours: startDate.value.getHours(), minutes: startDate.value.getMinutes(), seconds: startDate.value.getSeconds() },
-    { hours: endDate.value.getHours(), minutes: endDate.value.getMinutes(), seconds: endDate.value.getSeconds() },
+    { hours: props.availability.endDate.getHours(), minutes: props.availability.endDate.getMinutes(), seconds: props.availability.endDate.getSeconds() },
 ]); // Initialize with the current date and one hour later
 
 const initRepetitionData = convertFromRepetition(props.availability.repetition, props.availability.startDate, props.availability.repetition_day_shift);
@@ -44,18 +43,20 @@ const repConfig = ref<{day: string, selected: boolean}[]>([
 ]);
 
 const daysSelectionToggle = ref(false);
-const dayLabel = ref(`${startDate.value.toLocaleString('en-US', { weekday: 'short' })} ${startDate.value.getDate()}`);
+const dayLabel = computed(() => {
+    const date = startDate.value;
+    return `${date.toLocaleString('en-US', { weekday: 'short' })} ${date.getDate()}`;
+});
 
 
 function createAvailability(): Availability {
-    const [startDate, endDate] = convertTimeRangeToDates(time.value);
+    const [startDateNew, endDateNew] = convertTimeRangeToDates(startDate.value, time.value);
     const selectedDays = repConfig.value.filter(day => day.selected).map(day => day.day);
-    const repetitionConfig = convertToRepetition(repetition.value, selectedDays);
 
     return {
-        startDate,
-        endDate,
-        repetition: repetitionConfig,
+        startDate: startDateNew,
+        endDate: endDateNew,
+        repetition: convertToRepetition(repetition.value, selectedDays),
         repetition_day_shift: convertToDailyRepetitionConfig(props.availability.startDate, selectedDays),
     };
 }
