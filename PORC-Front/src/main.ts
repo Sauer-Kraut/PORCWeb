@@ -47,6 +47,6 @@ app.config.errorHandler = (err, instance, info) => {
         showErrorModal("Ran into unspecified Error at " + info)
     }
 
-}
+};
 app.mount('#app');
 

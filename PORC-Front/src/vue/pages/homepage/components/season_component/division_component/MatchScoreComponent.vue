@@ -105,9 +105,7 @@ const player2tag = ref<HTMLElement | null>(null);
 const accStorage = accountsStore();
 const playerAccounts = ref<PubAccountInfo[]>([]);
 
-const accPlaceholder = {
-    username: 'Loading...',
-} as PubAccountInfo;
+const accPlaceholder = accStorage.get_placeholder_account();
 
 watch(
     () => [props.match.p1.id, props.match.p2.id],
@@ -172,7 +170,7 @@ onMounted(async () => {
                 :anchor="player1tag"
                 :update="InfoPopover"
                 :display-logic="clickEvaluator"
-                :parent="'#season'"
+                :parent="'#divisions'"
                 :fade-in="false"
                 :popover-boundary="PopoverBoundary"
                 class="p-0"
@@ -184,7 +182,7 @@ onMounted(async () => {
                 :anchor="player2tag"
                 :update="InfoPopover"
                 :display-logic="clickEvaluator"
-                :parent="'#season'"
+                :parent="'#divisions'"
                 :fade-in="false"
                 :popover-boundary="PopoverBoundary"
                 class="p-0"

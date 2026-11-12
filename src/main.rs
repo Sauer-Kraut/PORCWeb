@@ -2,8 +2,6 @@ mod backend;
 mod porcbot;
 pub mod liberary;
 
-use actix_web::dev::Server;
-use askama::filters::format;
 use backend::backend_api::account::get_account_info::get_account_info_request;
 use backend::backend_api::account::get_account_info_full::get_account_info_full_request;
 use backend::backend_api::account::get_login::get_login_request;
@@ -47,6 +45,8 @@ use dotenvy::dotenv;
 use crate::backend::backend_api::account::get_global_rankings::get_global_ranking_request;
 use crate::backend::backend_api::account::post_account_cust::post_account_customisation_request;
 use crate::backend::backend_api::account::post_account_radar_chart::post_account_radar_chart_request;
+use crate::backend::backend_api::asset::image::get_image_meta::get_image_entries_request;
+use crate::backend::backend_api::asset::image::get_image_meta_by_id::get_image_entries_by_id_request;
 use crate::backend::backend_api::discord::get_discord_events::get_discord_events_reqeust;
 use crate::backend::backend_api::discord::get_discord_vods::get_discord_vods_reqeust;
 use crate::liberary::discord_lib::discord_event::discord_event::DiscordEvent;
@@ -55,6 +55,7 @@ use crate::liberary::matchplan_lib::division::player_performance::PlayerPerforma
 use crate::liberary::matchplan_lib::matchplan::matchplan::MatchPlan;
 use crate::liberary::matchplan_lib::matchplan::storage::matchplan_get::get_matchplan;
 use crate::liberary::util::functions::build_index::build_index;
+use crate::liberary::util::functions::import_images::import_images;
 use crate::porcbot::tasks::functions::collect_discord_vods::collect_discord_vods;
 use crate::porcbot::tasks::functions::fetch_discord_events::fetch_discord_events;
 
@@ -210,6 +211,18 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
+
+    // spawns a thread to import images from the resources/images/import folder to the resources/images/banner folder and store them in the database
+    tokio::spawn({
+        let pool = pool.clone();
+        async move {
+            match import_images(pool).await {
+                Ok(_) => println!("{}", "Images were imported successfully".bright_green()),
+                Err(err) => println!("{}", format!("An error has occured while importing images: {err}").red()),
+            }
+        }
+    });
+
     let appstate = AppState {
         // matchplan,
         // signups,
@@ -343,6 +356,11 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/faq").to(index))
             .service(web::resource("/match-planner").to(index))
 
+            .service(
+                Files::new("/resources", "./resources")
+                .prefer_utf8(true)
+            )
+
             // /api/account
 
             .service(web::resource("/api/account/simple")
@@ -398,10 +416,18 @@ async fn main() -> std::io::Result<()> {
             .route(web::get().to(get_match_event_request))
             .route(web::post().to(post_match_event_request)))
 
+            // /api/image
+
+            .service(web::resource("/api/image")
+            .route(web::get().to(get_image_entries_request)))
+
+            .service(web::resource("/api/image/by-id")
+            .route(web::get().to(get_image_entries_by_id_request)))
+
             // /api/query-testing
 
-            .service(web::resource("/api/query-testing")
-            .route(web::get().to(get_account_info_request)))
+            // .service(web::resource("/api/query-testing")
+            // .route(web::get().to(get_account_info_request)))
 
             // /api/discord
 

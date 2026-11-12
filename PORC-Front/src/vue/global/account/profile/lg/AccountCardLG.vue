@@ -10,11 +10,14 @@
     import { matchplanStore } from '@/logic/storage/st_matchplan.ts';
     import { waitForAppReady } from '@/appReady.ts';
     import { Chart, registerables } from 'chart.js';
-import ProfileBadge from '../../badge/ProfileBadge.vue';
-import { badge_from_code } from '@/logic/models/account/account_cust/badges/Badge.ts';
-import { Shiftstone } from '@/logic/models/account/account_cust/shiftstone/ShiftstoneModel.ts';
-import { filter_str } from '@/logic/util/formating/stringFilter.ts';
-import RadarChartComponent from '../../chart/RadarChartComponent.vue';
+    import ProfileBadge from '../../badge/ProfileBadge.vue';
+    import { badge_from_code } from '@/logic/models/account/account_cust/badges/Badge.ts';
+    import { Shiftstone } from '@/logic/models/account/account_cust/shiftstone/ShiftstoneModel.ts';
+    import { filter_str } from '@/logic/util/formating/stringFilter.ts';
+import { accountsStore } from '@/logic/storage/st_accounts.ts';
+import { EditProfile } from '../../modals/edit_profile/EditProfile.ts';
+import RadarChartComponent from '../../chart/radar_chart/RadarChartComponent.vue';
+import PieChartComponent from '../../chart/pie_chart/PieChartComponent.vue';
 
     Chart.register(...registerables);
 
@@ -154,7 +157,7 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
             chartInstance.data.labels = labels;
             chartInstance.data.datasets[0].data = data;
             (chartInstance.data.datasets[0] as any).borderColor = color;
-            (chartInstance.data.datasets[0] as any).backgroundColor = fillColor; // ✅ now updates too
+            (chartInstance.data.datasets[0] as any).backgroundColor = fillColor;
             chartInstance.update();
             return;
         }
@@ -183,8 +186,8 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                     x: { display: false, grid: { display: false } }
                 },
                 animation: {
-                    duration: 300, // default is 1000ms — lower = faster, higher = slower
-                    easing: 'easeOutQuart' // optional: controls the easing curve
+                    duration: 300,
+                    easing: 'easeOutQuart'
                 },
                 plugins: {
                     legend: { display: false },
@@ -197,10 +200,19 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
             }
         });
     }
+
+    const allowEdit = ref<boolean>(false);
+
+    watch(async () => props.account, async (newAccount) => {
+        allowEdit.value = await accountsStore().get_login_id() === (await newAccount).id; // Replace with actual logic to check if the user can edit
+    });
+
+
     onMounted(async () => {
         await waitForAppReady();
         await findMatches(props.account.id);
         await findDevelopment(props.account.id);
+        allowEdit.value = await accountsStore().get_login_id() === props.account.id;
     })
 
     onUnmounted(() => {
@@ -211,91 +223,88 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
 
 <template>
     <div class="account-card d-flex flex-column">
-            
-            <!-- <img class="banner" src="../assets/images/radar-chart.png" alt="Banner"> -->
+
             <div class="banner align-items-center justify-content-center d-flex">
-                <RadarChartComponent v-if="account.customisation?.radar_chart" class="radar-chart" :size="280" :labels="account.customisation?.radar_chart?.values.map((a) => a[0])" :values="account.customisation?.radar_chart?.values.map((a) => a[1])" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChartComponent>
-                <RadarChartComponent v-else class="radar-chart" :size="280" :labels="['Mobility', 'Weight', 'Aggresiv', 'Range Bias', 'Reactivity']" :values="[0, 0, 0, 0, 0]" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChartComponent>
+                <RadarChartComponent 
+                    v-if="account.customisation?.radar_chart" 
+                    class="radar-chart" :size="280" 
+                    :labels="account.customisation?.radar_chart?.values.map((a) => a[0])" :values="account.customisation?.radar_chart?.values.map((a) => a[1])" 
+                    :max-value="5" 
+                    :hardbg="[0, 0, 0, 0.4]"
+                    :style="{ '--chart-color': 'var(--primary)' }"
+                />
+                <RadarChartComponent 
+                    v-else 
+                    class="radar-chart" 
+                    :size="280" 
+                    :labels="['Mobility', 'Weight', 'Aggresiv', 'Range Bias', 'Reactivity']" 
+                    :values="[0, 0, 0, 0, 0]" 
+                    :max-value="5" 
+                    :hardbg="[0, 0, 0, 0.4]"
+                    :style="{ '--chart-color': 'var(--primary)' }"
+                />
+
+                <i
+                    v-if="allowEdit"
+                    @click="EditProfile(account)"
+                    class="edit-btn icon icon-edit-pencil"
+                ></i>
             </div>
 
             <div class="name-row align-items-center">
-                <!-- <div class="pfp"></div> -->
                 <DiscordAvatarComponent :account="account" class="pfp"></DiscordAvatarComponent>
 
                 <div class="username">
-                    {{ filter_str(account.username, 9) }}
+                    {{ filter_str(account.username, 7) }}
                     <div class="sub">
                         {{ recentDivision }} #{{ account.stats.division_rank }} - Global #{{ account.stats.global_rank }} 
                     </div>
                 </div>
 
                 <div class="shiftstones">
-                    <img class="shiftstone" :src="getShiftstoneIcon(Shiftstone.Stubborn)"/>
-                    <img class="shiftstone" :src="getShiftstoneIcon(Shiftstone.Adamant)"/>
+                    <img class="shiftstone" :src="getShiftstoneIcon(account.customisation?.shiftstones[0] ?? Shiftstone.Empty)"/>
+                    <img class="shiftstone" :src="getShiftstoneIcon(account.customisation?.shiftstones[1] ?? Shiftstone.Empty)"/>
                 </div>
             </div>
 
+            <div class="body d-flex flex-column w-100">
 
-            <div class="achievements">
-                <div class="achievement"><ProfileBadge :badge="badge_from_code(0)" :unlocked="true" :size="'lg'"></ProfileBadge></div>
-                <div class="achievement"><ProfileBadge :badge="badge_from_code(0)" :unlocked="true" :size="'lg'"></ProfileBadge></div>
-                <div class="achievement"><ProfileBadge :badge="badge_from_code(0)" :unlocked="true" :size="'lg'"></ProfileBadge></div>
-            </div>
-            
 
-            <!-- <div class="pose-section">
-                <div class="pose-title spaced-text mb-2 pb-1">Structure Distribution</div>
-
-                <div class="pose-bar">
-                    <div class="pose-w" :style="{width: '36%'}"></div>
-                    <div class="pose-c" :style="{width: '26%'}"></div>
-                    <div class="pose-p" :style="{width: '2%'}"></div>
-                    <div class="pose-b" :style="{width: '15%'}"></div>
-                    <div class="pose-d flex-grow-1"></div>
+                <div class="achievements">
+                    <div class="achievement"><ProfileBadge :badge="badge_from_code(account.customisation?.badges[0] ?? 0)" :unlocked="true" :size="'xl'"></ProfileBadge></div>
+                    <div class="achievement"><ProfileBadge :badge="badge_from_code(account.customisation?.badges[1] ?? 13)" :unlocked="true" :size="'xl'"></ProfileBadge></div>
+                    <div class="achievement"><ProfileBadge :badge="badge_from_code(account.customisation?.badges[2] ?? 0)" :unlocked="true" :size="'xl'"></ProfileBadge></div>
                 </div>
 
-                <div class="legend">
-                    <div class="pose-w">Wall</div>
-                    <div class="pose-c">Cube</div>
-                    <div class="pose-p">Pillar</div>
-                    <div class="pose-b">Ball</div>
-                    <div class="pose-d">Disk</div>
-                </div>
-            </div> -->
-
-            <div class="d-flex flex-column gap-4 w-100 flex-grow-1 pt-4">
-
-                <div class="stat-section p-4 pb-0 pt-1">
-                    <div class="section-title spaced-text pb-1 ms-1 w-100">Statistics Tickers</div>
+                <div class="stat-section">
+                    <div class="section-title spaced-text w-100">Statistics Tickers</div>
                     <div class="stat">
-                        <div class="value primary">{{ account.stats.global_rank }} </div>
                         <div class="stat-name spaced-text">Rank</div>
+                        <div class="value primary">{{ account.stats.global_rank ?? '-' }}</div>
                     </div>
                     <div class="stat">
-                        <div class="value">{{ account.stats.wins }} </div>
                         <div class="stat-name spaced-text">Points</div>
+                        <div class="value">{{ account.stats.wins ?? 0 }}</div>
                     </div>
                     <div class="stat">
-                        <div class="value">{{ account.stats.win_ratio }} %</div>
                         <div class="stat-name spaced-text">Win Rate</div>
+                        <div class="value">{{ account.stats.win_ratio?.toFixed(0) ?? '-' }} %</div>
                     </div>
                 </div>
 
 
-                <div class="chart-section p-4 pb-0 pt-1">
-                    <div class="section-title spaced-text pb-1 ms-1">Development Chart</div>
-                    <div class="chart">
-                        <canvas ref="chartCanvas"></canvas>
+                <div class="chart-block d-flex flex-column">
+                    <div class="section-title spaced-text">Structure Distribution</div>
+                    <div class="chart-section">
+                        <PieChartComponent :size="280" :data="account.stats.pose_stats ?? [['Wall', 0.2], ['Cube', 0.2], ['Pillar', 0.2], ['Ball', 0.2], ['Disc', 0.2]]"></PieChartComponent>
                     </div>
                 </div>
 
 
-                <div class="matches-section flex-grow-1 p-4 pb-0 pt-1">
-                    <div class="section-title spaced-text mb-1 ms-1 pb-1">Recent Matches</div>
+                <div class="matches-section flex-grow-1">
+                    <div class="section-title spaced-text">Recent Matches</div>
 
                     <div class="scroll-box">
-
-
                         <div v-if="!isFetching(matches)" v-for="entry in matches" class="match-entry" 
                             :class="{win: (entry.match.p1.id == account.id ? (entry.match.p1score??0) > (entry.match.p2score??0) : (entry.match.p1score??0) < (entry.match.p2score??0))}"
                         >
@@ -310,55 +319,11 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                                 <span :class="{owned: true}">{{ entry.match.p2score }}</span>
                             </div>
                         </div>
-
-
                     </div>
-
-                    
-
-
-                    <!-- <div class="match-entry" :class="{win: true}">
-                        <div v-if="true" class="status-text">Win</div>
-                        <div v-if="!true" class="status-text">Loss</div>
-                        <div class="source-text">PfM</div>
-                        <div class="vs">vs</div>
-                        <div class="opponent">the edj</div>
-                        <div class="score">
-                            <span :class="{owned: false}">6</span>
-                            / 
-                            <span :class="{owned: true}">0</span>
-                        </div>
-                    </div>
-                    <div class="match-entry" :class="{win: false}">
-                        <div v-if="false" class="status-text">Win</div>
-                        <div v-if="!false" class="status-text">Loss</div>
-                        <div class="source-text">S11</div>
-                        <div class="vs">vs</div>
-                        <div class="opponent">2Guib</div>
-                        <div class="score">
-                            <span :class="{owned: false}">4</span>
-                            / 
-                            <span :class="{owned: true}">2</span>
-                        </div>
-                    </div>
-                    <div class="match-entry" :class="{win: true}">
-                        <div v-if="true" class="status-text">Win</div>
-                        <div v-if="!true" class="status-text">Loss</div>
-                        <div class="source-text">S11</div>
-                        <div class="vs">vs</div>
-                        <div class="opponent">Savitarian</div>
-                        <div class="score">
-                            <span :class="{owned: false}">1</span>
-                            / 
-                            <span :class="{owned: true}">5</span>
-                        </div>
-                    </div> -->
                 </div>
 
             </div>
 
-            
-            
         </div>
 </template>
 
@@ -366,58 +331,36 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
     @import '@/assets/scss/styles.scss';
     @import '@/assets/scss/global.scss';
 
+    // Design rules (shared with AccountCard), scaled up for the larger card:
+    //  1. Card = $darker-bg, tiles on it = $highlight-bg, chips on a tile = $darker-bg (tone inverts one level down).
+    //  2. No outlines around items; separation comes from space, not borders.
+    //  3. Radius scales with size: 24 big tile / 16 mid tile / 12 small tile / 8 chip.
+    //  4. Elements overlapping the banner use the card colour (cutout look).
+    //  5. Spacing scale: 0.75rem between siblings, 1.5rem side gutter, 2rem between sections.
     .account-card {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         overflow: hidden;
-        
+
         width: 26rem;
         min-height: 50rem;
 
-        --dark-highlight-bg: rgba(0, 0, 0, 0.25);
+        --highlight-bg: #{$highlight-bg};
+        --gutter: 1.5rem;
+        --gap: 0.75rem;
 
-
+        background-color: $darker-bg;
+        // border: 1px solid $border-color;
         // border-radius: 12px !important;
-        // border-image: linear-gradient(180deg, var(--primary), $border-color) 1;
-
-        // background: transparent;
-        // background-color: #131313;
 
         padding: 0;
 
         .section-title {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: bold;
             color: $muted-text;
-        }
-
-        .division-title {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-
-            width: 100%;
-            height: 3.5rem;
-
-            background: linear-gradient(90deg, color-mix(in srgb, var(--primary), transparent 65%) 0%, color-mix(in srgb, var(--primary), transparent 95%) 95%);
-
-            gap: 1.5rem;
-
-            // padding-top: 0.25rem;
-            padding-left: 1rem;
-
-            .division-icon {
-                width: 3.25rem;
-                height: 3.25rem;
-                object-fit: contain;
-            }
-
-            .division-name {
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: var(--primary);
-            }
+            margin-bottom: 0.9rem;
         }
 
         .banner {
@@ -427,247 +370,284 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
             border-radius: 0 !important;
 
             width: 100%;
-            height: 18rem;
+            min-height: 21rem;
+            height: 24rem;
 
-            padding-top: 4rem;
-            padding-bottom: 2rem;
+            padding-top: 3rem;
+            padding-bottom: 5rem;
 
-            border-radius: $border-radius;
-
-            background-color: var(--dark-highlight-bg);
-
-            // Image layer
+            background-color: $darker-bg;
             background-image: url("https://static.vecteezy.com/system/resources/thumbnails/049/855/471/small/nature-background-high-resolution-wallpaper-for-a-serene-and-stunning-view-free-photo.jpg");
             background-size: cover;
             background-position: center;
 
-            transition:
-                transform 0.3s ease-in-out,
-                box-shadow 0.3s ease-in-out;
-
-            // Gradient overlay layer
+            // Static dim so the radar stays readable over the photo
             &::before {
                 content: "";
-
                 position: absolute;
                 inset: 0;
-
-                border-radius: inherit;
-
-                background:
-                    radial-gradient(
-                        circle at 50%,
-                        rgba(0, 0, 0, 0.95) 0%,
-                        rgba(0, 0, 0, 0.85) 35%,
-                        rgba(0, 0, 0, 0) 75%
-                    );
-
-                opacity: 0.9;
-
-                transition:
-                    opacity 0.35s ease,
-                    transform 0.35s ease;
-
+                background: radial-gradient(
+                    circle at 50%,
+                    rgba(0, 0, 0, 0.4) 0%,
+                    rgba(0, 0, 0, 0.3) 30%,
+                    rgba(0, 0, 0, 0.1) 60%
+                );
                 pointer-events: none;
-            }
-
-            &:hover::before {
-                opacity: 1;
-
-                transform: scale(1.08);
-
-                background:
-                    radial-gradient(
-                        circle at 50%,
-                        rgba(0, 0, 0, 0.95) 0%,
-                        rgba(0, 0, 0, 0.85) 40%,
-                        rgba(0, 0, 0, 0) 80%
-                    );
             }
 
             .radar-chart {
                 position: relative;
                 z-index: 5;
-
                 border-radius: 50%;
-
-                background:
-                    radial-gradient(
-                        circle,
-                        color-mix(in srgb, var(--primary), transparent 80%) 0%,
-                        rgba(0,0,0,0) 65%
-                    );
+                background: radial-gradient(
+                    circle,
+                    color-mix(in srgb, var(--primary), transparent 80%) 0%,
+                    rgba(0,0,0,0) 65%
+                );
             }
         }
 
+        .edit-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.5rem;
+
+            height: 1rem;
+            width: 1rem;
+
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 10;
+            cursor: pointer;
+
+            transition: color 0.2s ease, transform 0.2s ease;
+
+            &:hover {
+                color: rgba(255, 255, 255, 0.8);
+                transform: scale(1.1);
+            }
+        }
+
+        // Cutout pill: card colour over the banner, generous inner padding
         .name-row {
             display: flex;
             flex-direction: row;
             justify-content: flex-start;
             align-items: center !important;
 
-            width: 100%;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            position: relative;
+            z-index: 6;
 
-            // background-color: black;
+            width: calc(100% - 2 * (var(--gutter) - 0.75rem));
+            margin-inline: calc(var(--gutter) - 0.75rem);
+            padding: 1rem 1rem 1rem 0.75rem;
 
-            border: 1px solid $border-color;
-            border-left: none;
-            border-right: none;
+            background: $darker-bg;
+            border-radius: 20px;
 
-
-            // transform: translate(0rem, -4.25rem);
+            transform: translateY(-3.5rem);
+            margin-bottom: -3.5rem;
 
             .pfp {
-                // border: 1px solid var(--primary);
-
-                margin-left: 1.5rem;
-
-                width: 3.5rem;
-                height: 3.5rem;
-                border-radius: 20%;
+                flex-shrink: 0;
+                width: 3.75rem;
+                height: 3.75rem;
+                border-radius: 15%;
                 background: rgb(26, 26, 26);
-
                 background-size: cover;
             }
 
             .username {
                 margin-left: 1rem;
-                // transform: translate(0rem, 4rem);
 
-                font-size: 2rem; 
-                font-weight: 900; 
-                letter-spacing: -1px; 
-                text-transform: uppercase; 
+                font-size: 2rem;
+                font-weight: 900;
+                letter-spacing: -1px;
+                text-transform: uppercase;
                 line-height: 1;
 
                 .sub {
                     text-transform: initial;
-                    letter-spacing: 0px; 
+                    letter-spacing: 0px;
 
                     font-weight: 500;
-                    margin-top: 0.25rem;
+                    margin-top: 0.4rem;
                     font-size: 0.7rem;
                     color: rgb(88, 88, 88);
                 }
             }
 
+            // Raised tile on the card surface
             .shiftstones {
                 display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
 
                 margin-left: auto;
-                margin-right: 1.25rem;
+                height: 3.75rem;
+                padding: 0 0.5rem;
 
-                gap: 0.3rem;
+                background: var(--highlight-bg);
+                border-radius: 14px;
 
                 .shiftstone {
-                    scale: 0.96;
+                    scale: 0.8;
                 }
             }
         }
-
 
         .achievements {
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
+            align-items: center;
 
             width: 100%;
-            padding-inline: 1rem;
-
-            background: var(--dark-highlight-bg);
-
-            border-bottom: 1px solid $border-color;
-            border-left: none;
-            border-right: none;
+            margin: 0;
+            gap: var(--gap);
 
             .achievement {
                 display: flex;
-                flex-grow: 1;
-
+                flex: 1 1 0;
                 justify-content: center;
                 align-items: center;
 
+                height: 6.5rem;
+
+                background: var(--highlight-bg);
+                border-radius: 24px;
+            }
+        }
+
+        // Sections are separated by space, with one hairline above the body
+        .body {
+            margin-top: 0 !important;
+            gap: 2.25rem;
+            padding: 2rem var(--gutter) 2.25rem;
+
+            // border-top: 1px solid $border-color;
+        }
+
+        .stat-section {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: var(--gap);
+
+            width: 100%;
+            margin: 0;
+            padding: 0 !important;
+
+            .section-title {
+                width: 100%;
+                margin-bottom: 0.15rem;
+            }
+
+            .stat {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+
+                flex: 1 1 0;
+                min-width: 0;
                 height: 5.5rem;
-                // background: black;
 
-                // border: 1px solid $border-color;
-                border-top: none;
-                border-left: none;
-                border-bottom: none;
+                padding: 0 1.1rem;
 
-                .achievement-icon {
-                    font-size: 1.3rem;
-                    color: var(--primary);
-                    -webkit-text-fill-color: var(--primary);
-                    display: inline-block;
-                    filter: sepia(1) saturate(150%) brightness(110%) hue-rotate(120deg);
+                background: var(--highlight-bg);
+                border-radius: 16px;
+
+                .stat-name {
+                    font-size: 0.65rem !important;
+                    font-weight: 700;
+                    letter-spacing: 0px;
+                    color: rgb(110, 110, 110);
+                    margin-bottom: 0.5rem;
                 }
 
-                &:last-child {
-                    border-right: none;
+                // Chip inverts to the card colour so it reads one level deeper than its tile
+                .value {
+                    text-wrap: nowrap;
+
+                    font-size: 1.15rem;
+                    font-weight: 400;
+                    letter-spacing: 1px;
+                    color: rgb(224, 224, 224);
+                    font-family: 'Barlo Condensed', monospace;
+
+                    background: $darker-bg;
+                    border-radius: 8px;
+                    padding: 0.3rem 0.65rem;
+                }
+            }
+        }
+
+        .chart-block {
+            width: 100%;
+            padding: 0;
+        }
+
+        // Large raised tile with roomy inner padding
+        .chart-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            padding: 2rem 1.5rem;
+            margin: 0 !important;
+
+            background: var(--highlight-bg);
+            border: none;
+            border-radius: 24px;
+
+            .chart {
+                position: relative;
+                height: 15rem;
+                width: 100%;
+
+                background: $darker-bg;
+                border-radius: 16px;
+
+                canvas {
+                    position: absolute;
+                    inset: 0;
+                    width: 100% !important;
+                    height: 100% !important;
+                    display: block;
                 }
             }
         }
 
         .matches-section {
             display: flex;
+            display: none !important;
             flex-direction: column;
             justify-content: flex-start;
             align-items: flex-start;
 
-            // background: var(--dark-highlight-bg);
-
             width: 100%;
-            min-height: 16rem;
+            min-height: 8rem;
             overflow: hidden;
 
-            padding: 1.5rem;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            padding: 0;
 
             mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
 
-            // border-bottom: 1px solid $border-color;
-            // background-color: black;
-
-            .matches-title {
-                font-size: 0.7rem;
-                font-weight: bold;
-                color: $muted-text;
-            }
-
             .scroll-box {
+                width: 100%;
                 max-height: 16rem;
 
                 overflow-y: scroll;
                 overflow-x: hidden;
-
-                // scrollbar-color: var(--primary) transparent;
                 scrollbar-width: thin;
 
-                /* Fade masking effect at the bottom to visually hint at overflow */
-                mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
-                -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
-
-                &::-webkit-scrollbar {
-                    width: 8px;
-                }
-
-                &::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-
-                // &::-webkit-scrollbar-thumb {
-                //     background: var(--primary);
-                //     border-radius: 4px;
-
-                //     &:hover {
-                //         background: color-mix(in srgb, var(--primary) 120%, white);
-                //     }
-                // }
+                &::-webkit-scrollbar { width: 8px; }
+                &::-webkit-scrollbar-track { background: transparent; }
             }
 
             .match-entry {
@@ -680,271 +660,62 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                 align-items: center;
 
                 width: 100%;
-                height: 2.5rem !important;
+                height: 3rem !important;
+                margin-bottom: var(--gap);
 
-                border-radius: 4px;
-                border: 1px solid $border-color;
-
-                margin-bottom: 0.5rem;
-
+                overflow: hidden;
+                background: var(--highlight-bg);
+                border-radius: 12px;
                 border-left: 3px solid var(--win-status-color);
-                background-color: var(--dark-highlight-bg);
-                // background: linear-gradient(to right, 
-                //     color-mix(in srgb, var(--win-status-color) 8%, transparent), 
-                //     color-mix(in srgb, var(--win-status-color) 3%, transparent) 55%, 
-                //     color-mix(in srgb, var(--win-status-color) 3%, transparent) 85%, 
-                //     transparent 100%);
 
                 .source-text {
                     padding-left: 1rem;
-
-                    font-weight: 700; 
-                    width: 50px; 
+                    font-weight: 700;
+                    width: 50px;
                     font-size: calc(var(--match-font-size) * 1.1);
                     text-transform: uppercase;
-
                     color: $weak-text;
                 }
 
-                .vs  {
+                .vs {
                     width: 20px;
                     color: $weak-text;
-
                     font-weight: 500;
                     font-size: var(--match-font-size);
                 }
 
                 .status-text {
                     padding-left: 1rem;
-
-                    font-weight: 700; 
-                    width: 60px; 
+                    font-weight: 700;
+                    width: 60px;
                     height: 100%;
                     align-content: center;
                     font-size: var(--match-font-size);
                     text-transform: uppercase;
-
                     color: var(--win-status-color);
-
-                    background: linear-gradient(to right, 
-                        color-mix(in srgb, var(--win-status-color) 8%, transparent), 
-                        color-mix(in srgb, var(--win-status-color) 3%, transparent) 100%, 
-                        // color-mix(in srgb, var(--win-status-color) 3%, transparent) 85%, 
-                        transparent 100%);
-                    border-right: 1px solid $border-color;
+                    background: color-mix(in srgb, var(--win-status-color) 8%, $darker-bg);
                 }
 
-                &.win {
-                    --win-status-color: rgb(0, 221, 114);
-                }
-
-                &:not(.win) {
-                    --win-status-color: rgb(240, 28, 28);
-                }
+                &.win { --win-status-color: rgb(0, 221, 114); }
+                &:not(.win) { --win-status-color: rgb(240, 28, 28); }
 
                 .opponent {
                     margin-right: 1rem;
-                    width: 10rem !important;
-
-                    font-weight: 700; 
-                    width: 50px; 
+                    font-weight: 700;
+                    width: 50px;
                     font-size: calc(var(--match-font-size) * 1.05);
                     text-transform: uppercase;
-
                     color: rgb(224, 224, 224);
                 }
 
                 .score {
                     margin-left: 1rem;
-
-                    font-weight: 500; 
-                    width: 50px; 
+                    font-weight: 500;
+                    width: 50px;
                     font-size: var(--match-font-size);
-
                     color: var(--primary);
-
-                    .owned{
-                        // font-weight: 700; 
-                    }
                 }
             }
         }
-
-        .stat-section {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-
-            margin-top: -0.5rem;
-
-            padding: 1.5rem;
-            gap: 0.5rem;
-
-            width: 100%;
-
-            .stat {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-
-                // border-right: 1px solid $border-color;
-                // border-bottom: 1px solid $border-color;
-                // background-color: rgb(7, 7, 7);
-
-                height: 4rem;
-                min-width: 30%;
-                flex-grow: 1;
-
-                // margin: 1rem;
-                margin-bottom: 0;
-
-                border: 1px solid $border-color;
-                border-radius: 8px;
-
-                background: var(--dark-highlight-bg);
-
-                // padding-left: 0.5rem;
-
-                &:nth-child(even) {
-                    border-right: none;
-                }
-
-                .value {
-                    font-size: 1.15rem;
-                    font-weight: 600;
-                    letter-spacing: 1px;
-                    color: rgb(224, 224, 224);
-
-                    font-family: 'Barlo Condensed', monospace;
-                }
-
-                .stat-name {
-                    font-size: 0.65rem !important;
-                    font-weight: 700;
-                    letter-spacing: 0px;
-
-                    color: rgb(82, 82, 82);
-
-                    margin-bottom: 0.1rem;
-                }
-            }
-        }
-
-        .chart-section {
-            display: flex;
-            flex-direction: column;
-
-            width: 100%;
-
-            .chart {
-                display: flex;
-                flex-direction: column;
-
-                position: relative; // already added earlier
-
-                height: 15rem;
-                width: 100%;
-
-                flex-grow: 1;
-                margin-bottom: 0;
-
-                border: 1px solid $border-color;
-                border-radius: 8px;
-
-                background: var(--dark-highlight-bg);
-
-                canvas {
-                    position: absolute;
-                    inset: 0;
-
-                    width: 100% !important;
-                    height: 100% !important;
-
-                    display: block;
-                }
-            }
-        }
-
-        .pose-section {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start !important;
-
-            background: var(--dark-highlight-bg);
-
-            width: 100%;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-            padding-inline: 2rem;
-
-            // border: 1px solid $border-color;
-            border-left: none;
-            border-right: none;
-
-            .pose-title {
-                font-size: 0.7rem;
-                font-weight: bold;
-                color: $muted-text;
-            }
-
-            .pose-bar {
-                display: flex;
-                flex-direction: row;
-
-                width: 100%;
-                height: 0.5rem;
-                padding-bottom: 1rem;
-
-                * {
-                    height: 0.5rem;
-                    background: var(--pose-color);
-                }
-            }
-
-            .legend {
-                display: flex;
-                flex-direction: row;
-
-                * {
-                    text-align: left;
-                    margin-left: 0;
-                    padding-left: 2.25rem;
-
-                    font-size: 0.65rem;
-                    color: $muted-text;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-
-                    &:first-child {
-                        padding-left: 1rem;
-                    }
-
-
-                    &::before {
-                        content: '';
-                        position: absolute;
-
-                        width: 0.4rem;
-                        height: 0.4rem;
-
-                        border-radius: 50%;
-                        z-index: 5;
-
-                        background-color: var(--pose-color);
-
-                        transform: translate(-0.8rem, 0.3rem);
-                    }
-                }
-            }
-
-            .pose-w {--pose-color: color-mix(in srgb, var(--primary) 60%, rgba(0, 21, 255, 0.85));}
-            .pose-c {--pose-color: color-mix(in srgb, var(--primary) 80%, rgba(0, 72, 255, 0.85));}
-            .pose-p {--pose-color: color-mix(in srgb, var(--primary) 50%, rgb(255, 0, 0, 0.85));}
-            .pose-b {--pose-color: color-mix(in srgb, var(--primary) 80%, rgb(255, 0, 0, 0.85));}
-            .pose-d {--pose-color: color-mix(in srgb, var(--primary) 60%, rgb(228, 0, 0, 0.85));}
-        }
-        
-    }    
+    }
 </style>

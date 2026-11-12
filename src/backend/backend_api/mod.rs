@@ -9,3 +9,4 @@ pub mod season;
 pub mod signup;
 pub mod discord_communication;
 pub mod discord;
+pub mod asset;

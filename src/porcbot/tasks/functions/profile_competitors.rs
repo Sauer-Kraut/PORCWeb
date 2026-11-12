@@ -39,6 +39,7 @@ pub async fn profile_competitors(appstate: &AppState) -> Result<(), BotError> {
                 win_ratio: None,
                 global_rank: None,
                 division_rank: None,
+                pose_stats: None,
             },
         };
 

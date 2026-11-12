@@ -23,7 +23,7 @@ export enum ObservedMatchStatus {
     Confirmed = 'Confirmed', // calander_check
     Finished = 'Finished', // checkmark
     Declined = 'Declined', // calander_busy
-    Unplaned = 'Unplaned',
+    Unplanned = 'Unplanned',
     IsSelf = 'IsSelf', // calander
 }
 

@@ -1,5 +1,5 @@
 use colored::Colorize;
-use crate::liberary::account_lib::availability::storage::update_availabilities;
+use crate::liberary::account_lib::availability_exception::update_availablility_exceptions::update_availability_exceptions;
 use crate::liberary::account_lib::schedule::schedule::Schedule;
 use crate::liberary::dialogue_lib::bot_error::BotError;
 use crate::{liberary::account_lib::account::storage::store_account::store_account, AppState};
@@ -21,7 +21,8 @@ pub async fn upload_accounts(appstate: &AppState) -> Result<(), BotError> {
     for (_key, account) in accounts_to_upload.iter() {
         match store_account(account.clone(), appstate.pool.clone()).await {
             Ok(_) => {
-                update_availabilities(account.user_info.id.clone(), account.schedule.clone().unwrap_or(Schedule {availabilities: vec!(), matches: vec!(), note: "".to_owned()}).availabilities.clone(), appstate.pool.clone()).await.unwrap_or(());
+                update_availabilities(account.user_info.id.clone(), account.schedule.clone().unwrap_or(Schedule {availabilities: vec!(), availability_exceptions: vec!(), matches: vec!(), note: "".to_owned()}).availabilities.clone(), appstate.pool.clone()).await.unwrap_or(());
+                update_availability_exceptions(account.user_info.id.clone(), account.schedule.clone().unwrap_or(Schedule {availabilities: vec!(), availability_exceptions: vec!(), matches: vec!(), note: "".to_owned()}).availability_exceptions.clone(), appstate.pool.clone()).await.unwrap_or(());
                 println!("{}", format!("{}{}{}","Account ".green(), account.user_info.id.clone().bright_white(), " uploaded successfully".green()))
             },
             Err(e) => {

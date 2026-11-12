@@ -20,7 +20,7 @@
     });
 
     function selectEvent() {
-        setPrimaryColor(getDivision());
+        // setPrimaryColor(getDivision());
         selectedEvent.value = props.Event
     }
 

@@ -1,6 +1,7 @@
 /target
 /userdata
 /staging
+/resources
 Cargo.lock
 secrets.json
 .env

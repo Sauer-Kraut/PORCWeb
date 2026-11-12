@@ -6,6 +6,7 @@ $tertiary-text: #979797;
 $muted: #808080;
 //$secondary: white;
 $danger: #e22d67;
+$success: rgb(34, 197, 94);
 $background-color: rgb(10, 10, 10);
 $body-bg: #ffffff;
 // $body-color: #ffffff;
@@ -19,9 +20,18 @@ $muted-text: #808080;
 //Custom
 
 $darker-bg: rgb(15, 15, 15);
-$dark-bg: #212529; //Bootstrap hardcoded
+$dark-bg: rgb(27, 27, 27); //Bootstrap hardcoded
 $modal-bg: #212529;
 $dark-border: #495057; //Bootstrap hardcoded
+
+$highlight-bg: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.2) 0px,
+    rgb(57, 57, 57) 2px,
+    transparent 1px,
+    transparent 7px
+);
+
 //$border-color: #515458;
 $secondary-border-color: #515458;
 //$secondary-border-color: rgba(255,255,255,0.1);
@@ -63,13 +73,13 @@ $silver: rgb(205, 255, 252);
 $bronze: rgb(255, 108, 22);
 
 $grid-breakpoints: (
-  xs: 0,
-  sm: 480px,
-  md: 700px,
-  lg: 1000px,
-  xl: 1280px,
-  xxl: 1800px,
-  xxxl: 2300px,
+    xs: 0,
+    sm: 480px,
+    md: 700px,
+    lg: 1000px,
+    xl: 1280px,
+    xxl: 1800px,
+    xxxl: 2300px,
 );
 
 @import 'bootstrap/scss/bootstrap';

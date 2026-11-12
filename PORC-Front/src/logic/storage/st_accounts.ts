@@ -178,7 +178,7 @@ export const accountsStore = defineStore('accounts', {
                 });
                 /// ===== DEBUGGING INFO ===== ///
 
-                await postAccountCustomisation(account.customisation);
+                await postAccountCustomisation(account.customisation, account.stats?.pose_stats ?? null);
             }
         },
 
@@ -458,6 +458,7 @@ export const accountsStore = defineStore('accounts', {
                 } as AccountCustomisation,
                 schedule: {
                     availabilities: [],
+                    availability_exceptions: [],
                     matches: [],
                     note: "Hello"
                 } as Schedule

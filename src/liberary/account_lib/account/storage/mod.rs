@@ -6,3 +6,4 @@ pub mod create_account;
 pub mod store_account_cust;
 pub mod store_radar_chart;
 pub mod get_global_leaderboard;
+pub mod store_pose_stats;

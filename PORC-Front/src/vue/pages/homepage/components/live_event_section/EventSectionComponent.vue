@@ -2,13 +2,14 @@
     import type { DiscordEvent } from '@/models/discord/DiscordEvent';
     import EventInfoComponent from './EventInfoComponent.vue';
     import { discordInfoStore } from '@/logic/storage/st_discord';
-    import { onMounted, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { stripAfterFirstSpace } from '@/logic/util/formating/StripAfterSpace';
     import type { Matchplan } from '@/models/matchplan/Matchplan';
     import type { Division } from '@/models/matchplan/division/Division.ts';
     import { appReady, waitForAppReady } from '@/appReady';
     import { matchplanStore } from '@/logic/storage/st_matchplan';
-import DiscordEventComponent from './DiscordEventComponent.vue';
+    import DiscordEventComponent from './DiscordEventComponent.vue';
+    import { getDivisionColor } from '@/logic/util/resources/get/GetDivisionColor.ts';
 
 
     const ds_storage = discordInfoStore();
@@ -27,6 +28,12 @@ import DiscordEventComponent from './DiscordEventComponent.vue';
     let selectedInfoPlaceholder = InfoPlaceholders[Math.floor(Math.random() * InfoPlaceholders.length)];
 
     let localMatchplan = ref<Matchplan | null>(null);
+
+    const primaryColor = computed(() => {
+        if (!selectedEvent.value) return null;
+        const division = getEventDivision(selectedEvent.value);
+        return division?.name ? getDivisionColor(division.name) : null;
+    });
 
     async function getEvents() {
         let res = await ds_storage.get_events();
@@ -99,12 +106,12 @@ import DiscordEventComponent from './DiscordEventComponent.vue';
 </script>
 
 <template>
-    <div class="d-flex flex-row justify-content-center align-items-stretch gap-5">
+    <div class="d-flex flex-row justify-content-center align-items-stretch gap-5" :style="primaryColor ? `--primary: ${primaryColor}` : undefined">
 
         <div class="d-flex flex-column h-fit">
             <div class="d-flex flex-row mb-4 mx-2 flex-shrink-0">
                 
-                <div class="d-flex flex-column justify-content-start align-items-center col-12">
+                <div class="d-flex flex-column justify-content-start align-items-center mb-4 col-12">
                     <h2 class="decor-title text-start justify-content-center">Upcoming <span class="text-highlight">Matches</span></h2>
                     <h3 class="content-subtitle justify-content-center w-auto mt-2 mb-0">The best of the best</h3>
                 </div>
@@ -119,7 +126,7 @@ import DiscordEventComponent from './DiscordEventComponent.vue';
                 <h5 class="sort-option ms-auto primary mb-0" @click="selectedSortFeature += 1">Sorted by {{ sortingFeatures[selectedSortFeature % (sortingFeatures.length)] }} ▾</h5>
             </div>
 
-            <div class="event-scroll-container" style="max-height: 35rem;" :class="{colored: selectedEvent != null && selectedEvent != undefined}">
+            <div class="event-scroll-container" style="max-height: 33rem;" :class="{colored: selectedEvent != null && selectedEvent != undefined}">
                 <div class="d-flex flex-column gap-3 overflow-x-visible pt-0 pe-2 flex-grow-1">
                     <DiscordEventComponent v-for="event in discordEvents" :key="event.title" v-model:selected-event="selectedEvent"  :Event="event">{{ getEventDivision(event) }}</DiscordEventComponent>
                     <div v-if="discordEvents.length < 1" class="d-flex flex-column flex-grow-1 event-placeholder p-3" style="width: 100%; justify-content: center; align-items: center;"> <span v-for="line in selectedInfoPlaceholder" :key="line">{{ line }}</span> </div>
@@ -128,7 +135,7 @@ import DiscordEventComponent from './DiscordEventComponent.vue';
             
         </div>
 
-        <div class="d-flex justify-content-center align-center mt-5 mb-5 px-2 mx-4">
+        <div class="d-flex justify-content-center align-center mt-5 mb-5 px-4 mx-4">
             <div class="seperator-v mt-5 mb-5 h-100">
             </div>
         </div>
@@ -168,6 +175,7 @@ import DiscordEventComponent from './DiscordEventComponent.vue';
         // padding-right: 1rem;
 
         overflow-y: scroll;
+        overflow-x: visible;
 
         /* Fade masking effect at the bottom to visually hint at overflow */
         mask-image: linear-gradient(to bottom, black 85%, transparent 100%);

@@ -605,7 +605,7 @@ async function submitNote() {
                         :theme="matchTooltipTheme(match)"
                     >
                         <div class="w-100 h-100 p-2 d-flex justify-content-end">
-                            <div class="match-status pe-1"><MatchStatusComponent :status="match.status" :observer_id="ownId" :matches="[match]" :season="season_info ?? undefined"></MatchStatusComponent></div>
+                            <div class="match-status pe-1"><MatchStatusComponent :status="match.status as 'HasRequested' | 'Finished' | 'Declined' | 'HasBeenRequested' | 'Confirmed' | 'IsSelf' | 'Unplanned'  ?? 'Unplanned'" :observer_id="ownId" :matches="[match]" :season="season_info ?? undefined"></MatchStatusComponent></div>
                         </div>
                         <template #popper>
                             <MatchPopper :match="match" :own-calendar="ownCalendar"></MatchPopper>

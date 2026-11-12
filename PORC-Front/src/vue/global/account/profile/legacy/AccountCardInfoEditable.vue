@@ -17,8 +17,8 @@
     import type { AccountCustomisation } from '@/logic/models/account/account_cust/AccountCustomisation.ts';
     import { useModal } from 'vue-final-modal';
     import EditRadarChart from '../../modals/EditRadarChart.vue';
-import type { RadarChart } from '@/logic/models/account/account_cust/radar_chart/RadarChart.ts';
-import RadarChartComponent from '../../chart/RadarChartComponent.vue';
+    import type { RadarChart } from '@/logic/models/account/account_cust/radar_chart/RadarChart.ts';
+    import RadarChartComponent from '../../chart/RadarChartComponent.vue';
 
     Chart.register(...registerables);
 
@@ -427,12 +427,105 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
 <template>
     <div class="account-card d-flex flex-column" ref="cardRef" @click="closePickers">
 
-        <div class="banner align-items-center justify-content-center d-flex" @click="editRadarChart">
+        <!-- <div class="banner align-items-center justify-content-center d-flex" @click="editRadarChart">
             <RadarChartComponent v-if="account.customisation?.radar_chart" class="radar-chart" :size="280" :labels="account.customisation?.radar_chart?.values.map((a) => a[0])" :values="account.customisation?.radar_chart?.values.map((a) => a[1])" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChartComponent>
             <RadarChartComponent v-else class="radar-chart" :size="280" :labels="['Mobility', 'Weight', 'Aggresiv', 'Range Bias', 'Reactivity']" :values="[0, 0, 0, 0, 0]" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChartComponent>
+        </div> -->
+
+
+        <div class="d-flex flex-column mb-4">
+            <div class="section-title spaced-text">Avatar</div>
+            <DiscordAvatarComponent :account="account" class="pfp"></DiscordAvatarComponent>
         </div>
 
-        <div class="name-row align-items-center" ref="nameRowRef">
+        <div class="d-flex flex-column mb-4">
+            <div class="section-title spaced-text">Shiftstones</div>    
+            <div class="shiftstones">
+                <div
+                    v-for="(stone, i) in shiftstoneSlots"
+                    :key="i"
+                    class="shiftstone-btn"
+                    :ref="(el) => setStoneButtonRef(el, i)"
+                    :class="{ empty: stone === null, active: activeStoneSlot === i }"
+                    @click.stop="openStonePicker(i)"
+                >
+                    <img v-if="stone !== null" class="shiftstone" :src="getShiftstoneIcon(stone)" />
+                    <span v-else class="plus">+</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column mb-4">
+            <div class="section-title spaced-text">Username</div>
+            <input
+                v-if="true"
+                ref="usernameInput"
+                v-model="editableUsername"
+                class="username-input"
+                maxlength="32"
+                @click.stop
+                @keyup.enter="commitUsername"
+                @keyup.escape="cancelUsernameEdit"
+                @blur="commitUsername"
+            /> 
+
+            <div v-else class="username">
+                <span class="username-text" @click.stop="startEditingUsername">
+                    {{ editableUsername }}
+                    <!-- <span class="edit-icon">✎</span> -->
+                </span>
+            </div>
+
+            <div class="sub">
+                {{ recentDivision }} #{{ account.stats.division_rank }} - Global #{{ account.stats.global_rank }}
+            </div>
+        </div>
+
+        <div class="d-flex flex-column mb-4 w-100">
+            <div class="section-title spaced-text">Badges</div>    
+            <div class="achievements" ref="achievementsRef">
+                <div v-for="(badgeId, i) in badgeSlots" :key="i" class="achievement" :class="{ full: badgeId != null }">
+                    <div
+                        class="badge-slot"
+                        :ref="(el) => setBadgeButtonRef(el, i)"
+                        :class="{ active: activeBadgeSlot === i }"
+                        @click.stop="openBadgePicker(i)"
+                    >
+                        <ProfileBadge
+                            v-if="badgeId !== null"
+                            :badge="badge_from_code(badgeId)"
+                            :unlocked="true"
+                            :size="'lg'"
+                        ></ProfileBadge>
+                        <div v-else class="badge-empty">
+                            <span class="plus">+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column mb-4 w-100">
+            <div class="section-title spaced-text pb-1 ms-1 w-100">Statistics Tickers</div>
+            <div class="stat-section">
+                <div class="stat">
+                    <div class="value primary">{{ account.stats.global_rank }} </div>
+                    <div class="stat-name spaced-text">Rank</div>
+                </div>
+                <div class="stat">
+                    <div class="value">{{ account.stats.wins }} </div>
+                    <div class="stat-name spaced-text">Points</div>
+                </div>
+                <div class="stat">
+                    <div class="value">{{ account.stats.win_ratio }} %</div>
+                    <div class="stat-name spaced-text">Win Rate</div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- <div class="name-row align-items-center" ref="nameRowRef">
             <DiscordAvatarComponent :account="account" class="pfp"></DiscordAvatarComponent>
 
             <div class="username">
@@ -449,7 +542,7 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                 />
                 <span v-else class="username-text" @click.stop="startEditingUsername">
                     {{ filter_str(editableUsername, 9) }}
-                    <!-- <span class="edit-icon">✎</span> -->
+                    <span class="edit-icon">✎</span>
                 </span>
 
                 <div class="sub">
@@ -470,36 +563,10 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                     <span v-else class="plus">+</span>
                 </div>
             </div>
-        </div>
+        </div> -->
 
 
-        <div class="achievements" ref="achievementsRef">
-            <div v-for="(badgeId, i) in badgeSlots" :key="i" class="achievement">
-                <div
-                    class="badge-slot"
-                    :ref="(el) => setBadgeButtonRef(el, i)"
-                    :class="{ active: activeBadgeSlot === i }"
-                    @click.stop="openBadgePicker(i)"
-                >
-                    <ProfileBadge
-                        v-if="badgeId !== null"
-                        :badge="badge_from_code(badgeId)"
-                        :unlocked="true"
-                        :size="'lg'"
-                    ></ProfileBadge>
-                    <div v-else class="badge-empty">
-                        <span class="plus">+</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="save-section">
-            <button class="btn-outline-primary save-btn btn-small" :disabled="!isDirty" @click.stop="handleSave">
-                {{ saveButtonName }}
-            </button>
-        </div>
+        
 
         <!-- Shiftstone popover: anchored to the card, always centered on
              the full card width. Only the arrow moves to point at the
@@ -555,32 +622,9 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
 
         <div class="d-flex flex-column gap-4 w-100 flex-grow-1 pt-4">
 
-            <div class="stat-section p-4 pb-0 pt-1">
-                <div class="section-title spaced-text pb-1 ms-1 w-100">Statistics Tickers</div>
-                <div class="stat">
-                    <div class="value primary">{{ account.stats.global_rank }} </div>
-                    <div class="stat-name spaced-text">Rank</div>
-                </div>
-                <div class="stat">
-                    <div class="value">{{ account.stats.wins }} </div>
-                    <div class="stat-name spaced-text">Points</div>
-                </div>
-                <div class="stat">
-                    <div class="value">{{ account.stats.win_ratio }} %</div>
-                    <div class="stat-name spaced-text">Win Rate</div>
-                </div>
-            </div>
 
 
-            <div class="chart-section p-4 pb-0 pt-1">
-                <div class="section-title spaced-text pb-1 ms-1">Development Chart</div>
-                <div class="chart">
-                    <canvas ref="chartCanvas"></canvas>
-                </div>
-            </div>
-
-
-            <div class="matches-section flex-grow-1 p-4 pb-0 pt-1">
+            <!-- <div class="matches-section flex-grow-1 p-4 pb-0 pt-1">
                 <div class="section-title spaced-text mb-1 ms-1 pb-1">Recent Matches</div>
 
                 <div class="scroll-box">
@@ -599,7 +643,7 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
         </div>
 
@@ -624,9 +668,12 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
 
         --dark-highlight-bg: rgba(0, 0, 0, 0.25);
 
-        padding: 0;
+        padding: 1.5rem;
 
         .section-title {
+            // margin-left: 0.25rem;
+            margin-bottom: 1rem;
+
             font-size: 0.7rem;
             font-weight: bold;
             color: $muted-text;
@@ -684,130 +731,123 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
             }
         }
 
-        .name-row {
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-start;
-            align-items: center !important;
+        .pfp {
 
-            width: 100%;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            margin-inline: 1rem;
 
-            border: 1px solid $border-color;
-            border-left: none;
-            border-right: none;
+            width: 5rem;
+            height: 5rem;
+            border-radius: 8px;
+            background: rgb(26, 26, 26);
 
-            .pfp {
-                margin-left: 1.5rem;
+            background-size: cover;
+        }
 
-                width: 3.5rem;
-                height: 3.5rem;
-                border-radius: 20%;
-                background: rgb(26, 26, 26);
 
-                background-size: cover;
-            }
+        .username, .username-input {
+            width: 70%;
+            height: 2.5rem !important;
+            padding: 0.15rem 0.5rem;
 
-            .username {
-                margin-left: 1rem;
+            justify-content: center;
+            background: transparent;
 
-                font-size: 2rem;
-                font-weight: 900;
-                letter-spacing: -1px;
-                text-transform: uppercase;
-                line-height: 1;
+            color: $text-color;
 
-                .username-text {
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 0.5rem;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            line-height: 1;
 
-                    .edit-icon {
-                        font-size: 0.9rem;
-                        opacity: 0;
-                        color: $muted-text;
-                        transition: opacity 150ms ease;
-                    }
+            border: none;
 
-                    &:hover .edit-icon {
-                        opacity: 1;
-                    }
+            .username-text {
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+
+                .edit-icon {
+                    font-size: 0.9rem;
+                    opacity: 0;
+                    color: $muted-text;
+                    transition: opacity 150ms ease;
                 }
 
-                .username-input {
-                    width: 100%;
-                    max-width: 12rem;
-
-                    font: inherit;
-                    font-size: 1.6rem;
-                    letter-spacing: -1px;
-                    text-transform: uppercase;
-                    color: #fff;
-
-                    background: rgb(20, 20, 20);
-                    border: 1px solid var(--primary);
-                    border-radius: 6px;
-
-                    padding: 0.15rem 0.5rem;
-
-                    outline: none;
-                }
-
-                .sub {
-                    text-transform: initial;
-                    letter-spacing: 0px;
-
-                    font-weight: 500;
-                    margin-top: 0.25rem;
-                    font-size: 0.7rem;
-                    color: rgb(88, 88, 88);
-                }
-            }
-
-            .shiftstones {
-                display: flex;
-
-                margin-left: auto;
-                margin-right: 1.25rem;
-
-                gap: 0.3rem;
-
-                .shiftstone-btn {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-
-                    width: 2.4rem;
-                    height: 2.4rem;
-
-                    border-radius: 8px;
-                    border: 1px solid $border-color;
-                    background: var(--dark-highlight-bg);
-
-                    cursor: pointer;
-                    transition: border-color 150ms ease, transform 150ms ease;
-
-                    &:hover, &.active {
-                        border-color: var(--primary);
-                        transform: translateY(-1px);
-                    }
-
-                    &.empty .plus {
-                        color: $muted-text;
-                        font-size: 1.1rem;
-                    }
-
-                    .shiftstone {
-                        scale: 0.96;
-                        width: 100%;
-                        height: 100%;
-                        object-fit: contain;
-                    }
+                &:hover .edit-icon {
+                    opacity: 1;
                 }
             }
         }
+
+        .username-input {
+            border-radius: 8px;
+            border: 1px solid transparent;
+
+            transition: 0.2s ease;
+    
+            &:focus {
+                border: 1px solid;
+                // border: none !important;
+                box-shadow: none !important;
+                outline: none !important;
+            }
+        }
+
+        .sub {
+            text-transform: initial;
+            letter-spacing: 0px;
+
+            padding-inline: 0.5rem;
+
+            font-weight: 500;
+            font-size: 0.7rem;
+            color: rgb(88, 88, 88);
+        }
+        
+
+        .shiftstones {
+            display: flex;
+
+            padding-inline: 0.5rem;
+
+            gap: 0.5rem;
+
+            .shiftstone-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                width: 2.4rem;
+                height: 2.4rem;
+
+                border-radius: 8px;
+                border: 1px solid $border-color;
+                background: var(--dark-highlight-bg);
+
+                cursor: pointer;
+                transition: border-color 150ms ease, transform 150ms ease;
+
+                &:hover, &.active {
+                    border-color: var(--primary);
+                    transform: translateY(-1px);
+                }
+
+                &.empty .plus {
+                    color: $muted-text;
+                    font-size: 1.1rem;
+                }
+
+                .shiftstone {
+                    scale: 0.96;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+            }
+        }
+        
 
 
         .achievements {
@@ -818,11 +858,11 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
             width: 100%;
             padding-inline: 1rem;
 
-            background: var(--dark-highlight-bg);
+            gap: 1rem;
 
-            border-bottom: 1px solid $border-color;
-            border-left: none;
-            border-right: none;
+            // background: var(--dark-highlight-bg);
+
+            border: none;
 
             .achievement {
                 display: flex;
@@ -832,19 +872,22 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                 align-items: center;
 
                 height: 5.5rem;
+                width: 30%;
 
-                border-top: none;
-                border-left: none;
-                border-bottom: none;
+                background: $highlight-bg;
 
-                &:last-child {
-                    border-right: none;
-                }
+                border: 1px solid $border-color;
+                border-radius: 8px;
+
+                transition: all 0.25s ease;
 
                 .badge-slot {
                     cursor: pointer;
                     border-radius: 50%;
                     transition: transform 150ms ease;
+
+                    justify-content: center;
+                    align-items: center;
 
                     &:hover, &.active {
                         transform: scale(1.05);
@@ -867,6 +910,11 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                         font-size: 1.2rem;
                     }
                 }
+
+                &.full {
+                    width: 40%;
+                }
+
             }
         }
 
@@ -1122,9 +1170,7 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
             flex-direction: row;
             flex-wrap: wrap;
 
-            margin-top: -0.5rem;
-
-            padding: 1.5rem;
+            padding-inline: 1rem;            
             gap: 0.5rem;
 
             width: 100%;
@@ -1147,6 +1193,9 @@ import RadarChartComponent from '../../chart/RadarChartComponent.vue';
                 background: var(--dark-highlight-bg);
 
                 .value {
+                    background: $highlight-bg;
+                    padding-inline: 0.5rem;
+
                     font-size: 1.15rem;
                     font-weight: 600;
                     letter-spacing: 1px;

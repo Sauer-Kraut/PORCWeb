@@ -106,6 +106,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
         user_info: result.clone(),
         schedule: Some(Schedule {
             availabilities: vec!(),
+            availability_exceptions: vec!(),
             matches: vec!(),
             note: "".to_string(),
         }),
@@ -115,6 +116,7 @@ pub async fn discord_callback(appstate: web::Data<AppState>, query: web::Query<D
             win_ratio: None,
             global_rank: None,
             division_rank: None,
+            pose_stats: None,
         },
         customisation: None,
     };

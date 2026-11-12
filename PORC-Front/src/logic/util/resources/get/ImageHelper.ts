@@ -17,6 +17,17 @@ export function getTournamentCardImage(tournamentName: string): string {
     return `${base}tournamentShoutouts/${encodeURIComponent(tournamentName)}`;
 }
 
+export function getBannerImage(img_id: string, filetype: string | null = null): string {
+    const base = import.meta.env.BASE_URL ?? '/';
+
+    if (filetype == null || filetype.trim().length === 0) {
+        return `${base}resources/images/banner/global/${img_id}`;
+    }
+
+    const normalized_filetype = filetype.startsWith('.') ? filetype.slice(1) : filetype;
+    return `${'http://localhost:8082/'}resources/images/banner/global/${img_id}.${normalized_filetype}`;
+}
+
 const shiftstoneIcons = import.meta.glob(
     "../../../../assets/images/shiftstones/*",
     {

@@ -82,10 +82,10 @@ import { Repetition } from '@/models/pub_account_info/schedule/availability/Avai
 
 <template>
     <div class="col-12 col-lg-11 col-xl-8 col-xxl-7 col-xxxl-5 justify-content-center registration-section ps-md-4 p-md-4 pe-md-4 ms-auto me-auto mw-30">
-        <div class="row justify-content-center">
+        <div class="d-flex lg-flex-row justify-content-center">
 
             <!-- Info --> <!-- Hidden on small screens -->
-            <div class="col-md d-none d-md-flex ms-3">
+            <div class="col-md d-none d-lg-flex ms-3">
                 <div class="signup-info d-flex flex-column w-100">
                     <!-- Title -->
                     <h1 class="decor-title m-0 p-0 mt-3">Registration</h1>
@@ -93,22 +93,22 @@ import { Repetition } from '@/models/pub_account_info/schedule/availability/Avai
 
                     <!-- Signup Conditions -->
                     <div class="singup-conditions mt-2 mb-2 w-100">
-                        <div class="m-3 mt-5 d-flex condition align-items-center">
+                        <div class="ms-0 m-3 mt-5 d-flex condition align-items-center">
                             <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
                             <span>On the <a href="https://discord.gg/2n9prYYZjS" target="_blank">PORC Discord server</a></span>
                         </div>
                         <!-- <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div> -->
-                        <div class="m-3 d-flex condition align-items-center">
+                        <div class="ms-0 m-3 d-flex condition align-items-center">
                             <div :class="user && user != '0' ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
                             <span>Logged in</span>
                         </div>
                         <!-- <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div> -->
-                        <div class="m-3 d-flex condition align-items-center">
+                        <div class="ms-0 m-3 d-flex condition align-items-center">
                             <div :class="isFormFilledOut || signedup ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
                             <span>Filled out the form</span>
                         </div>
                         <!-- <div class="d-flex flex-row"><div class="seperator-h mt-1 mb-1"></div></div> -->
-                        <div class="m-3 d-flex condition align-items-center">
+                        <div class="ms-0 m-3 d-flex condition align-items-center">
                             <div :class="isScheduleConfigured || signedup ? 'icon-checkmark' : 'icon-cross'" class="mark"></div>
                             <span>Configured your schedule</span>
                         </div>
@@ -124,7 +124,7 @@ import { Repetition } from '@/models/pub_account_info/schedule/availability/Avai
                 <SignUpFormComponent 
                     :season_name="season_name" 
                     @formComplete="handleFormComplete"
-                    class="signup-form  ms-auto" 
+                    class="signup-form  ms-lg-auto" 
                 />
             </div>
         </div>
@@ -139,7 +139,6 @@ import { Repetition } from '@/models/pub_account_info/schedule/availability/Avai
 
     .registration-section {
         overflow: hidden;
-        margin-top: 10rem;
 
 
         @include media-breakpoint-down(md) {
@@ -281,13 +280,6 @@ import { Repetition } from '@/models/pub_account_info/schedule/availability/Avai
     }
 
     @media (min-width: 2099px) {
-    .col-xxxl-2 {
-        width: 20%;
-    }
-
-    .col-xxxl-5 {
-        width: 42%;
-    }
 }
 
 
