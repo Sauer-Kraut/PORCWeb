@@ -4,7 +4,7 @@ import type { Season } from '@/logic/models/season/Season';
 import { computed } from 'vue';
 
 const props = defineProps<{
-    status: string;
+    status?: 'HasRequested' | 'Finished' | 'Declined' | 'HasBeenRequested' | 'Confirmed' | 'IsSelf' | 'Unplanned' | null;
     matches: MatchEvent[];
     player_id?: string;
     observer_id: string;
@@ -12,13 +12,17 @@ const props = defineProps<{
 }>();
 
 const status = computed(() => {
+    if (props.status) {
+        return props.status;
+    }
+
     if (props.player_id === props.observer_id) {
         return ObservedMatchStatus.IsSelf;
     }
 
     const involvedMatches = props.matches.filter((match) => (match.initiatorId === props.observer_id || match.opponentId === props.observer_id) && match.endDate > new Date((props.season?.start_timestamp ?? 10000000000000) * 1000));
     if (involvedMatches.length === 0) {
-        return ObservedMatchStatus.Unplaned;
+        return ObservedMatchStatus.Unplanned;
     } else {
         for (const match of involvedMatches) {
             if (match.status === MatchStatus.Finished) {
@@ -49,18 +53,27 @@ const status = computed(() => {
 </script>
 
 <template>
-    <div v-if="status == 'HasRequested'" class="">Requested</div>
-    <div v-else-if="status == 'Finished'" class="">Finished</div>
-    <div v-else-if="status == 'Declined'" class="">Declined</div>
-    <div v-else-if="status == 'HasBeenRequested'" class="">Inbound Request</div>
-    <div v-else-if="status == 'Confirmed'" class="">Confirmed</div>
-    <div v-else-if="status == 'IsSelf'" class="">Self</div>
-    <div v-else-if="status == 'Unplaned'" class="">Unplanned</div>
+    <div v-if="status == 'HasRequested'" class="label">Requested</div>
+    <div v-else-if="status == 'Finished'" class="label">Finished</div>
+    <div v-else-if="status == 'Declined'" class="label">Declined</div>
+    <div v-else-if="status == 'HasBeenRequested'" class="label">Inbound Request</div>
+    <div v-else-if="status == 'Confirmed'" class="label good">Confirmed</div>
+    <div v-else-if="status == 'IsSelf'" class="label white">Self</div>
+    <div v-else-if="status == 'Unplanned'" class="label">Unplanned</div>
 </template>
 
 <style lang="scss" scoped>
-.icon {
-    height: fit-content;
-    width: fit-content;
+@import '@/assets/scss/styles.scss';
+
+.label {
+    color: $muted-text;
+}
+
+.white {
+    color: white !important;
+}
+
+.good {
+    color: $success !important;
 }
 </style>

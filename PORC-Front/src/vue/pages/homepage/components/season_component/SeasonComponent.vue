@@ -124,9 +124,11 @@
         groupedDivisions = groupDivisions();
     });
 
-    watch(async () => selectedSeason.value, async (newValue) => {
-        matchplan.value = await matchplanStore().get_matchplan((await newValue)?.name ?? null);
-        selectedDivision.value = matchplan.value?.divisions?.length ? matchplan.value.divisions.sort((a, b) => a.order - b.order)[0] : null;
+    watch(() => selectedSeason.value, async (newValue) => {
+        matchplan.value = await matchplanStore().get_matchplan(newValue?.name ?? null);
+        selectedDivision.value = matchplan.value?.divisions?.length
+            ? [...matchplan.value.divisions].sort((a, b) => a.order - b.order)[0]
+            : null;
     });
 
     watch(() => matchplan.value, (newValue) => {
@@ -160,15 +162,22 @@
 
 
         await waitForAppReady();
-        Promise.all([
-            matchplan.value = await matchplanStore().get_matchplan(),
-            seasons.value = await matchplanStore().get_all_seasons(),
-            current_season.value = await matchplanStore().get_season(),
-            userId.value = await accountsStore().get_login_id()
+        const [loadedMatchplan, loadedSeasons, loadedCurrentSeason, loadedUserId] = await Promise.all([
+            matchplanStore().get_matchplan(),
+            matchplanStore().get_all_seasons(),
+            matchplanStore().get_season(),
+            accountsStore().get_login_id(),
         ]);
 
+        matchplan.value = loadedMatchplan;
+        seasons.value = loadedSeasons;
+        current_season.value = loadedCurrentSeason;
+        userId.value = loadedUserId;
+
         selectedSeason.value = current_season.value ?? (seasons.value?.length ? seasons.value[0] : null);
-        selectedDivision.value = matchplan.value?.divisions?.length ? matchplan.value.divisions[0] : null;
+        selectedDivision.value = matchplan.value?.divisions?.length
+            ? [...matchplan.value.divisions].sort((a, b) => a.order - b.order)[0]
+            : null;
     });
     onUnmounted(() => {
         if (_timerId !== undefined) window.clearInterval(_timerId);
@@ -251,7 +260,7 @@
                     :division="selectedDivision" 
                     :userId="userId" 
                     :allowEditSeason="allowEditSeason" 
-                    :-popover-boundary="PopoverContainer ?? undefined"
+                    :popover-boundary="PopoverContainer ?? undefined"
                     class="division" 
                     />
             </div>
@@ -364,15 +373,15 @@
         width: 11.5rem !important;
         height: 2.35rem !important;
 
-        border-radius: 12px;
+        border-radius: 8px;
         background-color: transparent !important;
 
-        border-color: $border-color;
         
         transition: all 0.2s !important;
 
         background-color: rgb(26, 23, 23) !important;
-        border: 1px solid white;
+        border: 1px solid;
+        border-color: $secondary-border-color;
 
         font-weight: 600;
 

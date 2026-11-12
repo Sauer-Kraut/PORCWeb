@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { MatchStatus, type MatchEvent, ObservedMatchStatus} from '@/logic/models/account/schedule/match_event/MatchEvent';
 import type { Season } from '@/logic/models/season/Season';
+import { transform } from 'typescript';
 import { computed } from 'vue';
 
 const props = defineProps<{
-    status: string;
+    status?: 'HasRequested' | 'Finished' | 'Declined' | 'HasBeenRequested' | 'Confirmed' | 'IsSelf' | 'Unplanned' | null;
     matches: MatchEvent[];
     player_id?: string;
     observer_id: string;
@@ -12,13 +13,17 @@ const props = defineProps<{
 }>();
 
 const status = computed(() => {
+    if (props.status) {
+        return props.status;
+    }
+
     if (props.player_id === props.observer_id) {
         return ObservedMatchStatus.IsSelf;
     }
 
     const involvedMatches = props.matches.filter((match) => (match.initiatorId === props.observer_id || match.opponentId === props.observer_id) && match.endDate > new Date((props.season?.start_timestamp ?? 10000000000000) * 1000));
     if (involvedMatches.length === 0) {
-        return ObservedMatchStatus.Unplaned;
+        return ObservedMatchStatus.Unplanned;
     } else {
         for (const match of involvedMatches) {
             if (match.status === MatchStatus.Finished) {
@@ -53,14 +58,24 @@ const status = computed(() => {
     <div v-else-if="status == 'Finished'" class="icon checkmark icon-checkmark"></div>
     <div v-else-if="status == 'Declined'" class="icon calander icon-calender_busy"></div>
     <div v-else-if="status == 'HasBeenRequested'" class="icon bell icon-bell-o"></div>
-    <div v-else-if="status == 'Confirmed'" class="icon calander icon-calander_check"></div>
+    <div v-else-if="status == 'Confirmed'" class="icon calander icon-calander_check good"></div>
     <div v-else-if="status == 'IsSelf'" class="icon calander icon-calender"></div>
-    <div v-else-if="status == 'Unplaned'" class="icon calander icon-calender detail-title"></div>
+    <div v-else-if="status == 'Unplanned'" class="icon calander icon-calender muted"></div>
 </template>
 
 <style lang="scss" scoped>
+@import '@/assets/scss/styles.scss';
+
 .icon {
     height: fit-content;
     width: fit-content;
+}
+
+.muted{
+    color: $muted-text;
+}
+
+.good {
+    color: $success !important;
 }
 </style>

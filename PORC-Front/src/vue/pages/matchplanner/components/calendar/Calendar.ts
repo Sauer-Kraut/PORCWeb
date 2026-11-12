@@ -1,4 +1,3 @@
-
 import type { Availability } from '@/logic/models/account/schedule/availability/Availability';
 import { expandAvailability, type AvailabilityOccurrence } from '@/logic/models/account/schedule/availability/AvailabilityOccurence';
 import type { MatchEvent } from '@/logic/models/account/schedule/match_event/MatchEvent';
@@ -16,6 +15,7 @@ import type { st } from 'vue-router/dist/router-CWoNjPRp.mjs';
 
 const schedule = {
     availabilities: [] as Availability[],
+    availability_exceptions: [],
     matches: [] as MatchEvent[],
     note: "",
 } as Schedule;

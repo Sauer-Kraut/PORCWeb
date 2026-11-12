@@ -1,9 +1,5 @@
 SELECT
-  (
-    SELECT to_json(a) 
-    FROM accounts a 
-    WHERE a.id = ($1)
-  ) AS account_info,
+  to_json(accs) AS account_info,
 
   COALESCE(
     (  
@@ -13,6 +9,15 @@ SELECT
     ),
     '[]'::json
   ) AS availabilities,
+
+  COALESCE(
+    (  
+      SELECT json_agg(av_except)
+      FROM availability_exceptions AS av_except
+      WHERE av_except.owner_id = accs.id
+    ),
+    '[]'::json
+  ) AS availability_exceptions,
 
   COALESCE(
     (
@@ -48,10 +53,27 @@ SELECT
     '[]'::json
   ) AS match_events,
 
-  (
-    SELECT to_json(stats)
-    FROM account_stats AS stats
-    WHERE stats.account_id = accs.id
+  COALESCE(
+    (
+      SELECT json_build_object(
+        'wins', COALESCE(stats.wins, 0),
+        'matches', COALESCE(stats.matches, 0),
+        'win_ratio', stats.win_ratio,
+        'global_rank', stats.global_rank,
+        'division_rank', stats.division_rank,
+        'pose_stats', stats.pose_stats
+      )
+      FROM account_stats AS stats
+      WHERE stats.account_id = accs.id
+    ),
+    json_build_object(
+      'wins', 0,
+      'matches', 0,
+      'win_ratio', NULL,
+      'global_rank', NULL,
+      'division_rank', NULL,
+      'pose_stats', NULL
+    )
   ) AS stats,
 
   (
@@ -105,4 +127,5 @@ SELECT
   ) AS customisation
 
 FROM accounts AS accs
-WHERE accs.id = ($1);
+WHERE accs.id = ANY(($1))
+ORDER BY array_position(($1), accs.id);

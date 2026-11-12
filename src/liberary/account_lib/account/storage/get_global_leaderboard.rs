@@ -3,7 +3,7 @@ use futures::join;
 use sqlx::*;
 use sqlx::types::Json;
 
-use crate::liberary::{account_lib::{account::{account::Account, account_customisation::AccountCustomisation, discord_user::{self, DiscordUser}, user_data::{radar_chart::{self, RadarChart}, shiftstone::Shiftstone, account_stats::AccountStats}}, availability::availability::{Availability, DailyRepetitionConfig, Repetition}, match_event::match_event::{MatchEvent, MatchStatus}, schedule::{self, schedule::Schedule, storage::get_schedule::get_schedule}}, util::functions::build_query::{ArgumentType, build_query}};
+use crate::liberary::{account_lib::{account::{account::Account, account_customisation::AccountCustomisation, discord_user::{self, DiscordUser}, user_data::{radar_chart::{self, RadarChart}, shiftstone::Shiftstone, account_stats::AccountStats}}}, util::functions::build_query::{ArgumentType, build_query}};
 
 
 
@@ -54,6 +54,13 @@ impl Into<AccountStats> for SubQueryStructStats {
             win_ratio: self.win_ratio,
             global_rank: self.global_rank,
             division_rank: self.division_rank,
+            pose_stats: self._pose_stats.map(|value| {
+                value.as_object().map(|obj| {
+                    obj.iter().filter_map(|(key, val)| {
+                        val.as_f64().map(|f| (key.clone(), f as f32))
+                    }).collect()
+                }).unwrap_or_default()
+            }),
         }
     }
 }

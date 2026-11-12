@@ -12,7 +12,7 @@
     import type { Match } from '@/logic/models/matchplan/match/Match.ts';
     import type { PubAccountInfo } from '@/logic/models/account/PubAccountInfo.ts';
     import type { Matchplan } from '@/logic/models/matchplan/Matchplan.ts';
-    import RadarChartComponent from '@/vue/global/account/chart/RadarChartComponent.vue';
+import RadarChartComponent from '@/vue/global/account/chart/radar_chart/RadarChartComponent.vue';
 
     const props = defineProps<{
         Event?: DiscordEvent;

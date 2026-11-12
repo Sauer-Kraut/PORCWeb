@@ -1,11 +1,10 @@
 use actix_web::{web, HttpResponse, Responder};
-use futures::future::join_all;
 use serde::{Deserialize, Serialize};
 
 use crate::backend::backend_api::server_error::ServerError;
 use crate::backend::backend_api::util::parse_query_param::parse_query_param_to_vec;
 use crate::liberary::account_lib::account::pub_account_info::PubAccountInfo;
-use crate::liberary::account_lib::account::storage::get_account::get_account;
+use crate::liberary::account_lib::account::storage::get_account::get_accounts;
 use crate::AppState;
 
 
@@ -28,22 +27,11 @@ pub async fn get_account_info_request(query: web::Query<RecvPackage>, appstate: 
 
     let query_ids = parse_query_param_to_vec::<String>(query.ids.clone())?;
 
-    let mut account_info_handles = vec!();
-    let mut account_infos = vec!();
-
-    for user_id in query_ids.clone() {
-
-        account_info_handles.push(get_account(user_id, appstate.pool.clone()));
-    }
-        
-    for account_info in join_all(account_info_handles).await {
-
-        match account_info {
-            Ok(value) => {account_infos.push(value.get_pub_info())}
-            Err(_e) => {} // ignoring error, since finding nothing also returns an error 
-            // TODO: make better by making get_account option for that error specifically
-        }
-    }
+    let account_infos = get_accounts(query_ids, appstate.pool.clone())
+        .await?
+        .into_iter()
+        .map(|account| account.get_pub_info())
+        .collect::<Vec<_>>();
 
     if account_infos.is_empty() {
         Err(sqlx::Error::RowNotFound.into())

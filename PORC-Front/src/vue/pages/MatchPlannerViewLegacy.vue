@@ -42,6 +42,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const emptySchedule: Schedule = {
     availabilities: [] as Availability[],
+    availability_exceptions: [],
     matches: [] as MatchEvent[],
     note: '',
 };

@@ -1,21 +1,27 @@
 <script setup lang="ts">
     import { waitForAppReady } from '@/appReady';
-import { matchplanStore } from '@/logic/storage/st_matchplan';
-    import { ref, computed, onMounted, watch } from 'vue';
+    import { matchplanStore } from '@/logic/storage/st_matchplan';
+    import { formatTimeDiff } from '@/logic/util/formating/FormatTime';
+    import type { Season } from '@/models/season/Season';
+    import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
     
 
 
     let planStore = matchplanStore();
-    let season = computed(async () => {
-        return await planStore.get_season(); 
-    });
+    const season = ref<Season | null>(null);
+    const allSeasons = ref<Season[] | null>(null);
+    const ticker = ref(0);
+    const leaderboardHref = computed(() => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/leaderboard`);
+
+    let tickerInterval: number | null = null;
 
 
     // ----- Timer Logic -----------------
 
-    async function setTimerData(): Promise<{ TimerText: string; globalTimer: number }> {
-        const current_season = await season.value;
+    const timerData = computed((): { TimerText: string; globalTimer: number } => {
+        const current_season = season.value;
         const now = Date.now() / 1000; // Current time in seconds
+        ticker.value;
 
         if (current_season === null) {
             return {
@@ -25,28 +31,28 @@ import { matchplanStore } from '@/logic/storage/st_matchplan';
         }
         else if (now < current_season.start_timestamp) {
             return {
-                TimerText: `Time remaining until season ${current_season.name} of PORC`,
+                TimerText: `Season ${current_season.name} of PORC starts ${new Date(current_season.start_timestamp * 1000).toLocaleString()}`,
                 globalTimer: current_season.start_timestamp - now,
             };
         } else if (now < current_season.end_timestamp) {
             return {
-                TimerText: `Time remaining for season ${current_season.name} of PORC`,
+                TimerText: `Season ${current_season.name} of PORC ends ${new Date(current_season.pause_end_timestamp * 1000).toLocaleString()}`,
                 globalTimer: current_season.end_timestamp - now,
             };
         } else if (now < current_season.pause_end_timestamp) {
             return {
-                TimerText: `Time remaining until next season of PORC`,
+                TimerText: `Next season of PORC starts ${new Date(current_season.pause_end_timestamp * 1000).toLocaleString()}`,
                 globalTimer: current_season.pause_end_timestamp - now,
             };
         } else {
-            let seasonList = (await planStore.get_all_seasons()).sort((a, b) => {
-                return b.start_timestamp - a.start_timestamp; // Most recent first
+            const seasonList = [...(allSeasons.value ?? [])].sort((a, b) => {
+                return a.start_timestamp - b.start_timestamp; // Oldest first
             });
 
-            let nextSeason = seasonList.find(s => s.start_timestamp > now);
+            const nextSeason = seasonList.find(s => s.start_timestamp > now);
             if (nextSeason) {
                 return {
-                    TimerText: `Time remaining until season ${nextSeason.name} of PORC`,
+                    TimerText: `Season ${nextSeason.name} of PORC starts ${new Date(nextSeason.start_timestamp * 1000).toLocaleString()}`,
                     globalTimer: nextSeason.start_timestamp - now,
                 };
             } else {
@@ -56,25 +62,16 @@ import { matchplanStore } from '@/logic/storage/st_matchplan';
                 };
             }
         }
-    };
-
-    const timerData = ref<{ TimerText: string; globalTimer: number }>({
-        TimerText: 'Loading...',
-        globalTimer: 0,
     });
-
-    const TimerText = computed(() => timerData.value.TimerText);
-    const globalTimer = computed(() => timerData.value.globalTimer);
-
 
 
     // ----- Banner Logic ---------------
 
     const scroll = ref(0);  
 
-    window.addEventListener('scroll', () => {
+    const onScroll = () => {
         scroll.value = window.scrollY;
-    });
+    };
 
     let BannerImageDisplacement = ref(0);
     let TargetBannerImageDisplacement = computed(() => {
@@ -92,11 +89,30 @@ import { matchplanStore } from '@/logic/storage/st_matchplan';
     }
 
     onMounted(async () => {
+        window.addEventListener('scroll', onScroll);
         animateBanner();
+        tickerInterval = window.setInterval(() => {
+            ticker.value += 1;
+        }, 1000);
+
         await waitForAppReady();
-        await setTimerData().then(data => {
-            timerData.value = data;
-        });
+        allSeasons.value = await planStore.get_all_seasons();
+
+        const now = Date.now() / 1000;
+        season.value =
+            [...allSeasons.value]
+                .sort((a, b) => b.start_timestamp - a.start_timestamp)
+                .find(s => now < s.pause_end_timestamp) ??
+            await planStore.get_season();
+    });
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('scroll', onScroll);
+
+        if (tickerInterval !== null) {
+            window.clearInterval(tickerInterval);
+            tickerInterval = null;
+        }
     });
 </script>
 
@@ -115,7 +131,7 @@ import { matchplanStore } from '@/logic/storage/st_matchplan';
 
             <div class="position-relative">
                 <div class="banner-subtitle">
-                    // Next Season starting at: {{ new Date(globalTimer * 1000).toLocaleString() }}
+                    // {{ timerData.TimerText }} 
                 </div>
                 <h1 class="banner-text mb-0">
                     PRO ONLINE <br> <span class="text-highlight">RUMBLE</span> <br>COMPETITION
@@ -138,15 +154,15 @@ import { matchplanStore } from '@/logic/storage/st_matchplan';
                     <div class="stat-seperator"></div>
                     <div class="header-stat">
                         <i class="icon icon-stats"></i>
-                        <span class="stat-value">13</span>
+                        <span class="stat-value">{{ allSeasons?.length ?? 0}}</span>
                         <span class="stat-label">Seasons</span>
                     </div>
 
                 </div>
 
                 <div class="d-flex flex-row flex-grow-1 justify-content-start align-items-center w-100 ps-5 pe-5 gap-5 mt-5" style="width: 50%">
-                    <btn class="btn btn-primary me-4 col-4">Sign Up</btn>
-                    <btn class="btn btn-secondary btn-outline ms-5 col-4">Sign Up</btn>
+                    <a href="#sign-up" class="btn btn-primary me-4 col-4">Sign Up</a>
+                    <a :href="leaderboardHref" class="btn btn-secondary btn-outline ms-5 col-4">Leaderboard</a>
                 </div>
             </div>
         </div>

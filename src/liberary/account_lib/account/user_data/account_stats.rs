@@ -7,4 +7,5 @@ pub struct AccountStats {
     pub win_ratio: Option<f64>,
     pub global_rank: Option<u32>,
     pub division_rank: Option<u32>,
+    pub pose_stats: Option<Vec<(String, f32)>>,
 }

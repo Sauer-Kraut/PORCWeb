@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { onBeforeUnmount, nextTick, onMounted, ref } from 'vue';
+    import { onBeforeUnmount, nextTick, onMounted, ref, watch } from 'vue';
     import { computePosition, autoUpdate } from '@floating-ui/dom';
     import { arrow, type Boundary } from '@floating-ui/vue';
     import type { TooltipCommand, TooltipContext, TooltipEvent } from './PopoverEvaluator';
@@ -22,8 +22,10 @@
         parent?: string | null;
         fadeIn?: boolean;
         hideDelay?: number;
+        showDelay?: number;
         popoverBoundary?: HTMLElement;
-        offset?: number; 
+        offset?: number;
+        exclusiveGroup?: string;
     }>();
 
     defineOptions({
@@ -33,10 +35,31 @@
     const tooltipRef = ref<HTMLElement | null>(null);
     const arrowRef = ref<HTMLElement | null>(null);
 
+    const awaitingHide = ref(false);
+    const awaitingShow = ref(false);
     const hidden = ref(true);
 
     const hideDelay = props.hideDelay ?? 0; // ms
+    const showDelay = props.showDelay ?? 0; // ms
     const hideTimeout = ref<number | null>(null);
+    const instanceId = `popover_${Math.random().toString(36).slice(2)}`;
+    const exclusiveOpenEventName = "porc:popover-exclusive-open";
+
+    function clearHideTimeout() {
+        if (hideTimeout.value !== null) {
+            clearTimeout(hideTimeout.value);
+            hideTimeout.value = null;
+        }
+    }
+
+    watch(() => awaitingShow.value, async (newShow) => {
+        if (newShow) {
+            await new Promise((resolve) => setTimeout(resolve, showDelay));
+            if (awaitingShow.value) {
+                showTooltip();
+            }
+        }
+    })
 
 
     function extendBoundaryDown(el: HTMLElement, extraPx: number) {
@@ -49,28 +72,68 @@
         };
     }
 
+    function scheduleShowTooltip() {
+        awaitingShow.value = true;
+    }
+
     function showTooltip() {
         if (tooltipRef.value && props.anchor && arrowRef.value) {
-            if (hideTimeout.value) {
-                clearTimeout(hideTimeout.value);
-                hideTimeout.value = null;
-            }
+            awaitingHide.value = false;
+            clearHideTimeout();
 
             hidden.value = false;
             props.update(props.anchor, tooltipRef.value, arrowRef.value, 'fixed', props.popoverBoundary ? extendBoundaryDown(props.popoverBoundary, 100): undefined, undefined, props.offset);
+
+            if (props.exclusiveGroup) {
+                window.dispatchEvent(
+                    new CustomEvent(exclusiveOpenEventName, {
+                        detail: {
+                            group: props.exclusiveGroup,
+                            sourceId: instanceId,
+                        },
+                    })
+                );
+            }
         }
     }
 
     const slotKey = ref(0);
     
     function hideTooltip() {
+        awaitingShow.value = false;
         if (tooltipRef.value) {
+            awaitingHide.value = true;
+            clearHideTimeout();
             hideTimeout.value = window.setTimeout(() => {
-                if (tooltipRef.value) {
+                if (tooltipRef.value && awaitingHide.value) {
                     hidden.value = true;
+                    awaitingHide.value = false;
                 }
+                hideTimeout.value = null;
                 slotKey.value++;
             }, hideDelay);
+        }
+    }
+
+    function forceHideTooltip() {
+        clearHideTimeout();
+        awaitingShow.value = false;
+        hidden.value = true;
+        slotKey.value++;
+    }
+
+    function handleExclusiveOpen(event: Event) {
+        if (!props.exclusiveGroup) return;
+
+        const customEvent = event as CustomEvent<{ group?: string; sourceId?: string }>;
+        const detail = customEvent.detail;
+
+        if (!detail || detail.group !== props.exclusiveGroup || detail.sourceId === instanceId) {
+            return;
+        }
+
+        if (!hidden.value) {
+            forceHideTooltip();
         }
     }
     
@@ -97,11 +160,18 @@
                 target: e.target,
             })
         );
+
+        window.addEventListener(exclusiveOpenEventName, handleExclusiveOpen);
     }
 
 
     function handleEvent(event: TooltipEvent) {
         if (!props.anchor || !tooltipRef.value || !arrowRef.value) return;
+
+        if (hidden.value && event.type === "tooltip-mouseenter") {
+            // If the tooltip is hidden and the mouse enters it, we ignore this event.
+            return;
+        }
 
         const command = props.displayLogic(event, {
             visible: !hidden.value,
@@ -111,7 +181,7 @@
 
         switch (command) {
             case "show":
-                showTooltip();
+                scheduleShowTooltip();
                 break;
 
             case "hide":
@@ -119,10 +189,11 @@
                 break;
 
             case "toggle":
-                hidden.value ? showTooltip() : hideTooltip();
+                hidden.value ? scheduleShowTooltip() : hideTooltip();
                 break;
 
             case "stay":
+                awaitingHide.value = false;
                 break;
         }
     }
@@ -149,6 +220,8 @@
     });
 
     onBeforeUnmount(() => {
+        clearHideTimeout();
+        window.removeEventListener(exclusiveOpenEventName, handleExclusiveOpen);
         cleanup?.();
     });
 </script>
@@ -188,7 +261,7 @@
         width: fit-content;
         height: fit-content;
 
-        background-color: rgb(27, 27, 27) !important;
+        background-color: $darker-bg !important;
         box-shadow: 0 0px 30px rgba(0, 0, 0, 0.65);
         border: 1px solid $border-color;
         border-radius: 12px;
@@ -244,7 +317,7 @@
 
     #arrow {
         position: absolute;
-        background-color: #232323 !important;
+        background-color: $darker-bg !important;
         width: 12px;
         height: 12px;
         transform: rotate(45deg);

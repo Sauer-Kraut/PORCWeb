@@ -1,47 +1,26 @@
 use sqlx::*;
 
-use crate::liberary::{account_lib::{account::{account::Account, discord_user, storage::get_account_full::get_account_full}, schedule::storage::get_schedule::get_schedule}, util::functions::build_query::{ArgumentType, build_query}};
+use crate::liberary::account_lib::account::{account::Account, storage::get_account_full::get_accounts_full};
 
 
 
-#[derive(sqlx::FromRow)]
-#[derive(Debug)]
-struct QueryStruct {
-    id: String,
-    username: String,
-    discriminator: i32,
-    avatar: Option<String>,
-    email: Option<String>,
-    schedule_note: Option<String>
+pub async fn get_accounts(account_ids: Vec<String>, pool: PgPool) -> Result<Vec<Account>, Box<dyn std::error::Error + Send + Sync>> {
+    let accounts_full = get_accounts_full(account_ids, pool).await?;
+    let accounts = accounts_full
+        .into_iter()
+        .map(|(mut account, _)| {
+            account.schedule = None;
+            account
+        })
+        .collect();
+
+    Ok(accounts)
 }
 
 pub async fn get_account(account_id: String, pool: PgPool) -> Result<Account, Box<dyn std::error::Error + Send + Sync>> {
-    // let query_path = "src/liberary/account_lib/account/storage/queries/get_account.sql";
-    // let query = build_query(query_path, vec![
-    //     ArgumentType::String(account_id.clone()),
-    // ])?;
-
-    // let row = sqlx::query_as::<Postgres, QueryStruct>(&query)
-    // .fetch_one(&pool)
-    // .await?;
-
-    // let discord_user = discord_user::DiscordUser {
-    //     id: row.id.parse()?,
-    //     username: row.username,
-    //     discriminator: row.discriminator.to_string(),
-    //     avatar: row.avatar,
-    //     email: row.email,
-    // };
-
-    // let account = Account {
-    //     user_info: discord_user,
-    //     schedule: None,
-    // };
-
-    let mut account = get_account_full(account_id, pool).await?.0;
-    account.schedule = None; // Remove schedule for the sake of privacy, but lowkey this function might need to be brought out back
-
-    // println!("{:?}", account);
-
-    Ok(account)
+    get_accounts(vec![account_id], pool)
+        .await?
+        .into_iter()
+        .next()
+        .ok_or_else(|| Box::new(sqlx::Error::RowNotFound) as Box<dyn std::error::Error + Send + Sync>)
 }

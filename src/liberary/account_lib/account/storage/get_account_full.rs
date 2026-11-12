@@ -1,9 +1,8 @@
 use chrono::{DateTime, Utc};
-use futures::join;
 use sqlx::*;
 use sqlx::types::Json;
 
-use crate::liberary::{account_lib::{account::{account::Account, account_customisation::AccountCustomisation, discord_user::{self, DiscordUser}, pub_account_info::PubAccountInfo, user_data::{account_stats::AccountStats, radar_chart::{self, RadarChart}, shiftstone::Shiftstone}}, availability::availability::{Availability, DailyRepetitionConfig, Repetition}, match_event::match_event::{MatchEvent, MatchStatus}, schedule::{self, schedule::Schedule, storage::get_schedule::get_schedule}}, util::functions::build_query::{ArgumentType, build_query}};
+use crate::liberary::{account_lib::{account::{account::Account, account_customisation::AccountCustomisation, discord_user::{self, DiscordUser}, user_data::{account_stats::AccountStats, radar_chart::RadarChart, shiftstone::Shiftstone}}, availability::availability::{Availability, DailyRepetitionConfig, Repetition}, availability_exception::availability_exception::AvailabilityException, match_event::match_event::{MatchEvent, MatchStatus}, schedule::schedule::Schedule}, util::functions::build_query::{ArgumentType, build_query}};
 
 
 
@@ -110,6 +109,23 @@ impl TryInto<Availability> for SubQueryStructAvailability {
 }
 
 #[derive(sqlx::FromRow, serde::Deserialize, Debug, Clone)]
+struct SubQueryStructAvailabilityException {
+    start_timestamp: u64,
+    end_timestamp: u64,
+}
+
+impl TryInto<AvailabilityException> for SubQueryStructAvailabilityException {
+    type Error = Box<dyn std::error::Error + Send + Sync>;
+
+    fn try_into(self) -> Result<AvailabilityException, Self::Error> {
+        Ok(AvailabilityException {
+            start_timestamp: self.start_timestamp,
+            end_timestamp: self.end_timestamp,
+        })
+    }
+}
+
+#[derive(sqlx::FromRow, serde::Deserialize, Debug, Clone)]
 struct SubQueryStructStats {
     wins: u32,
     matches: u32,
@@ -127,6 +143,13 @@ impl Into<AccountStats> for SubQueryStructStats {
             win_ratio: self.win_ratio,
             global_rank: self.global_rank,
             division_rank: self.division_rank,
+            pose_stats: self._pose_stats.map(|value| {
+                value.as_object().map(|obj| {
+                    obj.iter().filter_map(|(key, val)| {
+                        val.as_f64().map(|f| (key.clone(), f as f32))
+                    }).collect()
+                }).unwrap_or_default()
+            }),
         }
     }
 }
@@ -193,37 +216,74 @@ impl TryInto<AccountCustomisation> for SubQueryStructCustomisation {
 struct QueryStruct {
     account_info: Json<SubQueryStructAccount>,
     availabilities: Json<Vec<SubQueryStructAvailability>>,
+    availability_exceptions: Json<Vec<SubQueryStructAvailabilityException>>,
     match_events: Json<Vec<SubQueryStructMatchEvent>>,
     stats: Json<SubQueryStructStats>,
-    customisation: Json<SubQueryStructCustomisation>
+    customisation: Option<Json<SubQueryStructCustomisation>>
+}
+
+pub async fn get_accounts_full(account_ids: Vec<String>, pool: PgPool) -> Result<Vec<(Account, Vec<MatchEvent>)>, Box<dyn std::error::Error + Send + Sync>> {
+        if account_ids.is_empty() {
+                return Ok(vec![]);
+        }
+
+        let query_path = "src/liberary/account_lib/account/storage/queries/get_account_full.sql";
+        let query = build_query(query_path, vec![
+                ArgumentType::StringArray(account_ids),
+        ])?;
+
+        let rows = sqlx::query_as::<Postgres, QueryStruct>(&query)
+                .fetch_all(&pool)
+                .await?;
+
+        let mut accounts = Vec::with_capacity(rows.len());
+
+        for res in rows {
+            let availabilities = match res.availabilities.iter().map(|av| {av.clone().try_into()}).collect::<Result<Vec<_>, _>>() {
+                Ok(value) => value,
+                Err(_) => continue,
+            };
+            let availability_exceptions = match res.availability_exceptions.iter().map(|av| {av.clone().try_into()}).collect::<Result<Vec<_>, _>>() {
+                Ok(value) => value,
+                Err(_) => continue,
+            };
+            let match_events = match res.match_events.iter().map(|ev| ev.clone().try_into()).collect::<Result<Vec<MatchEvent>, _>>() {
+                Ok(value) => value,
+                Err(_) => continue,
+            };
+            let schedule = Schedule { availabilities, availability_exceptions, matches: match_events.clone().iter().filter_map(|ev| ev.id).collect(), note: res.account_info.schedule_note.clone().unwrap_or("".to_string()) };
+            let discord_user = match res.account_info.0.clone().try_into() {
+                Ok(value) => value,
+                Err(_) => continue,
+            };
+
+            let user_stats: AccountStats = res.stats.0.into();
+
+            let customisation: Option<AccountCustomisation> = match res.customisation {
+                Some(value) => match value.0.try_into() {
+                    Ok(parsed) => Some(parsed),
+                    Err(_) => continue,
+                },
+                None => None,
+            };
+
+            let account = Account {
+                user_info: discord_user,
+                schedule: Some(schedule),
+                customisation,
+                stats: user_stats,
+            };
+
+            accounts.push((account, match_events));
+        }
+
+        Ok(accounts)
 }
 
 pub async fn get_account_full(account_id: String, pool: PgPool) -> Result<(Account, Vec<MatchEvent>), Box<dyn std::error::Error + Send + Sync>> {
-    let query_path = "src/liberary/account_lib/account/storage/queries/get_account_full.sql";
-    let query = build_query(query_path, vec![
-        ArgumentType::String(account_id.clone()),
-    ])?;
-
-    let res = sqlx::query_as::<Postgres, QueryStruct>(&query)
-    .fetch_one(&pool).await?;
-
-    let availabilities = res.availabilities.iter().map(|av| {av.clone().try_into()}).collect::<Result<Vec<_>, _>>()?;
-    let match_events = res.match_events.iter().map(|ev| ev.clone().try_into()).collect::<Result<Vec<MatchEvent>, _>>()?;
-    let schedule = Schedule { availabilities, matches: match_events.clone().iter().filter_map(|ev| ev.id).collect(), note: res.account_info.schedule_note.clone().unwrap_or("".to_string()) };
-    let discord_user = res.account_info.0.clone().try_into()?;
-
-    let user_stats: AccountStats = res.stats.0.into();
-
-    let customisation: Option<AccountCustomisation> = Some(res.customisation.0.try_into()?);
-
-    let account = Account {
-        user_info: discord_user,
-        schedule: Some(schedule),
-        customisation,
-        stats: user_stats,
-    };
-
-    // println!("{:?}", account);
-
-    Ok((account, match_events))
+        get_accounts_full(vec![account_id], pool)
+                .await?
+                .into_iter()
+                .next()
+                .ok_or_else(|| Box::new(sqlx::Error::RowNotFound) as Box<dyn std::error::Error + Send + Sync>)
 }

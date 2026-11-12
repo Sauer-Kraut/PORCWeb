@@ -10,6 +10,7 @@ import {defineStore} from 'pinia';
 import { createFetching, isFetching, type Fetching } from './fetching';
 import type { Matchplan } from '../models/matchplan/Matchplan';
 import debugWithTimestamp from '../util/logging/DebugWithTimestamp';
+import type { Division } from '@/models/matchplan/division/Division';
 
 
 type InfoTypeMap = {
@@ -302,7 +303,18 @@ export const matchplanStore = defineStore('matchplan', {
             
             return infoRanking;
         },
-        
+
+        async get_most_recent_placement(accountId: string, limit: number = 3): Promise<Division | null> {
+            let matchplans = (await Promise.all((await this.get_all_seasons()).sort((a, b) => b.start_timestamp - a.start_timestamp).slice(0, limit).map(async (s) => this.get_matchplan(s.name)))).sort((a, b) => b.start_timestamp - a.start_timestamp);
+
+            for (let matchplan of matchplans) {
+                let placement = matchplan.divisions.find((d) => d.players.some((p) => p.id == accountId));
+                if (placement) {
+                    return placement;
+                }
+            }
+            return null;
+        },
 
         async storeMatch(match: Match) {
             let _res = await postMatch(match);

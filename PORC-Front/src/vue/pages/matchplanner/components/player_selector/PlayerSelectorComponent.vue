@@ -74,7 +74,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
 <template>
     <div class="d-flex flex-column container-fluid m-0 p-0">
         <!-- css nonsence of row not working  -->
-        <div class="d-flex flex-row flex-md-column overflow-scroll overflow-md-auto">
+        <div class="player-list d-flex flex-row flex-md-column overflow-scroll overflow-md-auto">
 
             <div 
             v-for="player in props.players"
@@ -90,9 +90,9 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
                 <div class="mt-auto mb-auto account-info">
                     {{ filter_str(player.username, 14) }}
                     <!-- <div class="icon icon-checkmark"></div> -->
-                    <div class="d-flex flex-row">
-                        <MatchStatusComponent :season="season" :status="''" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []" class="m-0 mt-1 status-icon mb-1 me-1"></MatchStatusComponent>
-                        <MatchStatusComponentText :season="season" :status="''" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []" class="m-0 detail-title mt-2"></MatchStatusComponentText>
+                    <div class="d-flex flex-row mt-1">
+                        <MatchStatusComponent :season="season" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []" class="m-0 mt-1 status-icon mb-1 me-1"></MatchStatusComponent>
+                        <MatchStatusComponentText :season="season" :player_id="player.id" :observer_id="observer_id" :matches="player.schedule?.matches || []" class="m-0 detail-title"></MatchStatusComponentText>
                     </div>
                 </div>
 
@@ -104,37 +104,109 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
 <style lang="scss" scoped>
 @import '@/assets/scss/styles.scss';
 
+// Same language as the account cards: tonal tiles instead of flat rows,
+// radius tiers, and spacing (not borders) to separate items.
 .overflow-scroll {
     overflow-x: scroll !important;
     overflow-y: hidden !important;
 }
 
+.player-list {
+    --highlight-bg: #{$highlight-bg};
 
+    gap: 0.5rem;
+    padding: 0.5rem;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+
+    &::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 3px;
+    }
+}
 
 .account-box {
+    position: relative;
     box-sizing: border-box;
+    flex-shrink: 0;
 
     height: 4.5rem;
     padding: 0.25rem;
     padding-inline: 0;
-    
+
     cursor: pointer;
-    transition: 0.2s;
+    border-radius: 16px;
+    background-color: transparent;
 
-    // border-radius: 16px !important;
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
 
-    &.active, &:hover {
-        background-color: rgba(255, 255, 255, 0.07) !important;
+    // Accent bar: hidden by default, grows in for the active player
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+
+        width: 3px;
+        height: 1.75rem;
+
+        border-radius: 0 3px 3px 0;
+        background: var(--primary);
+
+        transform: translateY(-50%) scaleY(0);
+        transition: transform 0.2s ease;
     }
-    
+
+    &:hover {
+        background-color: var(--highlight-bg);
+    }
+
+    &.active {
+        background-color: color-mix(in srgb, var(--primary) 10%, var(--highlight-bg));
+
+        &::before {
+            transform: translateY(-50%) scaleY(1);
+        }
+
+        .account-info {
+            color: #fff;
+        }
+    }
+
+    &:active {
+        transform: scale(0.985);
+    }
+
     .account-info {
         font-size: 1rem;
         font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.2px;
+        color: rgb(224, 224, 224);
+
+        transition: color 0.2s ease;
     }
 
     .avatar {
-        height: 2.25rem;
-        margin-inline: 1rem;
+        height: 2.5rem;
+        width: 2.5rem;
+        margin-inline: 0.9rem 0.85rem;
+
+        border-radius: 15%;
+        background: rgb(26, 26, 26);
+        background-size: cover;
     }
 }
 
@@ -152,7 +224,8 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer', { de
 
 .detail-title {
     font-weight: 500 !important;
-    margin-top: 0.17rem !important;
+    margin-top: 0.4rem !important;
+    font-size: 0.75rem;
 }
 
 .calander {

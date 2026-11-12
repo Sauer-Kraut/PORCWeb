@@ -14,11 +14,13 @@ import type { SignUpInfo } from './logic/models/signup/SignUpInfo.ts';
 import type { Matchplan } from '@/models/matchplan/Matchplan.ts';
 import { getInitData } from './logic/util/resources/get/GetInitData.ts';
 import { discordInfoStore } from './logic/storage/st_discord.ts';
+import { imageStore } from './logic/storage/st_image.ts';
 
 
 const st_plan = matchplanStore();
 const st_account = accountsStore();
 const st_discord = discordInfoStore();
+const st_image = imageStore();
 
 
 const isMenuOpen = ref(false);
@@ -200,7 +202,8 @@ onMounted(async () => {
     await Promise.all([
         st_account.init_storage(),
         st_plan.init_storage(),
-        st_discord.init_storage()
+        st_discord.init_storage(),
+        st_image.init_storage()
     ]);
 
     appReady.value = true;

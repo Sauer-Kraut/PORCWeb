@@ -3,3 +3,4 @@ pub mod util;
 pub mod account_lib;
 pub mod dialogue_lib;
 pub mod discord_lib;
+pub mod asset_lib;

@@ -5,7 +5,7 @@ export function InfoPopover(
     tooltipEl: HTMLElement, 
     arrowEl: HTMLElement, 
     strategy: "fixed" | "absolute" = "fixed", 
-    boundary?: Rect,
+    boundary?: Boundary,
     boundaryPadding: number = 16,
     popover_offset: number = 14,
 ) {
@@ -19,7 +19,7 @@ export function InfoPopover(
             padding: boundaryPadding,
             }),
             ...(boundary
-                ? [shift({ boundary, rootBoundary: boundary, padding: boundaryPadding })]
+                ? [shift({ boundary, rootBoundary: boundary as Rect, padding: boundaryPadding })]
                 : []),
             arrow({element: arrowEl}),
         ]

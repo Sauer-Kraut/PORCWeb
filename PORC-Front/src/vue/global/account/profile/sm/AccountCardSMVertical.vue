@@ -8,14 +8,18 @@
     import { filter_str } from '@/logic/util/formating/stringFilter.ts';
     import ProfileBadge from '../../badge/ProfileBadge.vue';
     import { badge_from_code } from '@/logic/models/account/account_cust/badges/Badge.ts';
-    import RadarChartComponent from '../../chart/RadarChartComponent.vue';
+    import RadarChartComponent from '../../chart/radar_chart/RadarChartComponent.vue';
+    import { useModal } from 'vue-final-modal';
+    import type { AccountCustomisation } from '@/models/pub_account_info/account_cust/AccountCustomisation.ts';
+    import { EditProfile } from '../../modals/edit_profile/EditProfile.ts';
+    import { accountsStore } from '@/logic/storage/st_accounts.ts';
 
     const props = defineProps<{
         account: PubAccountInfo
     }>();
 
     const card = ref<HTMLElement | null>(null);
-    const nameRowExpanded = ref(true);
+    const allowEdit = ref<boolean>(false);
 
     type CardState =
         "Banner" |
@@ -63,6 +67,14 @@
         }
     }
 
+    watch(async () => props.account, async (newAccount) => {
+        allowEdit.value = await accountsStore().get_login_id() === (await newAccount).id; // Replace with actual logic to check if the user can edit
+    });
+
+    onMounted(async () => {
+        // Check if the user is allowed to edit the profile
+        allowEdit.value = await accountsStore().get_login_id() === props.account.id;
+    });
 </script>
 
 <template>
@@ -76,16 +88,22 @@
             }">
                 <div class="banner flex-grow-1 align-items-center justify-content-center" @click="toggleCardState('Banner')">
                     <RadarChartComponent class="radar-chart" :size="210" :labels="['Mobility', 'Weight', 'Aggresiv', 'Range Bias', 'Reactivity']" :values="[3, 4, 4, 2.5, 4.2]" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChartComponent>
+
+                    <i
+                        v-if="allowEdit"
+                        @click="EditProfile(account)"
+                        class="edit-btn icon icon-edit-pencil"
+                    ></i>
                 </div>
 
                 <div class="d-flex flex-row role">
-                    <div class="me-1" style="border-radius: 50%; height: 0.5rem; width: 0.5rem; background-color: pink;"></div>
-                    Participant
+                    <!-- <div class="me-1" style="border-radius: 50%; height: 0.5rem; width: 0.5rem; background-color: pink;"></div> -->
+                    Win Streak: {{ "4" }}
                 </div>
 
-                <div class="player-data" @click="toggleCardState('Info')">
+                <div class="d-flex flex-column player-data" @click="toggleCardState('Info')">
+                    <DiscordAvatarComponent class="pfp" :account="account"></DiscordAvatarComponent>
                     <div class="name-row align-items-center">
-                        <DiscordAvatarComponent class="pfp" :account="account"></DiscordAvatarComponent>
 
                         <!-- <div class="usr-at">@sauerkraut</div> -->
 
@@ -158,6 +176,7 @@
         --card-width: 18rem;
         --display-height: 29.5rem;
         --banner-height: 14.25rem;
+        --gap: 0.85rem;
         --display-transition: all 0.4s ease-in-out;
 
         display: flex;
@@ -166,11 +185,13 @@
         overflow: hidden;
         
         width: var(--card-width);
-        min-height: 20rem;
-        height: fit-content;
+        min-height: 30rem;
+        max-height: 30rem;
+        height: 30rem;
 
-        --card-bg-color: rgb(35, 35, 35);
-        --dark-highlight-bg: color-mix(in srgb, var(--primary) 3.2%, black 96%, transparent);
+        --card-bg-color: $darker-bg;
+        --dark-highlight-bg: #{$highlight-bg};
+        // --dark-highlight-bg: color-mix(in srgb, var(--primary) 3.2%, black 80%, transparent);
 
 
         border: 1px solid transparent;
@@ -232,6 +253,7 @@
 
             width: 100%;
             min-height: 4rem;
+            min-height: var(--banner-height);
             height: var(--banner-height);
 
             // padding-top: 4rem;
@@ -313,24 +335,79 @@
             }
         }
 
+        .edit-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.5rem;
+
+            height: 1rem;
+            width: 1rem;
+
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 10;
+
+            cursor: pointer;
+
+            transition:
+                color 0.2s ease,
+                transform 0.2s ease;
+
+            &:hover {
+                color: rgba(255, 255, 255, 0.8);
+                transform: scale(1.1);
+            }
+        }
+
         .cardStateBanner .radar-chart {
             scale: 1.2;
         }
 
         .player-data {
-            --player-data-height: calc(var(--display-height) - var(--banner-height));
-            height: var(--player-data-height);
+            position: relative;
+            // --player-data-height: calc(var(--display-height) - var(--banner-height));
+            // height: var(--player-data-height);
+            min-height: 23.5rem;
             transition: var(--display-transition);
 
+            gap: var(--gap);
+
             z-index: 2;
+
+            .pfp {
+                // display: none;
+                --displacement: -1rem;
+
+                transition: var(--display-transition);
+                position: absolute;
+                // border: 1px solid var(--primary);
+
+                // margin-left: 1.5rem;
+
+                left: 1.25rem;
+                top: 0rem;
+
+                width: 4rem;
+                height: 4rem;
+                border-radius: 20%;
+                background: rgb(26, 26, 26);
+
+                // background-image: url(https://cdn.discordapp.com/avatars/306467062530965514/7df79ec5c3938cf59cd8cd4a69242ad3.png);
+                background-size: cover;
+
+                border: 7px solid var(--card-bg-color);
+
+                transform: translateY(var(--displacement));
+            }
         }
 
         .role {
+            --role-color: var(--primary);
             --displacement: -2rem;
 
             position: absolute;
             top: calc(var(--banner-height) + var(--displacement));
-            left: 5.5rem;
+            left: 6rem;
 
             transition: var(--display-transition);
 
@@ -341,36 +418,41 @@
             z-index: 0;
 
             border-radius: 4px;
-            border: 1px solid $border-color;
-            background: color-mix(in srgb, rgb(0, 0, 0), transparent 50%);
+            border: 1px solid var(--role-color);
+            background: transparent;
 
             padding: 0.2rem;
             padding-inline: 0.5rem;
 
-            color: rgb(193, 193, 193);
+            color: var(--role-color);
+            font-weight: 600;
         }
 
         .cardStateInfo .role {--displacement: 0.5rem !important;}
 
         .name-row {
-            --name-row-height: calc(5rem + 0.1 * (var(--player-data-height) - 5rem));
-            --name-displacement: 0rem;
+            --name-height: 5rem;
 
             transition: var(--display-transition);
 
-            transform: translateY(var(--name-displacement));
+            margin-top: 1rem;
 
             display: flex;
             flex-direction: row;
             justify-content: flex-start;
             align-items: center !important;
 
+            flex-grow: 1;
+            height: 100%;
+
             z-index: 7;
 
             width: 100%;
-            height: var(--name-row-height);
+            height: var(--name-height);
+            min-height: var(--name-height);
+            max-height: var(--name-height);
+            
             padding-left: 1rem;
-            // padding-top: 0.5rem;
             // padding-bottom: 0.5rem;
 
             // margin-bottom: -2rem;
@@ -383,28 +465,6 @@
 
 
             // transform: translate(0rem, -2.25rem);
-
-            .pfp {
-                --displacement: var(--name-displacement);
-
-                transition: var(--display-transition);
-                position: absolute;
-                // border: 1px solid var(--primary);
-
-                // margin-left: 1.5rem;
-
-                width: 4rem;
-                height: 4rem;
-                border-radius: 20%;
-                background: rgb(26, 26, 26);
-
-                // background-image: url(https://cdn.discordapp.com/avatars/306467062530965514/7df79ec5c3938cf59cd8cd4a69242ad3.png);
-                background-size: cover;
-
-                border: 7px solid var(--card-bg-color);
-
-                transform: translateY(calc(-0.5 * var(--name-row-height) - var(--displacement)));
-            }
 
             .username {
                 // margin-left: 1rem;
@@ -438,21 +498,28 @@
             }
         }
 
-        .cardStateBanner .name-row {
-            --name-row-height: 5rem !important;
-            --name-displacement: 0rem !important;
-            .pfp {--displacement:  calc(1rem + var(--name-displacement)) !important;}
+        .cardStateBanner {
+            .name-row {--name-height: 3rem !important;}
+            .pfp {--displacement: -3.5rem !important;}
+            .achievements {border-radius: 0px; padding-inline: 1rem; margin-inline: 0rem;}
+            // padding-top: 2rem;
         }
 
-        .cardStateBalanced .name-row {
-            --name-row-height: 5.3rem !important;
-            --name-displacement: 0.75rem !important;
-            .pfp {--displacement: calc(0rem + var(--name-displacement)) !important;}
+        .cardStateBalanced {
+            --gap: 0.75rem;
+            .name-row {
+                --name-height: 3rem !important;
+                padding-top: 0.25rem;
+            }
+            .pfp {--displacement: -3.0rem !important;}
         }
 
-        .cardStateInfo .name-row {
-            --name-displacement: 1.25rem !important;
-            .pfp {--displacement: calc(-1rem + var(--name-displacement)) !important;}
+        .cardStateInfo {
+            .name-row { 
+                --name-height: 5rem !important;
+                padding-top: 2rem;
+            }
+            .pfp {--displacement: -1.75rem !important;}
         }
 
 
@@ -469,17 +536,20 @@
             justify-content: center;
 
             height: 5rem;
-            padding-inline: 1.5rem;
+            margin-inline: 1rem;
             // margin-left: calc(var(--card-width) - 9rem - 2px);
-            width: 100%;
+            width: auto;
             // border-top-right-radius: 12px !important;
             // border-bottom-left-radius: 12px !important;
 
             border: 1px solid $border-color;
+            border-radius: 8px;
             border-right: none;
             border-top: none;
 
             background: var(--dark-highlight-bg);
+
+            transition: var(--display-transition);
 
             .achievement {
                 display: flex;
@@ -522,12 +592,12 @@
             flex-direction: row;
             flex-wrap: wrap;
 
-            margin-top: -0.5rem;
+            // margin-top: -0.5rem;
 
-            padding: 1rem;
-            padding-top: 1.25rem;
-            padding-bottom: 0.75rem;
-            gap: 0.5rem;
+            padding-inline: 1rem;
+            // padding-top: 1.25rem;
+            // padding-bottom: 0.75rem;
+            gap: var(--gap);
 
             width: 100%;
 
@@ -584,7 +654,7 @@
         }
 
         .cardStateBalanced .stat-section {
-            padding-top: 1rem;
+            // padding-top: 1rem;
         }
 
         .pose-section {
@@ -631,6 +701,9 @@
             display: flex;
             flex-direction: row;
             justify-content: center;
+
+            min-height: 1rem;
+            margin-bottom: 0.5rem;
 
             position: relative;
             overflow: hidden;

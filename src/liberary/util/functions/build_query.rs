@@ -6,6 +6,7 @@ use crate::backend::backend_api::server_error::ServerError;
 
 pub enum ArgumentType {
     String(String),
+    StringArray(Vec<String>),
     Int(i64),
     Float(f64),
     Bool(bool),
@@ -35,6 +36,14 @@ pub fn build_query(query_file_path: &str, args: Vec<ArgumentType>) -> Result<Str
         let argument_key = format!("(${})", index + 1);
         let argument_value = match arg {
             ArgumentType::String(val) => format!("'{}'", val.replace("'", "")),
+            ArgumentType::StringArray(values) => {
+                let array_values = values
+                    .iter()
+                    .map(|val| format!("'{}'", val.replace("'", "")))
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                format!("ARRAY[{}]::text[]", array_values)
+            }
             ArgumentType::Int(val) => val.to_string(),
             ArgumentType::Float(val) => val.to_string(),
             ArgumentType::Bool(val) => val.to_string(),

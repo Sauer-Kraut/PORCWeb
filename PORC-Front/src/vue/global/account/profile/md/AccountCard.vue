@@ -12,10 +12,13 @@
     import DiscordAvatarComponent from '../../avatar/DiscordAvatarComponent.vue';
     import { filter_str } from '@/logic/util/formating/stringFilter.ts';
     import { Shiftstone } from '@/logic/models/account/account_cust/shiftstone/ShiftstoneModel.ts';
+import { EditProfile } from '../../modals/edit_profile/EditProfile.ts';
+import { accountsStore } from '@/logic/storage/st_accounts.ts';
 
     const props = defineProps<{
         account: PubAccountInfo;
         listHeight?: number;
+        editable?: boolean;
     }>();
 
     const planStore = matchplanStore();
@@ -57,12 +60,19 @@
         matches.value = found.map(({ match, source }) => ({ match, source }));
     }
 
+    const allowEdit = ref<boolean>(false);
+
+    watch(async () => props.account, async (newAccount) => {
+        allowEdit.value = await accountsStore().get_login_id() === (await newAccount).id; // Replace with actual logic to check if the user can edit
+    });
+
     watch(() => props.account, async (newAcc) => {
         await findMatches(newAcc.id);
     })
 
     onMounted(async () => {
         await waitForAppReady();
+        allowEdit.value = await accountsStore().get_login_id() === props.account.id;
         await findMatches(props.account.id);
     })
 
@@ -80,6 +90,12 @@
             <!-- <img class="banner" src="../assets/images/radar-chart.png" alt="Banner"> -->
             <div class="banner align-items-center justify-content-center d-flex">
                 <!-- <RadarChart class="radar-chart" :size="280" :labels="['Mobility', 'Weight', 'Aggresiv', 'Range Bias', 'Reactivity']" :values="[3, 4, 4, 2.5, 4.2]" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChart> -->
+
+                <i
+                    v-if="allowEdit && editable"
+                    @click="EditProfile(account)"
+                    class="edit-btn icon icon-edit-pencil"
+                ></i>
             </div>
 
             <div class="d-flex flex-row w-100 justify-content-start">
@@ -108,7 +124,7 @@
                 <div class="achievement"><ProfileBadge :badge="badge_from_code(account.customisation?.badges[2] ?? 0)" :unlocked="true" :size="'xl'"></ProfileBadge></div>
             </div>    
 
-            <div class="matches-section flex-grow-1 pt-3">
+            <div v-if="(listHeight ?? 0) > 0" class="matches-section flex-grow-1 pt-3">
                 <div class="section-title spaced-text mb-1 ms-1 pb-1">Recent Matches</div>
 
                 <div class="scroll-box" :style="{height: `${(listHeight != null) ? listHeight: 12}rem`}">
@@ -182,18 +198,12 @@
         align-items: flex-start;
         overflow: hidden;
         
-        width: 22rem;
+        width: 21rem;
         height: fit-content;
 
         --dark-highlight-bg: white;
 
-        --highlight-bg: repeating-linear-gradient(
-            45deg,
-            rgba(0, 0, 0, 0.2) 0px,
-            rgb(57, 57, 57) 2px,
-            transparent 1px,
-            transparent 7px
-        );
+        --highlight-bg: #{$highlight-bg};
 
         // --highlight-bg: rgb(32, 32, 32);
 
@@ -321,6 +331,30 @@
             }
         }
 
+        .edit-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.5rem;
+
+            height: 1rem;
+            width: 1rem;
+
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 10;
+
+            cursor: pointer;
+
+            transition:
+                color 0.2s ease,
+                transform 0.2s ease;
+
+            &:hover {
+                color: rgba(255, 255, 255, 0.8);
+                transform: scale(1.1);
+            }
+        }
+
         .name-row {
             display: flex;
             flex-direction: row;
@@ -419,6 +453,7 @@
             justify-content: space-around;
 
             margin-top: -3rem !important;
+            margin-bottom: 0.5rem !important;
 
             height: 7rem;
             padding-inline: 0.5rem;

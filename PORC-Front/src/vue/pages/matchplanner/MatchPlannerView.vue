@@ -45,6 +45,7 @@ const selectedPlayer = defineModel<PubAccountInfo | null>('selectedPlayer');
 
 const emptySchedule: Schedule = {
     availabilities: [] as Availability[],
+    availability_exceptions: [],
     matches: [] as MatchEvent[],
     note: '',
 };
@@ -210,7 +211,7 @@ async function submitNote() {
             <div class="player-selector">
                 <PlayerSelector :season="season ?? undefined" :players="playerinfos" v-model:selected-player="selectedPlayer" :observer_id="userId ?? ''" class=""></PlayerSelector>
             </div>
-            <div class="player-profile d-flex flex-column h-100">
+            <div class="player-profile d-flex flex-column">
                 <AccountCardFloating v-if="selectedPlayer" :account="selectedPlayer" id="account-plate" class="flex-grow-1" area-describedby="tooltip"></AccountCardFloating>
 
                 <div class="note-box mt-auto mb-0 d-none d-md-block">
@@ -254,17 +255,20 @@ async function submitNote() {
 @import '@/assets/scss/global.scss';
 
 $match-border-width: 2px;
-$tile-bg: rgb(15, 15, 15) !important;
+$tile-bg: #{$darker-bg} !important;
 
 .match-planner {
     flex-grow: 1;
-    width: 100vh;
+    width: 100vw;
+    height: 96vh;
 }
 
 .player-profile {
-    background-color: #151515;
+    background-color: $darker-bg;
     border: 1px solid $border-color;
     border-width: 0px 1px 0px 1px;
+
+    border: 0px;
 
 }
 
@@ -316,6 +320,18 @@ $tile-bg: rgb(15, 15, 15) !important;
         padding: 0.2rem !important;
 
         border-radius: 6px !important;
+    }
+}
+
+.sidebar {
+    border-radius: 0px !important;
+}
+
+.calendar {
+    border-radius: 0px !important;
+
+    .calendar-container {
+        border-radius: 0px !important;
     }
 }
 </style>
