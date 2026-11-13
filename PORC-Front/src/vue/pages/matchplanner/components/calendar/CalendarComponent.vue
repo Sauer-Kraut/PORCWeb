@@ -10,12 +10,18 @@ import { InfoPopover } from '@/vue/global/system/Popover/PopoverDesign/InfoPopov
 import { clickEvaluator } from '@/vue/global/system/Popover/PopoverDisplayLogic/ClickPopover';
 import MatchStatusComponent from '@/vue/pages/matchplanner/components/player_selector/match_status/MatchStatusComponent.vue';
 import { addDays, endOfWeek, startOfWeek } from 'date-fns';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useModal } from 'vue-final-modal';
+import { clamp, dateAtMinutes, getEventStyle, getHourStyle, getHoursInRange, getMonday, getRangeStyle, snapMinutes, splitDateRangeByDay } from './calendarGridUtils.ts';
 import ConfirmDeleteAvailabilityModal from './modals/ConfirmDeleteAvailabilityModal.vue';
 import EditAvailability from './modals/EditAvailability/EditAvailability.vue';
 import MatchPopper from './modals/MatchPopper.vue';
 import RequestMatchPopover from './popovers/RequestMatchPopover.vue';
+import type { AvailabilityException } from '@/models/pub_account_info/schedule/availability_exception/AvailabilityException.ts';
+import { submitMatchRequest, updateAvailabilities, updateExceptions } from './calendarCalls';
+import debugWithTimestamp from '@/logic/util/logging/DebugWithTimestamp.ts';
+
+
 
 const props = defineProps<{
     schedule: Schedule;
@@ -30,27 +36,42 @@ const props = defineProps<{
 const compStore = accountsStore();
 const emit = defineEmits(['reload']);
 
+
+const calendarBox = ref<HTMLElement | null>(null);
+const calendarDaysRef = ref<HTMLElement | null>(null);
+
+
+
+
+// ------------------------------
+// ----- Popover Management -----
+// ------------------------------
+
 type CalendarPopoverContent =
     | { kind: 'availability-editor'; availability: Availability }
     | { kind: 'availability-create'; availability: Availability }
     | { kind: 'match-request'; match: MatchEvent; opponentUsername: string };
-type CalendarPopover = CalendarPopoverContent & { key: number; anchor: HTMLElement };
+
+type CalendarPopover = CalendarPopoverContent & { anchor: HTMLElement };
+
 
 const activePopover = ref<CalendarPopover | null>(null);
-const activePopoverAnchor = computed(() => activePopover.value?.anchor ?? null);
 const calendarPopoverRef = ref<{ open: () => void; close: () => void } | null>(null);
-let popoverKey = 0;
 
 function openCalendarPopover(event: Event, content: CalendarPopoverContent): void {
     const anchor = event.currentTarget;
     if (!(anchor instanceof HTMLElement)) return;
     event.stopPropagation();
+    openCalendarPopoverAtAnchor(anchor, content);
+}
+
+function openCalendarPopoverAtAnchor(anchor: HTMLElement, content: CalendarPopoverContent): void {
     if (activePopover.value?.anchor === anchor && activePopover.value.kind === content.kind) {
         closeCalendarPopover();
         return;
     }
 
-    activePopover.value = { ...content, key: ++popoverKey, anchor };
+    activePopover.value = { ...content, anchor };
     void nextTick(() => calendarPopoverRef.value?.open());
 }
 
@@ -60,17 +81,17 @@ function closeCalendarPopover(): void {
 }
 
 
-// Watch for changes in the schedule prop
-watch(
-    () => props.schedule,
-    (newSchedule) => {
-        //console.log('new schedule: ', newSchedule, newSchedule.availabilities);
-        closeCalendarPopover();
-        availabilities.value = splitEvents(newSchedule.availabilities);
-        matches.value = newSchedule.matches;
-    },
-    { deep: true },
-);
+
+
+
+
+
+
+
+
+// ------------------------------
+// ------- Calendar Logic -------
+// ------------------------------
 
 const viewMode = ref<'day' | 'week'>('week');
 
@@ -82,7 +103,6 @@ const hours = Array.from({ length: 24 }, (_, i) => {
 const currentWeekStart = ref(getMonday(new Date()));
 const currentDay = ref(new Date());
 
-const availabilities = ref(splitEvents(props.schedule.availabilities));
 const matches = ref(props.schedule.matches);
 
 onMounted(() => {
@@ -107,6 +127,8 @@ const displayedDays = computed(() => {
     return viewMode.value === 'week' && currentDay ? weekDays.value : [weekDays.value.find((d) => d.toDateString() === currentDay.value.toDateString()) ?? weekDays.value[0]];
 });
 
+
+
 const prevPeriod = () => {
     closeCalendarPopover();
     if (viewMode.value === 'week') {
@@ -118,7 +140,6 @@ const prevPeriod = () => {
         currentDay.value = new Date(currentDay.value);
         currentWeekStart.value = getMonday(currentDay.value);
     }
-    availabilities.value = splitEvents(props.schedule.availabilities);
 };
 
 function nextPeriod(): void {
@@ -132,191 +153,20 @@ function nextPeriod(): void {
         currentDay.value = new Date(currentDay.value);
         currentWeekStart.value = getMonday(currentDay.value);
     }
-    availabilities.value = splitEvents(props.schedule.availabilities);
 }
 
-function getMonday(date: Date): Date {
-    var newDate = new Date(date);
-    const day = newDate.getDay();
-    const diff = newDate.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
-    return new Date(newDate.setDate(diff));
-}
 
-type AvailabilityDisplay = {
-    startDate: Date;
-    endDate: Date;
-    event: Availability;
-    isMasked?: boolean;
-};
 
-function splitEvents(events: Availability[]): AvailabilityDisplay[] {
-    const splitEvents: AvailabilityDisplay[] = [];
-    events.forEach((event) => {
-        let start = new Date(event.startDate);
-        const end = new Date(event.endDate);
-        switch (event.repetition ?? Repetition.Once) {
-            case Repetition.Once:
-                while (start < end) {
-                    const nextDay = new Date(start);
-                    nextDay.setHours(23, 59, 0, 0); // Move to the next day
-                    const segmentEnd = nextDay < end ? nextDay : end;
-                    splitEvents.push({
-                        startDate: new Date(start),
-                        endDate: new Date(segmentEnd),
-                        event: event,
-                    });
-                    nextDay.setHours(24, 0, 0, 0);
-                    start = nextDay;
-                }
-                break;
-            case Repetition.Daily:
-                for (const day of getRepetitionDays(event.startDate, event.repetition_day_shift)) {
-                    splitEvents.push(...splitEventDisplay(getEventOfTheWeek(event, day)));
-                }
-                break;
-            case Repetition.Weekly:
-                const eventDayOfWeek = (start.getDay() + 6) % 7; // Adjust for week starting on Monday
-                splitEvents.push(getEventOfTheWeek(event, eventDayOfWeek));
-                break;
-        }
-    });
-    //TODO implement the masking of recurring events
-    return splitEvents.map((display) => ({ ...display, isMasked: false }));
-}
 
-function splitEventDisplay(event: AvailabilityDisplay): AvailabilityDisplay[] {
-    console.log('spliting event display: ', event);
-    const startDate = event.startDate;
-    const splitEvents: AvailabilityDisplay[] = [];
-    let start = event.startDate.getDate();
-    let startMonth = event.startDate.getMonth();
-    let end = event.endDate.getDate();
-    let endMonth = event.endDate.getMonth();
 
-    console.log('start: ', start, ' end: ', end);
 
-    if (end - start > 0) {
-        const dayEnd = new Date(event.startDate);
-        dayEnd.setHours(23, 59, 0, 0);
 
-        console.log('start: ', startDate);
 
-        splitEvents.push({
-            startDate: new Date(event.startDate),
-            endDate: dayEnd,
-            event: event.event,
-        });
-
-        start += 1;
-
-        while (start < end) {
-            const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0);
-            const dayEnd = new Date(start, 23, 59, 0, 0);
-
-            splitEvents.push({
-                startDate: dayStart,
-                endDate: dayEnd,
-                event: event.event,
-            });
-            start += 1;
-        }
-
-        const dayStart = new Date(event.startDate.getFullYear(), event.startDate.getMonth(), start, 0, 0, 0, 0);
-        splitEvents.push({
-            startDate: dayStart,
-            endDate: new Date(event.endDate),
-            event: event.event,
-        });
-    } else {
-        splitEvents.push({
-            startDate: new Date(event.startDate),
-            endDate: new Date(event.endDate),
-            event: event.event,
-        });
-    }
-
-    console.log('result: ', splitEvents);
-    return splitEvents;
-}
-
-function getEventOfTheWeek(event: Availability, day: number): AvailabilityDisplay {
-    const currentWeekEventDate = new Date(currentWeekStart.value);
-    currentWeekEventDate.setDate(currentWeekStart.value.getDate() + day);
-
-    const startDay = event.startDate.getDate();
-    const endDay = event.endDate.getDate();
-    const dayDif = endDay - startDay;
-
-    if (dayDif < 0) {
-        const currentWeekEventStart = new Date(currentWeekEventDate);
-        currentWeekEventStart.setHours(event.startDate.getHours(), event.startDate.getMinutes(), event.startDate.getSeconds(), event.startDate.getMilliseconds());
-
-        const currentWeekEventEnd = new Date(currentWeekEventDate);
-        currentWeekEventEnd.setDate(1);
-        currentWeekEventEnd.setMonth(currentWeekEventDate.getMonth() + 1);
-        currentWeekEventEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds(), event.endDate.getMilliseconds());
-
-        return {
-            startDate: currentWeekEventStart,
-            endDate: currentWeekEventEnd,
-            event: event,
-        };
-    } else {
-        const currentWeekEventStart = new Date(currentWeekEventDate);
-        currentWeekEventStart.setHours(event.startDate.getHours(), event.startDate.getMinutes(), event.startDate.getSeconds(), event.startDate.getMilliseconds());
-
-        const currentWeekEventEnd = new Date(currentWeekEventDate);
-        currentWeekEventEnd.setDate(currentWeekEventEnd.getDate() + dayDif);
-        currentWeekEventEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds(), event.endDate.getMilliseconds());
-
-        return {
-            startDate: currentWeekEventStart,
-            endDate: currentWeekEventEnd,
-            event: event,
-        };
-    }
-}
-
-function getRepetitionDays(anchor: Date, shifts: number[]): number[] {
-    const anchorDayOfWeek = (anchor.getDay() + 6) % 7; // Adjust for week starting on Monday
-    return shifts.map((shift) => (shift + anchorDayOfWeek) % 7);
-}
-
-function getEventStyle(event: AvailabilityDisplay | MatchEvent): { top: string; height: string } {
-    const start = event.startDate;
-    const end = event.endDate;
-    const top = ((start.getHours() * 60 + start.getMinutes()) / (24 * 60)) * 100;
-    const height = ((end.getHours() * 60 + end.getMinutes() - (start.getHours() * 60 + start.getMinutes())) / (24 * 60)) * 100;
-    return {
-        top: `${top}%`,
-        height: `${height}%`,
-    };
-}
-
-function getHoursInRange(startDate: Date, endDate: Date): Date[] {
-    const hours = [];
-    const current = new Date(startDate);
-    current.setMinutes(0);
-    while (current <= endDate) {
-        hours.push(new Date(current));
-        current.setHours(current.getHours() + 1);
-    }
-    return hours;
-}
-
-function getHourStyle(hour: Date, startDate: Date, endDate: Date): { top: string; height: string } {
-    const totalMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
-    const minutesFromStart = (hour.getTime() - startDate.getTime()) / (1000 * 60);
-    const top = (minutesFromStart / totalMinutes) * 100;
-    const height = (60 / totalMinutes) * 100;
-    return {
-        top: `${top}%`,
-        height: `${height}%`,
-    };
-}
+// ----------------------------------
+// ------ Popovers and Modals -------
+// ----------------------------------
 
 function getPlayer(id: string): Player {
-    //console.log("players: ", props.players);
     return props.players.find((p) => p.id === id) ?? ({} as Player);
 }
 
@@ -366,31 +216,6 @@ function isRecurringAvailability(availability: Availability): boolean {
     return availability.repetition === Repetition.Daily || availability.repetition === Repetition.Weekly;
 }
 
-function editAvailability(availability: Availability, event: Event): void {
-    if (!props.ownCalendar) return;
-    openCalendarPopover(event, {
-        kind: 'availability-editor',
-        availability,
-    });
-}
-
-function deleteAvailability(availability: Availability): void {
-    if (!props.ownCalendar) return;
-    if (isRecurringAvailability(availability)) {
-        confirmDeleteAvailabilitySeries(availability);
-        return;
-    }
-
-    closeCalendarPopover();
-    void deleteAvailabilitySeries(availability);
-}
-
-function toggleAvailabilityMask(display: AvailabilityDisplay): void {
-    if (!isRecurringAvailability(display.event)) return;
-    console.log('Toggle masked availability occurrence: ', display.event);
-    display.isMasked = !display.isMasked;
-}
-
 function confirmDeleteAvailabilitySeries(availability: Availability): void {
     closeCalendarPopover();
     const { open, close } = useModal({
@@ -401,20 +226,48 @@ function confirmDeleteAvailabilitySeries(availability: Availability): void {
             },
             async onConfirm() {
                 close();
-                await deleteAvailabilitySeries(availability);
+                await updateAvailabilities([], [availability], emit);
             },
         },
     });
     open();
 }
 
+
+
+
+// ------------------------------
+// ------ Button Commands -------
+// ------------------------------
+
+function onHourClick(event: MouseEvent, day: Date, hour: Date): void {
+    createEvent(event, props.ownCalendar ? 'availability' : 'match', day, hour);
+}
+
+function onAvailabilityClick(avItem: CalendarItem, event: Event): void {
+    let availability = availabilities.value[avItem.referenceIndex];
+    debugWithTimestamp('Availability clicked:', avItem, 'Reference availability:', availability);
+    if (props.ownCalendar) {
+        editAvailability(availability, event);
+    }
+}
+
+function editAvailability(availability: Availability, event: Event): void {
+    if (!props.ownCalendar) return;
+    openCalendarPopover(event, {
+        kind: 'availability-editor',
+        availability,
+    });
+}
+
 async function submitAvailabilityEdit(data: Availability): Promise<void> {
     const popover = activePopover.value;
     if (popover?.kind !== 'availability-editor') return;
 
-    const { availability } = popover;
+    const original = popover.availability;
+
     closeCalendarPopover();
-    await saveAvailabilitySeries(data, availability);
+    await updateAvailabilities([data], [original], emit);
 }
 
 async function submitAvailabilityCreate(data: Availability): Promise<void> {
@@ -424,23 +277,25 @@ async function submitAvailabilityCreate(data: Availability): Promise<void> {
     emit('reload');
 }
 
-async function submitMatchRequest(data: MatchEvent): Promise<void> {
+function deleteAvailabilityFromPopover(): void {
+    const popover = activePopover.value;
     closeCalendarPopover();
-    await compStore.create_match_event_local(data);
-    await compStore.post_match_event(data);
-    emit('reload');
+
+    if (popover?.kind === 'availability-editor') {
+        if (popover.availability.repetition == Repetition.Daily) {
+            confirmDeleteAvailabilitySeries(popover.availability);
+        } else {
+            updateAvailabilities([], [popover.availability], emit);
+        }
+    }
 }
 
-async function saveAvailabilitySeries(updated: Availability, original: Availability): Promise<void> {
-    await compStore.self_edit_availabilities_local([updated], [original]);
-    await compStore.post_account();
-    emit('reload');
-}
-
-async function deleteAvailabilitySeries(availability: Availability): Promise<void> {
-    await compStore.self_edit_availabilities_local([], [availability]);
-    await compStore.post_account();
-    emit('reload');
+function deleteAvailability(availability: Availability): void {
+    if (availability.repetition == Repetition.Daily) {
+        confirmDeleteAvailabilitySeries(availability);
+    } else {
+        updateAvailabilities([], [availability], emit);
+    }
 }
 
 async function respondToMatch(match: MatchEvent, accept: boolean) {
@@ -451,13 +306,469 @@ async function respondToMatch(match: MatchEvent, accept: boolean) {
     emit('reload');
 }
 
-async function submitNote() {
-    let res = await compStore.self_update_schedule_note(props.schedule.note);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ------------------------------
+// --------- Drag Logic ---------
+// ------------------------------
+
+
+const availabilities = ref<Availability[]>([]);
+const exceptions = ref<AvailabilityException[]>([]);
+
+watch(props.schedule, (newSchedule) => {
+    availabilities.value = [...newSchedule.availabilities];
+    exceptions.value = [...newSchedule.availability_exceptions];
+    matches.value = [...newSchedule.matches];
+}, { immediate: true });
+
+
+interface CalendarItem {
+    type: 'availability' | 'excpetion';
+    startDate: Date;
+    endDate: Date;
+    referenceIndex: number;
 }
+
+
+const expandedavailabilities = ref<CalendarItem[]>([]);
+
+watch(availabilities, (newAvs) => {
+    expandedavailabilities.value = newAvs.map((av, index) => {
+        switch (av.repetition) {
+            case Repetition.Daily:
+                let items = [] as CalendarItem[];
+                for (let offset of av.repetition_day_shift) {
+                    let timeShift = offset * 24 * 60 * 60 * 1000;
+
+                    items.push({
+                        type: 'availability',
+                        startDate: new Date(av.startDate.getTime() + timeShift),
+                        endDate: new Date(av.endDate.getTime() + timeShift),
+                        referenceIndex: index,
+                    } as CalendarItem);
+                }
+                return items;
+
+            default:
+                return [
+                    {
+                        type: 'availability',
+                        startDate: av.startDate,
+                        endDate: av.endDate,
+                        referenceIndex: index,
+                    } as CalendarItem,
+                ];
+        }
+    }).flat();
+});
+
+
+const expandedExceptions = ref<CalendarItem[]>([]);
+
+watch(exceptions, (newExs) => {
+    expandedExceptions.value = newExs.map((ex, index) => {
+        return {
+            type: 'excpetion',
+            startDate: ex.startDate,
+            endDate: ex.endDate,
+            referenceIndex: index,
+        } as CalendarItem;
+    });
+});
+
+availabilities.value = props.schedule.availabilities;
+exceptions.value = props.schedule.availability_exceptions;
+
+
+
+const availabilityItems = computed(() => {
+    return expandedavailabilities.value.map((item) => {
+        let items = [] as CalendarItem[];
+        for (let timeframes of splitDateRangeByDay(item.startDate, item.endDate)) {
+            items.push({
+                ...item,
+                startDate: timeframes.startDate,
+                endDate: timeframes.endDate,
+            });
+        }
+        return items;
+    }).flat();
+});
+
+const exceptionItems = computed(() => {
+    return expandedExceptions.value.map((item) => {
+        let items = [] as CalendarItem[];
+        for (let timeframes of splitDateRangeByDay(item.startDate, item.endDate)) {
+            items.push({
+                ...item,
+                startDate: timeframes.startDate,
+                endDate: timeframes.endDate,
+            });
+        }
+        return items;
+    }).flat();
+});
+
+
+
+
+
+type DragState = {
+    dragMode: 'create' | 'resize' | 'move';
+    dragContext: 'availability' | 'exception';
+    dragStartDate: Date;
+    dragItemIndex: number;
+}
+const dragState = ref<DragState | null>(null);
+
+function onDragStart(event: MouseEvent, itemIndex: number | null, mode: 'create' | 'resize' | 'move', context: 'availability' | 'exception') {
+    let target = getPointerCalendarTarget(event.clientX, event.clientY);
+
+    if (mode == 'create') {
+        let newItem = {
+            startDate: target?.date ?? new Date(),
+            endDate: new Date((target?.date ?? new Date()).getTime() + 60 * 60 * 1000),
+            referenceIndex: -1
+        } as CalendarItem;
+
+        switch (context) {
+            case 'availability':
+                expandedavailabilities.value.push(newItem);
+                break;
+            case 'exception':
+                expandedExceptions.value.push(newItem);
+        }
+    }
+
+    let newItemIndex = itemIndex ?? (context === 'availability' ? expandedavailabilities.value.length - 1 : expandedExceptions.value.length - 1);
+
+    dragState.value = {
+        dragMode: mode,
+        dragContext: context,
+        dragStartDate: new Date(),
+        dragItemIndex: newItemIndex,
+    };
+
+    document.addEventListener('pointermove', onItemDrag);
+    document.addEventListener('pointerup', onItemDrop);
+    document.addEventListener('pointercancel', onItemDrop); // touch interrupted, etc
+}
+
+
+
+function onItemDrag(event: MouseEvent) {
+    if (!dragState.value) return;
+    let target = getPointerCalendarTarget(event.clientX, event.clientY);
+
+    let itemList = [];
+    switch (dragState.value.dragContext) {
+        case 'availability':
+            itemList = expandedavailabilities.value;
+            break;
+        case 'exception':
+            itemList = expandedExceptions.value;
+            break;
+    }
+
+    let item = itemList[dragState.value.dragItemIndex];
+    if (!item) return;
+
+    switch (dragState.value.dragMode) {
+        case 'move':
+            let delta = (target?.date.getTime() ?? 0) - dragState.value.dragStartDate.getTime();
+            item.startDate = new Date(item.startDate.getTime() + delta);
+            item.endDate = new Date(item.endDate.getTime() + delta);
+            dragState.value.dragStartDate = target?.date ?? dragState.value.dragStartDate;
+            break;
+
+        case 'create': 
+        case 'resize':
+            let dragBoundary = Math.abs(item.startDate.getTime() - dragState.value.dragStartDate.getTime()) > Math.abs(item.startDate.getTime() - dragState.value.dragStartDate.getTime()) ? 'up' : 'down';
+
+            switch (dragBoundary) {
+                case 'up':
+                    item.startDate = target?.date ?? item.startDate;
+                    break;
+                case 'down':
+                    item.endDate = target?.date ?? item.endDate;
+                    break;
+            }
+
+            dragState.value.dragStartDate = target?.date ?? dragState.value.dragStartDate;
+            break;
+    }
+
+    itemList[dragState.value.dragItemIndex] = item;
+
+
+    switch (dragState.value.dragContext) {
+        case 'availability':
+            expandedavailabilities.value = [...itemList];
+            break;
+        case 'exception':
+            expandedExceptions.value = [...itemList];
+            break;
+    }
+}
+
+function onItemDrop(event: MouseEvent){
+    console.log('onItemDrop called');
+
+    if (!dragState.value) return;
+
+
+
+    document.removeEventListener('pointermove', onItemDrag);
+    document.removeEventListener('pointerup', onItemDrop);
+    document.removeEventListener('pointercancel', onItemDrop); // touch interrupted, etc
+    
+    switch (dragState.value.dragContext) {
+        case 'availability':
+            let editedAvItem = expandedavailabilities.value[dragState.value.dragItemIndex];
+            if (!editedAvItem) return;
+            let originalAv: Availability | null = availabilities.value[editedAvItem.referenceIndex] ?? null;
+
+            let editedAv = {
+                repetition: originalAv?.repetition ?? Repetition.Once,
+                repetition_day_shift: originalAv?.repetition_day_shift ?? [],
+                startDate: editedAvItem.startDate,
+                endDate: editedAvItem.endDate
+            } as Availability;
+
+            debugWithTimestamp('Submitting availability edit:', editedAv, 'Original:', originalAv);
+
+            void updateAvailabilities([editedAv], originalAv ? [originalAv] : [], emit);
+            break;
+        case 'exception':
+            let editedExItem = expandedExceptions.value[dragState.value.dragItemIndex];
+            if (!editedExItem) return;
+            let originalEx = exceptions.value[editedExItem.referenceIndex];
+            if (!originalEx) return;
+
+            let editedEx = {
+                startDate: editedExItem.startDate,
+                endDate: editedExItem.endDate,
+            } as AvailabilityException;
+
+            debugWithTimestamp('Submitting exception edit:', editedEx, 'Original:', originalEx);
+
+            void updateExceptions([editedEx], [originalEx], emit);
+            break;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const DRAG_SNAP_MINUTES = 15;
+
+function getCalendarDayElement(dayIndex: number): HTMLElement | null {
+    return calendarBox.value?.querySelector(`.calendar-day[data-day-index="${dayIndex}"]`) ?? null;
+}
+
+function getDateFromPointer(dayIndex: number, clientY: number): Date | null {
+    const day = displayedDays.value[dayIndex];
+    const dayElement = getCalendarDayElement(dayIndex);
+    if (!day || !dayElement) return null;
+
+    const rect = dayElement.getBoundingClientRect();
+    if (rect.height <= 0) return null;
+
+    const y = clamp(clientY - rect.top, 0, rect.height);
+    const minutes = snapMinutes((y / rect.height) * 24 * 60, DRAG_SNAP_MINUTES);
+    return dateAtMinutes(day, minutes);
+}
+
+function getPointerCalendarTarget(clientX: number, clientY: number): { dayIndex: number; date: Date } | null {
+    if (!calendarDaysRef.value || displayedDays.value.length === 0) return null;
+    const gridRect = calendarDaysRef.value.getBoundingClientRect();
+    if (gridRect.width <= 0 || gridRect.height <= 0) return null;
+
+    const x = clamp(clientX - gridRect.left, 0, gridRect.width - 1);
+    const dayWidth = gridRect.width / displayedDays.value.length;
+    const dayIndex = clamp(Math.floor(x / dayWidth), 0, displayedDays.value.length - 1);
+
+    const date = getDateFromPointer(dayIndex, clientY);
+    if (!date) return null;
+
+    return { dayIndex, date };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 <template>
-    <div class="d-flex flex-column calendar-container m-0 px-0">
+        {{ props.schedule.availabilities }}
+        <br>
+        {{ availabilityItems }}
+    <div class="d-flex flex-column calendar-container m-0 px-0" :class="{ 'drag-active': dragState != null }" ref="calendarBox">
+
 
 
         <div class="calendar-header m-0 ps-0 pe-0">
@@ -473,7 +784,11 @@ async function submitNote() {
                         "Future"
                     }}
                 </div>
-                <span class="col-auto">{{ currentWeekStart.toLocaleDateString('en-US', { month: 'long' }) }} {{ currentWeekStart.getDate() }}-{{ addDays(endOfWeek(currentWeekStart), 1).getDate()  }} {{ currentWeekStart.getFullYear() }}</span>
+                <span class="col-auto" :style="{ width: '11.5rem', textAlign: 'center', textWrap: 'nowrap' }">
+                    {{ currentWeekStart.toLocaleDateString('en-US', { month: 'long' }) }} 
+                    {{ currentWeekStart.getDate() }}-{{ addDays(endOfWeek(currentWeekStart), 1).getDate()  }} 
+                    {{ currentWeekStart.getFullYear() }}
+                </span>
                 <div class="col day-arrows">
                     <i @click="nextPeriod" class="icon-chevron-right px-2"></i>
                 </div>
@@ -507,8 +822,9 @@ async function submitNote() {
         <div class="calendar-body">
 
 
-            <div class="calendar-days">
+            <div class="calendar-days" ref="calendarDaysRef">
                 <div v-for="(day, dayIndex) in displayedDays" :key="day.toDateString()" class="calendar-day" 
+                :data-day-index="dayIndex"
                 :class="{ 
                     'current-day': day.toDateString() === new Date().toDateString(), 
                     'past-day': day < new Date() && !(day.toDateString() === new Date().toDateString()),
@@ -535,7 +851,8 @@ async function submitNote() {
                                 borderTop: dayIndex === 0 && index != 0 ? 'none !important' : '1px'
                             }"
                             :id="`hour-${index}`"
-                            @click="createEvent($event, ownCalendar ? 'availability' : 'match', day, hour.date)">
+                            @pointerdown="ownCalendar && onDragStart($event, null, 'create', 'availability')"
+                            @click="onHourClick($event, day, hour.date)">
                         </div>
                         <div v-else-if="!(index === (hours.length * 2 -1)) && dayIndex === 0" class="d-flex flex-row seperator-row no-wrap">
                             <div class="hour-separator-line sm"></div>
@@ -549,46 +866,67 @@ async function submitNote() {
                     <!-- Availabilities -->
                     <div
                         class="event availability"
-                        :class="{ own: ownCalendar, 'masked-occurrence': availability.isMasked }"
-                        v-for="availability in availabilities.filter((e) => e.startDate.toDateString() === day.toDateString() && (ownCalendar || !e.isMasked))"
-                        :key="availability.startDate.toISOString()"
-                        :style="getEventStyle(availability)"
-                        @click.stop="ownCalendar && editAvailability(availability.event, $event)"
+                        :class="{ own: ownCalendar, 'masked-occurrence': false, 'dragging-source': false }"
+                        v-for="(avItem, index) in availabilityItems.filter((e) => e.startDate.getDay() === day.getDay() && (ownCalendar))"
+                        :key="avItem.startDate.toISOString() + '-' + index"
+                        :style="getEventStyle(avItem)"
+                        @pointerdown.stop="onDragStart($event, index, 'move', 'availability')"
+                        @pointer.stop="onAvailabilityClick(avItem, $event)"
                     >
+                        <div
+                            v-if="ownCalendar"
+                            class="availability-resize-handle top"
+                            @dragstart.stop="onDragStart($event, index, 'resize', 'availability')"
+                        ></div>
+                        <div
+                            v-if="ownCalendar"
+                            class="availability-resize-handle bottom"
+                            @dragstart.stop="onDragStart($event, index, 'resize', 'availability')"
+                        ></div>
                         <div class="availability-actions" v-if="ownCalendar">
-                            <button
-                                v-if="isRecurringAvailability(availability.event)"
+                            <!-- <button
+                                v-if="isRecurringAvailability(avItem.event)"
                                 type="button"
                                 class="availability-action mask-action"
-                                :aria-label="availability.isMasked ? 'Show this occurrence' : 'Mask this occurrence'"
-                                :title="availability.isMasked ? 'Show this occurrence' : 'Mask this occurrence'"
-                                @click.stop="toggleAvailabilityMask(availability)"
+                                :aria-label="avItem.isMasked ? 'Show this occurrence' : 'Mask this occurrence'"
+                                :title="avItem.isMasked ? 'Show this occurrence' : 'Mask this occurrence'"
+                                @pointerdown.stop
+                                @click.stop="toggleAvailabilityMask(avItem)"
                             >
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
                                     <circle cx="12" cy="12" r="3" />
-                                    <path v-if="availability.isMasked" d="M4 20 20 4" />
+                                    <path v-if="avItem.isMasked" d="M4 20 20 4" />
                                 </svg>
-                            </button>
+                            </button> -->
                             <button
                                 type="button"
                                 class="availability-action delete-action"
                                 aria-label="Delete availability"
                                 title="Delete availability"
-                                @click.stop="deleteAvailability(availability.event)"
+                                @pointerdown.stop
+                                @click.stop="deleteAvailability(availabilities[avItem.referenceIndex])"
                             >
                                 <i class="icon-cross"></i>
                             </button>
                         </div>
                         <div
                             v-if="!ownCalendar"
-                            v-for="hour in getHoursInRange(availability.startDate, availability.endDate)"
+                            v-for="hour in getHoursInRange(avItem.startDate, avItem.endDate)"
                             :key="hour.toDateString()"
                             class="event-overlay"
                             @click.stop="createEvent($event, 'match', day, hour)"
-                            :style="getHourStyle(hour, availability.startDate, availability.endDate)"
+                            :style="getHourStyle(hour, avItem.startDate, avItem.endDate)"
+                            :id="`hour-${avItem.startDate.toISOString()}-${avItem.endDate.toISOString()}`"
                         ></div>
                     </div>
+<!-- 
+                    <div
+                        class="event availability drag-preview"
+                        v-for="(preview, previewIndex) in dragPreviewSegments.filter((segment) => segment.startDate.toDateString() === day.toDateString())"
+                        :key="`drag-preview-${day.toDateString()}-${previewIndex}`"
+                        :style="getRangeStyle(preview.startDate, preview.endDate)"
+                    ></div> -->
 
 
                     <!-- Matches -->
@@ -630,26 +968,28 @@ async function submitNote() {
     <PopoverComponent
         v-if="activePopover"
         ref="calendarPopoverRef"
-        :anchor="activePopoverAnchor"
+        :anchor="activePopover.anchor"
+        :popover-boundary="calendarBox ?? undefined"
         :update="InfoPopover"
         :display-logic="clickEvaluator"
         :fade-in="true"
         :hide-delay="250"
         :offset="14"
+        :boundary-lineance-down="0"
     >
         <EditAvailability
             v-if="activePopover.kind === 'availability-editor'"
-            :key="`availability-editor-${activePopover.key}`"
+            :key="`availability-editor-${activePopover}`"
             :availability="activePopover.availability"
             :create="false"
             title="Edit availability"
             @submit-availability="submitAvailabilityEdit"
             @cancel="closeCalendarPopover"
-            @delete="deleteAvailability(activePopover.availability)"
+            @delete="deleteAvailabilityFromPopover"
         />
         <EditAvailability
             v-else-if="activePopover.kind === 'availability-create'"
-            :key="`availability-create-${activePopover.key}`"
+            :key="`availability-create-${activePopover}`"
             :availability="activePopover.availability"
             :create="true"
             title="Add availability"
@@ -658,11 +998,11 @@ async function submitNote() {
         />
         <RequestMatchPopover
             v-else-if="activePopover.kind === 'match-request'"
-            :key="`match-request-${activePopover.key}`"
+            :key="`match-request-${activePopover}`"
             title="Request a match"
             :match="activePopover.match"
             :opponent-username="activePopover.opponentUsername"
-            @submit-match="submitMatchRequest"
+            @submit-match="submitMatchRequest(emit, closeCalendarPopover)"
             @cancel="closeCalendarPopover"
         />
     </PopoverComponent>
@@ -727,7 +1067,7 @@ $border-style: 1px solid $hour-border-color;
     overflow: hidden;
 
     // border: 1px solid $border-color;
-    border-radius: 16px;
+    border-radius: 0px;
     border-left: none;
 
     .calendar-header {
@@ -948,6 +1288,26 @@ $border-style: 1px solid $hour-border-color;
                     background-color: var(--primary);
                     color: white;
 
+                    justify-self: center;
+                    border-radius: 4px;
+
+                    width: 100%;
+                    
+                    @include media-breakpoint-up(xxxl) {
+                        width: 85%;
+                    }
+
+                    &.drag-preview {
+                        z-index: 10;
+                        opacity: 0.8;
+                        border: 1px dashed color-mix(in srgb, white 75%, var(--primary) 25%);
+                        pointer-events: none;
+                    }
+
+                    &.dragging-source {
+                        opacity: 0.35;
+                    }
+
                     &.masked-occurrence {
                         filter: grayscale(0.85);
                         opacity: 0.6;
@@ -1011,6 +1371,23 @@ $border-style: 1px solid $hour-border-color;
                         }
                     }
 
+                    .availability-resize-handle {
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        height: 0.45rem;
+                        z-index: 3;
+                        cursor: ns-resize;
+
+                        &.top {
+                            top: 0;
+                        }
+
+                        &.bottom {
+                            bottom: 0;
+                        }
+                    }
+
                     &.own:hover {
                         background-color: color-mix(in srgb, var(--primary), white 10%);
                         cursor: pointer;
@@ -1066,6 +1443,13 @@ $border-style: 1px solid $hour-border-color;
                 background-position: -300% 0;
             }
         }
+    }
+}
+
+.calendar-container.drag-active {
+    .calendar-hour-day,
+    .event.availability.own {
+        cursor: grabbing !important;
     }
 }
 

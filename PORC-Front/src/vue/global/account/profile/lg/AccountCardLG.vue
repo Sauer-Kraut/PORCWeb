@@ -238,7 +238,7 @@ import PieChartComponent from '../../chart/pie_chart/PieChartComponent.vue';
                     class="radar-chart" 
                     :size="280" 
                     :labels="['Mobility', 'Weight', 'Aggresiv', 'Range Bias', 'Reactivity']" 
-                    :values="[0, 0, 0, 0, 0]" 
+                    :values="[2, 2, 2, 2, 2]" 
                     :max-value="5" 
                     :hardbg="[0, 0, 0, 0.4]"
                     :style="{ '--chart-color': 'var(--primary)' }"

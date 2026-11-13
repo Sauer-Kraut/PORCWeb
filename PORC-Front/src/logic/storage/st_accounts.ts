@@ -19,6 +19,7 @@ import type { MatchEvent } from '../models/account/schedule/match_event/MatchEve
 import type { Availability } from '../models/account/schedule/availability/Availability';
 import debugWithTimestamp from '../util/logging/DebugWithTimestamp';
 import { is } from 'date-fns/locale';
+import type { AvailabilityException } from '@/models/pub_account_info/schedule/availability_exception/AvailabilityException';
 
 
 export const accountsStore = defineStore('accounts', {
@@ -449,7 +450,7 @@ export const accountsStore = defineStore('accounts', {
                     banner:null,
                     bp:0,
                     radar_chart: {
-                        values: [['Mobility', 0], ['Weight', 0], ['Aggresiv', 0], ['Range Bias', 0], ['Reactivity', 0]],
+                        values: [['Mobility', 2], ['Weight', 2], ['Aggresiv', 2], ['Range Bias', 2], ['Reactivity', 2]],
                         color: [200, 200, 200]
                     } as RadarChart,   
                     region:null,
@@ -538,6 +539,44 @@ export const accountsStore = defineStore('accounts', {
                         a.startDate === av.startDate && a.endDate === av.endDate
                     )) {
                         account.schedule.availabilities.push(av);
+                    }
+                }
+
+                await this.set_competitor(null, account)
+                await this.post_account(); // update the store
+            } 
+            else {
+                throw new Error("Cant edit account while account is not fully loaded")
+            }
+        },
+
+
+        // doesnt automatically store the account, less input latency this way
+        async self_edit_exceptions_local(add_ex: AvailabilityException[], rem_ex: AvailabilityException[]) {
+            // console.log("editing availability");
+            let account = await this.get_login_full();
+
+            if (account != null && account.schedule != null) {
+        
+                // Remove exceptions
+                for (const ex of rem_ex) {
+                    const index = account.schedule.availability_exceptions.findIndex(a =>
+                        a.startDate === ex.startDate && a.endDate === ex.endDate
+                    );
+                    if (index !== -1) {
+                        account.schedule.availability_exceptions.splice(index, 1);
+                    } else {
+                        throw new Error(`Error: Availability to remove not found (day: ${ex.startDate}, start: ${ex.endDate})`);
+                    }
+                }
+
+                // Add new exceptions
+                for (const ex of add_ex) {
+                    // Avoid duplicates
+                    if (!account.schedule.availability_exceptions.some(a =>
+                        a.startDate === ex.startDate && a.endDate === ex.endDate
+                    )) {
+                        account.schedule.availability_exceptions.push(ex);
                     }
                 }
 

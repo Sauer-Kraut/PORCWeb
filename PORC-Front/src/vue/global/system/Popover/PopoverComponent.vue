@@ -26,6 +26,7 @@
         popoverBoundary?: HTMLElement;
         offset?: number;
         exclusiveGroup?: string;
+        boundaryLineanceDown?: number;
     }>();
 
     defineOptions({
@@ -116,7 +117,6 @@
                     awaitingHide.value = false;
                 }
                 hideTimeout.value = null;
-                slotKey.value++;
             }, hideDelay);
         }
     }
@@ -125,7 +125,6 @@
         clearHideTimeout();
         awaitingShow.value = false;
         hidden.value = true;
-        slotKey.value++;
     }
 
     function handleExclusiveOpen(event: Event) {
@@ -162,7 +161,7 @@
             tooltipRef.value,
             arrowRef.value,
             props.parent ? 'absolute' : 'fixed',
-            props.popoverBoundary ? extendBoundaryDown(props.popoverBoundary, 100) : undefined,
+            props.popoverBoundary ? extendBoundaryDown(props.popoverBoundary, props.boundaryLineanceDown ?? 100) : undefined,
             undefined,
             props.offset,
         );
@@ -267,7 +266,6 @@
         if (documentClickListener) document.removeEventListener('click', documentClickListener);
         if (hideTimeout.value !== null) clearTimeout(hideTimeout.value);
         clearHideTimeout();
-        cleanup?.();
     });
 </script>
 

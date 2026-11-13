@@ -10,12 +10,12 @@ import type { Season } from '@/logic/models/season/Season';
 import { accountsStore } from '@/logic/storage/st_accounts';
 import { matchplanStore } from '@/logic/storage/st_matchplan';
 import { setPrimaryColor } from '@/logic/util/resources/set/SetPrimaryColor';
-import CalendarComponent from '@/vue/pages/matchplanner/components/calendar/CalendarComponent.vue';
 import PlayerSelector from '@/vue/pages/matchplanner/components/player_selector/PlayerSelectorComponent.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import AccountCardFloating from '@/vue/global/account/profile/lg/AccountCardLG.vue';
 import { computePosition } from '@floating-ui/vue';
+import CalendarComponent from './components/calendar/CalendarComponent.vue';
 
 const accountPlate = document.querySelector<HTMLElement>('#account-plate');
 const tooltip = document.querySelector<HTMLElement>('#test-tooltip');

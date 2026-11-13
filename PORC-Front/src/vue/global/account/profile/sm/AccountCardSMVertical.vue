@@ -87,7 +87,7 @@
                 cardStateInfo: cardState == 'Info'
             }">
                 <div class="banner flex-grow-1 align-items-center justify-content-center" @click="toggleCardState('Banner')">
-                    <RadarChartComponent class="radar-chart" :size="210" :labels="['Mobility', 'Weight', 'Aggresiv', 'Range Bias', 'Reactivity']" :values="[3, 4, 4, 2.5, 4.2]" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChartComponent>
+                    <RadarChartComponent class="radar-chart" :size="210" :labels="((account.customisation?.radar_chart ?? accountsStore().get_placeholder_account().customisation?.radar_chart) ?? {values:[]}).values.map(([v, _]) => v)" :values="((account.customisation?.radar_chart ?? accountsStore().get_placeholder_account().customisation?.radar_chart) ?? {values:[]}).values.map(([_, v]) => v)" :max-value="5" :style="{ '--chart-color': 'var(--primary)' }"></RadarChartComponent>
 
                     <i
                         v-if="allowEdit"
